@@ -1,17 +1,23 @@
 package types
 
 import (
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/algorand/go-algorand-sdk/crypto"
 )
+
+func randomBytes(s []byte) {
+	_, err := rand.Read(s)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestEncodeDecode(t *testing.T) {
 	a := Address{}
 	for i := 0; i < 1000; i++ {
-		crypto.RandomBytes(a[:])
+		randomBytes(a[:])
 		addr := a.String()
 		b, err := DecodeAddress(addr)
 		require.NoError(t, err)
