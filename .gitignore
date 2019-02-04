@@ -1,0 +1,16 @@
+*.log
+*.log.archive
+*.out
+*.prof
+coverage.html
+
+# Exclude GoLand files
+.idea/
+
+# Ignore vim backup and swap files
+*~
+*.swp
+*.swo
+
+# Mac
+.DS_Store

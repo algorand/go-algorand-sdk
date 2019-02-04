@@ -24,7 +24,7 @@ func init() {
 	}
 }
 
-// KeyToMnemonic converts a 32-byte key into a 25 word mnemonic. The generated
+// FromKey converts a 32-byte key into a 25 word mnemonic. The generated
 // mnemonic includes a checksum. Each word in the mnemonic represents 11 bits
 // of data, and the last 11 bits are reserved for the checksum.
 func FromKey(key []byte) (string, error) {
@@ -40,9 +40,9 @@ func FromKey(key []byte) (string, error) {
 	return fmt.Sprintf("%s %s", strings.Join(words, " "), chk), nil
 }
 
-// MnemonicToKey converts a mnemonic generated using this library into the
-// source key used to create it. It returns an error if the passed mnemonic
-// has an incorrect checksum, if the number of words is unexpected, or if one
+// ToKey converts a mnemonic generated using this library into the source
+// key used to create it. It returns an error if the passed mnemonic has an
+// incorrect checksum, if the number of words is unexpected, or if one
 // of the passed words is not found in the words list.
 func ToKey(mnemonic string) ([]byte, error) {
 	// Split input on whitespace
