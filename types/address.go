@@ -8,7 +8,7 @@ import (
 
 const (
 	checksumLenBytes = 4
-	hashLenBytes = sha512.Size256
+	hashLenBytes     = sha512.Size256
 )
 
 // Address represents an Algorand address.
@@ -36,7 +36,7 @@ func DecodeAddress(addr string) (a Address, err error) {
 	}
 
 	// Ensure the decoded address is the correct length
-	if len(decoded) != len(a) + checksumLenBytes {
+	if len(decoded) != len(a)+checksumLenBytes {
 		err = errWrongAddressLen
 		return
 	}
