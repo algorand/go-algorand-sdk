@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:4cca5cc8a70a54677df7e5b4eddc2d0d5ab20fee2c60222e1e6ba5616a6aa89d"
+  name = "github.com/algorand/go-codec"
+  packages = ["codec"]
+  pruneopts = "UT"
+  revision = "2439244dcef227ccd731683768610d6629c899ea"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -43,6 +51,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/algorand/go-codec/codec",
     "github.com/stretchr/testify/require",
     "golang.org/x/crypto/ed25519",
   ]

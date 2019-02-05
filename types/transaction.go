@@ -15,6 +15,16 @@ type Transaction struct {
 	PaymentTxnFields
 }
 
+// SignedTxn wraps a transaction and a signature. The encoding of this struct
+// is suitable to broadcast on the network
+type SignedTxn struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Sig  Signature   `codec:"sig"`
+	Msig MultisigSig `codec:"msig"`
+	Txn  Transaction `codec:"txn"`
+}
+
 // KeyregTxnFields captures the fields used for key registration transactions.
 type KeyregTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
