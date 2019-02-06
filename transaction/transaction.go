@@ -20,17 +20,19 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 	}
 
 	// Build the transaction
-	tx = types.Transaction {
+	tx = types.Transaction{
 		Type: types.PaymentTx,
-		Header: Header {
-			Sender: from,
-			Fee: fee,
-			FirstValid: firstRound,
-			LastValid: lastRound,
-			Note: note,
+		Header: types.Header{
+			Sender:     fromAddr,
+			Fee:        types.Algos(fee),
+			FirstValid: types.Round(firstRound),
+			LastValid:  types.Round(lastRound),
+			Note:       note,
 		},
-		Receiver: to,
-		Amount: amount,
+		PaymentTxnFields: types.PaymentTxnFields{
+			Receiver: toAddr,
+			Amount:   types.Algos(amount),
+		},
 	}
 	return
 }

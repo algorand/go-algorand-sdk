@@ -10,11 +10,8 @@ const (
 	KeyRegistrationTx TxType = "keyreg"
 )
 
-// Algos are the unit of currency in Algorand. We use a struct here to
-// discourage using arithmetic directly on the Raw field
-type Algos struct {
-	Raw uint64
-}
+// Algos are the unit of currency in Algorand
+type Algos uint64
 
 // Round represents a round of the Algorand consensus protocol
 type Round uint64
