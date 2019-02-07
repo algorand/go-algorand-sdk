@@ -21,3 +21,6 @@ type VotePK [32]byte
 
 // VRFPK is the VRF public key used in key registration transactions
 type VRFPK [32]byte
+
+// MasterDerivationKey is the secret key used to derive keys in wallets
+type MasterDerivationKey [32]byte
