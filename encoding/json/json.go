@@ -40,6 +40,7 @@ func Decode(b []byte, objptr interface{}) error {
 	return nil
 }
 
+// NewDecoder returns a json decoder
 func NewDecoder(r io.Reader) *codec.Decoder {
 	return codec.NewDecoder(r, CodecHandle)
 }
