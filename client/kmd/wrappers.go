@@ -22,9 +22,9 @@ func (kcl Client) ListWallets() (resp APIV1GETWalletsResponse, err error) {
 }
 
 // GenerateKey wraps APIV1POSTKeyRequest
-func (kcl Client) GenerateKey(walletHandle []byte) (resp APIV1POSTKeyResponse, err error) {
+func (kcl Client) GenerateKey(walletHandle string) (resp APIV1POSTKeyResponse, err error) {
 	req := APIV1POSTKeyRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 		DisplayMnemonic:   false,
 	}
 	err = kcl.DoV1Request(req, &resp)
@@ -32,11 +32,11 @@ func (kcl Client) GenerateKey(walletHandle []byte) (resp APIV1POSTKeyResponse, e
 }
 
 // CreateWallet wraps APIV1POSTWalletRequest
-func (kcl Client) CreateWallet(walletName []byte, walletDriverName string, walletPassword []byte, walletMDK types.MasterDerivationKey) (resp APIV1POSTWalletResponse, err error) {
+func (kcl Client) CreateWallet(walletName, walletDriverName, walletPassword string, walletMDK types.MasterDerivationKey) (resp APIV1POSTWalletResponse, err error) {
 	req := APIV1POSTWalletRequest{
-		WalletName:          string(walletName),
+		WalletName:          walletName,
 		WalletDriverName:    walletDriverName,
-		WalletPassword:      string(walletPassword),
+		WalletPassword:      walletPassword,
 		MasterDerivationKey: walletMDK,
 	}
 	err = kcl.DoV1Request(req, &resp)
@@ -44,46 +44,46 @@ func (kcl Client) CreateWallet(walletName []byte, walletDriverName string, walle
 }
 
 // InitWallet wraps APIV1POSTWalletInitRequest
-func (kcl Client) InitWallet(walletID []byte, walletPassword []byte) (resp APIV1POSTWalletInitResponse, err error) {
+func (kcl Client) InitWallet(walletID, walletPassword string) (resp APIV1POSTWalletInitResponse, err error) {
 	req := APIV1POSTWalletInitRequest{
-		WalletID:       string(walletID),
-		WalletPassword: string(walletPassword),
+		WalletID:       walletID,
+		WalletPassword: walletPassword,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // ReleaseWalletHandle wraps APIV1POSTWalletReleaseRequest
-func (kcl Client) ReleaseWalletHandle(walletHandle []byte) (resp APIV1POSTWalletReleaseResponse, err error) {
+func (kcl Client) ReleaseWalletHandle(walletHandle string) (resp APIV1POSTWalletReleaseResponse, err error) {
 	req := APIV1POSTWalletReleaseRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // ListKeys wraps APIV1POSTKeysListRequest
-func (kcl Client) ListKeys(walletHandle []byte) (resp APIV1POSTKeysListResponse, err error) {
+func (kcl Client) ListKeys(walletHandle string) (resp APIV1POSTKeysListResponse, err error) {
 	req := APIV1POSTKeysListRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // ListMultisigAddrs wraps APIV1POSTMultisigListRequest
-func (kcl Client) ListMultisigAddrs(walletHandle []byte) (resp APIV1POSTMultisigListResponse, err error) {
+func (kcl Client) ListMultisigAddrs(walletHandle string) (resp APIV1POSTMultisigListResponse, err error) {
 	req := APIV1POSTMultisigListRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // ImportMultisigAddr wraps APIV1POSTMultisigImportRequest
-func (kcl Client) ImportMultisigAddr(walletHandle []byte, version, threshold uint8, pks []ed25519.PublicKey) (resp APIV1POSTMultisigImportResponse, err error) {
+func (kcl Client) ImportMultisigAddr(walletHandle string, version, threshold uint8, pks []ed25519.PublicKey) (resp APIV1POSTMultisigImportResponse, err error) {
 	req := APIV1POSTMultisigImportRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 		Version:           version,
 		Threshold:         threshold,
 		PKs:               pks,
@@ -93,10 +93,10 @@ func (kcl Client) ImportMultisigAddr(walletHandle []byte, version, threshold uin
 }
 
 // MultisigSignTransaction wraps APIV1POSTMultisigTransactionSignRequest
-func (kcl Client) MultisigSignTransaction(walletHandle, pw []byte, tx []byte, pk ed25519.PublicKey, partial types.MultisigSig) (resp APIV1POSTMultisigTransactionSignResponse, err error) {
+func (kcl Client) MultisigSignTransaction(walletHandle, pw string, tx []byte, pk ed25519.PublicKey, partial types.MultisigSig) (resp APIV1POSTMultisigTransactionSignResponse, err error) {
 	req := APIV1POSTMultisigTransactionSignRequest{
-		WalletHandleToken: string(walletHandle),
-		WalletPassword:    string(pw),
+		WalletHandleToken: walletHandle,
+		WalletPassword:    pw,
 		Transaction:       tx,
 		PublicKey:         pk,
 		PartialMsig:       partial,
@@ -106,18 +106,18 @@ func (kcl Client) MultisigSignTransaction(walletHandle, pw []byte, tx []byte, pk
 }
 
 // RenewWalletHandle wraps APIV1POSTKeysListRequest
-func (kcl Client) RenewWalletHandle(walletHandle []byte) (resp APIV1POSTWalletRenewResponse, err error) {
+func (kcl Client) RenewWalletHandle(walletHandle string) (resp APIV1POSTWalletRenewResponse, err error) {
 	req := APIV1POSTWalletRenewRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // ImportKey wraps APIV1POSTKeyImportRequest
-func (kcl Client) ImportKey(walletHandle []byte, secretKey ed25519.PrivateKey) (resp APIV1POSTKeyImportResponse, err error) {
+func (kcl Client) ImportKey(walletHandle string, secretKey ed25519.PrivateKey) (resp APIV1POSTKeyImportResponse, err error) {
 	req := APIV1POSTKeyImportRequest{
-		WalletHandleToken: string(walletHandle),
+		WalletHandleToken: walletHandle,
 		PrivateKey:        secretKey,
 	}
 	err = kcl.DoV1Request(req, &resp)
@@ -125,21 +125,21 @@ func (kcl Client) ImportKey(walletHandle []byte, secretKey ed25519.PrivateKey) (
 }
 
 // ExportMasterDerivationKey wraps APIV1POSTMasterKeyExportRequest
-func (kcl Client) ExportMasterDerivationKey(walletHandle []byte, walletPassword []byte) (resp APIV1POSTMasterKeyExportResponse, err error) {
+func (kcl Client) ExportMasterDerivationKey(walletHandle, walletPassword string) (resp APIV1POSTMasterKeyExportResponse, err error) {
 	req := APIV1POSTMasterKeyExportRequest{
-		WalletHandleToken: string(walletHandle),
-		WalletPassword:    string(walletPassword),
+		WalletHandleToken: walletHandle,
+		WalletPassword:    walletPassword,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
 // SignTransaction wraps APIV1POSTTransactionSignRequest
-func (kcl Client) SignTransaction(walletHandle, pw []byte, tx types.Transaction) (resp APIV1POSTTransactionSignResponse, err error) {
+func (kcl Client) SignTransaction(walletHandle, pw string, tx types.Transaction) (resp APIV1POSTTransactionSignResponse, err error) {
 	txBytes := msgpack.Encode(tx)
 	req := APIV1POSTTransactionSignRequest{
-		WalletHandleToken: string(walletHandle),
-		WalletPassword:    string(pw),
+		WalletHandleToken: walletHandle,
+		WalletPassword:    pw,
 		Transaction:       txBytes,
 	}
 	err = kcl.DoV1Request(req, &resp)
