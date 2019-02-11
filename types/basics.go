@@ -24,3 +24,6 @@ type VRFPK [32]byte
 
 // MasterDerivationKey is the secret key used to derive keys in wallets
 type MasterDerivationKey [32]byte
+
+// Digest is a SHA512_256 hash
+type Digest [hashLenBytes]byte

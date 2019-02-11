@@ -15,6 +15,9 @@ import (
 // txidPrefix is prepended to a transaction when computing its txid
 var txidPrefix = []byte("TX")
 
+// bidPrefix is prepended to a bid when signing it
+var bidPrefix = []byte("aB")
+
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
 func RandomBytes(s []byte) {
@@ -58,5 +61,20 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 	// Compute the txid
 	txidBytes := sha512.Sum512_256(toBeSigned)
 	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
+	return
+}
+
+// SignBid accepts a private key and a bid, and returns the signature of the
+// bid under that key
+func SignBid(sk ed25519.PrivateKey, bid types.Bid) (sig []byte, err error) {
+	// Encode the bid as msgpack
+	encodedBid := msgpack.Encode(bid)
+
+	// Prepend the hashable prefix
+	msgParts := [][]byte{bidPrefix, encodedBid}
+	toBeSigned := bytes.Join(msgParts, nil)
+
+	// Sign the encoded bid
+	sig = ed25519.Sign(sk, toBeSigned)
 	return
 }
