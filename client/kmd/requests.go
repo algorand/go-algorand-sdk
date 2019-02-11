@@ -6,6 +6,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// DefaultWalletDriver is the wallet backend that kmd will use by default
+const DefaultWalletDriver = "sqlite"
+
 // APIV1Request is the interface that all API V1 requests must satisfy
 type APIV1Request interface{}
 

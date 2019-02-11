@@ -22,7 +22,7 @@ func (kcl Client) ListWallets() (resp APIV1GETWalletsResponse, err error) {
 }
 
 // CreateWallet wraps APIV1POSTWalletRequest
-func (kcl Client) CreateWallet(walletName, walletDriverName, walletPassword string, walletMDK types.MasterDerivationKey) (resp APIV1POSTWalletResponse, err error) {
+func (kcl Client) CreateWallet(walletName, walletPassword, walletDriverName string, walletMDK types.MasterDerivationKey) (resp APIV1POSTWalletResponse, err error) {
 	req := APIV1POSTWalletRequest{
 		WalletName:          walletName,
 		WalletDriverName:    walletDriverName,
