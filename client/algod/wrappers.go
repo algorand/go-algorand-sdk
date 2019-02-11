@@ -13,7 +13,6 @@ import (
 
 // Status retrieves the StatusResponse from the running node
 // the StatusResponse includes data like the consensus version and current round
-// Not supported
 func (client Client) Status() (response models.NodeStatus, err error) {
 	err = client.get(&response, "/status", nil)
 	return
@@ -27,7 +26,6 @@ func (client Client) HealthCheck() error {
 
 // StatusAfterBlock waits for a block to occur then returns the StatusResponse after that block
 // blocks on the node end
-// Not supported
 func (client Client) StatusAfterBlock(blockNum uint64) (response models.NodeStatus, err error) {
 	err = client.get(&response, fmt.Sprintf("/status/wait-for-block-after/%d", blockNum), nil)
 	return
