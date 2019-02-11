@@ -50,7 +50,7 @@ func (kcl Client) DoV1Request(req APIV1Request, resp APIV1Response) error {
 
 	// Encode the request
 	body = json.Encode(req)
-	fullPath := fmt.Sprintf("http://%s/%s", kcl.address, reqPath)
+	fullPath := fmt.Sprintf("%s/%s", kcl.address, reqPath)
 	hreq, err := http.NewRequest(reqMethod, fullPath, bytes.NewReader(body))
 	if err != nil {
 		return err

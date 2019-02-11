@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/transaction"
@@ -11,8 +12,10 @@ import (
 )
 
 // CHANGE ME
-const kmdAddress = "localhost:7833"
+const kmdAddress = "http://localhost:7833"
 const kmdToken = "b1105d6dc7192617a63acfc023d9a693aa5690dc20fbea40f571150bfc7d6339"
+const algodAddress = "http://localhost:8080"
+const algodToken = "330b2e4fc9b20f4f89812cf87f1dabeb716d23e3f11aec97a61ff5f750563b78"
 
 const exampleWalletName = "example-wallet"
 const exampleWalletPassword = "example-password"
@@ -26,6 +29,21 @@ func main() {
 		return
 	}
 	fmt.Println("Made a kmd client")
+
+	// Create an algod client
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		fmt.Printf("failed to make algod client: %s\n", err)
+		return
+	}
+
+	// Print algod status
+	nodeStatus, err := algodClient.Status()
+	if err != nil {
+		fmt.Printf("error getting algod status: %s\n", err)
+		return
+	}
+	fmt.Printf("algod last round: %d\n", nodeStatus.LastRound)
 
 	// List existing wallets, and check if our example wallet already exists
 	resp0, err := kmdClient.ListWallets()
