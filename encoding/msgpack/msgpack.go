@@ -1,6 +1,8 @@
 package msgpack
 
 import (
+	"io"
+
 	"github.com/algorand/go-codec/codec"
 )
 
@@ -25,4 +27,20 @@ func Encode(obj interface{}) []byte {
 	enc := codec.NewEncoderBytes(&b, CodecHandle)
 	enc.MustEncode(obj)
 	return b
+}
+
+// Decode attempts to decode a msgpack-encoded byte buffer into an
+// object instance pointed to by objptr
+func Decode(b []byte, objptr interface{}) error {
+	dec := codec.NewDecoderBytes(b, CodecHandle)
+	err := dec.Decode(objptr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// NewDecoder returns a msgpack decoder
+func NewDecoder(r io.Reader) *codec.Decoder {
+	return codec.NewDecoder(r, CodecHandle)
 }
