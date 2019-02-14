@@ -14,16 +14,16 @@ func (kcl Client) Version() (resp VersionsResponse, err error) {
 	return
 }
 
-// ListWallets wraps APIV1GETWalletsRequest
-func (kcl Client) ListWallets() (resp APIV1GETWalletsResponse, err error) {
-	req := APIV1GETWalletsRequest{}
+// ListWallets wraps ListWalletsRequest
+func (kcl Client) ListWallets() (resp ListWalletsResponse, err error) {
+	req := ListWalletsRequest{}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// CreateWallet wraps APIV1POSTWalletRequest
-func (kcl Client) CreateWallet(walletName, walletPassword, walletDriverName string, walletMDK types.MasterDerivationKey) (resp APIV1POSTWalletResponse, err error) {
-	req := APIV1POSTWalletRequest{
+// CreateWallet wraps CreateWalletRequest
+func (kcl Client) CreateWallet(walletName, walletPassword, walletDriverName string, walletMDK types.MasterDerivationKey) (resp CreateWalletResponse, err error) {
+	req := CreateWalletRequest{
 		WalletName:          walletName,
 		WalletDriverName:    walletDriverName,
 		WalletPassword:      walletPassword,
@@ -33,9 +33,9 @@ func (kcl Client) CreateWallet(walletName, walletPassword, walletDriverName stri
 	return
 }
 
-// InitWallet wraps APIV1POSTWalletInitRequest
-func (kcl Client) InitWallet(walletID, walletPassword string) (resp APIV1POSTWalletInitResponse, err error) {
-	req := APIV1POSTWalletInitRequest{
+// InitWalletHandle wraps InitWalletHandleRequest
+func (kcl Client) InitWalletHandle(walletID, walletPassword string) (resp InitWalletHandleResponse, err error) {
+	req := InitWalletHandleRequest{
 		WalletID:       walletID,
 		WalletPassword: walletPassword,
 	}
@@ -43,27 +43,27 @@ func (kcl Client) InitWallet(walletID, walletPassword string) (resp APIV1POSTWal
 	return
 }
 
-// ReleaseWalletHandle wraps APIV1POSTWalletReleaseRequest
-func (kcl Client) ReleaseWalletHandle(walletHandle string) (resp APIV1POSTWalletReleaseResponse, err error) {
-	req := APIV1POSTWalletReleaseRequest{
+// ReleaseWalletHandleHandle wraps ReleaseWalletHandleRequest
+func (kcl Client) ReleaseWalletHandleHandle(walletHandle string) (resp ReleaseWalletHandleResponse, err error) {
+	req := ReleaseWalletHandleRequest{
 		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// RenewWalletHandle wraps APIV1POSTKeysListRequest
-func (kcl Client) RenewWalletHandle(walletHandle string) (resp APIV1POSTWalletRenewResponse, err error) {
-	req := APIV1POSTWalletRenewRequest{
+// RenewWalletHandle wraps RenewWalletHandleRequest
+func (kcl Client) RenewWalletHandle(walletHandle string) (resp RenewWalletHandleResponse, err error) {
+	req := RenewWalletHandleRequest{
 		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// RenameWallet wraps APIV1POSTWalletRenameRequest
-func (kcl Client) RenameWallet(walletID, walletPassword, newWalletName string) (resp APIV1POSTWalletRenameResponse, err error) {
-	req := APIV1POSTWalletRenameRequest{
+// RenameWallet wraps RenameWalletRequest
+func (kcl Client) RenameWallet(walletID, walletPassword, newWalletName string) (resp RenameWalletResponse, err error) {
+	req := RenameWalletRequest{
 		WalletID: walletID,
 		WalletPassword: walletPassword,
 		NewWalletName: newWalletName,
@@ -72,18 +72,18 @@ func (kcl Client) RenameWallet(walletID, walletPassword, newWalletName string) (
 	return
 }
 
-// WalletInfo wraps APIV1POSTWalletInfoRequest
-func (kcl Client) WalletInfo(walletHandle string) (resp APIV1POSTWalletInfoResponse, err error) {
-	req := APIV1POSTWalletInfoRequest{
+// GetWallet wraps GetWalletRequest
+func (kcl Client) GetWallet(walletHandle string) (resp GetWalletResponse, err error) {
+	req := GetWalletRequest{
 		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// ExportMasterDerivationKey wraps APIV1POSTMasterKeyExportRequest
-func (kcl Client) ExportMasterDerivationKey(walletHandle, walletPassword string) (resp APIV1POSTMasterKeyExportResponse, err error) {
-	req := APIV1POSTMasterKeyExportRequest{
+// ExportMasterDerivationKey wraps ExportMasterDerivationKeyRequest
+func (kcl Client) ExportMasterDerivationKey(walletHandle, walletPassword string) (resp ExportMasterDerivationKeyResponse, err error) {
+	req := ExportMasterDerivationKeyRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword:    walletPassword,
 	}
@@ -91,9 +91,9 @@ func (kcl Client) ExportMasterDerivationKey(walletHandle, walletPassword string)
 	return
 }
 
-// ImportKey wraps APIV1POSTKeyImportRequest
-func (kcl Client) ImportKey(walletHandle string, secretKey ed25519.PrivateKey) (resp APIV1POSTKeyImportResponse, err error) {
-	req := APIV1POSTKeyImportRequest{
+// ImportKey wraps ImportKeyRequest
+func (kcl Client) ImportKey(walletHandle string, secretKey ed25519.PrivateKey) (resp ImportKeyResponse, err error) {
+	req := ImportKeyRequest{
 		WalletHandleToken: walletHandle,
 		PrivateKey:        secretKey,
 	}
@@ -101,9 +101,9 @@ func (kcl Client) ImportKey(walletHandle string, secretKey ed25519.PrivateKey) (
 	return
 }
 
-// ExportKey wraps APIV1POSTKeyExportRequest
-func (kcl Client) ExportKey(walletHandle, walletPassword, addr string) (resp APIV1POSTKeyExportResponse, err error) {
-	req := APIV1POSTKeyExportRequest{
+// ExportKey wraps ExportKeyRequest
+func (kcl Client) ExportKey(walletHandle, walletPassword, addr string) (resp ExportKeyResponse, err error) {
+	req := ExportKeyRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword: walletPassword,
 		Address: addr,
@@ -112,9 +112,9 @@ func (kcl Client) ExportKey(walletHandle, walletPassword, addr string) (resp API
 	return
 }
 
-// GenerateKey wraps APIV1POSTKeyRequest
-func (kcl Client) GenerateKey(walletHandle string) (resp APIV1POSTKeyResponse, err error) {
-	req := APIV1POSTKeyRequest{
+// GenerateKey wraps GenerateKeyRequest
+func (kcl Client) GenerateKey(walletHandle string) (resp GenerateKeyResponse, err error) {
+	req := GenerateKeyRequest{
 		WalletHandleToken: walletHandle,
 		DisplayMnemonic:   false,
 	}
@@ -122,9 +122,9 @@ func (kcl Client) GenerateKey(walletHandle string) (resp APIV1POSTKeyResponse, e
 	return
 }
 
-// DeleteKey wraps APIV1DELETEKeyRequest
-func (kcl Client) DeleteKey(walletHandle, walletPassword, addr string) (resp APIV1DELETEKeyResponse, err error) {
-	req := APIV1DELETEKeyRequest{
+// DeleteKey wraps DeleteKeyRequest
+func (kcl Client) DeleteKey(walletHandle, walletPassword, addr string) (resp DeleteKeyResponse, err error) {
+	req := DeleteKeyRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword: walletPassword,
 		Address: addr,
@@ -133,19 +133,19 @@ func (kcl Client) DeleteKey(walletHandle, walletPassword, addr string) (resp API
 	return
 }
 
-// ListKeys wraps APIV1POSTKeysListRequest
-func (kcl Client) ListKeys(walletHandle string) (resp APIV1POSTKeysListResponse, err error) {
-	req := APIV1POSTKeysListRequest{
+// ListKeys wraps ListKeysRequest
+func (kcl Client) ListKeys(walletHandle string) (resp ListKeysResponse, err error) {
+	req := ListKeysRequest{
 		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// SignTransaction wraps APIV1POSTTransactionSignRequest
-func (kcl Client) SignTransaction(walletHandle, pw string, tx types.Transaction) (resp APIV1POSTTransactionSignResponse, err error) {
+// SignTransaction wraps SignTransactionRequest
+func (kcl Client) SignTransaction(walletHandle, pw string, tx types.Transaction) (resp SignTransactionResponse, err error) {
 	txBytes := msgpack.Encode(tx)
-	req := APIV1POSTTransactionSignRequest{
+	req := SignTransactionRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword:    pw,
 		Transaction:       txBytes,
@@ -154,18 +154,18 @@ func (kcl Client) SignTransaction(walletHandle, pw string, tx types.Transaction)
 	return
 }
 
-// ListMultisigAddrs wraps APIV1POSTMultisigListRequest
-func (kcl Client) ListMultisigAddrs(walletHandle string) (resp APIV1POSTMultisigListResponse, err error) {
-	req := APIV1POSTMultisigListRequest{
+// ListMultisig wraps ListMultisigRequest
+func (kcl Client) ListMultisig(walletHandle string) (resp ListMultisigResponse, err error) {
+	req := ListMultisigRequest{
 		WalletHandleToken: walletHandle,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
 }
 
-// ImportMultisigAddr wraps APIV1POSTMultisigImportRequest
-func (kcl Client) ImportMultisigAddr(walletHandle string, version, threshold uint8, pks []ed25519.PublicKey) (resp APIV1POSTMultisigImportResponse, err error) {
-	req := APIV1POSTMultisigImportRequest{
+// ImportMultisig wraps ImportMultisigRequest
+func (kcl Client) ImportMultisig(walletHandle string, version, threshold uint8, pks []ed25519.PublicKey) (resp ImportMultisigResponse, err error) {
+	req := ImportMultisigRequest{
 		WalletHandleToken: walletHandle,
 		Version:           version,
 		Threshold:         threshold,
@@ -175,9 +175,9 @@ func (kcl Client) ImportMultisigAddr(walletHandle string, version, threshold uin
 	return
 }
 
-// ExportMultisigAddr wraps APIV1POSTMultisigExportRequest
-func (kcl Client) ExportMultisigAddr(walletHandle, walletPassword, addr string) (resp APIV1POSTMultisigExportResponse, err error) {
-	req := APIV1POSTMultisigExportRequest{
+// ExportMultisig wraps ExportMultisigRequest
+func (kcl Client) ExportMultisig(walletHandle, walletPassword, addr string) (resp ExportMultisigResponse, err error) {
+	req := ExportMultisigRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword: walletPassword,
 		Address: addr,
@@ -186,9 +186,9 @@ func (kcl Client) ExportMultisigAddr(walletHandle, walletPassword, addr string) 
 	return
 }
 
-// MultisigSignTransaction wraps APIV1POSTMultisigTransactionSignRequest
-func (kcl Client) MultisigSignTransaction(walletHandle, pw string, tx []byte, pk ed25519.PublicKey, partial types.MultisigSig) (resp APIV1POSTMultisigTransactionSignResponse, err error) {
-	req := APIV1POSTMultisigTransactionSignRequest{
+// MultisigSignTransaction wraps SignMultisigTransactionRequest
+func (kcl Client) MultisigSignTransaction(walletHandle, pw string, tx []byte, pk ed25519.PublicKey, partial types.MultisigSig) (resp SignMultisigTransactionResponse, err error) {
+	req := SignMultisigTransactionRequest{
 		WalletHandleToken: walletHandle,
 		WalletPassword:    pw,
 		Transaction:       tx,

@@ -36,140 +36,120 @@ func (r APIV1ResponseEnvelope) GetError() error {
 }
 
 // VersionsResponse is the response to `GET /versions`
-// friendly:VersionsResponse
 type VersionsResponse struct {
 	_struct  struct{} `codec:",omitempty,omitemptyarray"`
 	Versions []string `json:"versions"`
 }
 
-// APIV1GETWalletsResponse is the response to `GET /v1/wallets`
-// friendly:ListWalletsResponse
-type APIV1GETWalletsResponse struct {
+// ListWalletsResponse is the response to `GET /v1/wallets`
+type ListWalletsResponse struct {
 	APIV1ResponseEnvelope
 	Wallets []APIV1Wallet `json:"wallets"`
 }
 
-// APIV1POSTWalletResponse is the response to `POST /v1/wallet`
-// friendly:CreateWalletResponse
-type APIV1POSTWalletResponse struct {
+// CreateWalletResponse is the response to `POST /v1/wallet`
+type CreateWalletResponse struct {
 	APIV1ResponseEnvelope
 	Wallet APIV1Wallet `json:"wallet"`
 }
 
-// APIV1POSTWalletInitResponse is the response to `POST /v1/wallet/init`
-// friendly:InitWalletHandleTokenResponse
-type APIV1POSTWalletInitResponse struct {
+// InitWalletHandleResponse is the response to `POST /v1/wallet/init`
+type InitWalletHandleResponse struct {
 	APIV1ResponseEnvelope
 	WalletHandleToken string `json:"wallet_handle_token"`
 }
 
-// APIV1POSTWalletReleaseResponse is the response to `POST /v1/wallet/release`
-// friendly:ReleaseWalletHandleTokenResponse
-type APIV1POSTWalletReleaseResponse struct {
+// ReleaseWalletHandleResponse is the response to `POST /v1/wallet/release`
+type ReleaseWalletHandleResponse struct {
 	APIV1ResponseEnvelope
 }
 
-// APIV1POSTWalletRenewResponse is the response to `POST /v1/wallet/renew`
-// friendly:RenewWalletHandleTokenResponse
-type APIV1POSTWalletRenewResponse struct {
+// RenewWalletHandleResponse is the response to `POST /v1/wallet/renew`
+type RenewWalletHandleResponse struct {
 	APIV1ResponseEnvelope
 	WalletHandle APIV1WalletHandle `json:"wallet_handle"`
 }
 
-// APIV1POSTWalletRenameResponse is the response to `POST /v1/wallet/rename`
-// friendly:RenameWalletResponse
-type APIV1POSTWalletRenameResponse struct {
+// RenameWalletResponse is the response to `POST /v1/wallet/rename`
+type RenameWalletResponse struct {
 	APIV1ResponseEnvelope
 	Wallet APIV1Wallet `json:"wallet"`
 }
 
-// APIV1POSTWalletInfoResponse is the response to `POST /v1/wallet/info`
-// friendly:WalletInfoResponse
-type APIV1POSTWalletInfoResponse struct {
+// GetWalletResponse is the response to `POST /v1/wallet/info`
+type GetWalletResponse struct {
 	APIV1ResponseEnvelope
 	WalletHandle APIV1WalletHandle `json:"wallet_handle"`
 }
 
-// APIV1POSTMasterKeyExportResponse is the reponse to `POST /v1/master_key/export`
-// friendly:ExportMasterKeyResponse
-type APIV1POSTMasterKeyExportResponse struct {
+// ExportMasterDerivationKeyResponse is the reponse to `POST /v1/master_key/export`
+type ExportMasterDerivationKeyResponse struct {
 	APIV1ResponseEnvelope
 	MasterDerivationKey types.MasterDerivationKey `json:"master_derivation_key"`
 }
 
-// APIV1POSTKeyImportResponse is the repsonse to `POST /v1/key/import`
-// friendly:ImportKeyResponse
-type APIV1POSTKeyImportResponse struct {
+// ImportKeyResponse is the repsonse to `POST /v1/key/import`
+type ImportKeyResponse struct {
 	APIV1ResponseEnvelope
 	Address string `json:"address"`
 }
 
-// APIV1POSTKeyExportResponse is the reponse to `POST /v1/key/export`
-// friendly:ExportKeyResponse
-type APIV1POSTKeyExportResponse struct {
+// ExportKeyResponse is the reponse to `POST /v1/key/export`
+type ExportKeyResponse struct {
 	APIV1ResponseEnvelope
 	PrivateKey ed25519.PrivateKey `json:"private_key"`
 }
 
-// APIV1POSTKeyResponse is the response to `POST /v1/key`
-// friendly:GenerateKeyResponse
-type APIV1POSTKeyResponse struct {
+// GenerateKeyResponse is the response to `POST /v1/key`
+type GenerateKeyResponse struct {
 	APIV1ResponseEnvelope
 	Address string `json:"address"`
 }
 
-// APIV1DELETEKeyResponse is the response to `DELETE /v1/key`
-// friendly:DeleteKeyResponse
-type APIV1DELETEKeyResponse struct {
+// DeleteKeyResponse is the response to `DELETE /v1/key`
+type DeleteKeyResponse struct {
 	APIV1ResponseEnvelope
 }
 
-// APIV1POSTKeysListResponse is the response to `POST /v1/keys/list`
-// friendly:ListKeysResponse
-type APIV1POSTKeysListResponse struct {
+// ListKeysResponse is the response to `POST /v1/keys/list`
+type ListKeysResponse struct {
 	APIV1ResponseEnvelope
 	Addresses []string `json:"addresses"`
 }
 
-// APIV1POSTTransactionSignResponse is the repsonse to `POST /v1/transaction/sign`
-// friendly:SignTransactionResponse
-type APIV1POSTTransactionSignResponse struct {
+// SignTransactionResponse is the repsonse to `POST /v1/transaction/sign`
+type SignTransactionResponse struct {
 	APIV1ResponseEnvelope
 	SignedTransaction []byte `json:"signed_transaction"`
 }
 
-// APIV1POSTMultisigListResponse is the response to `POST /v1/multisig/list`
-// friendly:ListMultisigResponse
-type APIV1POSTMultisigListResponse struct {
+// ListMultisigResponse is the response to `POST /v1/multisig/list`
+type ListMultisigResponse struct {
 	APIV1ResponseEnvelope
 	Addresses []string `json:"addresses"`
 }
 
-// APIV1POSTMultisigImportResponse is the response to `POST /v1/multisig/import`
-// friendly:ImportMultisigResponse
-type APIV1POSTMultisigImportResponse struct {
+// ImportMultisigResponse is the response to `POST /v1/multisig/import`
+type ImportMultisigResponse struct {
 	APIV1ResponseEnvelope
 	Address string `json:"address"`
 }
 
-// APIV1POSTMultisigExportResponse is the response to `POST /v1/multisig/export`
-// friendly:ExportMultisigResponse
-type APIV1POSTMultisigExportResponse struct {
+// ExportMultisigResponse is the response to `POST /v1/multisig/export`
+type ExportMultisigResponse struct {
 	APIV1ResponseEnvelope
 	Version   uint8               `json:"multisig_version"`
 	Threshold uint8               `json:"threshold"`
 	PKs       []ed25519.PublicKey `json:"pks"`
 }
 
-// APIV1POSTMultisigDeleteResponse is the response to POST /v1/multisig/delete`
-// friendly:DeleteMultisigResponse
-type APIV1POSTMultisigDeleteResponse struct {
+// DeleteMultisigResponse is the response to POST /v1/multisig/delete`
+type DeleteMultisigResponse struct {
 	APIV1ResponseEnvelope
 }
 
-// APIV1POSTMultisigTransactionSignResponse is the repsonse to `POST /v1/multisig/sign`
-// friendly:SignMultisigResponse
-type APIV1POSTMultisigTransactionSignResponse struct {
+// SignMultisigTransactionResponse is the repsonse to `POST /v1/multisig/sign`
+type SignMultisigTransactionResponse struct {
 	APIV1ResponseEnvelope
 	Multisig types.MultisigSig `json:"multisig"`
 }

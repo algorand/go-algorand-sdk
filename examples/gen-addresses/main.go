@@ -74,7 +74,7 @@ func main() {
 	}
 
 	// Get a wallet handle
-	resp2, err := kmdClient.InitWallet(exampleWalletID, exampleWalletPassword)
+	resp2, err := kmdClient.InitWalletHandle(exampleWalletID, exampleWalletPassword)
 	if err != nil {
 		fmt.Printf("Error initializing wallet: %s\n", err)
 		return
@@ -96,8 +96,8 @@ func main() {
 		addresses = append(addresses, resp3.Address)
 	}
 
-	// Extract the private key of the last address
-	fmt.Println("Extracting private key for %s", addresses[0])
+	// Extract the private key of the first address
+	fmt.Printf("Extracting private key for %s", addresses[0])
 	resp4, err := kmdClient.ExportKey(exampleWalletHandleToken, exampleWalletPassword, addresses[0])
 	if err != nil {
 		fmt.Printf("Error extracting secret key: %s\n", err)

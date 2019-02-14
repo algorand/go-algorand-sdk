@@ -6,9 +6,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-// KeyPair holds both the public and private information associated with an
+// Account holds both the public and private information associated with an
 // Algorand address
-type KeyPair struct {
+type Account struct {
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
 	Address    types.Address
@@ -22,8 +22,8 @@ func init() {
 	}
 }
 
-// GenerateKeyPair generates a random KeyPair
-func GenerateKeyPair() (kp KeyPair) {
+// GenerateAccount generates a random Account
+func GenerateAccount() (kp Account) {
 	// Generate an ed25519 keypair. This should never fail
 	pk, sk, err := ed25519.GenerateKey(nil)
 	if err != nil {
@@ -37,7 +37,7 @@ func GenerateKeyPair() (kp KeyPair) {
 		panic("generated public key is the wrong size")
 	}
 
-	// Build the returned keypair
+	// Build the account
 	kp.PublicKey = pk
 	kp.PrivateKey = sk
 	kp.Address = a

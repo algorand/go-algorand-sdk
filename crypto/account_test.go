@@ -8,7 +8,7 @@ import (
 )
 
 func TestKeyGeneration(t *testing.T) {
-	kp := GenerateKeyPair()
+	kp := GenerateAccount()
 
 	// Public key should not be empty
 	require.NotEqual(t, kp.PublicKey, ed25519.PublicKey{})
