@@ -82,7 +82,7 @@ type GetWalletResponse struct {
 	WalletHandle APIV1WalletHandle `json:"wallet_handle"`
 }
 
-// ExportMasterDerivationKeyResponse is the reponse to `POST /v1/master_key/export`
+// ExportMasterDerivationKeyResponse is the reponse to `POST /v1/master-key/export`
 type ExportMasterDerivationKeyResponse struct {
 	APIV1ResponseEnvelope
 	MasterDerivationKey types.MasterDerivationKey `json:"master_derivation_key"`
@@ -111,7 +111,7 @@ type DeleteKeyResponse struct {
 	APIV1ResponseEnvelope
 }
 
-// ListKeysResponse is the response to `POST /v1/keys/list`
+// ListKeysResponse is the response to `POST /v1/key/list`
 type ListKeysResponse struct {
 	APIV1ResponseEnvelope
 	Addresses []string `json:"addresses"`
