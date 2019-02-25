@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // Status retrieves the StatusResponse from the running node

@@ -23,16 +23,52 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 # Quick Start
 
+```golang
+package main
+
+import (
+	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/client/algod"
+	"github.com/algorand/go-algorand-sdk/client/kmd"
+)
+
+const algodAddress = "http://localhost:8080"
+const kmdAddress = "http://localhost:7833"
+const algodToken = "contents-of-algod.token"
+const kmdToken = "contents-of-kmd.token"
+
+func main() {
+	// Create an algod client
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		return
+	}
+
+	// Create a kmd client
+	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("algod: %T, kmd: %T\n", algodClient, kmdClient)
+}
+```
+
+# Examples
+
 ## algod client
 
 Here is an example that creates an algod client and uses it to fetch node status information, and then a specific block.
 
 ```golang
+package main
+
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/algorand/go-algorand/sdk/client/algod"
+	"github.com/algorand/go-algorand-sdk/client/algod"
 )
 
 // These constants represent the algod REST endpoint and the corresponding
@@ -86,7 +122,7 @@ The following example creates a wallet, and generates an account within that wal
 import (
 	"fmt"
 
-	"github.com/algorand/go-algorand/sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/client/kmd"
 )
 
 // These constants represent the kmdd REST endpoint and the corresponding API
