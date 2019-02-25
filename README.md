@@ -23,10 +23,11 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 ## algod client
 
-Here is an example that creates an algod client and uses it to fetch node status information.
+Here is an example that creates an algod client and uses it to fetch node status information, and then a specific block.
 
 ```golang
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/algorand/go-algorand/sdk/client/algod"
@@ -58,6 +59,20 @@ func main() {
 	fmt.Printf("algod catchup: %d\n", nodeStatus.CatchupTime)
 	fmt.Printf("algod latest version: %s\n", nodeStatus.LastVersion)	
 
+	// Fetch block information
+	lastBlock, err := algodClient.Block(nodeStatus.LastRound)
+	if err != nil {
+		fmt.Printf("error getting last block: %s\n", err)
+		return
+	}
+
+	// Print the block information
+	fmt.Printf("\n-----------------Block Information-------------------\n")
+	blockJSON, err := json.MarshalIndent(lastBlock, "", "\t")
+	if err != nil {
+		fmt.Printf("Can not marshall block data: %s\n", err)
+	}
+	fmt.Printf("%s\n", blockJSON)
 }
 ```
 
