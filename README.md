@@ -29,7 +29,7 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 Here is an example that creates an algod client and uses it to fetch node status information.
 
-```
+```golang
 import (
 	"fmt"
 
@@ -69,7 +69,7 @@ func main() {
 
 The following example creates a wallet, and generates an account within that wallet.
 
-```
+```golang
 import (
 	"fmt"
 
@@ -129,7 +129,7 @@ This account can now be used to sign transactions, but you will need some funds 
 
 You can export a master derivation key from the wallet and convert it to a mnemonic phrase in order to back up any generated addresses. This backup phrase will only allow you to recover wallet-generated keys; if you import an external key into a kmd-managed wallet, you'll need to back up the wallet file itself in order to recover it.
 
-```
+```golang
 // Create a kmd client
 kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
 if err != nil {
@@ -186,7 +186,7 @@ fmt.Printf("Backup Phrase: %s\n", stringToSave)
 
 To restore a wallet, convert the phrase to a key and pass it to `CreateWallet`:
 
-```
+```golang
 backupPhrase := "first umbrella camera pass middle misery copper sniff cargo wealth predict car wise trim guide middle virus bamboo evolve letter prefer panther venue about delay"
 keyBytes, err := mnemonic.ToKey(backupPhrase)
 if err != nil {
@@ -205,7 +205,7 @@ if err != nil {
 
 ## Signing and submitting a transaction
 
-```
+```golang
 // Make transaction
 tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil)
 if err != nil {
