@@ -93,9 +93,9 @@ func (client Client) SuggestedFee() (response models.TransactionFee, err error) 
 	return
 }
 
-// SendRawTransaction gets a SignedTxn and broadcasts it to the network
-func (client Client) SendRawTransaction(txn types.SignedTxn) (response models.TransactionID, err error) {
-	err = client.post(&response, "/transactions", msgpack.Encode(txn))
+// SendRawTransaction gets the bytes of a SignedTxn and broadcasts it to the network
+func (client Client) SendRawTransaction(stx []byte) (response models.TransactionID, err error) {
+	err = client.post(&response, "/transactions", stx)
 	return
 }
 
