@@ -138,7 +138,7 @@ This account can now be used to sign transactions, but you will need some funds 
 
 ## Backing up a Wallet
 
-You can export a master derivation key from the wallet and convert it to a mnemonic phrase in order to back up any generated addresses. This backup phrase will only allow you to recover wallet-generated keys; if you import an external key into a kmd-managed wallet, you'll need to back up the wallet file itself in order to recover it.
+You can export a master derivation key from the wallet and convert it to a mnemonic phrase in order to back up any generated addresses. This backup phrase will only allow you to recover wallet-generated keys; if you import an external key into a kmd-managed wallet, you'll need to back up that key by itself in order to recover it.
 
 ```golang
 // Create a kmd client
