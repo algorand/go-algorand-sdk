@@ -9,6 +9,8 @@ The Algorand golang SDK provides:
 
 Full documentation is available [on godoc](#). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
 
+Additional developer documentation can be found on [developer.algorand.org](https://developer.algorand.org/)
+
 # Package overview
 
 In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corresponding APIs. `algod` is the Algorand protocol daemon, responsible for reaching consensus with the network and participating in the Algorand protocol. You can use it to check the status of the blockchain, read a block, look at transactions, look at balances, or submit a signed transaction. `kmd` is the key management daemon. It is responsible for managing spending key material, signing transactions, and managing wallets.
