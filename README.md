@@ -21,7 +21,7 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 `encoding` contains the `json` and `msgpack` packages, which can be used to serialize messages for the algod/kmd APIs and the network.
 
-`mnemonic` contains support for turning 32-byte keys into checksummed, human-readable mnemonics.
+`mnemonic` contains support for turning 32-byte keys into checksummed, human-readable mnemonics (and going from mnemonics back to keys).
 
 # Quick Start
 
