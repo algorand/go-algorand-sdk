@@ -254,7 +254,7 @@ func main() {
 }
 ```
 
-To restore a wallet, convert the phrase to a key and pass it to `CreateWallet`:
+To restore a wallet, convert the phrase to a key and pass it to `CreateWallet`. This call will fail if the wallet already exists:
 
 ```golang
 package main
