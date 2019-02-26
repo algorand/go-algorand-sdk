@@ -27,7 +27,7 @@ To download the SDK, open a terminal and use the `go get` command.
 ```command
 go get -u github.com/algorand/go-algorand-sdk
 ```
-
+Use Go packages from the SDK:
 
 ```golang
 package main
