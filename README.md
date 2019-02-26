@@ -119,17 +119,20 @@ func main() {
 The following example creates a wallet, and generates an account within that wallet.
 
 ```golang
+package main
+
 import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // These constants represent the kmdd REST endpoint and the corresponding API
 // token. You can retrieve these from the `kmd.net` and `kmd.token` files in
 // the kmd data directory.
 const kmdAddress = "http://localhost:7833"
-const kmdToken = "51ab7f41f250aa6c1b9c873df20f4030cfa8207a93e0ba2b18348ae18c6a2ade"
+const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c1e"
 
 func main() {
 	// Create a kmd client
@@ -152,7 +155,7 @@ func main() {
 	fmt.Printf("Created wallet '%s' with ID: %s\n", cwResponse.Wallet.Name, exampleWalletID)
 
 	// Get a wallet handle. The wallet handle is used for things like signing transactions
-	// and creating accounts. Wallet handles do expire, but they can be renewed 
+	// and creating accounts. Wallet handles do expire, but they can be renewed
 	initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, "testpassword")
 	if err != nil {
 		fmt.Printf("Error initializing wallet handle: %s\n", err)
@@ -179,111 +182,225 @@ This account can now be used to sign transactions, but you will need some funds 
 You can export a master derivation key from the wallet and convert it to a mnemonic phrase in order to back up any generated addresses. This backup phrase will only allow you to recover wallet-generated keys; if you import an external key into a kmd-managed wallet, you'll need to back up that key by itself in order to recover it.
 
 ```golang
-// Create a kmd client
-kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
-if err != nil {
-	fmt.Printf("failed to make kmd client: %s\n", err)
-	return
-}
-fmt.Println("Made a kmd client")
+package main
 
-//Get the list of wallets
-listResponse, err := kmdClient.ListWallets()
-if err != nil {
-	fmt.Printf("error listing wallets: %s\n", err)
-	return
-}
+import (
+	"fmt"
 
-//Find our wallet name in the list
-var exampleWalletID string
-fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
-for _, wallet := range listResponse.Wallets {
-	fmt.Printf("ID: %s\tName: %s\n", wallet.ID, wallet.Name)
-	if wallet.Name == "testwallet" {
-		fmt.Printf("found wallet '%s' with ID: %s\n", wallet.Name, wallet.ID)
-		exampleWalletID = wallet.ID
+	"github.com/algorand/go-algorand-sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
+)
+
+// These constants represent the kmdd REST endpoint and the corresponding API
+// token. You can retrieve these from the `kmd.net` and `kmd.token` files in
+// the kmd data directory.
+const kmdAddress = "http://localhost:7833"
+const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c1e"
+
+func main() {
+	// Create a kmd client
+	// Create a kmd client
+	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
+	if err != nil {
+		fmt.Printf("failed to make kmd client: %s\n", err)
+		return
 	}
+	fmt.Println("Made a kmd client")
+
+	//Get the list of wallets
+	listResponse, err := kmdClient.ListWallets()
+	if err != nil {
+		fmt.Printf("error listing wallets: %s\n", err)
+		return
+	}
+
+	//Find our wallet name in the list
+	var exampleWalletID string
+	fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
+	for _, wallet := range listResponse.Wallets {
+		fmt.Printf("ID: %s\tName: %s\n", wallet.ID, wallet.Name)
+		if wallet.Name == "testwallet" {
+			fmt.Printf("found wallet '%s' with ID: %s\n", wallet.Name, wallet.ID)
+			exampleWalletID = wallet.ID
+		}
+	}
+
+	// Get a wallet handle
+	initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, "testpassword")
+	if err != nil {
+		fmt.Printf("Error initializing wallet handle: %s\n", err)
+		return
+	}
+
+	// Extract the wallet handle
+	exampleWalletHandleToken := initResponse.WalletHandleToken
+
+	//Get backup phrase
+	exportResponse, err := kmdClient.ExportMasterDerivationKey(exampleWalletHandleToken, "testpassword")
+	if err != nil {
+		fmt.Printf("Error exporting backup phrase: %s\n", err)
+		return
+	}
+	mdk := exportResponse.MasterDerivationKey
+
+	// This string should be kept in a safe place and not shared
+	stringToSave, err := mnemonic.FromKey(mdk[:])
+	if err != nil {
+		fmt.Printf("Error getting backup phrase: %s\n", err)
+		return
+	}
+
+	fmt.Printf("Backup Phrase: %s\n", stringToSave)
 }
-
-// Get a wallet handle
-initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, "testpassword")
-if err != nil {
-	fmt.Printf("Error initializing wallet handle: %s\n", err)
-	return
-}
-
-// Extract the wallet handle
-exampleWalletHandleToken := initResponse.WalletHandleToken
-
-//Get backup phrase
-exportResponse, err := kmdClient.ExportMasterDerivationKey(exampleWalletHandleToken, "testpassword")
-if err != nil {
-	fmt.Printf("Error exporting backup phrase: %s\n", err)
-	return
-}
-mdk := exportResponse.MasterDerivationKey
-
-// This string should be kept in a safe place and not shared
-stringToSave, err := mnemonic.FromKey(mdk[:])
-if err != nil {
-	fmt.Printf("Error getting backup phrase: %s\n", err)
-	return
-}
-
-fmt.Printf("Backup Phrase: %s\n", stringToSave)
 ```
 
 To restore a wallet, convert the phrase to a key and pass it to `CreateWallet`:
 
 ```golang
-backupPhrase := "first umbrella camera pass middle misery copper sniff cargo wealth predict car wise trim guide middle virus bamboo evolve letter prefer panther venue about delay"
-keyBytes, err := mnemonic.ToKey(backupPhrase)
-if err != nil {
-	fmt.Printf("failed to get key: %s\n", err)
-	return
-}
+package main
 
-var mdk types.MasterDerivationKey
-copy(mdk[:], keyBytes)
-_, err := kmdClient.CreateWallet("testwallet", "testpassword", kmd.DefaultWalletDriver, mdk)
-if err != nil {
-	fmt.Printf("error creating wallet: %s\n", err)
-	return
+import (
+	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
+	"github.com/algorand/go-algorand-sdk/types"
+)
+
+// These constants represent the kmdd REST endpoint and the corresponding API
+// token. You can retrieve these from the `kmd.net` and `kmd.token` files in
+// the kmd data directory.
+const kmdAddress = "http://localhost:7833"
+const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c1e"
+
+func main() {
+	// Create a kmd client
+	// Create a kmd client
+	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
+	if err != nil {
+		fmt.Printf("failed to make kmd client: %s\n", err)
+		return
+	}
+	backupPhrase := "fire enlist diesel stamp nuclear chunk student stumble call snow flock brush example slab guide choice option recall south kangaroo hundred matrix school above zero"
+	keyBytes, err := mnemonic.ToKey(backupPhrase)
+	if err != nil {
+		fmt.Printf("failed to get key: %s\n", err)
+		return
+	}
+
+	var mdk types.MasterDerivationKey
+	copy(mdk[:], keyBytes)
+	cwResponse, err := kmdClient.CreateWallet("testwallet", "testpassword", kmd.DefaultWalletDriver, mdk)
+	if err != nil {
+		fmt.Printf("error creating wallet: %s\n", err)
+		return
+	}
+	fmt.Printf("Created wallet '%s' with ID: %s\n", cwResponse.Wallet.Name, cwResponse.Wallet.ID)
 }
 ```
 
 ## Signing and submitting a transaction
 
 ```golang
-// Make transaction
-tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil)
-if err != nil {
-	fmt.Printf("Error creating transaction: %s\n", err)
-	return
-}
+package main
 
-// Sign the transaction
-signResponse, err := kmdClient.SignTransaction(exampleWalletHandleToken, "testpassword", tx)
-if err != nil {
-	fmt.Printf("Failed to sign transaction with kmd: %s\n", err)
-	return
-}
+import (
+	"fmt"
 
-fmt.Printf("kmd made signed transaction with bytes: %x\n", signResponse.SignedTransaction)
+	"github.com/algorand/go-algorand-sdk/client/algod"
+	"github.com/algorand/go-algorand-sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/transaction"
+)
 
-// Create an algod client
-algodClient, err := algod.MakeClient(algodAddress, algodToken)
-if err != nil {
-	fmt.Printf("failed to make algod client: %s\n", err)
-	return
-}
+// CHANGE ME
+const kmdAddress = "http://localhost:7833"
+const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c1e"
+const algodAddress = "http://localhost:8080"
+const algodToken = "6218386c0d964e371f34bbff4adf543dab14a7d9720c11c6f11970774d4575de"
 
-// Broadcast the transaction to the network
-sendResponse, err := algodClient.SendRawTransaction(signResponse.SignedTransaction)
-if err != nil {
-	fmt.Printf("failed to send transaction: %s\n", err)
-	return
-}
+func main() {
+	// Create a kmd client
+	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
+	if err != nil {
+		fmt.Printf("failed to make kmd client: %s\n", err)
+		return
+	}
+	fmt.Println("Made a kmd client")
 
-fmt.Printf("Transaction ID: %s\n", sendResponse.TxID)
+	//Get the list of wallets
+	listResponse, err := kmdClient.ListWallets()
+	if err != nil {
+		fmt.Printf("error listing wallets: %s\n", err)
+		return
+	}
+
+	//Find our wallet name in the list
+	var exampleWalletID string
+	fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
+	for _, wallet := range listResponse.Wallets {
+		fmt.Printf("ID: %s\tName: %s\n", wallet.ID, wallet.Name)
+		if wallet.Name == "testwallet" {
+			fmt.Printf("found wallet '%s' with ID: %s\n", wallet.Name, wallet.ID)
+			exampleWalletID = wallet.ID
+		}
+	}
+	// Get a wallet handle
+	initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, "testpassword")
+	if err != nil {
+		fmt.Printf("Error initializing wallet handle: %s\n", err)
+		return
+	}
+
+	// Extract the wallet handle
+	exampleWalletHandleToken := initResponse.WalletHandleToken
+
+	//Generate a new address from the wallet handle
+	gen1Response, err := kmdClient.GenerateKey(exampleWalletHandleToken)
+	if err != nil {
+		fmt.Printf("Error generating key: %s\n", err)
+		return
+	}
+	fmt.Printf("Generated address 1 %s\n", gen1Response.Address)
+	fromAddr := gen1Response.Address
+	//Generate a new address from the wallet handle
+	gen2Response, err := kmdClient.GenerateKey(exampleWalletHandleToken)
+	if err != nil {
+		fmt.Printf("Error generating key: %s\n", err)
+		return
+	}
+	fmt.Printf("Generated address 2 %s\n", gen2Response.Address)
+	toAddr := gen2Response.Address
+
+	// Make transaction
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil)
+	if err != nil {
+		fmt.Printf("Error creating transaction: %s\n", err)
+		return
+	}
+
+	// Sign the transaction
+	signResponse, err := kmdClient.SignTransaction(exampleWalletHandleToken, "testpassword", tx)
+	if err != nil {
+		fmt.Printf("Failed to sign transaction with kmd: %s\n", err)
+		return
+	}
+
+	fmt.Printf("kmd made signed transaction with bytes: %x\n", signResponse.SignedTransaction)
+
+	// Create an algod client
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		fmt.Printf("failed to make algod client: %s\n", err)
+		return
+	}
+
+	// Broadcast the transaction to the network
+	// Note that this transaction will get rejected because the accounts do not have any tokens
+	sendResponse, err := algodClient.SendRawTransaction(signResponse.SignedTransaction)
+	if err != nil {
+		fmt.Printf("failed to send transaction: %s\n", err)
+		return
+	}
+
+	fmt.Printf("Transaction ID: %s\n", sendResponse.TxID)
 ```
