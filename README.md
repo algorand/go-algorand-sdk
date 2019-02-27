@@ -27,6 +27,12 @@ To download the SDK, open a terminal and use the `go get` command.
 ```command
 go get -u github.com/algorand/go-algorand-sdk/...
 ```
+The algod process is automatically running. The kmd process must be started to interact with keys. This
+process can be started and stopped use the `goal` command line tool using `goal kmd start` and `goal kmd stop` commands.
+Start the kmd process so wallet and account can be created with sdk:
+```command
+goal kmd start -d specifyyourndesdatadirectory
+```
 Use Go packages from the SDK:
 
 ```golang
