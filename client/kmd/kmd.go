@@ -111,7 +111,7 @@ func getPathAndMethod(req APIV1Request) (reqPath string, reqMethod string, err e
 		reqPath = "v1/wallet/info"
 		reqMethod = "POST"
 	case ExportMasterDerivationKeyRequest:
-		reqPath = "v1/master_key/export"
+		reqPath = "v1/master-key/export"
 		reqMethod = "POST"
 	case ImportKeyRequest:
 		reqPath = "v1/key/import"
@@ -126,7 +126,7 @@ func getPathAndMethod(req APIV1Request) (reqPath string, reqMethod string, err e
 		reqPath = "v1/key"
 		reqMethod = "DELETE"
 	case ListKeysRequest:
-		reqPath = "v1/keys/list"
+		reqPath = "v1/key/list"
 		reqMethod = "POST"
 	case SignTransactionRequest:
 		reqPath = "v1/transaction/sign"
