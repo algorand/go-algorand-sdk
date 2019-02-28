@@ -417,4 +417,5 @@ func main() {
 	}
 
 	fmt.Printf("Transaction ID: %s\n", sendResponse.TxID)
+}
 ```
