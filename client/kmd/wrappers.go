@@ -56,7 +56,7 @@ func (kcl Client) InitWalletHandle(walletID, walletPassword string) (resp InitWa
 }
 
 // ReleaseWalletHandle invalidates the passed wallet handle token, making
-// it unusuable for subsequent wallet operations.
+// it unusable for subsequent wallet operations.
 func (kcl Client) ReleaseWalletHandle(walletHandle string) (resp ReleaseWalletHandleResponse, err error) {
 	req := ReleaseWalletHandleRequest{
 		WalletHandleToken: walletHandle,

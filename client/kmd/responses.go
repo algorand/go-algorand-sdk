@@ -82,19 +82,19 @@ type GetWalletResponse struct {
 	WalletHandle APIV1WalletHandle `json:"wallet_handle"`
 }
 
-// ExportMasterDerivationKeyResponse is the reponse to `POST /v1/master-key/export`
+// ExportMasterDerivationKeyResponse is the response to `POST /v1/master-key/export`
 type ExportMasterDerivationKeyResponse struct {
 	APIV1ResponseEnvelope
 	MasterDerivationKey types.MasterDerivationKey `json:"master_derivation_key"`
 }
 
-// ImportKeyResponse is the repsonse to `POST /v1/key/import`
+// ImportKeyResponse is the response to `POST /v1/key/import`
 type ImportKeyResponse struct {
 	APIV1ResponseEnvelope
 	Address string `json:"address"`
 }
 
-// ExportKeyResponse is the reponse to `POST /v1/key/export`
+// ExportKeyResponse is the response to `POST /v1/key/export`
 type ExportKeyResponse struct {
 	APIV1ResponseEnvelope
 	PrivateKey ed25519.PrivateKey `json:"private_key"`
@@ -117,7 +117,7 @@ type ListKeysResponse struct {
 	Addresses []string `json:"addresses"`
 }
 
-// SignTransactionResponse is the repsonse to `POST /v1/transaction/sign`
+// SignTransactionResponse is the response to `POST /v1/transaction/sign`
 type SignTransactionResponse struct {
 	APIV1ResponseEnvelope
 	SignedTransaction []byte `json:"signed_transaction"`
@@ -148,7 +148,7 @@ type DeleteMultisigResponse struct {
 	APIV1ResponseEnvelope
 }
 
-// SignMultisigTransactionResponse is the repsonse to `POST /v1/multisig/sign`
+// SignMultisigTransactionResponse is the response to `POST /v1/multisig/sign`
 type SignMultisigTransactionResponse struct {
 	APIV1ResponseEnvelope
 	Multisig types.MultisigSig `json:"multisig"`
