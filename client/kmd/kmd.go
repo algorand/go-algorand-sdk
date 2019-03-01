@@ -3,39 +3,39 @@ package kmd
 import (
 	"bytes"
 	"fmt"
-        "net/http"
-        "time"
+	"net/http"
+	"time"
 
 	"github.com/algorand/go-algorand-sdk/encoding/json"
 )
 
 const (
-        timeoutSecs = 120
+	timeoutSecs    = 120
 	kmdTokenHeader = "X-KMD-API-Token"
 )
 
 // Client is the client used to interact with the kmd API
 type Client struct {
-        httpClient http.Client
-        apiToken   string
-        address    string
+	httpClient http.Client
+	apiToken   string
+	address    string
 }
 
 func makeHTTPClient() http.Client {
-        client := http.Client{
-                Timeout: timeoutSecs * time.Second,
-        }
-        return client
+	client := http.Client{
+		Timeout: timeoutSecs * time.Second,
+	}
+	return client
 }
 
 // MakeClient instantiates a Client for the given address and apiToken
 func MakeClient(address string, apiToken string) (Client, error) {
-        kcl := Client{
-                httpClient: makeHTTPClient(),
-                apiToken:   apiToken,
-                address:    address,
-        }
-        return kcl, nil
+	kcl := Client{
+		httpClient: makeHTTPClient(),
+		apiToken:   apiToken,
+		address:    address,
+	}
+	return kcl, nil
 }
 
 // DoV1Request accepts a request from kmdapi/requests and

@@ -54,7 +54,7 @@ func main() {
 	fmt.Printf("Got %d wallet(s):\n", len(resp0.Wallets))
 	var exampleExists bool
 	var exampleWalletID string
-	for _, wallet := range(resp0.Wallets) {
+	for _, wallet := range resp0.Wallets {
 		fmt.Printf("ID: %s\tName: %s\n", wallet.ID, wallet.Name)
 		if wallet.Name == exampleWalletName {
 			exampleWalletID = wallet.ID

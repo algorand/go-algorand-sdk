@@ -81,9 +81,9 @@ func (kcl Client) RenewWalletHandle(walletHandle string) (resp RenewWalletHandle
 // and renames the underlying wallet.
 func (kcl Client) RenameWallet(walletID, walletPassword, newWalletName string) (resp RenameWalletResponse, err error) {
 	req := RenameWalletRequest{
-		WalletID: walletID,
+		WalletID:       walletID,
 		WalletPassword: walletPassword,
-		NewWalletName: newWalletName,
+		NewWalletName:  newWalletName,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
@@ -132,8 +132,8 @@ func (kcl Client) ImportKey(walletHandle string, secretKey ed25519.PrivateKey) (
 func (kcl Client) ExportKey(walletHandle, walletPassword, addr string) (resp ExportKeyResponse, err error) {
 	req := ExportKeyRequest{
 		WalletHandleToken: walletHandle,
-		WalletPassword: walletPassword,
-		Address: addr,
+		WalletPassword:    walletPassword,
+		Address:           addr,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
@@ -160,8 +160,8 @@ func (kcl Client) GenerateKey(walletHandle string) (resp GenerateKeyResponse, er
 func (kcl Client) DeleteKey(walletHandle, walletPassword, addr string) (resp DeleteKeyResponse, err error) {
 	req := DeleteKeyRequest{
 		WalletHandleToken: walletHandle,
-		WalletPassword: walletPassword,
-		Address: addr,
+		WalletPassword:    walletPassword,
+		Address:           addr,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return
@@ -228,8 +228,8 @@ func (kcl Client) ImportMultisig(walletHandle string, version, threshold uint8, 
 func (kcl Client) ExportMultisig(walletHandle, walletPassword, addr string) (resp ExportMultisigResponse, err error) {
 	req := ExportMultisigRequest{
 		WalletHandleToken: walletHandle,
-		WalletPassword: walletPassword,
-		Address: addr,
+		WalletPassword:    walletPassword,
+		Address:           addr,
 	}
 	err = kcl.DoV1Request(req, &resp)
 	return

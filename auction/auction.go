@@ -20,12 +20,12 @@ func MakeBid(bidderAddress string, bidAmount, maxPrice, bidID uint64, auctionAdd
 	}
 
 	bid = types.Bid{
-		BidderKey: bidderAddr,
+		BidderKey:   bidderAddr,
 		BidCurrency: bidAmount,
-		MaxPrice: maxPrice,
-		BidID: bidID,
-		AuctionKey: auctionAddr,
-		AuctionID: auctionID,
+		MaxPrice:    maxPrice,
+		BidID:       bidID,
+		AuctionKey:  auctionAddr,
+		AuctionID:   auctionID,
 	}
 	return
 }
