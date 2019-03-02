@@ -182,7 +182,7 @@ func main() {
 	// Extract the wallet handle
 	exampleWalletHandleToken := initResponse.WalletHandleToken
 
-	//Generate a new address from the wallet handle
+	// Generate a new address from the wallet handle
 	genResponse, err := kmdClient.GenerateKey(exampleWalletHandleToken)
 	if err != nil {
 		fmt.Printf("Error generating key: %s\n", err)
@@ -223,14 +223,14 @@ func main() {
 	}
 	fmt.Println("Made a kmd client")
 
-	//Get the list of wallets
+	// Get the list of wallets
 	listResponse, err := kmdClient.ListWallets()
 	if err != nil {
 		fmt.Printf("error listing wallets: %s\n", err)
 		return
 	}
 
-	//Find our wallet name in the list
+	// Find our wallet name in the list
 	var exampleWalletID string
 	fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
 	for _, wallet := range listResponse.Wallets {
@@ -251,7 +251,7 @@ func main() {
 	// Extract the wallet handle
 	exampleWalletHandleToken := initResponse.WalletHandleToken
 
-	//Get backup phrase
+	// Get the backup phrase
 	exportResponse, err := kmdClient.ExportMasterDerivationKey(exampleWalletHandleToken, "testpassword")
 	if err != nil {
 		fmt.Printf("Error exporting backup phrase: %s\n", err)
@@ -343,14 +343,14 @@ func main() {
 	}
 	fmt.Println("Made a kmd client")
 
-	//Get the list of wallets
+	// Get the list of wallets
 	listResponse, err := kmdClient.ListWallets()
 	if err != nil {
 		fmt.Printf("error listing wallets: %s\n", err)
 		return
 	}
 
-	//Find our wallet name in the list
+	// Find our wallet name in the list
 	var exampleWalletID string
 	fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
 	for _, wallet := range listResponse.Wallets {
@@ -370,7 +370,7 @@ func main() {
 	// Extract the wallet handle
 	exampleWalletHandleToken := initResponse.WalletHandleToken
 
-	//Generate a new address from the wallet handle
+	// Generate a new address from the wallet handle
 	gen1Response, err := kmdClient.GenerateKey(exampleWalletHandleToken)
 	if err != nil {
 		fmt.Printf("Error generating key: %s\n", err)
@@ -378,7 +378,8 @@ func main() {
 	}
 	fmt.Printf("Generated address 1 %s\n", gen1Response.Address)
 	fromAddr := gen1Response.Address
-	//Generate a new address from the wallet handle
+
+	// Generate a new address from the wallet handle
 	gen2Response, err := kmdClient.GenerateKey(exampleWalletHandleToken)
 	if err != nil {
 		fmt.Printf("Error generating key: %s\n", err)
