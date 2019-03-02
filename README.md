@@ -38,7 +38,7 @@ If you are connected to the Algorand network, your algod process should already 
 goal kmd start -d <your-data-directory>
 ```
 
-Use Go packages from the SDK:
+Here's a simple example which creates clients for algod and kmd:
 
 ```golang
 package main
