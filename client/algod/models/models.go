@@ -278,6 +278,32 @@ type TransactionFee struct {
 	Fee uint64 `json:"fee"`
 }
 
+// TransactionParams contains the parameters that help a client construct
+// a new transaction.
+// swagger:model TransactionParams
+type TransactionParams struct {
+	// Fee is the suggested transaction fee
+	//
+	// required: true
+	Fee uint64 `json:"fee"`
+
+	// Genesis ID
+	//
+	// required: true
+	GenesisID string `json:"genesisID"`
+
+	// LastRound indicates the last round seen
+	//
+	// required: true
+	LastRound uint64 `json:"lastRound"`
+
+	// ConsensusVersion indicates the consensus protocol version
+	// as of LastRound.
+	//
+	// required: true
+	ConsensusVersion string `json:"consensusVersion"`
+}
+
 // TransactionID Description
 // swagger:model TransactionID
 type TransactionID struct {

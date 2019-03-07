@@ -343,6 +343,14 @@ func main() {
 	}
 	fmt.Println("Made a kmd client")
 
+	// Create an algod client
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		fmt.Printf("failed to make algod client: %s\n", err)
+		return
+	}
+	fmt.Println("Made an algod client")
+
 	// Get the list of wallets
 	listResponse, err := kmdClient.ListWallets()
 	if err != nil {
@@ -388,8 +396,16 @@ func main() {
 	fmt.Printf("Generated address 2 %s\n", gen2Response.Address)
 	toAddr := gen2Response.Address
 
+	// Get the suggested transaction parameters
+	txParams, err := algodClient.SuggestedParams()
+        if err != nil {
+                fmt.Printf("error getting suggested tx params: %s\n", err)
+                return
+        }
+
 	// Make transaction
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil)
+	genID := txParams.GenesisID
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, genID)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -403,13 +419,6 @@ func main() {
 	}
 
 	fmt.Printf("kmd made signed transaction with bytes: %x\n", signResponse.SignedTransaction)
-
-	// Create an algod client
-	algodClient, err := algod.MakeClient(algodAddress, algodToken)
-	if err != nil {
-		fmt.Printf("failed to make algod client: %s\n", err)
-		return
-	}
 
 	// Broadcast the transaction to the network
 	// Note that this transaction will get rejected because the accounts do not have any tokens

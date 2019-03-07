@@ -91,6 +91,12 @@ func (client Client) SuggestedFee() (response models.TransactionFee, err error) 
 	return
 }
 
+// SuggestedParams gets the suggested transaction parameters
+func (client Client) SuggestedParams() (response models.TransactionParams, err error) {
+	err = client.get(&response, "/transactions/params", nil)
+	return
+}
+
 // SendRawTransaction gets the bytes of a SignedTxn and broadcasts it to the network
 func (client Client) SendRawTransaction(stx []byte) (response models.TransactionID, err error) {
 	err = client.post(&response, "/transactions", stx)

@@ -50,4 +50,5 @@ type Header struct {
 	FirstValid Round   `codec:"fv"`
 	LastValid  Round   `codec:"lv"`
 	Note       []byte  `codec:"note"`
+	GenesisID  string  `codec:"gen"`
 }

@@ -6,7 +6,7 @@ import (
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte) (tx types.Transaction, err error) {
+func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, genesisID string) (tx types.Transaction, err error) {
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
 	if err != nil {
@@ -28,6 +28,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 			FirstValid: types.Round(firstRound),
 			LastValid:  types.Round(lastRound),
 			Note:       note,
+			GenesisID:  genesisID,
 		},
 		PaymentTxnFields: types.PaymentTxnFields{
 			Receiver: toAddr,

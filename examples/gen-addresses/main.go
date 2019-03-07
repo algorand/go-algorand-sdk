@@ -97,7 +97,7 @@ func main() {
 	}
 
 	// Extract the private key of the first address
-	fmt.Printf("Extracting private key for %s", addresses[0])
+	fmt.Printf("Extracting private key for %s\n", addresses[0])
 	resp4, err := kmdClient.ExportKey(exampleWalletHandleToken, exampleWalletPassword, addresses[0])
 	if err != nil {
 		fmt.Printf("Error extracting secret key: %s\n", err)
@@ -105,8 +105,16 @@ func main() {
 	}
 	privateKey := resp4.PrivateKey
 
+	// Get the suggested transaction parameters
+	txParams, err := algodClient.SuggestedParams()
+        if err != nil {
+                fmt.Printf("error getting suggested tx params: %s\n", err)
+                return
+        }
+
 	// Sign a sample transaction using this library, *not* kmd
-	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil)
+	genID := txParams.GenesisID
+	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, genID)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
