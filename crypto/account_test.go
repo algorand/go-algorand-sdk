@@ -17,6 +17,6 @@ func TestKeyGeneration(t *testing.T) {
 	require.NotEqual(t, kp.PrivateKey, ed25519.PrivateKey{})
 
 	// Address should be identical to public key
-	pk := ed25519.PublicKey(kp.Address[:])
+	pk := kp.Address[:]
 	require.Equal(t, pk, kp.PublicKey)
 }
