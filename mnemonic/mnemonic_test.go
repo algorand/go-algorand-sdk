@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 func TestGenerateAndRecovery(t *testing.T) {
@@ -20,6 +23,31 @@ func TestGenerateAndRecovery(t *testing.T) {
 		recovered, err := ToKey(m)
 		require.NoError(t, err)
 		require.Equal(t, recovered, key)
+	}
+
+	var mdk types.MasterDerivationKey
+	for i := 0; i < 1000; i++ {
+		// Generate a mdk
+		_, err := rand.Read(key)
+		require.NoError(t, err)
+		copy(mdk[:], key)
+		// Go from mdk -> mnemonic
+		m, err := FromMasterDerivationKey(mdk)
+		// Go from mnemonic -> mdk
+		recovered, err := ToMasterDerivationKey(m)
+		require.NoError(t, err)
+		require.Equal(t, recovered, mdk)
+	}
+
+	for i := 0; i < 1000; i++ {
+		// Generate a private key
+		acct := crypto.GenerateAccount()
+		// Go from sk -> mnemonic
+		m, err := FromPrivateKey(acct.PrivateKey)
+		// Go from mnemonic -> sk
+		recovered, err := ToPrivateKey(m)
+		require.NoError(t, err)
+		require.Equal(t, recovered, acct.PrivateKey)
 	}
 }
 
