@@ -36,7 +36,7 @@ func ToMasterDerivationKey(mnemonic string) (mdk types.MasterDerivationKey, err 
 	if err != nil {
 		return
 	}
-	if len(mdkBytes) != keyLenBytes {
+	if len(mdkBytes) != len(mdk) {
 		panic("recovered mdk is wrong length")
 	}
 	copy(mdk[:], mdkBytes)
