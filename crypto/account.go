@@ -9,9 +9,9 @@ import (
 // Account holds both the public and private information associated with an
 // Algorand address
 type Account struct {
-	PublicKey  ed25519.PublicKey
-	PrivateKey ed25519.PrivateKey
-	Address    types.Address
+	PublicKey  []byte
+	PrivateKey []byte
+	Address    []byte
 }
 
 func init() {
@@ -40,6 +40,6 @@ func GenerateAccount() (kp Account) {
 	// Build the account
 	kp.PublicKey = pk
 	kp.PrivateKey = sk
-	kp.Address = a
+	kp.Address = a[:]
 	return
 }

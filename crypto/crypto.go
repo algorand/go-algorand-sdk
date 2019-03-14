@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+	"fmt"
 
 	"golang.org/x/crypto/ed25519"
 
@@ -29,9 +30,11 @@ func RandomBytes(s []byte) {
 
 // SignTransaction accepts a private key and a transaction, and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
-func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	// Encode the transaction as msgpack
-	encodedTx := msgpack.Encode(tx)
+func SignTransaction(sk []byte, encodedTx []byte) (stxBytes []byte, err error) {
+
+	if len(sk) != 64 {
+		err = fmt.Errorf("")
+	}
 
 	// Prepend the hashable prefix
 	msgParts := [][]byte{txidPrefix, encodedTx}
@@ -49,6 +52,9 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 		return
 	}
 
+	var tx types.Transaction
+	msgpack.Decode(encodedTx, &tx)
+
 	// Construct the SignedTxn
 	stx := types.SignedTxn{
 		Sig: s,
@@ -57,18 +63,12 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 
 	// Encode the SignedTxn
 	stxBytes = msgpack.Encode(stx)
-
-	// Compute the txid
-	txidBytes := sha512.Sum512_256(toBeSigned)
-	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
 	return
 }
 
 // SignBid accepts a private key and a bid, and returns the signature of the
 // bid under that key
-func SignBid(sk ed25519.PrivateKey, bid types.Bid) (sig []byte, err error) {
-	// Encode the bid as msgpack
-	encodedBid := msgpack.Encode(bid)
+func SignBid(sk []byte, encodedBid []byte) (sig []byte, err error) {
 
 	// Prepend the hashable prefix
 	msgParts := [][]byte{bidPrefix, encodedBid}
@@ -77,4 +77,15 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (sig []byte, err error) {
 	// Sign the encoded bid
 	sig = ed25519.Sign(sk, toBeSigned)
 	return
+}
+
+func getTxID(encodedTxn []byte) string {
+	// Prepend the hashable prefix
+	msgParts := [][]byte{txidPrefix, encodedTxn}
+	toBeSigned := bytes.Join(msgParts, nil)
+
+	// Compute the txid
+	txidBytes := sha512.Sum512_256(toBeSigned)
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
+
 }
