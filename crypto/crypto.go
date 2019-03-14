@@ -33,6 +33,7 @@ func RandomBytes(s []byte) {
 func SignTransaction(sk []byte, encodedTx []byte) (stxBytes []byte, err error) {
 	if len(sk) != ed25519.PrivateKeySize {
 		err = fmt.Errorf("Incorrect pricateKey length expected %d, got %d", ed25519.PrivateKeySize, len(sk))
+		return
 	}
 
 	// Prepend the hashable prefix
@@ -70,6 +71,7 @@ func SignTransaction(sk []byte, encodedTx []byte) (stxBytes []byte, err error) {
 func SignBid(sk []byte, encodedBid []byte) (sig []byte, err error) {
 	if len(sk) != ed25519.PrivateKeySize {
 		err = fmt.Errorf("Incorrect pricateKey length expected %d, got %d", ed25519.PrivateKeySize, len(sk))
+		return
 	}
 
 	// Prepend the hashable prefix
@@ -81,6 +83,7 @@ func SignBid(sk []byte, encodedBid []byte) (sig []byte, err error) {
 	return
 }
 
+// GetTxID takes an encoded txn and return the txid as string
 func GetTxID(encodedTxn []byte) string {
 	// Prepend the hashable prefix
 	msgParts := [][]byte{txidPrefix, encodedTxn}

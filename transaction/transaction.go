@@ -8,7 +8,7 @@ import (
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string) (encoded []byte, err error) {
+func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, closeRemainderTo, genesisID string) (encoded []byte, err error) {
 
 	// Sanity check for int64
 	if fee < 0 ||
