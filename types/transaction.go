@@ -39,6 +39,12 @@ type PaymentTxnFields struct {
 
 	Receiver Address `codec:"rcv"`
 	Amount   Algos   `codec:"amt"`
+
+	// When CloseRemainderTo is set, it indicates that the
+	// transaction is requesting that the account should be
+	// closed, and all remaining funds be transferred to this
+	// address.
+	CloseRemainderTo Address `codec:"close"`
 }
 
 // Header captures the fields common to every transaction type.
