@@ -405,7 +405,7 @@ func main() {
 
 	// Make transaction
 	genID := txParams.GenesisID
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, genID)
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, "", genID)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return

@@ -8,7 +8,7 @@ import (
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, genesisID string) (encoded []byte, err error) {
+func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string) (encoded []byte, err error) {
 
 	// Sanity check for int64
 	if fee < 0 ||
@@ -31,6 +31,15 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		return
 	}
 
+	// Decode the CloseRemainderTo address, if present
+	var closeRemainderToAddr types.Address
+	if closeRemainderTo != "" {
+		closeRemainderToAddr, err = types.DecodeAddress(closeRemainderTo)
+		if err != nil {
+			return
+		}
+	}
+
 	// Build the transaction
 	tx := types.Transaction{
 		Type: types.PaymentTx,
@@ -43,8 +52,9 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 			GenesisID:  genesisID,
 		},
 		PaymentTxnFields: types.PaymentTxnFields{
-			Receiver: toAddr,
-			Amount:   types.Algos(amount),
+			Receiver:         toAddr,
+			Amount:           types.Algos(amount),
+			CloseRemainderTo: closeRemainderToAddr,
 		},
 	}
 

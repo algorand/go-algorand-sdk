@@ -21,7 +21,7 @@ func TestSignTransaction(t *testing.T) {
 	const toAddr = "PU7ZTZJ5GSXET2ZPIWDWDT2TQQEP7WXOGXDQ3ARUCZW6PK7D4ULSE6NYCE"
 
 	// Build the unsigned transaction
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 1234, 106575, 107575, nil, "")
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 1234, 106575, 107575, nil, "", "")
 	require.NoError(t, err)
 
 	// Decode the secret key for the sender
@@ -41,6 +41,6 @@ func TestSignTransaction(t *testing.T) {
 	stxHex := fmt.Sprintf("%x", stxBytes)
 	require.Equal(t, referenceSignedTxn, stxHex)
 
-	txid := getTxID(tx)
+	txid := GetTxID(tx)
 	require.Equal(t, txid, referenceTxid)
 }

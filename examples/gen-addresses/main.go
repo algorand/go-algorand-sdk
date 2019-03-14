@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/algod"
@@ -107,14 +106,14 @@ func main() {
 
 	// Get the suggested transaction parameters
 	txParams, err := algodClient.SuggestedParams()
-        if err != nil {
-                fmt.Printf("error getting suggested tx params: %s\n", err)
-                return
-        }
+	if err != nil {
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
+	}
 
 	// Sign a sample transaction using this library, *not* kmd
 	genID := txParams.GenesisID
-	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, genID)
+	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, "", genID)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -122,26 +121,12 @@ func main() {
 	fmt.Printf("Made unsigned transaction: %+v\n", tx)
 	fmt.Println("Signing transaction with go-algo-sdk library function (not kmd)")
 
-	txid, stx, err := crypto.SignTransaction(privateKey, tx)
+	stx, err := crypto.SignTransaction(privateKey, tx)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Made signed transaction with TxID %s: %x\n", txid, stx)
-
-	// Sign the same transaction with kmd
-	fmt.Println("Signing same transaction with kmd")
-	resp5, err := kmdClient.SignTransaction(exampleWalletHandleToken, exampleWalletPassword, tx)
-	if err != nil {
-		fmt.Printf("Failed to sign transaction with kmd: %s\n", err)
-		return
-	}
-
-	fmt.Printf("kmd made signed transaction with bytes: %x\n", resp5.SignedTransaction)
-	if bytes.Equal(resp5.SignedTransaction, stx) {
-		fmt.Println("signed transactions match!")
-	} else {
-		fmt.Println("signed transactions don't match!")
-	}
+	txid := crypto.GetTxID(stx)
+	fmt.Printf("Made signed transaction with TxID %s: %x\n", txid)
 }
