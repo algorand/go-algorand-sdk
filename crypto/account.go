@@ -22,20 +22,22 @@ func init() {
 	}
 }
 
-// GenerateAccount generates a random Account
-func GenerateAccount(pk, sk []byte) string {
-	// Generate an ed25519 keypair. This should never fail
-	pk, sk, err := ed25519.GenerateKey(nil)
+func GenerateSK() []byte {
+	_, sk, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		panic(err)
 	}
+	return sk
+}
 
-	// Convert the public key to an address
+func GenerateAddressFromSK(sk []byte) string {
+	edsk := ed25519.PrivateKey(sk)
+
 	var a types.Address
-	n := copy(a[:], pk)
+	pk := edsk.Public()
+	n := copy(a[:], []byte(pk.(ed25519.PublicKey)))
 	if n != ed25519.PublicKeySize {
 		panic("generated public key is the wrong size")
 	}
-
 	return a.String()
 }
