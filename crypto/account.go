@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"fmt"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/types"
@@ -30,14 +31,14 @@ func GenerateSK() []byte {
 	return sk
 }
 
-func GenerateAddressFromSK(sk []byte) string {
+func GenerateAddressFromSK(sk []byte) (string, error) {
 	edsk := ed25519.PrivateKey(sk)
 
 	var a types.Address
 	pk := edsk.Public()
 	n := copy(a[:], []byte(pk.(ed25519.PublicKey)))
 	if n != ed25519.PublicKeySize {
-		panic("generated public key is the wrong size")
+		return "", fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
 	}
-	return a.String()
+	return a.String(), nil
 }
