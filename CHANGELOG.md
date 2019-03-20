@@ -5,3 +5,6 @@
 ## Added
 - Support for "genesis ID" field in transactions
 - Support for "close remainder to" field in transactions
+# 0.0.3
+## Added
+- Additional mnemonic support
