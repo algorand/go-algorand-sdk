@@ -41,13 +41,13 @@ func TestGenerateAndRecovery(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		// Generate a private key
-		acct := crypto.GenerateAccount()
+		acct := crypto.GenerateSK()
 		// Go from sk -> mnemonic
-		m, err := FromPrivateKey(acct.PrivateKey)
+		m, err := FromPrivateKey(acct)
 		// Go from mnemonic -> sk
 		recovered, err := ToPrivateKey(m)
 		require.NoError(t, err)
-		require.Equal(t, recovered, acct.PrivateKey)
+		require.Equal(t, recovered, acct)
 	}
 }
 

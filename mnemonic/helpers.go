@@ -8,14 +8,18 @@ import (
 
 // FromPrivateKey is a helper that converts an ed25519 private key to a
 // human-readable mnemonic
-func FromPrivateKey(sk ed25519.PrivateKey) (string, error) {
-	seed := sk.Seed()
+func FromPrivateKey(sk []byte) (string, error) {
+	if len(sk) != ed25519.PrivateKeySize {
+		return "", errWrongKeyLen
+	}
+	sk1 := ed25519.PrivateKey(sk)
+	seed := sk1.Seed()
 	return FromKey(seed)
 }
 
 // ToPrivateKey is a helper that converts a mnemonic directly to an ed25519
 // private key
-func ToPrivateKey(mnemonic string) (sk ed25519.PrivateKey, err error) {
+func ToPrivateKey(mnemonic string) (sk []byte, err error) {
 	seedBytes, err := ToKey(mnemonic)
 	if err != nil {
 		return
