@@ -8,3 +8,6 @@
 # 0.0.3
 ## Added
 - Additional mnemonic support
+# 0.0.4
+## Added
+- Better auction support

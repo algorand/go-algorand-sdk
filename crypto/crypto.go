@@ -66,7 +66,7 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 
 // SignBid accepts a private key and a bid, and returns the signature of the
 // bid under that key
-func SignBid(sk ed25519.PrivateKey, bid types.Bid) (sig []byte, err error) {
+func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error) {
 	// Encode the bid as msgpack
 	encodedBid := msgpack.Encode(bid)
 
@@ -75,6 +75,25 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (sig []byte, err error) {
 	toBeSigned := bytes.Join(msgParts, nil)
 
 	// Sign the encoded bid
-	sig = ed25519.Sign(sk, toBeSigned)
+	sig := ed25519.Sign(sk, toBeSigned)
+
+	var s types.Signature
+	n := copy(s[:], sig)
+	if n != len(s) {
+		err = errInvalidSignatureReturned
+		return
+	}
+
+	sb := types.SignedBid{
+		Bid: bid,
+		Sig: s,
+	}
+
+	nf := types.NoteField{
+		Type:      types.NoteBid,
+		SignedBid: sb,
+	}
+
+	signedBid = msgpack.Encode(nf)
 	return
 }

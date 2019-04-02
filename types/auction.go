@@ -29,3 +29,44 @@ type Bid struct {
 	// AuctionID identifies the auction for which this bid is intended.
 	AuctionID uint64 `codec:"aid"`
 }
+
+// SignedBid represents a signed bid by a bidder.
+type SignedBid struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Bid contains information about the bid.
+	Bid Bid `codec:"bid"`
+
+	// Sig is a signature by the bidder, as identified in the bid
+	// (Bid.BidderKey) over the hash of the Bid.
+	Sig Signature `codec:"sig"`
+}
+
+// NoteFieldType indicates a type of auction message encoded into a
+// transaction's Note field.
+type NoteFieldType string
+
+const (
+	// NoteDeposit indicates a SignedDeposit message.
+	NoteDeposit NoteFieldType = "d"
+
+	// NoteBid indicates a SignedBid message.
+	NoteBid NoteFieldType = "b"
+
+	// NoteSettlement indicates a SignedSettlement message.
+	NoteSettlement NoteFieldType = "s"
+
+	// NoteParams indicates a SignedParams message.
+	NoteParams NoteFieldType = "p"
+)
+
+// NoteField is the struct that represents an auction message.
+type NoteField struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Type indicates which type of a message this is
+	Type NoteFieldType `codec:"t"`
+
+	// SignedBid, for NoteBid type
+	SignedBid SignedBid `codec:"b"`
+}
