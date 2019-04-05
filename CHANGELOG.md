@@ -11,3 +11,6 @@
 # 0.0.4
 ## Added
 - Better auction support
+# 0.0.5
+## Added
+- Added helper functions for preventing overflow
