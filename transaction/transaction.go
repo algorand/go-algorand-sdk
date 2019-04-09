@@ -45,7 +45,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		Type: types.PaymentTx,
 		Header: types.Header{
 			Sender:     fromAddr,
-			Fee:        types.Algos(fee),
+			Fee:        types.Algos(200 * fee),
 			FirstValid: types.Round(firstRound),
 			LastValid:  types.Round(lastRound),
 			Note:       note,
@@ -58,6 +58,14 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		},
 	}
 
+	// Get the right fee
+	l, err := tx.GetEstimatedSize()
+	if err != nil {
+		return nil, err
+	}
+	tx.Fee = types.Algos(uint64(fee) * l)
+
 	encoded = msgpack.Encode(tx)
+
 	return
 }
