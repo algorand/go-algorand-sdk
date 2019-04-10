@@ -6,6 +6,7 @@ import (
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
+// fee is fee per byte as received from algod SuggestedFee API call
 func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string) (tx types.Transaction, err error) {
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
@@ -45,5 +46,13 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 			CloseRemainderTo: closeRemainderToAddr,
 		},
 	}
+
+	// Update fee
+	eSize, err := tx.EstimateSize()
+	if err == nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.Algos(eSize * fee)
+
 	return
 }

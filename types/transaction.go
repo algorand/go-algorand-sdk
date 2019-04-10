@@ -1,5 +1,10 @@
 package types
 
+import (
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+)
+
 // Transaction describes a transaction that can appear in a block.
 type Transaction struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -13,6 +18,16 @@ type Transaction struct {
 	// Fields for different types of transactions
 	KeyregTxnFields
 	PaymentTxnFields
+}
+
+// EstimateSize returns the estimated length of the encoded transaction
+func (txn Transaction) EstimateSize() (uint64, error) {
+	key := crypto.GenerateAccount()
+	_, stx, err := crypto.SignTransaction(key.PrivateKey, txn)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(len(msgpack.Encode(stx))), nil
 }
 
 // SignedTxn wraps a transaction and a signature. The encoding of this struct
