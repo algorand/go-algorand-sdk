@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -59,7 +60,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 	}
 
 	// Get the right fee
-	l, err := tx.GetEstimatedSize()
+	l, err := getEstimatedSize(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -68,4 +69,14 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 	encoded = msgpack.Encode(tx)
 
 	return
+}
+
+func getEstimatedSize(tx types.Transaction) (uint64, error) {
+	key := crypto.GenerateSK()
+	en, err := crypto.SignTransaction(key, msgpack.Encode(tx))
+	if err != nil {
+		return 0, err
+	}
+
+	return uint64(len(en)), nil
 }
