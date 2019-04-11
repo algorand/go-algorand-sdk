@@ -151,5 +151,5 @@ type DeleteMultisigResponse struct {
 // SignMultisigTransactionResponse is the response to `POST /v1/multisig/sign`
 type SignMultisigTransactionResponse struct {
 	APIV1ResponseEnvelope
-	Multisig types.MultisigSig `json:"multisig"`
+	Multisig []byte `json:"multisig"`
 }
