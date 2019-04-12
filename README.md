@@ -334,6 +334,9 @@ const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c
 const algodAddress = "http://localhost:8080"
 const algodToken = "6218386c0d964e371f34bbff4adf543dab14a7d9720c11c6f11970774d4575de"
 
+const walletName = "testwallet"
+const walletPassword = "testpassword"
+
 func main() {
 	// Create a kmd client
 	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
@@ -363,13 +366,13 @@ func main() {
 	fmt.Printf("Got %d wallet(s):\n", len(listResponse.Wallets))
 	for _, wallet := range listResponse.Wallets {
 		fmt.Printf("ID: %s\tName: %s\n", wallet.ID, wallet.Name)
-		if wallet.Name == "testwallet" {
+		if wallet.Name == walletName {
 			fmt.Printf("found wallet '%s' with ID: %s\n", wallet.Name, wallet.ID)
 			exampleWalletID = wallet.ID
 		}
 	}
 	// Get a wallet handle
-	initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, "testpassword")
+	initResponse, err := kmdClient.InitWalletHandle(exampleWalletID, walletPassword)
 	if err != nil {
 		fmt.Printf("Error initializing wallet handle: %s\n", err)
 		return
@@ -398,21 +401,21 @@ func main() {
 
 	// Get the suggested transaction parameters
 	txParams, err := algodClient.SuggestedParams()
-        if err != nil {
-                fmt.Printf("error getting suggested tx params: %s\n", err)
-                return
-        }
+	if err != nil {
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
+	}
 
 	// Make transaction
 	genID := txParams.GenesisID
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, "", genID)
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 1000, txParams.LastRound, txParams.LastRound+2, []byte("Algorand!"), "", genID)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
 	}
 
 	// Sign the transaction
-	signResponse, err := kmdClient.SignTransaction(exampleWalletHandleToken, "testpassword", tx)
+	signResponse, err := kmdClient.SignTransaction(exampleWalletHandleToken, walletPassword, tx)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction with kmd: %s\n", err)
 		return
