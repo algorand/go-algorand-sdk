@@ -28,10 +28,12 @@ type MasterDerivationKey [32]byte
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
 
-func ToAlgos(microalgos MicroAlgos) uint64 {
-	return uint64(microalgos) / 1e6
+const microAlgoConversionFactor = 1e6
+
+func (microalgos MicroAlgos) ToAlgos() uint64 {
+	return uint64(microalgos) / microAlgoConversionFactor
 }
 
 func ToMicroAlgos(algos uint64) MicroAlgos {
-	return MicroAlgos(algos * 1e6)
+	return MicroAlgos(algos * microAlgoConversionFactor)
 }
