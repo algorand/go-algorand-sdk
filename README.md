@@ -1,3 +1,5 @@
+Test contributor license agreement.
+
 # go-algorand-sdk
 
 [![Build Status](https://travis-ci.com/algorand/go-algorand-sdk.svg?branch=master)](https://travis-ci.com/algorand/go-algorand-sdk)
