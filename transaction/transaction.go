@@ -35,7 +35,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 		Type: types.PaymentTx,
 		Header: types.Header{
 			Sender:     fromAddr,
-			Fee:        types.Algos(fee),
+			Fee:        types.MicroAlgos(fee),
 			FirstValid: types.Round(firstRound),
 			LastValid:  types.Round(lastRound),
 			Note:       note,
@@ -43,7 +43,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 		},
 		PaymentTxnFields: types.PaymentTxnFields{
 			Receiver:         toAddr,
-			Amount:           types.Algos(amount),
+			Amount:           types.MicroAlgos(amount),
 			CloseRemainderTo: closeRemainderToAddr,
 		},
 	}
@@ -53,7 +53,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 	if err != nil {
 		return types.Transaction{}, err
 	}
-	tx.Fee = types.Algos(eSize * fee)
+	tx.Fee = types.MicroAlgos(eSize * fee)
 
 	return tx, nil
 }

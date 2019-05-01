@@ -10,8 +10,8 @@ const (
 	KeyRegistrationTx TxType = "keyreg"
 )
 
-// Algos are the unit of currency in Algorand
-type Algos uint64
+// MicroAlgos are the base unit of currency in Algorand
+type MicroAlgos uint64
 
 // Round represents a round of the Algorand consensus protocol
 type Round uint64
@@ -27,3 +27,13 @@ type MasterDerivationKey [32]byte
 
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
+
+const microAlgoConversionFactor = 1e6
+
+func (microalgos MicroAlgos) ToAlgos() uint64 {
+	return uint64(microalgos) / microAlgoConversionFactor
+}
+
+func ToMicroAlgos(algos uint64) MicroAlgos {
+	return MicroAlgos(algos * microAlgoConversionFactor)
+}

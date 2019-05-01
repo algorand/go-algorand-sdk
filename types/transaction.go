@@ -37,8 +37,8 @@ type KeyregTxnFields struct {
 type PaymentTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Receiver Address `codec:"rcv"`
-	Amount   Algos   `codec:"amt"`
+	Receiver Address    `codec:"rcv"`
+	Amount   MicroAlgos `codec:"amt"`
 
 	// When CloseRemainderTo is set, it indicates that the
 	// transaction is requesting that the account should be
@@ -51,10 +51,10 @@ type PaymentTxnFields struct {
 type Header struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sender     Address `codec:"snd"`
-	Fee        Algos   `codec:"fee"`
-	FirstValid Round   `codec:"fv"`
-	LastValid  Round   `codec:"lv"`
-	Note       []byte  `codec:"note"`
-	GenesisID  string  `codec:"gen"`
+	Sender     Address    `codec:"snd"`
+	Fee        MicroAlgos `codec:"fee"`
+	FirstValid Round      `codec:"fv"`
+	LastValid  Round      `codec:"lv"`
+	Note       []byte     `codec:"note"`
+	GenesisID  string     `codec:"gen"`
 }
