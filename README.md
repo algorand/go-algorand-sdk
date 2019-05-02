@@ -317,7 +317,7 @@ func main() {
 
 ## Signing and submitting a transaction
 
-The following example shows how to to use both KMD and Algod when signing and submitting a transaction.  You can also sign a transaction offline, which is shown in the following examples.
+The following example shows how to to use both KMD and Algod when signing and submitting a transaction.  You can also sign a transaction offline, which is shown in the next section of this document.
 ```golang
 package main
 
