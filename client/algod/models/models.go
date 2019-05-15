@@ -14,20 +14,32 @@ package models
 // Account Description
 // swagger:model Account
 type Account struct {
+	// Round indicates the round for which this information is relevant
+	//
+	// required: true
+	Round uint64 `json:"round"`
 
 	// Address indicates the account public key
-	// Required: true
+	//
+	// required: true
 	Address string `json:"address"`
 
-	// Amount indicates the total number of Algos in the account
-	// Required: true
+	// Amount indicates the total number of MicroAlgos in the account
+	//
+	// required: true
 	Amount uint64 `json:"amount"`
 
-	// Status indicates the delegation status of the account's Algos
+	// Rewards indicates the total rewards of MicroAlgos the account has recieved
+	//
+	// required: true
+	Rewards uint64 `json:"rewards"`
+
+	// Status indicates the delegation status of the account's MicroAlgos
 	// Offline - indicates that the associated account is delegated.
 	// Online  - indicates that the associated account used as part of the delegation pool.
 	// NotParticipating - indicates that the associated account is neither a delegator nor a delegate.
-	// Required: true
+	//
+	// required: true
 	Status string `json:"status"`
 }
 
@@ -35,7 +47,6 @@ type Account struct {
 // TODO: SHOULD NOT ! BE IN PRODUCTION!
 // swagger:model Balances
 type Balances struct {
-
 	// Accounts
 	// Required: true
 	Accounts []Account `json:"accounts"`
