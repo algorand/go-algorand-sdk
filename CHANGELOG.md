@@ -1,3 +1,6 @@
+# 0.1.0
+## Added
+- Multisignature support
 # 0.0.6
 ## Added
 - Support in new SuggestedFee functionality 
