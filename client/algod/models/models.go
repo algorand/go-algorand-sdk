@@ -43,27 +43,6 @@ type Account struct {
 	Status string `json:"status"`
 }
 
-// Balances should not be public
-// TODO: SHOULD NOT ! BE IN PRODUCTION!
-// swagger:model Balances
-type Balances struct {
-	// Accounts
-	// Required: true
-	Accounts []Account `json:"accounts"`
-
-	// OnlineMoney
-	// Required: true
-	OnlineMoney uint64 `json:"onlineMoney"`
-
-	// Round
-	// Required: true
-	Round uint64 `json:"round"`
-
-	// TotalMoney
-	// Required: true
-	TotalMoney uint64 `json:"totalMoney"`
-}
-
 // Block contains a block information
 // swagger:model Block
 type Block struct {

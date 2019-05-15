@@ -47,12 +47,6 @@ func (client Client) Versions() (response models.Version, err error) {
 	return
 }
 
-// LedgerBalances gets the BalancesResponse for the specified node // TODO: To be removed before production
-func (client Client) LedgerBalances() (response models.Balances, err error) {
-	err = client.get(&response, "/ledger/balances", nil)
-	return
-}
-
 // LedgerSupply gets the supply details for the specified node's Ledger
 func (client Client) LedgerSupply() (response models.Supply, err error) {
 	err = client.get(&response, "/ledger/supply", nil)
