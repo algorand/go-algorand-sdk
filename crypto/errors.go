@@ -2,10 +2,9 @@ package crypto
 
 import (
 	"errors"
-	"fmt"
 )
 
-var errInvalidSignatureReturned = fmt.Errorf("ed25519 library returned an invalid signature")
+var errInvalidSignatureReturned = errors.New("ed25519 library returned an invalid signature")
 var errMsigUnknownVersion = errors.New("unknown version != 1")
 var errMsigInvalidThreshold = errors.New("invalid threshold")
 var errMsigBadTxnSender = errors.New("transaction sender does not match multisig parameters")

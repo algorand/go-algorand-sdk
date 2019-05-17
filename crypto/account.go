@@ -7,6 +7,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// prefix for multisig transaction signing
+const msigAddrPrefix = "MultisigAddr"
+
 // Account holds both the public and private information associated with an
 // Algorand address
 type Account struct {
@@ -93,7 +96,6 @@ func (ma MultisigAccount) Address() (addr types.Address, err error) {
 	if err != nil {
 		return
 	}
-	const msigAddrPrefix = "MultisigAddr"
 	buffer := append([]byte(msigAddrPrefix), byte(ma.Version), byte(ma.Threshold))
 	for _, pki := range ma.Pks {
 		buffer = append(buffer, pki[:]...)
