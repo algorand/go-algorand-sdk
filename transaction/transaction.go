@@ -5,6 +5,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+const MinTxnFee = 1000 // v5 consensus params, in microAlgos
+
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is fee per byte as received from algod SuggestedFee API call
@@ -54,6 +56,10 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 
 	return tx, nil
 }
