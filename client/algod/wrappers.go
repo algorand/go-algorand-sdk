@@ -70,6 +70,13 @@ func (client Client) TransactionsByAddr(addr string, first, last uint64) (respon
 	return
 }
 
+// TransactionsByAddrLimit returns all transactions for a PK [addr] after the given [first] round, with a limit.
+func (client Client) TransactionsByAddrLimit(addr string, first uint64, limit uint64) (response models.TransactionList, err error) {
+	params := transactionsByAddrParams{FirstRound: first, Max: limit}
+	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
+	return
+}
+
 // TransactionsByAddr returns all transactions for a PK [addr] in the [first,
 // last] date range. Dates are of the form "2006-01-02".
 func (client Client) TransactionsByAddrForDate(addr string, first, last string) (response models.TransactionList, err error) {
