@@ -228,6 +228,12 @@ type Transaction struct {
 	// ConfirmedRound indicates the block number this transaction appeared in
 	ConfirmedRound uint64 `json:"round,omitempty"`
 
+	// PoolError indicates the transaction was evicted from this node's transaction
+	// pool (if non-empty).  A non-empty PoolError does not guarantee that the
+	// transaction will never be committed; other nodes may not have evicted the
+	// transaction and may attempt to commit it in the future.
+	PoolError string `json:"poolerror,omitempty"`
+
 	// Fee is the transaction fee
 	// Required: true
 	Fee uint64 `json:"fee"`

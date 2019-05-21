@@ -108,6 +108,21 @@ func (client Client) TransactionInformation(accountAddress, transactionID string
 	return
 }
 
+// PendingTransactionInformation gets information about a recently issued
+// transaction.  There are several cases when this might succeed:
+//
+// - transaction committed (CommittedRound > 0)
+// - transaction still in the pool (CommittedRound = 0, PoolError = "")
+// - transaction removed from pool due to error (CommittedRound = 0, PoolError != "")
+//
+// Or the transaction may have happened sufficiently long ago that the
+// node no longer remembers it, and this will return an error.
+func (client Client) PendingTransactionInformation(transactionID string) (response models.Transaction, err error) {
+	transactionID = stripTransaction(transactionID)
+	err = client.get(&response, fmt.Sprintf("/transactions/pending/%s", transactionID), nil)
+	return
+}
+
 // TransactionByID gets a transaction by its ID. Works only if the indexer is enabled on the node
 // being queried.
 func (client Client) TransactionByID(transactionID string) (response models.Transaction, err error) {
