@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
 )
@@ -56,12 +57,33 @@ func (client Client) LedgerSupply() (response models.Supply, err error) {
 type transactionsByAddrParams struct {
 	FirstRound uint64 `url:"firstRound"`
 	LastRound  uint64 `url:"lastRound"`
+	FromDate   string `url:"fromDate"`
+	ToDate     string `url:"toDate"`
+	Max        uint64 `url:"max"`
 }
 
 // TransactionsByAddr returns all transactions for a PK [addr] in the [first,
 // last] rounds range.
 func (client Client) TransactionsByAddr(addr string, first, last uint64) (response models.TransactionList, err error) {
-	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), transactionsByAddrParams{first, last})
+	params := transactionsByAddrParams{FirstRound: first, LastRound: last}
+	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
+	return
+}
+
+// TransactionsByAddr returns all transactions for a PK [addr] in the [first,
+// last] date range. Dates are of the form "2006-01-02".
+func (client Client) TransactionsByAddrForDate(addr string, first, last string) (response models.TransactionList, err error) {
+	params := transactionsByAddrParams{FromDate: first, ToDate: last}
+	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
+	return
+}
+
+// TransactionsByAddr returns all transactions for a PK [addr] since the given date, with the given limit.
+// Dates are of the form "2006-01-02".
+func (client Client) TransactionsByAddrSinceDate(addr string, sinceDate string, limit uint64) (response models.TransactionList, err error) {
+	now := time.Now().Format("2006-01-02")
+	params := transactionsByAddrParams{FromDate: sinceDate, ToDate: now, Max: limit}
+	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
 	return
 }
 
@@ -76,6 +98,14 @@ func (client Client) AccountInformation(address string) (response models.Account
 func (client Client) TransactionInformation(accountAddress, transactionID string) (response models.Transaction, err error) {
 	transactionID = stripTransaction(transactionID)
 	err = client.get(&response, fmt.Sprintf("/account/%s/transaction/%s", accountAddress, transactionID), nil)
+	return
+}
+
+// TransactionByID gets a transaction by its ID. Works only if the indexer is enabled on the node
+// being queried.
+func (client Client) TransactionByID(transactionID string) (response models.Transaction, err error) {
+	transactionID = stripTransaction(transactionID)
+	err = client.get(&response, fmt.Sprintf("/transaction/%s", transactionID), nil)
 	return
 }
 
