@@ -7,6 +7,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+const minFee = 1000
+
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, closeRemainderTo, genesisID string) (encoded []byte, err error) {
@@ -64,7 +66,12 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 	if err != nil {
 		return nil, err
 	}
-	tx.Fee = types.Algos(uint64(fee) * l)
+
+	tmpFee := types.Algos(uint64(fee) * l)
+
+	if tmpFee < minFee {
+		tx.Fee = minFee
+	}
 
 	encoded = msgpack.Encode(tx)
 
