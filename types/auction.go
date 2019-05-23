@@ -29,3 +29,15 @@ type Bid struct {
 	// AuctionID identifies the auction for which this bid is intended.
 	AuctionID uint64 `codec:"aid"`
 }
+
+// SignedBid represents a signed bid by a bidder.
+type SignedBid struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Bid contains information about the bid.
+	Bid Bid `codec:"bid"`
+
+	// Sig is a signature by the bidder, as identified in the bid
+	// (Bid.BidderKey) over the hash of the Bid.
+	Sig Signature `codec:"sig"`
+}

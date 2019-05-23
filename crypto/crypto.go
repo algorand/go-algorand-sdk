@@ -68,7 +68,7 @@ func SignTransaction(sk []byte, encodedTx []byte) (stxBytes []byte, err error) {
 
 // SignBid accepts a private key and a bid, and returns the signature of the
 // bid under that key
-func SignBid(sk []byte, encodedBid []byte) (sig []byte, err error) {
+func SignBid(sk []byte, encodedBid []byte) (sBid []byte, err error) {
 	if len(sk) != ed25519.PrivateKeySize {
 		err = fmt.Errorf("Incorrect pricateKey length expected %d, got %d", ed25519.PrivateKeySize, len(sk))
 		return
@@ -79,7 +79,31 @@ func SignBid(sk []byte, encodedBid []byte) (sig []byte, err error) {
 	toBeSigned := bytes.Join(msgParts, nil)
 
 	// Sign the encoded bid
-	sig = ed25519.Sign(sk, toBeSigned)
+	signature := ed25519.Sign(sk, toBeSigned)
+
+	// Copy the resulting signature into a Signature, and check that it's
+	// the expected length
+	var s types.Signature
+	n := copy(s[:], signature)
+	if n != len(s) {
+		err = errInvalidSignatureReturned
+		return
+	}
+
+	var bid types.Bid
+	err = msgpack.Decode(encodedBid, &bid)
+	if err != nil {
+		return
+	}
+
+	//Construct Signed Bid
+
+	signedBid := types.SignedBid{
+		Bid: bid,
+		Sig: s,
+	}
+
+	sBid = msgpack.Encode(signedBid)
 	return
 }
 
