@@ -29,7 +29,7 @@ func RandomBytes(s []byte) {
 }
 
 // SignTransaction accepts a private key and a transaction, and returns the
-// bytes of a signed transaction ready to be broadcasted to the network
+// bytes of a signed bid in a note.
 func SignTransaction(sk []byte, encodedTx []byte) (stxBytes []byte, err error) {
 	if len(sk) != ed25519.PrivateKeySize {
 		err = fmt.Errorf("Incorrect pricateKey length expected %d, got %d", ed25519.PrivateKeySize, len(sk))
@@ -103,7 +103,12 @@ func SignBid(sk []byte, encodedBid []byte) (sBid []byte, err error) {
 		Sig: s,
 	}
 
-	sBid = msgpack.Encode(signedBid)
+	note := types.NoteField{
+		Type:      types.NoteBid,
+		SignedBid: signedBid,
+	}
+
+	sBid = msgpack.Encode(note)
 	return
 }
 

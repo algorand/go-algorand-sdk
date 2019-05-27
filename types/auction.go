@@ -41,3 +41,23 @@ type SignedBid struct {
 	// (Bid.BidderKey) over the hash of the Bid.
 	Sig Signature `codec:"sig"`
 }
+
+// NoteFieldType indicates a type of auction message encoded into a
+// transaction's Note field.
+type NoteFieldType string
+
+const (
+	// NoteBid indicates a SignedBid message.
+	NoteBid NoteFieldType = "b"
+)
+
+// NoteField is the struct that represents an auction message.
+type NoteField struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Type indicates which type of a message this is
+	Type NoteFieldType `codec:"t"`
+
+	// SignedBid, for NoteBid type
+	SignedBid SignedBid `codec:"b"`
+}
