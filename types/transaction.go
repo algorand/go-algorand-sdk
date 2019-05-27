@@ -54,10 +54,11 @@ type PaymentTxnFields struct {
 type Header struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sender     Address    `codec:"snd"`
-	Fee        MicroAlgos `codec:"fee"`
-	FirstValid Round      `codec:"fv"`
-	LastValid  Round      `codec:"lv"`
-	Note       []byte     `codec:"note"`
-	GenesisID  string     `codec:"gen"`
+	Sender      Address    `codec:"snd"`
+	Fee         MicroAlgos `codec:"fee"`
+	FirstValid  Round      `codec:"fv"`
+	LastValid   Round      `codec:"lv"`
+	Note        []byte     `codec:"note"`
+	GenesisID   string     `codec:"gen"`
+	GenesisHash Digest     `codec:"gh"`
 }
