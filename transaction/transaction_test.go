@@ -1,25 +1,48 @@
 package transaction
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
 )
 
-func TestMakePaymentTxn(t *testing.T) {
-	const fromAddress = "R5KMWJSLZRBBJJBDDNCJLF7AR436L3OMLIC2AYGBOXCU7N244OCLNZFM2M"
-	const referenceTxID = "SGQTHZ4NF47OEHNUKN4SPGJOEVLFIMW2GILZRVU347YOYYRDSVAA"
-	var fromSK = []byte{242, 175, 163, 193, 109, 239, 243, 150, 57, 236, 107, 130, 11, 20, 250, 252, 116, 163, 125, 222, 50, 175, 14, 232, 7, 153, 82, 169, 228, 5, 76, 247, 143, 84, 203, 38, 75, 204, 66, 20, 164, 35, 27, 68, 149, 151, 224, 143, 55, 229, 237, 204, 90, 5, 160, 96, 193, 117, 197, 79, 183, 92, 227, 132}
+func byteFromBase64(s string) []byte {
+	b, _ := base64.StdEncoding.DecodeString(s)
+	return b
+}
 
-	txn, err := MakePaymentTxn(fromAddress, fromAddress, 10, 10, 1000, 1000, nil, "", "")
+func TestMakePaymentTxn(t *testing.T) {
+	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
+	const referenceTxID = "5FJDJD5LMZC3EHUYYJNH5I23U4X6H2KXABNDGPIL557ZMJ33GZHQ"
+	const mn = "advice pudding treat near rule blouse same whisper inner electric quit surface sunny dismiss leader blood seat clown cost exist hospital century reform able sponsor"
+	const golden = "gqNzaWfEQPhUAZ3xkDDcc8FvOVo6UinzmKBCqs0woYSfodlmBMfQvGbeUx3Srxy3dyJDzv7rLm26BRv9FnL2/AuT7NYfiAWjdHhui6NhbXTNA+ilY2xvc2XEIEDpNJKIJWTLzpxZpptnVCaJ6aHDoqnqW2Wm6KRCH/xXo2ZlZc0EmKJmds0wsqNnZW6sZGV2bmV0LXYzMy4womdoxCAmCyAJoJOohot5WHIvpeVG7eftF+TYXEx4r7BFJpDt0qJsds00mqRub3RlxAjqABVHQ2y/lqNyY3bEIHts4k/rW6zAsWTinCIsV/X2PcOH1DkEglhBHF/hD3wCo3NuZMQg5/D4TQaBHfnzHI2HixFV9GcdUaGFwgCQhmf0SVhwaKGkdHlwZaNwYXk="
+	gh := byteFromBase64("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI=")
+
+	txn, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", gh)
 	require.NoError(t, err)
 
-	id, bytes, err := crypto.SignTransaction(fromSK, txn)
+	key, err := mnemonic.ToPrivateKey(mn)
+	require.NoError(t, err)
 
-	stxBytes := []byte{130, 163, 115, 105, 103, 196, 64, 131, 118, 119, 11, 135, 24, 77, 7, 112, 40, 243, 142, 37, 135, 67, 134, 136, 191, 0, 29, 231, 196, 61, 179, 87, 218, 72, 35, 51, 136, 90, 21, 28, 20, 46, 187, 156, 253, 174, 221, 29, 32, 35, 191, 204, 151, 214, 104, 130, 179, 128, 91, 234, 165, 10, 125, 202, 69, 175, 56, 134, 162, 222, 13, 163, 116, 120, 110, 135, 163, 97, 109, 116, 10, 163, 102, 101, 101, 205, 7, 38, 162, 102, 118, 205, 3, 232, 162, 108, 118, 205, 3, 232, 163, 114, 99, 118, 196, 32, 143, 84, 203, 38, 75, 204, 66, 20, 164, 35, 27, 68, 149, 151, 224, 143, 55, 229, 237, 204, 90, 5, 160, 96, 193, 117, 197, 79, 183, 92, 227, 132, 163, 115, 110, 100, 196, 32, 143, 84, 203, 38, 75, 204, 66, 20, 164, 35, 27, 68, 149, 151, 224, 143, 55, 229, 237, 204, 90, 5, 160, 96, 193, 117, 197, 79, 183, 92, 227, 132, 164, 116, 121, 112, 101, 163, 112, 97, 121}
+	id, bytes, err := crypto.SignTransaction(key, txn)
+
+	stxBytes := byteFromBase64(golden)
 	require.Equal(t, stxBytes, bytes)
 
 	require.Equal(t, referenceTxID, id)
+}
+
+// should fail on a lack of GenesisHash
+func TestMakePaymentTxn2(t *testing.T) {
+	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
+
+	_, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", []byte{})
+	require.Error(t, err)
+
 }
