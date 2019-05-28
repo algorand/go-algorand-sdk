@@ -107,14 +107,15 @@ func main() {
 
 	// Get the suggested transaction parameters
 	txParams, err := algodClient.SuggestedParams()
-        if err != nil {
-                fmt.Printf("error getting suggested tx params: %s\n", err)
-                return
-        }
+	if err != nil {
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
+	}
 
 	// Sign a sample transaction using this library, *not* kmd
 	genID := txParams.GenesisID
-	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, "", genID)
+	genHash := txParams.GenesisHash
+	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, "", genID, genHash)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return

@@ -406,7 +406,8 @@ func main() {
 
 	// Make transaction
 	genID := txParams.GenesisID
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, "", genID)
+	genHash := txParans.GenesisHash
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, "", genID, genHash)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -459,19 +460,21 @@ func main() {
 	// Sign a sample transaction using this library, *not* kmd
 	//This transaction will not be valid as the example parameters will most likely not be valid
 	//You can use the algod client to get suggested values for the fee, first and last rounds, and genesisID
-	tx, err := transaction.MakePaymentTxn(account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4", 1000, 400, 642715, 643715, nil, "", "")
+	tx, err := transaction.MakePaymentTxn(account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4", 1000, 400, 642715, 643715, nil, "", "", ""JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="")
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
 	}
 	fmt.Printf("Made unsigned transaction: %+v\n", tx)
 	fmt.Println("Signing transaction with go-algo-sdk library function (not kmd)")
+	
 	//Sign the Transaction
 	txid, stx, err := crypto.SignTransaction(account.PrivateKey, tx)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return
 	}
+	
 	//Save the signed object to disk
 	fmt.Printf("Made signed transaction with TxID %s: %x\n", txid, stx)
 	file, err := os.Create("./stx.gob")
@@ -564,6 +567,7 @@ txn, err := transaction.MakePaymentTxn(
 	nil,    // note
 	"",     // closeRemainderTo
 	"",     // genesisID
+	[]byte, // genesisHash (Cannot be empty in practice)
 )
 txid, txBytes, err := crypto.SignMultisigTransaction(secretKey, ma, txn)
 if err != nil {
