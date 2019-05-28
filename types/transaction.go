@@ -29,8 +29,8 @@ type SignedTxn struct {
 type KeyregTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	VotePK      	VotePK `codec:"votekey"`
-	SelectionPK 	VRFPK  `codec:"selkey"`
+	VotePK          VotePK `codec:"votekey"`
+	SelectionPK     VRFPK  `codec:"selkey"`
 	VoteFirst       Round  `codec:"votefst"`
 	VoteLast        Round  `codec:"votelst"`
 	VoteKeyDilution uint64 `codec:"votekd"`
@@ -54,10 +54,11 @@ type PaymentTxnFields struct {
 type Header struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sender     Address    `codec:"snd"`
-	Fee        MicroAlgos `codec:"fee"`
-	FirstValid Round      `codec:"fv"`
-	LastValid  Round      `codec:"lv"`
-	Note       []byte     `codec:"note"`
-	GenesisID  string     `codec:"gen"`
+	Sender      Address    `codec:"snd"`
+	Fee         MicroAlgos `codec:"fee"`
+	FirstValid  Round      `codec:"fv"`
+	LastValid   Round      `codec:"lv"`
+	Note        []byte     `codec:"note"`
+	GenesisID   string     `codec:"gen"`
+	GenesisHash Digest     `codec:"gh"`
 }
