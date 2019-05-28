@@ -11,7 +11,7 @@ const minFee = 1000
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, closeRemainderTo, genesisID string) (encoded []byte, err error) {
+func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (encoded []byte, err error) {
 
 	// Sanity check for int64
 	if fee < 0 ||
@@ -43,16 +43,26 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		}
 	}
 
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		err = fmt.Errorf("payment transaction must contain a genesisHash")
+		return
+	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
+
 	// Build the transaction
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
-			Sender:     fromAddr,
-			Fee:        types.Algos(200 * fee),
-			FirstValid: types.Round(firstRound),
-			LastValid:  types.Round(lastRound),
-			Note:       note,
-			GenesisID:  genesisID,
+			Sender:      fromAddr,
+			Fee:         types.Algos(200 * fee),
+			FirstValid:  types.Round(firstRound),
+			LastValid:   types.Round(lastRound),
+			Note:        note,
+			GenesisID:   genesisID,
+			GenesisHash: gh,
 		},
 		PaymentTxnFields: types.PaymentTxnFields{
 			Receiver:         toAddr,
