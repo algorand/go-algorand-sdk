@@ -12,7 +12,6 @@ const minFee = 1000
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (encoded []byte, err error) {
-
 	// Sanity check for int64
 	if fee < 0 ||
 		amount < 0 ||
@@ -57,7 +56,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		Type: types.PaymentTx,
 		Header: types.Header{
 			Sender:      fromAddr,
-			Fee:         types.Algos(200 * fee),
+			Fee:         types.Algos(fee),
 			FirstValid:  types.Round(firstRound),
 			LastValid:   types.Round(lastRound),
 			Note:        note,
@@ -77,9 +76,9 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound int64, n
 		return nil, err
 	}
 
-	tmpFee := types.Algos(uint64(fee) * l)
+	tx.Fee = types.Algos(uint64(fee) * l)
 
-	if tmpFee < minFee {
+	if tx.Fee < minFee {
 		tx.Fee = minFee
 	}
 
