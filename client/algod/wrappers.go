@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
 )
@@ -55,10 +54,10 @@ func (client Client) LedgerSupply() (response models.Supply, err error) {
 }
 
 type transactionsByAddrParams struct {
-	FirstRound uint64 `url:"firstRound"`
-	LastRound  uint64 `url:"lastRound"`
-	FromDate   string `url:"fromDate"`
-	ToDate     string `url:"toDate"`
+	FirstRound uint64 `url:"firstRound,omitempty"`
+	LastRound  uint64 `url:"lastRound,omitempty"`
+	FromDate   string `url:"fromDate,omitempty"`
+	ToDate     string `url:"toDate,omitempty"`
 	Max        uint64 `url:"max"`
 }
 
@@ -85,11 +84,10 @@ func (client Client) TransactionsByAddrForDate(addr string, first, last string) 
 	return
 }
 
-// TransactionsByAddr returns all transactions for a PK [addr] since the given date, with the given limit.
+// TransactionsByAddr returns all transactions for a PK [addr] to the given date, with the given limit.
 // Dates are of the form "2006-01-02".
-func (client Client) TransactionsByAddrSinceDate(addr string, sinceDate string, limit uint64) (response models.TransactionList, err error) {
-	now := time.Now().Format("2006-01-02")
-	params := transactionsByAddrParams{FromDate: sinceDate, ToDate: now, Max: limit}
+func (client Client) TransactionsByAddrToDate(addr string, toDate string, limit uint64) (response models.TransactionList, err error) {
+	params := transactionsByAddrParams{ToDate: toDate, Max: limit}
 	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
 	return
 }
