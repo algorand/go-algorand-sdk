@@ -87,7 +87,7 @@ func (client Client) TransactionsByAddrForDate(addr string, first, last string) 
 // TransactionsByAddr returns all transactions for a PK [addr] to the given date, with the given limit.
 // Dates are of the form "2006-01-02".
 func (client Client) TransactionsByAddrToDate(addr string, toDate string, limit uint64) (response models.TransactionList, err error) {
-	params := transactionsByAddrParams{ToDate: toDate, Max: limit}
+	params := transactionsByAddrParams{ToDate: toDate, FromDate: "2006-01-02T15:04:05Z", Max: limit}
 	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
 	return
 }
