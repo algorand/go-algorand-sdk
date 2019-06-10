@@ -58,7 +58,7 @@ type transactionsByAddrParams struct {
 	LastRound  uint64 `url:"lastRound,omitempty"`
 	FromDate   string `url:"fromDate,omitempty"`
 	ToDate     string `url:"toDate,omitempty"`
-	Max        uint64 `url:"max"`
+	Max        uint64 `url:"max,omitempty"`
 }
 
 // TransactionsByAddr returns all transactions for a PK [addr] in the [first,
@@ -69,7 +69,7 @@ func (client Client) TransactionsByAddr(addr string, first, last uint64) (respon
 	return
 }
 
-// TransactionsByAddrLimit returns all transactions for a PK [addr] after the given [first] round, with a limit.
+// TransactionsByAddrLimit returns the last [limit] number of transaction for a PK [addr].
 func (client Client) TransactionsByAddrLimit(addr string, limit uint64) (response models.TransactionList, err error) {
 	params := transactionsByAddrParams{Max: limit}
 	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
@@ -80,14 +80,6 @@ func (client Client) TransactionsByAddrLimit(addr string, limit uint64) (respons
 // last] date range. Dates are of the form "2006-01-02".
 func (client Client) TransactionsByAddrForDate(addr string, first, last string) (response models.TransactionList, err error) {
 	params := transactionsByAddrParams{FromDate: first, ToDate: last}
-	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
-	return
-}
-
-// TransactionsByAddr returns all transactions for a PK [addr] to the given date, with the given limit.
-// Dates are of the form "2006-01-02".
-func (client Client) TransactionsByAddrToDate(addr string, toDate string, limit uint64) (response models.TransactionList, err error) {
-	params := transactionsByAddrParams{ToDate: toDate, Max: limit}
 	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
 	return
 }
