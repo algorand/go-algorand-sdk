@@ -291,7 +291,6 @@ const kmdToken = "42b7482737a77d9e5dffb8493ac8899db5f95cbc744d4fcffc0f1c47a6db0c
 
 func main() {
 	// Create a kmd client
-	// Create a kmd client
 	kmdClient, err := kmd.MakeClient(kmdAddress, kmdToken)
 	if err != nil {
 		fmt.Printf("failed to make kmd client: %s\n", err)
