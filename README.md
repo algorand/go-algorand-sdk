@@ -405,8 +405,8 @@ func main() {
 
 	// Make transaction
 	genID := txParams.GenesisID
-	genHash := txParans.GenesisHash
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1, 100, 300, 400, nil, "", genID, genHash)
+	genHash := txParams.GenesisHash
+	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1000, 200000, txParams.LastRound, (txParams.LastRound + 1000), nil, "", genID, genHash)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -459,7 +459,7 @@ func main() {
 	// Sign a sample transaction using this library, *not* kmd
 	//This transaction will not be valid as the example parameters will most likely not be valid
 	//You can use the algod client to get suggested values for the fee, first and last rounds, and genesisID
-	tx, err := transaction.MakePaymentTxn(account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4", 1000, 400, 642715, 643715, nil, "", "", ""JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="")
+	tx, err := transaction.MakePaymentTxn(account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4", 1000, 20000, 642715, 643715, nil, "", "", ""JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="")
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
