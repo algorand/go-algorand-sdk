@@ -1,5 +1,65 @@
 package types
 
+import (
+	"github.com/algorand/go-algorand/protocol"
+)
+
+// Deposit represents a deposit of external currency with a bank
+// like CoinList, for a specific auction number.
+type Deposit struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// BidderKey is the hash of the bidder's public key, used to
+	// authenticate bids paid for by this deposit.
+	BidderKey Digest `codec:"key"`
+
+	// WinningsAddress is the address to which the winning algos should
+	// be sent to (Optional, if this field is empty, the address will be set
+	// to BidderKey)
+	WinningsAddress Digest `codec:"out"`
+
+	// Currency indicates the amount of external currency deposited.
+	Currency uint64 `codec:"cur"`
+
+	// AuctionKey specifies the auction into which the currency is
+	// being deposited.
+	AuctionKey Digest `codec:"auc"`
+
+	// AuctionID indicates the auction number for which this currency
+	// has been deposited.
+	AuctionID uint64 `codec:"aid"`
+
+	// DepositID uniquely identifies this deposit within an auction
+	// (identified by AuctionID), so that a deposit cannot be applied
+	// multiple times in the same auction.
+	DepositID uint64 `codec:"did"`
+}
+
+// ToBeHashed implements the Hashable interface.
+func (d Deposit) ToBeHashed() (protocol.HashID, []byte) {
+	return protocol.AuctionDeposit, protocol.Encode(d)
+}
+
+// WinningAddress returns the effective winning address
+func (d Deposit) WinningAddress() Digest {
+	if d.WinningsAddress.IsZero() {
+		return d.BidderKey
+	}
+	return d.WinningsAddress
+}
+
+// SignedDeposit represents a signed deposit message.
+type SignedDeposit struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Deposit represents the deposit being signed.
+	Deposit Deposit `codec:"dep"`
+
+	// Sig is a signature over the hash of Deposit by the external
+	// bank's key (e.g., CoinList).
+	Sig Signature `codec:"sig"`
+}
+
 // Bid represents a bid by a user as part of an auction.
 type Bid struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -30,6 +90,11 @@ type Bid struct {
 	AuctionID uint64 `codec:"aid"`
 }
 
+// ToBeHashed implements the Hashable interface.
+func (b Bid) ToBeHashed() (protocol.HashID, []byte) {
+	return protocol.AuctionBid, protocol.Encode(b)
+}
+
 // SignedBid represents a signed bid by a bidder.
 type SignedBid struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -42,23 +107,53 @@ type SignedBid struct {
 	Sig Signature `codec:"sig"`
 }
 
-// NoteFieldType indicates a type of auction message encoded into a
-// transaction's Note field.
-type NoteFieldType string
+// BidderOutcome specifies the outcome of a particular bidder's participation
+// in an auction.
+type BidderOutcome struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-const (
-	// NoteDeposit indicates a SignedDeposit message.
-	NoteDeposit NoteFieldType = "d"
+	// BidderKey indicates the bidder that participated in the auction.
+	BidderKey Digest `codec:"key"`
 
-	// NoteBid indicates a SignedBid message.
-	NoteBid NoteFieldType = "b"
+	// AlgosWon indicates the number of MicroAlgos that were won
+	// by this bidder.
+	AlgosWon uint64 `codec:"alg"`
 
-	// NoteSettlement indicates a SignedSettlement message.
-	NoteSettlement NoteFieldType = "s"
+	// WinningsAddress is the address to which the winning algos will
+	// be sent to
+	WinningsAddress Digest `codec:"out"`
 
-	// NoteParams indicates a SignedParams message.
-	NoteParams NoteFieldType = "p"
-)
+	// BidID indicates the ID of the successful bid.
+	BidID uint64 `codec:"id"`
+}
+
+// BidOutcomes describes the outcome of an auction.
+type BidOutcomes struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// AuctionKey is the public key for the series of auctions.
+	AuctionKey Digest `codec:"auc"`
+
+	// AuctionID specifies the auction in which these outcomes apply.
+	AuctionID uint64 `codec:"aid"`
+
+	// Price indicates the price, in units of external currency
+	// per algo, at which this auction finished.
+	Price uint64 `codec:"price"`
+
+	// Cleared indicates whether the auction fully cleared.
+	// It is the same as in the Settlement.
+	Cleared bool `codec:"cleared"`
+
+	// Outcomes is a list of bid outcomes, one for every placed bid
+	// in the auction.
+	Outcomes []BidderOutcome `codec:"outcomes"`
+}
+
+// ToBeHashed implements the Hashable interface.
+func (o BidOutcomes) ToBeHashed() (protocol.HashID, []byte) {
+	return protocol.AuctionOutcomes, protocol.Encode(o)
+}
 
 // Settlement describes the outcome of an auction.
 type Settlement struct {
@@ -82,6 +177,11 @@ type Settlement struct {
 	// Canceled indicates that the auction was canceled.
 	// When Canceled is true, clear and OutcomeHash are false and empty, respectively.
 	Canceled bool `codec:"canceled"`
+}
+
+// ToBeHashed implements the crypto.Hashable interface.
+func (s Settlement) ToBeHashed() (protocol.HashID, []byte) {
+	return protocol.AuctionSettlement, protocol.Encode(s)
 }
 
 // SignedSettlement is a settlement signed by the auction operator
@@ -164,6 +264,11 @@ type Params struct {
 	MinBidAlgos uint64 `codec:"minbidalgos"`
 }
 
+// ToBeHashed implements the crypto.Hashable interface.
+func (p Params) ToBeHashed() (protocol.HashID, []byte) {
+	return protocol.AuctionParams, protocol.Encode(p)
+}
+
 // SignedParams is a signed statement by the auction operator attesting
 // to the start of an auction.
 type SignedParams struct {
@@ -176,12 +281,33 @@ type SignedParams struct {
 	Sig Signature `codec:"sig"`
 }
 
+// NoteFieldType indicates a type of auction message encoded into a
+// transaction's Note field.
+type NoteFieldType string
+
+const (
+	// NoteDeposit indicates a SignedDeposit message.
+	NoteDeposit NoteFieldType = "d"
+
+	// NoteBid indicates a SignedBid message.
+	NoteBid NoteFieldType = "b"
+
+	// NoteSettlement indicates a SignedSettlement message.
+	NoteSettlement NoteFieldType = "s"
+
+	// NoteParams indicates a SignedParams message.
+	NoteParams NoteFieldType = "p"
+)
+
 // NoteField is the struct that represents an auction message.
 type NoteField struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// Type indicates which type of a message this is
 	Type NoteFieldType `codec:"t"`
+
+	// SignedDeposit, for NoteDeposit type
+	SignedDeposit SignedDeposit `codec:"d"`
 
 	// SignedBid, for NoteBid type
 	SignedBid SignedBid `codec:"b"`
@@ -191,4 +317,23 @@ type NoteField struct {
 
 	// SignedParams, for NoteParams type
 	SignedParams SignedParams `codec:"p"`
+}
+
+// MasterInput describes an input to an auction, used to feed auction deposits
+// and bids into the auctionmaster tool.
+type MasterInput struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Round indicates the round number in which this input appeared.
+	Round uint64 `codec:"rnd"`
+
+	// Type indicates whether this is a deposit or a bid.  Only deposit
+	// and bid field types are valid here.
+	Type NoteFieldType `codec:"t"`
+
+	// SignedDeposit, for NoteDeposit type.
+	SignedDeposit SignedDeposit `codec:"d"`
+
+	// SignedBid, for NoteBid type.
+	SignedBid SignedBid `codec:"b"`
 }

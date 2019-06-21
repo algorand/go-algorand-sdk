@@ -30,10 +30,17 @@ type Digest [hashLenBytes]byte
 
 const microAlgoConversionFactor = 1e6
 
+// ToAlgos convert MicroAlgos to Algos
 func (microalgos MicroAlgos) ToAlgos() uint64 {
 	return uint64(microalgos) / microAlgoConversionFactor
 }
 
+// ToMicroAlgos converts Algos to MicroAlgos
 func ToMicroAlgos(algos uint64) MicroAlgos {
 	return MicroAlgos(algos * microAlgoConversionFactor)
+}
+
+// IsZero return true if the digest contains only zeros, false otherwise
+func (d Digest) IsZero() bool {
+	return d == Digest{}
 }
