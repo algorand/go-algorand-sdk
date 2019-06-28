@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/base64"
+	"github.com/algorand/go-algorand-sdk/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,15 @@ import (
 func byteFromBase64(s string) []byte {
 	b, _ := base64.StdEncoding.DecodeString(s)
 	return b
+}
+
+func byte32ArrayFromBase64(s string) (out [32]byte) {
+	slice := byteFromBase64(s)
+	if len(slice) != 32 {
+		panic("wrong length: input slice not 32 bytes")
+	}
+	copy(out[:], slice)
+	return
 }
 
 func TestMakePaymentTxn(t *testing.T) {
@@ -45,4 +55,38 @@ func TestMakePaymentTxn2(t *testing.T) {
 	_, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", []byte{})
 	require.Error(t, err)
 
+}
+
+func TestKeyRegTxn(t *testing.T) {
+	// preKeyRegTxn is an unsigned signed keyreg txn with zero Sender
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	a, err := types.DecodeAddress(addr)
+	require.NoError(t, err)
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	expKeyRegTxn := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         1000,
+			FirstValid:  322575,
+			LastValid:   323575,
+			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+			GenesisID:   "",
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:          byte32ArrayFromBase64("Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo="),
+			SelectionPK:     byte32ArrayFromBase64("bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc="),
+			VoteFirst:       10000,
+			VoteLast:        10111,
+			VoteKeyDilution: 11,
+		},
+	}
+	const signedGolden = "gqNzaWfEQEA8ANbrvTRxU9c8v6WERcEPw7D/HacRgg4vICa61vEof60Wwtx6KJKDyvBuvViFeacLlngPY6vYCVP0DktTwQ2jdHhui6NmZWXNA+iiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96ZzZWxrZXnEIGz4K7+GKID3HWlAMa7dUMrGGU1ckQLlDA+M0JgrvZZXo3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaZrZXlyZWendm90ZWZzdM0nEKZ2b3Rla2QLp3ZvdGVrZXnEICr+0CO3IYtcumsaMvre8MwFaXj6kav65I81of0TGMi6p3ZvdGVsc3TNJ38="
+	// now, sign
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	txid, newStxBytes, err := crypto.SignTransaction(private, expKeyRegTxn)
+	require.NoError(t, err)
+	require.Equal(t, "MDRIUVH5AW4Z3GMOB67WP44LYLEVM2MP3ZEPKFHUB5J47A2J6TUQ", txid)
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
