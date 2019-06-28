@@ -90,3 +90,32 @@ func TestKeyRegTxn(t *testing.T) {
 	require.Equal(t, "MDRIUVH5AW4Z3GMOB67WP44LYLEVM2MP3ZEPKFHUB5J47A2J6TUQ", txid)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
+
+func TestMakeKeyRegTxn(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, "", "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
+		"Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11)
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expKeyRegTxn := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         2970,
+			FirstValid:  322575,
+			LastValid:   323575,
+			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+			GenesisID:   "",
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:          byte32ArrayFromBase64("Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo="),
+			SelectionPK:     byte32ArrayFromBase64("bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc="),
+			VoteFirst:       10000,
+			VoteLast:        10111,
+			VoteKeyDilution: 11,
+		},
+	}
+	require.Equal(t, expKeyRegTxn, tx)
+}

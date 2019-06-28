@@ -1,6 +1,8 @@
 package transaction
 
 import (
+	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
@@ -75,6 +77,75 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 	return tx, nil
 }
 
+// MakeKeyRegTxn constructs a keyreg transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// KeyReg parameters:
+// - votePK is a base64-encoded string corresponding to the root participation public key
+// - selectionKey is a base64-encoded string corresponding to the vrf public key
+// - voteFirst is the first round this participation key is valid
+// - voteLast is the last round this participation key is valid
+// - voteKeyDilution is the dilution for the 2-level participation key
+func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, genesisID string, genesisHash string,
+	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
+	// Decode account address
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	gh, err := byteArrayFromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	votePK, err := byteArrayFromBase64(voteKey)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	selectionPK, err := byteArrayFromBase64(selectionKey)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      accountAddr,
+			Fee:         types.MicroAlgos(feePerByte),
+			FirstValid:  types.Round(firstRound),
+			LastValid:   types.Round(lastRound),
+			GenesisHash: gh,
+			GenesisID:   genesisID,
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:          votePK,
+			SelectionPK:     selectionPK,
+			VoteFirst:       types.Round(voteFirst),
+			VoteLast:        types.Round(voteLast),
+			VoteKeyDilution: voteKeyDilution,
+		},
+	}
+
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
+	return tx, nil
+}
+
 // EstimateSize returns the estimated length of the encoded transaction
 func estimateSize(txn types.Transaction) (uint64, error) {
 	key := crypto.GenerateAccount()
@@ -83,4 +154,16 @@ func estimateSize(txn types.Transaction) (uint64, error) {
 		return 0, err
 	}
 	return uint64(len(stx)), nil
+}
+
+func byteArrayFromBase64(in string) (out [32]byte, err error) {
+	slice, err := base64.StdEncoding.DecodeString(in)
+	if err != nil {
+		return
+	}
+	if len(slice) != 32 {
+		return out, errors.New("Input is not 32 bytes")
+	}
+	copy(out[:], slice)
+	return
 }
