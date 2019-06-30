@@ -2,7 +2,6 @@ package transaction
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
@@ -98,17 +97,17 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, gen
 		return types.Transaction{}, err
 	}
 
-	gh, err := byteArrayFromBase64(genesisHash)
+	gh, err := keysLenBytesFromBase64(genesisHash)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 
-	votePK, err := byteArrayFromBase64(voteKey)
+	votePK, err := keysLenBytesFromBase64(voteKey)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 
-	selectionPK, err := byteArrayFromBase64(selectionKey)
+	selectionPK, err := keysLenBytesFromBase64(selectionKey)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -156,13 +155,15 @@ func estimateSize(txn types.Transaction) (uint64, error) {
 	return uint64(len(stx)), nil
 }
 
-func byteArrayFromBase64(in string) (out [32]byte, err error) {
+// keysLenBytesFromBase64 decodes the input base64 string and outputs a
+// 32 byte array, erroring if the input is the wrong length.
+func keysLenBytesFromBase64(in string) (out [types.KeysLenBytes]byte, err error) {
 	slice, err := base64.StdEncoding.DecodeString(in)
 	if err != nil {
 		return
 	}
-	if len(slice) != 32 {
-		return out, errors.New("Input is not 32 bytes")
+	if len(slice) != types.KeysLenBytes {
+		return out, fmt.Errorf("Input is not %v bytes", types.KeysLenBytes)
 	}
 	copy(out[:], slice)
 	return
