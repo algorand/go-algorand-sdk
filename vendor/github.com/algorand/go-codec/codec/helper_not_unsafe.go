@@ -82,15 +82,16 @@ func isEmptyValue(v reflect.Value, tinfos *TypeInfos, deref, checkStruct bool, o
 	case reflect.Struct:
 		return isEmptyStruct(v, tinfos, deref, checkStruct, omitEmptyArray)
 	case reflect.Array:
+		vlen := v.Len()
 		if omitEmptyArray {
-			for i := 0; i < v.Len(); i++ {
+			for i := 0; i < vlen; i++ {
 				if !isEmptyValue(v.Index(i), tinfos, deref, checkStruct, omitEmptyArray) {
 					return false
 				}
 			}
 			return true
 		} else {
-			return v.Len() == 0
+			return vlen == 0
 		}
 	}
 	return false
