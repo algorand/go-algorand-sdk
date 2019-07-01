@@ -97,17 +97,17 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, gen
 		return types.Transaction{}, err
 	}
 
-	gh, err := keysLenBytesFromBase64(genesisHash)
+	ghBytes, err := byte32FromBase64(genesisHash)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 
-	votePK, err := keysLenBytesFromBase64(voteKey)
+	votePKBytes, err := byte32FromBase64(voteKey)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 
-	selectionPK, err := keysLenBytesFromBase64(selectionKey)
+	selectionPKBytes, err := byte32FromBase64(selectionKey)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -119,12 +119,12 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, gen
 			Fee:         types.MicroAlgos(feePerByte),
 			FirstValid:  types.Round(firstRound),
 			LastValid:   types.Round(lastRound),
-			GenesisHash: gh,
+			GenesisHash: types.Digest(ghBytes),
 			GenesisID:   genesisID,
 		},
 		KeyregTxnFields: types.KeyregTxnFields{
-			VotePK:          votePK,
-			SelectionPK:     selectionPK,
+			VotePK:          types.VotePK(votePKBytes),
+			SelectionPK:     types.VRFPK(selectionPKBytes),
 			VoteFirst:       types.Round(voteFirst),
 			VoteLast:        types.Round(voteLast),
 			VoteKeyDilution: voteKeyDilution,
@@ -155,15 +155,15 @@ func estimateSize(txn types.Transaction) (uint64, error) {
 	return uint64(len(stx)), nil
 }
 
-// keysLenBytesFromBase64 decodes the input base64 string and outputs a
+// byte32FromBase64 decodes the input base64 string and outputs a
 // 32 byte array, erroring if the input is the wrong length.
-func keysLenBytesFromBase64(in string) (out [types.KeysLenBytes]byte, err error) {
+func byte32FromBase64(in string) (out [32]byte, err error) {
 	slice, err := base64.StdEncoding.DecodeString(in)
 	if err != nil {
 		return
 	}
-	if len(slice) != types.KeysLenBytes {
-		return out, fmt.Errorf("Input is not %v bytes", types.KeysLenBytes)
+	if len(slice) != 32 {
+		return out, fmt.Errorf("Input is not 32 bytes")
 	}
 	copy(out[:], slice)
 	return
