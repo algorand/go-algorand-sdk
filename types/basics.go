@@ -1,5 +1,7 @@
 package types
 
+import "golang.org/x/crypto/ed25519"
+
 // TxType identifies the type of the transaction
 type TxType string
 
@@ -10,6 +12,8 @@ const (
 	KeyRegistrationTx TxType = "keyreg"
 )
 
+const masterDerivationKeyLenBytes = 32
+
 // MicroAlgos are the base unit of currency in Algorand
 type MicroAlgos uint64
 
@@ -17,13 +21,13 @@ type MicroAlgos uint64
 type Round uint64
 
 // VotePK is the participation public key used in key registration transactions
-type VotePK [32]byte
+type VotePK [ed25519.PublicKeySize]byte
 
 // VRFPK is the VRF public key used in key registration transactions
-type VRFPK [32]byte
+type VRFPK [ed25519.PublicKeySize]byte
 
 // MasterDerivationKey is the secret key used to derive keys in wallets
-type MasterDerivationKey [32]byte
+type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
