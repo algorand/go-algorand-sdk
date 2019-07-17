@@ -64,7 +64,7 @@ type transactionsByAddrParams struct {
 // TransactionsByAddr returns all transactions for a PK [addr] in the [first,
 // last] rounds range.
 func (client Client) TransactionsByAddr(addr string, first, last uint64) (response models.TransactionList, err error) {
-	params := transactionsByAddrParams{FirstRound: first, LastRound: last}
+	params := transactionsByAddrParams{FirstRound: first, LastRound: last, Max: MaxUint64}
 	err = client.get(&response, fmt.Sprintf("/account/%s/transactions", addr), params)
 	return
 }
