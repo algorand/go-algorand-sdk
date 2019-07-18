@@ -1,6 +1,7 @@
 package types
 
 import (
+	"crypto/sha512"
 	"encoding/base32"
 	"encoding/binary"
 
