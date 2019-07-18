@@ -34,8 +34,11 @@ type VRFPK [ed25519.PublicKeySize]byte
 // MasterDerivationKey is the secret key used to derive keys in wallets
 type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 
-// Digest is a SHA512_256 hash
-type Digest [hashLenBytes]byte
+// DigestSize is the number of bytes in the preferred hash Digest used here.
+const DigestSize = sha512.Size256
+
+// Digest represents a 32-byte value holding the 256-bit Hash digest.
+type Digest [DigestSize]byte
 
 // String returns the digest in a human-readable Base32 string
 func (d Digest) String() string {
