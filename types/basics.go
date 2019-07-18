@@ -32,6 +32,21 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
 
+// String returns the digest in a human-readable Base32 string
+func (d Digest) String() string {
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(d[:])
+}
+
+// TrimUint64 returns the top 64 bits of the digest and converts to uint64
+func (d Digest) TrimUint64() uint64 {
+	return binary.LittleEndian.Uint64(d[:8])
+}
+
+// IsZero return true if the digest contains only zeros, false otherwise
+func (d Digest) IsZero() bool {
+	return d == Digest{}
+}
+
 const microAlgoConversionFactor = 1e6
 
 // ToAlgos converts micro algos into algos
