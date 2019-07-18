@@ -27,8 +27,8 @@ func RandomBytes(s []byte) {
 }
 
 // VerifySignature checks that the given hashed data is has a valid signature.
-func VerifySignature(pk ed25519.PublicKey, data []byte, sig ed25519Signature) bool {
-	return ed25519Verify(ed25519PublicKey(pk), data, sig)
+func VerifySignature(pk ed25519.PublicKey, data []byte, sig types.Signature) bool {
+	return ed25519.Verify(pk, data, sig.ToBytes())
 }
 
 // SignTransaction accepts a private key and a transaction, and returns the

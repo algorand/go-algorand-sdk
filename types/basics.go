@@ -1,6 +1,11 @@
 package types
 
-import "golang.org/x/crypto/ed25519"
+import (
+	"encoding/base32"
+	"encoding/binary"
+
+	"golang.org/x/crypto/ed25519"
+)
 
 // TxType identifies the type of the transaction
 type TxType string

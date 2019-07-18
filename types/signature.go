@@ -7,6 +7,11 @@ import (
 // Signature is an ed25519 signature
 type Signature [ed25519.SignatureSize]byte
 
+// ToBytes converts a signature to a byte representation
+func (s Signature) ToBytes() []byte {
+	return s[:]
+}
+
 // MultisigSubsig contains a single public key and, optionally, a signature
 type MultisigSubsig struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
