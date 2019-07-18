@@ -34,10 +34,12 @@ type Digest [hashLenBytes]byte
 
 const microAlgoConversionFactor = 1e6
 
+// ToAlgos converts micro algos into algos
 func (microalgos MicroAlgos) ToAlgos() uint64 {
 	return uint64(microalgos) / microAlgoConversionFactor
 }
 
+// ToMicroAlgos converts algos into MicroAlgos
 func ToMicroAlgos(algos uint64) MicroAlgos {
 	return MicroAlgos(algos * microAlgoConversionFactor)
 }

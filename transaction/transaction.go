@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// MinTxnFee is the minimum transaction fee
 const MinTxnFee = 1000 // v5 consensus params, in microAlgos
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
