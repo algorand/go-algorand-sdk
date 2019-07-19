@@ -35,10 +35,9 @@ func GenerateAccount() (kp Account) {
 	}
 
 	// Convert the public key to an address
-	var a types.Address
-	n := copy(a[:], pk)
-	if n != ed25519.PublicKeySize {
-		panic("generated public key is the wrong size")
+	a, err := types.MakeAddressFromPublicKey(pk)
+	if err != nil {
+		panic(err)
 	}
 
 	// Build the account

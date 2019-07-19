@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base32"
+	"fmt"
+	"golang.org/x/crypto/ed25519"
 )
 
 const (
@@ -58,4 +60,14 @@ func DecodeAddress(addr string) (a Address, err error) {
 	// Checksum is good, copy address bytes into output
 	copy(a[:], addressBytes)
 	return a, nil
+}
+
+// MakeAddressFromPublicKey converts a public key to an Address
+func MakeAddressFromPublicKey(pk ed25519.PublicKey) (a Address, err error) {
+	// Convert the public key to an address
+	n := copy(a[:], pk)
+	if n != ed25519.PublicKeySize {
+		return a, fmt.Errorf("generated public key is the wrong size")
+	}
+	return
 }
