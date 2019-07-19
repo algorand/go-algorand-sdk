@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+	"fmt"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -282,4 +283,15 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, preStx
 	}
 	txid, stxBytes, err = MergeMultisigTransactions(partStxBytes, preStxBytes)
 	return
+}
+
+func GenerateKeysFromSeed(seed []byte) (*ed25519.PublicKey, *ed25519.PrivateKey, error) {
+	if len(seed) != ed25519.SeedSize {
+		return nil, nil, fmt.Errorf("seed from length mismatch: %d != %d", len(seed), ed25519.SeedSize)
+	}
+
+	var publicKey ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
+	privateKey := ed25519.NewKeyFromSeed(seed)
+	copy(publicKey, privateKey[32:])
+	return &publicKey, &privateKey, nil
 }
