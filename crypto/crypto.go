@@ -31,6 +31,20 @@ func VerifySignature(pk ed25519.PublicKey, data []byte, sig types.Signature) boo
 	return ed25519.Verify(pk, data, sig.ToBytes())
 }
 
+// SignTransactionRaw returns an unencoded version of the transaction.
+func SignTransactionRaw(sk ed25519.PrivateKey, tx types.Transaction) (s types.Signature, txid string, stx types.SignedTxn, err error) {
+  s, txid, err = rawSignTransaction(sk, tx)
+  if err != nil {
+    return
+  }
+  // Construct the SignedTxn
+  stx = types.SignedTxn{
+    Sig: s,
+    Txn: tx,
+  }
+	return
+}
+
 // SignTransaction accepts a private key and a transaction, and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
 func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
