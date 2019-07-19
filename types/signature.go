@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"golang.org/x/crypto/ed25519"
 )
 
@@ -27,4 +28,14 @@ type MultisigSig struct {
 	Version   uint8            `codec:"v"`
 	Threshold uint8            `codec:"thr"`
 	Subsigs   []MultisigSubsig `codec:"subsig"`
+}
+
+// MakeSignature converts data into a Signature and checks the size.
+func MakeSignature(data []byte) (s Signature, err error) {
+	n := copy(s[:], data)
+	if n != len(s) {
+		err = errors.New("ed25519 library returned an invalid signature")
+		return
+	}
+	return
 }

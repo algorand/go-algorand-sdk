@@ -32,6 +32,11 @@ func VerifySignature(pk ed25519.PublicKey, data []byte, sig types.Signature) boo
 	return ed25519.Verify(pk, data, sig.ToBytes())
 }
 
+func SignData(sk ed25519.PrivateKey, data interface{}) (types.Signature, error) {
+	sig := ed25519.Sign(sk, msgpack.Encode(data))
+	return types.MakeSignature(sig)
+}
+
 // SignTransactionRaw returns an unencoded version of the transaction.
 func SignTransactionRaw(sk ed25519.PrivateKey, tx types.Transaction) (s types.Signature, txid string, stx types.SignedTxn, err error) {
   s, txid, err = rawSignTransaction(sk, tx)
@@ -97,11 +102,11 @@ func rawSignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (s types.Si
 
 	// Copy the resulting signature into a Signature, and check that it's
 	// the expected length
-	n := copy(s[:], signature)
-	if n != len(s) {
-		err = errInvalidSignatureReturned
+	s, err = types.MakeSignature(signature)
+	if err != nil {
 		return
 	}
+
 	// Populate txID
 	txid = txIDFromRawTxnBytesToSign(toBeSigned)
 	return
@@ -120,10 +125,8 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error)
 	// Sign the encoded bid
 	sig := ed25519.Sign(sk, toBeSigned)
 
-	var s types.Signature
-	n := copy(s[:], sig)
-	if n != len(s) {
-		err = errInvalidSignatureReturned
+	s, err := types.MakeSignature(sig)
+	if err != nil {
 		return
 	}
 
