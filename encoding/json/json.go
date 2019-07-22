@@ -46,6 +46,6 @@ func NewDecoder(r io.Reader) *codec.Decoder {
 }
 
 // NewDecoderBytes returns a json decoder
-func NewDecoderBytes(b []byte, objptr interface{}) *codec.Decoder {
+func NewDecoderBytes(b []byte) *codec.Decoder {
 	return codec.NewDecoderBytes(b, CodecHandle)
 }
