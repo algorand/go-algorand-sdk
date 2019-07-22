@@ -44,8 +44,3 @@ func Decode(b []byte, objptr interface{}) error {
 func NewDecoder(r io.Reader) *codec.Decoder {
 	return codec.NewDecoder(r, CodecHandle)
 }
-
-// NewDecoderBytes returns a json decoder
-func NewDecoderBytes(b []byte) *codec.Decoder {
-	return codec.NewDecoderBytes(b, CodecHandle)
-}
