@@ -140,6 +140,9 @@ func getPathAndMethod(req APIV1Request) (reqPath string, reqMethod string, err e
 	case ExportMultisigRequest:
 		reqPath = "v1/multisig/export"
 		reqMethod = "POST"
+	case DeleteMultisigRequest:
+		reqPath = "v1/multisig"
+		reqMethod = "DELETE"
 	case SignMultisigTransactionRequest:
 		reqPath = "v1/multisig/sign"
 		reqMethod = "POST"
