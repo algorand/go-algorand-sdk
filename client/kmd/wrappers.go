@@ -235,6 +235,18 @@ func (kcl Client) ExportMultisig(walletHandle, walletPassword, addr string) (res
 	return
 }
 
+// DeleteMultisig accepts a wallet handle, wallet password, and address, and deletes
+// the information about this multisig address from the wallet.
+func (kcl Client) DeleteMultisig(walletHandle, walletPassword, addr string) (resp DeleteMultisigResponse, err error) {
+	req := DeleteMultisigRequest{
+		WalletHandleToken: walletHandle,
+		WalletPassword:    walletPassword,
+		Address:           addr,
+	}
+	err = kcl.DoV1Request(req, &resp)
+	return
+}
+
 // MultisigSignTransaction accepts a wallet handle, wallet password,
 // transaction, public key (*not* an address), and an optional partial
 // MultisigSig. It looks up the secret key corresponding to the public key, and

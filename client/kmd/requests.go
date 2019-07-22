@@ -143,8 +143,8 @@ type ExportMultisigRequest struct {
 	WalletPassword    string `json:"wallet_password"`
 }
 
-// DeleteMultisig is the request for `POST /v1/multisig/delete`
-type DeleteMultisig struct {
+// DeleteMultisigRequest is the request for `POST /v1/multisig/delete`
+type DeleteMultisigRequest struct {
 	APIV1RequestEnvelope
 	WalletHandleToken string `json:"wallet_handle_token"`
 	Address           string `json:"address"`
