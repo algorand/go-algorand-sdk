@@ -34,16 +34,10 @@ func GenerateAccount() (kp Account) {
 		panic(err)
 	}
 
-	// Convert the public key to an address
-	a, err := types.MakeAddressFromPublicKey(pk)
-	if err != nil {
-		panic(err)
-	}
-
 	// Build the account
 	kp.PublicKey = pk
 	kp.PrivateKey = sk
-	kp.Address = a
+	kp.Address = types.MakeAddressFromPublicKey(pk)
 	return
 }
 

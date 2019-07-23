@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base32"
-	"fmt"
 	"golang.org/x/crypto/ed25519"
 )
 
