@@ -63,11 +63,7 @@ func DecodeAddress(addr string) (a Address, err error) {
 }
 
 // MakeAddressFromPublicKey converts a public key to an Address
-func MakeAddressFromPublicKey(pk ed25519.PublicKey) (a Address, err error) {
-	// Convert the public key to an address
-	n := copy(a[:], pk)
-	if n != ed25519.PublicKeySize {
-		return a, fmt.Errorf("generated public key is the wrong size")
-	}
+func MakeAddressFromPublicKey(pk ed25519.PublicKey) (a Address) {
+	copy(a[:], pk)
 	return
 }

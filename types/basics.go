@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/binary"
-
 	"golang.org/x/crypto/ed25519"
 )
 
@@ -66,4 +65,9 @@ func (microalgos MicroAlgos) ToAlgos() uint64 {
 // ToMicroAlgos converts algos into MicroAlgos
 func ToMicroAlgos(algos uint64) MicroAlgos {
 	return MicroAlgos(algos * microAlgoConversionFactor)
+}
+
+func MakeDigestFromPublicKey(key ed25519.PublicKey) (d Digest) {
+	copy(d[:], key)
+	return
 }
