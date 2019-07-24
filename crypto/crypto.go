@@ -32,8 +32,9 @@ func VerifySignature(pk ed25519.PublicKey, data []byte, sig types.Signature) boo
 	return ed25519.Verify(pk, data, sig.ToBytes())
 }
 
-func SignData(sk ed25519.PrivateKey, data interface{}) (types.Signature, error) {
-	sig := ed25519.Sign(sk, msgpack.Encode(data))
+// SignData generates a signature for the encoded data.
+func SignData(sk ed25519.PrivateKey, data []byte) (types.Signature, error) {
+	sig := ed25519.Sign(sk, data)
 	return types.MakeSignature(sig)
 }
 
@@ -288,6 +289,7 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, preStx
 	return
 }
 
+// GenerateKeysFromSeed is a helper to generate keys from a seed. Seed must be ed25519.SeedSize bytes of data.
 func GenerateKeysFromSeed(seed []byte) (*ed25519.PublicKey, *ed25519.PrivateKey, error) {
 	if len(seed) != ed25519.SeedSize {
 		return nil, nil, fmt.Errorf("seed from length mismatch: %d != %d", len(seed), ed25519.SeedSize)

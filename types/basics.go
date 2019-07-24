@@ -67,6 +67,7 @@ func ToMicroAlgos(algos uint64) MicroAlgos {
 	return MicroAlgos(algos * microAlgoConversionFactor)
 }
 
+// MakeDigestFromPublicKey convert ed25519.PublicKey into types.Digest
 func MakeDigestFromPublicKey(key ed25519.PublicKey) (d Digest) {
 	copy(d[:], key)
 	return
