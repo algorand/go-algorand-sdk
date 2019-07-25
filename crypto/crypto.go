@@ -27,6 +27,18 @@ func RandomBytes(s []byte) {
 	}
 }
 
+// GenerateKeysFromSeed is a helper to generate keys from a seed. Seed must be ed25519.SeedSize bytes of data.
+func GenerateKeysFromSeed(seed []byte) (*ed25519.PublicKey, *ed25519.PrivateKey, error) {
+	if len(seed) != ed25519.SeedSize {
+		return nil, nil, fmt.Errorf("seed from length mismatch: %d != %d", len(seed), ed25519.SeedSize)
+	}
+
+	var publicKey ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
+	privateKey := ed25519.NewKeyFromSeed(seed)
+	copy(publicKey, privateKey[32:])
+	return &publicKey, &privateKey, nil
+}
+
 // VerifySignature checks that the given hashed data is has a valid signature.
 func VerifySignature(pk ed25519.PublicKey, data []byte, sig types.Signature) bool {
 	return ed25519.Verify(pk, data, sig.ToBytes())
@@ -289,14 +301,15 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, preStx
 	return
 }
 
-// GenerateKeysFromSeed is a helper to generate keys from a seed. Seed must be ed25519.SeedSize bytes of data.
-func GenerateKeysFromSeed(seed []byte) (*ed25519.PublicKey, *ed25519.PrivateKey, error) {
-	if len(seed) != ed25519.SeedSize {
-		return nil, nil, fmt.Errorf("seed from length mismatch: %d != %d", len(seed), ed25519.SeedSize)
+// MultisigPreimageFromPKs builds a MultisigSig from public keys.
+func MultisigPreimageFromPKs(version, threshold uint8, pks []ed25519.PublicKey) types.MultisigSig {
+	subsigs := make([]types.MultisigSubsig, len(pks))
+	for i := range pks {
+		subsigs[i].Key = pks[i]
 	}
-
-	var publicKey ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
-	privateKey := ed25519.NewKeyFromSeed(seed)
-	copy(publicKey, privateKey[32:])
-	return &publicKey, &privateKey, nil
+	return types.MultisigSig{
+		Version: version,
+		Threshold: threshold,
+		Subsigs: subsigs,
+	}
 }
