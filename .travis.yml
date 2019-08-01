@@ -2,5 +2,13 @@ go:
   - "1.12"
 language: go
 
+before_install:
+  - pyenv global 3.7
+
 install:
   - go get -u golang.org/x/lint/golint
+  - curl https://raw.githubusercontent.com/algorand/algorand-sdk-testing/master/scripts/sdkupdate.sh -o ~/sdkupdate.sh
+  - chmod +x ~/sdkupdate.sh
+
+script:
+  - ~/sdkupdate.sh --go
