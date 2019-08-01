@@ -76,7 +76,7 @@ func (client Client) TransactionsByAddrLimit(addr string, limit uint64) (respons
 	return
 }
 
-// TransactionsByAddr returns all transactions for a PK [addr] in the [first,
+// TransactionsByAddrForDate returns all transactions for a PK [addr] in the [first,
 // last] date range. Dates are of the form "2006-01-02".
 func (client Client) TransactionsByAddrForDate(addr string, first, last string) (response models.TransactionList, err error) {
 	params := transactionsByAddrParams{FromDate: first, ToDate: last}
