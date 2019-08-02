@@ -97,11 +97,12 @@ func stripTransaction(tx string) string {
 func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool) error {
 	var err error
 	queryURL := client.serverURL
-	queryURL.Path = path
 
 	// Handle version prefix
 	if !unversionedPaths[path] {
-		queryURL.Path = strings.Join([]string{apiVersionPathPrefix, path}, "")
+		queryURL.Path += strings.Join([]string{apiVersionPathPrefix, path}, "")
+	} else {
+		queryURL.Path += path
 	}
 
 	var req *http.Request
