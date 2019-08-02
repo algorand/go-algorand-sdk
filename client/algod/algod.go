@@ -30,21 +30,45 @@ var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
 
+// Token struct for custom api tokens.
+type Token struct {
+	Key string
+	Value string
+}
+
 // Client manages the REST interface for a calling user.
 type Client struct {
 	serverURL url.URL
-	apiToken  string
+	apiToken  []Token
 }
 
-// MakeClient is the factory for constructing a Client for a given endpoint
-func MakeClient(address string, apiToken string) (c Client, err error) {
+func getTokens(apiToken interface{}) (tokens []Token){
+	switch apiToken.(type) {
+	case string:
+		tokens = append(tokens, Token{authHeader, apiToken.(string)})
+	case Token:
+		tokens = append(tokens, apiToken.(Token))
+	case []Token:
+		tokens = apiToken.([]Token)
+	default:
+		fmt.Println("type unknown")
+	}
+	return tokens
+}
+
+// MakeClient is the factory for constructing a Client for a given endpoint.
+// The apiToken can be a string, a Token, or a slice of Tokens.
+func MakeClient(address string, apiToken interface{}) (c Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
 		return
 	}
+
+	tokens := getTokens(apiToken)
+
 	c = Client{
 		serverURL: *url,
-		apiToken:  apiToken,
+		apiToken:  tokens,
 	}
 	return
 }
@@ -111,8 +135,8 @@ func (client Client) submitForm(response interface{}, path string, request inter
 
 	// If we add another endpoint that does not require auth, we should add a
 	// requiresAuth argument to submitForm rather than checking here
-	if path != healthCheckEndpoint {
-		req.Header.Set(authHeader, client.apiToken)
+	for _, token := range client.apiToken {
+		req.Header.Add(token.Key, token.Value)
 	}
 
 	httpClient := &http.Client{}
