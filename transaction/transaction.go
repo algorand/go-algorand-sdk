@@ -76,6 +76,24 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 	return tx, nil
 }
 
+// MakePaymentTxn constructs a payment transaction using the passed parameters.
+// `from` and `to` addresses should be checksummed, human-readable addresses
+// fee is a flat fee
+func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (types.Transaction, error) {
+	// Decode from address
+	tx, err := MakePaymentTxn(from, to, fee, amount, firstRound, lastRound, note, closeRemainderTo, genesisID, genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
+	return tx, nil
+}
+
 // MakeKeyRegTxn constructs a keyreg transaction using the passed parameters.
 // - account is a checksummed, human-readable address for which we register the given participation key.
 // - fee is fee per byte as received from algod SuggestedFee API call.
@@ -137,6 +155,35 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, gen
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
+	return tx, nil
+}
+
+// MakeKeyRegTxn constructs a keyreg transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// KeyReg parameters:
+// - votePK is a base64-encoded string corresponding to the root participation public key
+// - selectionKey is a base64-encoded string corresponding to the vrf public key
+// - voteFirst is the first round this participation key is valid
+// - voteLast is the last round this participation key is valid
+// - voteKeyDilution is the dilution for the 2-level participation key
+func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, genesisID string, genesisHash string,
+	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
+	tx, err := MakeKeyRegTxn(account, fee, firstRound, lastRound, genesisID, genesisHash, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
 
 	if tx.Fee < MinTxnFee {
 		tx.Fee = MinTxnFee
