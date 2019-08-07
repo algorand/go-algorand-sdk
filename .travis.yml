@@ -1,9 +1,7 @@
-go:
-  - "1.12"
 language: go
 
-before_install:
-  - pyenv global 3.7
+go:
+  - "1.12"
 
 install:
   - go get -u golang.org/x/lint/golint
