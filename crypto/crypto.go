@@ -17,8 +17,8 @@ var txidPrefix = []byte("TX")
 // bidPrefix is prepended to a bid when signing it
 var bidPrefix = []byte("aB")
 
-// bytesPrefix is prepended to bytes when signing
-var bytesPrefix = []byte("NF")
+// bytesPrefix is prepended to a message when signing
+var bytesPrefix = []byte("MX")
 
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
