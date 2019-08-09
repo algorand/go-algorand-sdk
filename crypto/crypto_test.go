@@ -4,6 +4,7 @@ import (
     "github.com/algorand/go-algorand-sdk/encoding/msgpack"
     "github.com/algorand/go-algorand-sdk/mnemonic"
     "testing"
+    "math/rand"
 
     "github.com/stretchr/testify/require"
     "golang.org/x/crypto/ed25519"
@@ -115,4 +116,19 @@ func TestMergeMultisigTransactions(t *testing.T) {
     require.EqualValues(t, expectedBytes, txBytesSym)
     expectedTxid := "2U2QKCYSYA3DUJNVP5T2KWBLWVUMX4PPIGN43IPPVGVZKTNFKJFQ"
     require.Equal(t, expectedTxid, txid)
+}
+
+func TestSignBytes(t *testing.T) {
+    account := GenerateAccount()
+    message := make([]byte, 15)
+    rand.Read(message)
+    signature, err := SignBytes(account.PrivateKey, message)
+    require.NoError(t, err)
+    require.True(t, VerifyBytes(account.PublicKey, message, signature))
+    if message[0] == 255 {
+        message[0] = 0
+    } else {
+        message[0] = message[0]+1
+    }
+    require.False(t, VerifyBytes(account.PublicKey, message, signature))
 }

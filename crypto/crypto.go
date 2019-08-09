@@ -17,6 +17,9 @@ var txidPrefix = []byte("TX")
 // bidPrefix is prepended to a bid when signing it
 var bidPrefix = []byte("aB")
 
+// bytesPrefix is prepended to bytes when signing
+var bytesPrefix = []byte("NF")
+
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
 func RandomBytes(s []byte) {
@@ -85,6 +88,23 @@ func rawSignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (s types.Si
 	// Populate txID
 	txid = txIDFromRawTxnBytesToSign(toBeSigned)
 	return
+}
+
+// SignBytes signs the bytes and returns the signature
+func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err error) {
+	// prepend the prefix for signing bytes
+	toBeSigned := bytes.Join([][]byte{bytesPrefix, bytesToSign}, nil)
+
+	// sign the bytes
+	signature = ed25519.Sign(sk, toBeSigned)
+	return
+}
+
+//VerifyBytes verifies that the signature is valid
+func VerifyBytes(pk ed25519.PublicKey, message, signature []byte) bool {
+	msgParts := [][]byte{bytesPrefix, message}
+	toBeVerified := bytes.Join(msgParts, nil)
+	return ed25519.Verify(pk, toBeVerified, signature)
 }
 
 // SignBid accepts a private key and a bid, and returns the signature of the
