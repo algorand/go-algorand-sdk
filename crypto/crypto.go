@@ -20,6 +20,7 @@ var bidPrefix = []byte("aB")
 // bytesPrefix is prepended to a message when signing
 var bytesPrefix = []byte("MX")
 
+
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
 func RandomBytes(s []byte) {
