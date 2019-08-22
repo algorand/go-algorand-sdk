@@ -1,3 +1,6 @@
+# 1.1.3
+# Changed
+- Add note parameter to key registration transaction constructors
 # 1.1.2
 # Added 
 - Support for GenesisHash
