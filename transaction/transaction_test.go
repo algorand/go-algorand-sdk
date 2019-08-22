@@ -93,7 +93,7 @@ func TestKeyRegTxn(t *testing.T) {
 
 func TestMakeKeyRegTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
-	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, "", "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
+	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, []byte{45, 67}, "", "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
 		"Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11)
 	require.NoError(t, err)
 
@@ -103,9 +103,10 @@ func TestMakeKeyRegTxn(t *testing.T) {
 		Type: types.KeyRegistrationTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         2970,
+			Fee:         3060,
 			FirstValid:  322575,
 			LastValid:   323575,
+			Note:        []byte{45, 67},
 			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
 			GenesisID:   "",
 		},
