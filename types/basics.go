@@ -1,6 +1,10 @@
 package types
 
-import "golang.org/x/crypto/ed25519"
+import (
+	"math"
+
+	"golang.org/x/crypto/ed25519"
+)
 
 // TxType identifies the type of the transaction
 type TxType string
@@ -34,10 +38,10 @@ type Digest [hashLenBytes]byte
 
 const microAlgoConversionFactor = 1e6
 
-func (microalgos MicroAlgos) ToAlgos() uint64 {
-	return uint64(microalgos) / microAlgoConversionFactor
+func (microalgos MicroAlgos) ToAlgos() float64 {
+	return float64(microalgos) / microAlgoConversionFactor
 }
 
-func ToMicroAlgos(algos uint64) MicroAlgos {
-	return MicroAlgos(algos * microAlgoConversionFactor)
+func ToMicroAlgos(algos float64) MicroAlgos {
+	return MicroAlgos(math.Round(algos * microAlgoConversionFactor))
 }
