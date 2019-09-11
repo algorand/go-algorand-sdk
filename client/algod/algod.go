@@ -90,7 +90,7 @@ func stripTransaction(tx string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool) error {
+func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
 	var err error
 	queryURL := client.serverURL
 
@@ -159,23 +159,23 @@ func (client Client) submitForm(response interface{}, path string, request inter
 }
 
 // get performs a GET request to the specific path against the server
-func (client Client) get(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "GET", false /* encodeJSON */)
+func (client Client) get(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "GET", false /* encodeJSON */, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client Client) post(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "POST", true /* encodeJSON */)
+func (client Client) post(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "POST", true /* encodeJSON */, headers)
 }
 
 // as post, but with MethodPut
-func (client Client) put(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */)
+func (client Client) put(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */, headers)
 }
 
 // as post, but with MethodPatch
-func (client Client) patch(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */)
+func (client Client) patch(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */, headers)
 }
