@@ -30,8 +30,8 @@ var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
 
-// Token struct for custom api tokens.
-type Token struct {
+// Struct for custom headers.
+type Header struct {
 	Key string
 	Value string
 }
@@ -39,37 +39,33 @@ type Token struct {
 // Client manages the REST interface for a calling user.
 type Client struct {
 	serverURL url.URL
-	apiToken  []Token
-}
-
-func getTokens(apiToken interface{}) (tokens []Token){
-	switch apiToken.(type) {
-	case string:
-		tokens = append(tokens, Token{authHeader, apiToken.(string)})
-	case Token:
-		tokens = append(tokens, apiToken.(Token))
-	case []Token:
-		tokens = apiToken.([]Token)
-	default:
-		fmt.Println("type unknown")
-	}
-	return tokens
+	apiToken  string
+	headers  []*Header
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
-// The apiToken can be a string, a Token, or a slice of Tokens.
-func MakeClient(address string, apiToken interface{}) (c Client, err error) {
+func MakeClient(address string, apiToken string) (c Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
 		return
 	}
 
-	tokens := getTokens(apiToken)
-
 	c = Client{
 		serverURL: *url,
-		apiToken:  tokens,
+		apiToken:  apiToken,
 	}
+	return
+}
+
+// MakeClientWithHeader is the factory for constructing a Client for a given endpoint with additional user defined headers.
+func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c Client, err error) {
+	c, err = MakeClient(address, apiToken)
+	if err != nil {
+		return
+	}
+
+	c.headers = append(c.headers, headers...)
+
 	return
 }
 
@@ -136,8 +132,12 @@ func (client Client) submitForm(response interface{}, path string, request inter
 
 	// If we add another endpoint that does not require auth, we should add a
 	// requiresAuth argument to submitForm rather than checking here
-	for _, token := range client.apiToken {
-		req.Header.Add(token.Key, token.Value)
+	if path != healthCheckEndpoint {
+		req.Header.Set(authHeader, client.apiToken)
+	}
+	// Add the client headers.
+	for _, header := range client.headers {
+		req.Header.Add(header.Key, header.Value)
 	}
 
 	httpClient := &http.Client{}

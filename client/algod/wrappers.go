@@ -170,8 +170,9 @@ func (client Client) doGetWithQuery(ctx context.Context, path string, queryArgs 
 	}
 	req.URL.RawQuery = q.Encode()
 
-	for _, token := range client.apiToken {
-		req.Header.Add(token.Key, token.Value)
+	req.Header.Set(authHeader, client.apiToken)
+	for _, header := range client.headers {
+		req.Header.Add(header.Key, header.Value)
 	}
 
 	httpClient := http.Client{}
