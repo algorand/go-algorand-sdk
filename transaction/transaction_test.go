@@ -135,7 +135,7 @@ func TestMakeUnsignedAssetCreateTx(t *testing.T) {
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         2970,
+			Fee:         3890,
 			FirstValid:  322575,
 			LastValid:   323575,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -145,6 +145,7 @@ func TestMakeUnsignedAssetCreateTx(t *testing.T) {
 	expectedAssetCreationTxn.AssetParams = types.AssetParams{
 		Total:         total,
 		DefaultFrozen: defaultFrozen,
+		Manager:       a,
 	}
 	require.Equal(t, expectedAssetCreationTxn, tx)
 }
