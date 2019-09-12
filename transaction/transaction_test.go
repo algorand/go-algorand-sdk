@@ -121,13 +121,18 @@ func TestMakeKeyRegTxn(t *testing.T) {
 	require.Equal(t, expKeyRegTxn, tx)
 }
 
-func TestMakeUnsignedAssetCreateTx(t *testing.T) {
+func TestMakeAssetCreateTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const defaultFrozen = false
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
 	const total = 100
-	tx, err := MakeUnsignedAssetCreateTx(addr, 10, 322575, 323575, "", genesisHash,
-		total, defaultFrozen, addr, "", "", "", "", "")
+	const reserve = addr
+	const freeze = addr
+	const clawback = addr
+	const unitName = "tst"
+	const assetName = "testcoin"
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, "", genesisHash,
+		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -147,6 +152,11 @@ func TestMakeUnsignedAssetCreateTx(t *testing.T) {
 		Total:         total,
 		DefaultFrozen: defaultFrozen,
 		Manager:       a,
+		Reserve:       a,
+		Freeze:        a,
+		Clawback:      a,
 	}
+	copy(expectedAssetCreationTxn.AssetParams.UnitName[:], []byte(unitName))
+	copy(expectedAssetCreationTxn.AssetParams.AssetName[:], []byte(assetName))
 	require.Equal(t, expectedAssetCreationTxn, tx)
 }

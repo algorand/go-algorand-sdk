@@ -194,7 +194,7 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 	return tx, nil
 }
 
-// MakeUnsignedAssetCreateTx constructs an asset creation transaction using the passed parameters.
+// MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address for which we register the given participation key.
 // - fee is fee per byte as received from algod SuggestedFee API call.
 // - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
@@ -203,7 +203,7 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeUnsignedAssetCreateTx(account string, feePerByte, firstRound, lastRound uint64, genesisID string, genesisHash string,
+func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, genesisID string, genesisHash string,
 	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
 	var tx types.Transaction
 	var err error
@@ -276,6 +276,31 @@ func MakeUnsignedAssetCreateTx(account string, feePerByte, firstRound, lastRound
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	return tx, nil
+}
+
+// MakeAssetCreateTxnWithFlatFee constructs an asset creation transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// Asset creation parameters:
+// - see asset.go
+func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, genesisID string, genesisHash string,
+	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
+	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, genesisID, genesisHash, total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 
 	return tx, nil
 }
