@@ -112,7 +112,7 @@ func main() {
 	fmt.Printf("algod last round: %d\n", nodeStatus.LastRound)
 	fmt.Printf("algod time since last round: %d\n", nodeStatus.TimeSinceLastRound)
 	fmt.Printf("algod catchup: %d\n", nodeStatus.CatchupTime)
-	fmt.Printf("algod latest version: %s\n", nodeStatus.LastVersion)	
+	fmt.Printf("algod latest version: %s\n", nodeStatus.LastVersion)
 
 	// Fetch block information
 	lastBlock, err := algodClient.Block(nodeStatus.LastRound)
@@ -208,7 +208,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 )
 
-// These constants represent the kmdd REST endpoint and the corresponding API
+// These constants represent the kmd REST endpoint and the corresponding API
 // token. You can retrieve these from the `kmd.net` and `kmd.token` files in
 // the kmd data directory.
 const kmdAddress = "http://localhost:7833"
@@ -283,7 +283,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-// These constants represent the kmdd REST endpoint and the corresponding API
+// These constants represent the kmd REST endpoint and the corresponding API
 // token. You can retrieve these from the `kmd.net` and `kmd.token` files in
 // the kmd data directory.
 const kmdAddress = "http://localhost:7833"
@@ -434,18 +434,16 @@ func main() {
 ```
 ## Sign a transaction offline
 
-The following example shows how to create a transaction and sign it offline. You can also create the tranasaction online and then sign it offline.
+The following example shows how to create a transaction and sign it offline. You can also create the transaction online and then sign it offline.
 ```golang
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
-	"os"
-
-	"github.com/algorand/go-algorand-sdk/mnemonic"
+	"io/ioutil"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 )
 
@@ -456,38 +454,41 @@ func main() {
 
 	m, err := mnemonic.FromPrivateKey(account.PrivateKey)
 	fmt.Printf("backup phrase = %s\n", m)
-	// Sign a sample transaction using this library, *not* kmd
-	//This transaction will not be valid as the example parameters will most likely not be valid
-	//You can use the algod client to get suggested values for the fee, first and last rounds, and genesisID
-	tx, err := transaction.MakePaymentTxn(account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4", 1000, 20000, 642715, 643715, nil, "", "", ""JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="")
+
+	// Create and sign a sample transaction using this library, *not* kmd
+	// This transaction will not be valid as the example parameters will most likely not be valid
+	// You can use the algod client to get suggested values for the fee, first and last rounds, and genesisID
+	const fee = 1000
+	const amount = 20000
+	const firstRound = 642715
+	const lastRound = firstRound + 1000
+	tx, err := transaction.MakePaymentTxn(
+		account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4",
+		fee, amount, firstRound, lastRound, nil, "", "", []byte("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="),
+	)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
 	}
 	fmt.Printf("Made unsigned transaction: %+v\n", tx)
 	fmt.Println("Signing transaction with go-algo-sdk library function (not kmd)")
-	
-	//Sign the Transaction
-	txid, stx, err := crypto.SignTransaction(account.PrivateKey, tx)
+
+	// Sign the Transaction
+	txid, bytes, err := crypto.SignTransaction(account.PrivateKey, tx)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return
 	}
-	
-	//Save the signed object to disk
-	fmt.Printf("Made signed transaction with TxID %s: %x\n", txid, stx)
-	file, err := os.Create("./stx.gob")
-	if err == nil {
-		encoder := gob.NewEncoder(file)
-		encoder.Encode(stx)
-	}
-	file.Close()
-	if err == nil {
-		fmt.Printf("Saved signed transaction to file\n")
+
+	// Save the signed object to disk
+	fmt.Printf("Made signed transaction with TxID %s\n", txid)
+	filename := "./signed.tx"
+	err = ioutil.WriteFile(filename, bytes, 0644)
+	if err != nil {
+		fmt.Printf("Failed in saving transaction to file %s, error %s\n", filename, err)
 		return
 	}
-	fmt.Printf("Failed in saving trx to file, error %s\n", err)
-
+	fmt.Printf("Saved signed transaction to file: %s\n", filename)
 }
 ```
 ## Submit the transaction from a file
@@ -497,9 +498,8 @@ This example takes the output from the previous example (file containing signed 
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
-	"os"
+	"io/ioutil"
 
 	"github.com/algorand/go-algorand-sdk/client/algod"
 )
@@ -510,16 +510,12 @@ const algodToken = "f1dee49e36a82face92fdb21cd3d340a1b369925cd12f3ee7371378f1665
 
 func main() {
 
-	var signedTransaction []byte
-	file, err := os.Open("./stx.gob")
-	if err == nil {
-		decoder := gob.NewDecoder(file)
-		err = decoder.Decode(&signedTransaction)
-	}else{
+	rawTx, err := ioutil.ReadFile("./signed.tx")
+	if err != nil {
 		fmt.Printf("failed to open signed transaction: %s\n", err)
-		return	
+		return
 	}
-	file.Close()
+
 	// Create an algod client
 	algodClient, err := algod.MakeClient(algodAddress, algodToken)
 	if err != nil {
@@ -528,7 +524,7 @@ func main() {
 	}
 
 	// Broadcast the transaction to the network
-	sendResponse, err := algodClient.SendRawTransaction(signedTransaction)
+	sendResponse, err := algodClient.SendRawTransaction(rawTx)
 	if err != nil {
 		fmt.Printf("failed to send transaction: %s\n", err)
 		return
