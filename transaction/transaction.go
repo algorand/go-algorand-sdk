@@ -199,11 +199,12 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - fee is fee per byte as received from algod SuggestedFee API call.
 // - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
 // - lastRound is the last round this txn is valid
+// - note is a byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, genesisID string, genesisHash string,
+func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
 	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
 	var tx types.Transaction
 	var err error
@@ -268,6 +269,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 		LastValid:   types.Round(lastRound),
 		GenesisHash: types.Digest(ghBytes),
 		GenesisID:   genesisID,
+		Note:        note,
 	}
 
 	// Update fee
@@ -289,9 +291,9 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, genesisID string, genesisHash string,
+func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
 	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
-	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, genesisID, genesisHash, total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName)
+	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName)
 	if err != nil {
 		return types.Transaction{}, err
 	}
