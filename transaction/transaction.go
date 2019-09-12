@@ -3,7 +3,6 @@ package transaction
 import (
 	"encoding/base64"
 	"fmt"
-
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -129,6 +128,96 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, gen
 			VoteLast:        types.Round(voteLast),
 			VoteKeyDilution: voteKeyDilution,
 		},
+	}
+
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
+	return tx, nil
+}
+
+// MakeUnsignedAssetCreateTx constructs an asset creation transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// Asset creation parameters:
+// - see asset.go
+func MakeUnsignedAssetCreateTx(account string, feePerByte, firstRound, lastRound uint64, genesisID string, genesisHash string,
+	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
+	var tx types.Transaction
+	var err error
+
+	tx.Type = types.AssetConfigTx
+	tx.AssetParams = types.AssetParams{
+		Total:         total,
+		DefaultFrozen: defaultFrozen,
+	}
+
+	if manager != "" {
+		tx.AssetParams.Manager, err = types.DecodeAddress(manager)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if reserve != "" {
+		tx.AssetParams.Reserve, err = types.DecodeAddress(reserve)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if freeze != "" {
+		tx.AssetParams.Freeze, err = types.DecodeAddress(freeze)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if clawback != "" {
+		tx.AssetParams.Clawback, err = types.DecodeAddress(clawback)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if len(unitName) > len(tx.AssetParams.UnitName) {
+		return tx, fmt.Errorf("asset unit name %s too long (max %d bytes)", unitName, len(tx.AssetParams.UnitName))
+	}
+	copy(tx.AssetParams.UnitName[:], []byte(unitName))
+
+	if len(assetName) > len(tx.AssetParams.AssetName) {
+		return tx, fmt.Errorf("asset name %s too long (max %d bytes)", assetName, len(tx.AssetParams.AssetName))
+	}
+	copy(tx.AssetParams.AssetName[:], []byte(assetName))
+
+	// Fill in header
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	ghBytes, err := byte32FromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Header = types.Header{
+		Sender:      accountAddr,
+		Fee:         types.MicroAlgos(feePerByte),
+		FirstValid:  types.Round(firstRound),
+		LastValid:   types.Round(lastRound),
+		GenesisHash: types.Digest(ghBytes),
+		GenesisID:   genesisID,
 	}
 
 	// Update fee

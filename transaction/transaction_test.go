@@ -119,3 +119,32 @@ func TestMakeKeyRegTxn(t *testing.T) {
 	}
 	require.Equal(t, expKeyRegTxn, tx)
 }
+
+func TestMakeUnsignedAssetCreateTx(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const defaultFrozen = false
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const total = 100
+	tx, err := MakeUnsignedAssetCreateTx(addr, 10, 322575, 323575, "", genesisHash,
+		total, defaultFrozen, addr, "", "", "", "", "")
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expectedAssetCreationTxn := types.Transaction{
+		Type: types.AssetConfigTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         2970,
+			FirstValid:  322575,
+			LastValid:   323575,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+	expectedAssetCreationTxn.AssetParams = types.AssetParams{
+		Total:         total,
+		DefaultFrozen: defaultFrozen,
+	}
+	require.Equal(t, expectedAssetCreationTxn, tx)
+}

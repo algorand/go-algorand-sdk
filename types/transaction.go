@@ -13,6 +13,7 @@ type Transaction struct {
 	// Fields for different types of transactions
 	KeyregTxnFields
 	PaymentTxnFields
+	AssetConfigTxnFields
 }
 
 // SignedTxn wraps a transaction and a signature. The encoding of this struct
@@ -48,6 +49,20 @@ type PaymentTxnFields struct {
 	// closed, and all remaining funds be transferred to this
 	// address.
 	CloseRemainderTo Address `codec:"close"`
+}
+
+// AssetConfigTxnFields captures the fields used for asset
+// allocation, re-configuration, and destruction.
+type AssetConfigTxnFields struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// ConfigAsset is the asset being configured or destroyed.
+	// A zero value (including the creator address) means allocation.
+	ConfigAsset AssetID `codec:"caid"`
+
+	// AssetParams are the parameters for the asset being
+	// created or re-configured.  A zero value means destruction.
+	AssetParams AssetParams `codec:"apar"`
 }
 
 // Header captures the fields common to every transaction type.
