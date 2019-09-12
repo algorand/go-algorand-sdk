@@ -69,6 +69,17 @@ func stripTransaction(tx string) string {
 	return tx
 }
 
+// mergeRawQueries merges two raw queries, appending an "&" if both are non-empty
+func mergeRawQueries(q1, q2 string) string {
+	if q1 == "" {
+		return q2
+	} else if q2 == "" {
+		return q1
+	} else {
+		return q1 + "&" + q2
+	}
+}
+
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
 func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool) error {
 	var err error
@@ -96,7 +107,7 @@ func (client Client) submitForm(response interface{}, path string, request inter
 				return err
 			}
 
-			queryURL.RawQuery = v.Encode()
+			queryURL.RawQuery = mergeRawQueries(queryURL.RawQuery, v.Encode())
 			if encodeJSON {
 				jsonValue, _ := json.Marshal(request)
 				body = bytes.NewBuffer(jsonValue)

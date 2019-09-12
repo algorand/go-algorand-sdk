@@ -17,6 +17,9 @@ var txidPrefix = []byte("TX")
 // bidPrefix is prepended to a bid when signing it
 var bidPrefix = []byte("aB")
 
+// bytesPrefix is prepended to a message when signing
+var bytesPrefix = []byte("MX")
+
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
 func RandomBytes(s []byte) {
@@ -46,7 +49,7 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 
 // rawTransactionBytesToSign returns the byte form of the tx that we actually sign
 // and compute txID from.
-func rawTransactionBytesToSign(tx types.Transaction) ([]byte) {
+func rawTransactionBytesToSign(tx types.Transaction) []byte {
 	// Encode the transaction as msgpack
 	encodedTx := msgpack.Encode(tx)
 
@@ -85,6 +88,23 @@ func rawSignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (s types.Si
 	// Populate txID
 	txid = txIDFromRawTxnBytesToSign(toBeSigned)
 	return
+}
+
+// SignBytes signs the bytes and returns the signature
+func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err error) {
+	// prepend the prefix for signing bytes
+	toBeSigned := bytes.Join([][]byte{bytesPrefix, bytesToSign}, nil)
+
+	// sign the bytes
+	signature = ed25519.Sign(sk, toBeSigned)
+	return
+}
+
+//VerifyBytes verifies that the signature is valid
+func VerifyBytes(pk ed25519.PublicKey, message, signature []byte) bool {
+	msgParts := [][]byte{bytesPrefix, message}
+	toBeVerified := bytes.Join(msgParts, nil)
+	return ed25519.Verify(pk, toBeVerified, signature)
 }
 
 // SignBid accepts a private key and a bid, and returns the signature of the
@@ -171,7 +191,7 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, tx types
 	// Encode the signedTxn
 	stx := types.SignedTxn{
 		Msig: sig,
-		Txn: tx,
+		Txn:  tx,
 	}
 	stxBytes = msgpack.Encode(stx)
 	return
@@ -239,7 +259,7 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	// Encode the signedTxn
 	stx := types.SignedTxn{
 		Msig: sig,
-		Txn: refTx,
+		Txn:  refTx,
 	}
 	stxBytes = msgpack.Encode(stx)
 	// let's also compute the txid.

@@ -1,3 +1,10 @@
+# 1.1.3
+# Added
+- Signing and verifying arbitrary bytes
+- Deleting multisigs
+- Support for flat fees in transactions
+# Changed
+- Add note parameter to key registration transaction constructors
 # 1.1.2
 # Added 
 - Support for GenesisHash

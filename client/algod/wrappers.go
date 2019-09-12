@@ -145,17 +145,6 @@ func (client Client) Block(round uint64) (response models.Block, err error) {
 	return
 }
 
-// GetGoRoutines gets a dump of the goroutines from pprof
-// Not supported
-func (client Client) GetGoRoutines(ctx context.Context) (goRoutines string, err error) {
-	// issue a "/debug/pprof/goroutine?debug=1" request
-	query := make(map[string]string)
-	query["debug"] = "1"
-
-	goRoutines, err = client.doGetWithQuery(ctx, "/debug/pprof/goroutine", query)
-	return
-}
-
 func (client Client) doGetWithQuery(ctx context.Context, path string, queryArgs map[string]string) (result string, err error) {
 	queryURL := client.serverURL
 	queryURL.Path = path
