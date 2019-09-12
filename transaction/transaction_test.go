@@ -131,7 +131,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const clawback = addr
 	const unitName = "tst"
 	const assetName = "testcoin"
-	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, "", genesisHash,
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
 		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName)
 	require.NoError(t, err)
 
