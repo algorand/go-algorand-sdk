@@ -61,4 +61,21 @@ type Header struct {
 	Note        []byte     `codec:"note"`
 	GenesisID   string     `codec:"gen"`
 	GenesisHash Digest     `codec:"gh"`
+
+	// Group specifies that this transaction is part of a
+	// transaction group (and, if so, specifies the hash
+	// of a TxGroup).
+	Group Digest `codec:"grp"`
+}
+
+// TxGroup describes a group of transactions that must appear
+// together in a specific order in a block.
+type TxGroup struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Transactions specifies a list of transactions that must appear
+	// together, sequentially, in a block in order for the group to be
+	// valid.  Each hash in the list is a hash of a transaction with
+	// the `Group` field omitted.
+	Transactions []Digest `codec:"txlist"`
 }

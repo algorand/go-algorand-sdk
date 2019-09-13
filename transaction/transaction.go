@@ -8,7 +8,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-const MinTxnFee = 1000 // v5 consensus params, in microAlgos
+// MinTxnFee is v5 consensus params, in microAlgos
+const MinTxnFee = 1000
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses

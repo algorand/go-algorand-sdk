@@ -610,3 +610,92 @@ We can also merge raw, partially-signed multisig transactions:
 otherTxBytes := ... // generate another raw multisig transaction somehow
 txid, mergedTxBytes, err := crypto.MergeMultisigTransactions(twoOfThreeTxBytes, otherTxBytes)
 ```
+
+## Working with transactions group
+
+Example below demonstrates how to create a transactions group and send it to network.
+
+```golang
+package main
+
+import (
+	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/client/algod"
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/types"
+)
+
+// CHANGE ME
+const algodAddress = "http://localhost:8080"
+const algodToken = "f1dee49e36a82face92fdb21cd3d340a1b369925cd12f3ee7371378f1665b9b1"
+
+func submitGroup() {
+	account1 := crypto.GenerateAccount()
+	fmt.Printf("account address: %s\n", account1.Address)
+	account2 := crypto.GenerateAccount()
+	fmt.Printf("account address: %s\n", account2.Address)
+
+	address1 := account1.Address.String()
+	address2 := account2.Address.String()
+	const address3 = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	const fee = 1000
+	const amount1 = 2000
+	var note []byte
+	const genesisID = "XYZ"      // replace me
+	genesisHash := []byte("ABC") // replace me
+
+	const firstRound1 = 710399
+	tx1, err := transaction.MakePaymentTxnWithFlatFee(
+		address1, address2, fee, amount1, firstRound1, firstRound1+1000,
+		note, "", genesisID, genesisHash,
+	)
+	if err != nil {
+		fmt.Printf("Failed to create payment transaction: %v\n", err)
+		return
+	}
+
+	const firstRound2 = 710515
+	const amount2 = 1500
+	tx2, err := transaction.MakePaymentTxnWithFlatFee(
+		address2, address3, fee, amount2, firstRound2, firstRound2+1000,
+		note, "", genesisID, genesisHash,
+	)
+	if err != nil {
+		fmt.Printf("Failed to create payment transaction: %v\n", err)
+		return
+	}
+
+	// compute group id and put it into each transaction
+	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
+	tx1.Group = gid
+	tx2.Group = gid
+
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		fmt.Printf("failed to make algod client: %v\n", err)
+		return
+	}
+
+	_, stx1, err := crypto.SignTransaction(account1.PrivateKey, tx1)
+	if err != nil {
+		fmt.Printf("Failed to sign transaction: %s\n", err)
+		return
+	}
+	_, stx2, err := crypto.SignTransaction(account2.PrivateKey, tx2)
+	if err != nil {
+		fmt.Printf("Failed to sign transaction: %s\n", err)
+		return
+	}
+
+	var signedGroup []byte
+	signedGroup = append(signedGroup, stx1...)
+	signedGroup = append(signedGroup, stx2...)
+	_, err = algodClient.SendRawTransaction(signedGroup)
+	if err != nil {
+		fmt.Printf("Failed to create payment transaction: %v\n", err)
+		return
+	}
+}
+```
