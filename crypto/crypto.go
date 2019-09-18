@@ -62,14 +62,9 @@ func rawTransactionBytesToSign(tx types.Transaction) []byte {
 	return bytes.Join(msgParts, nil)
 }
 
-// rawHash computes Sum512_256 hash from raw bytes
-func rawHash(input []byte) types.Digest {
-	return sha512.Sum512_256(input)
-}
-
 // txID computes a transaction id from raw transaction bytes
 func txIDFromRawTxnBytesToSign(toBeSigned []byte) (txid string) {
-	txidBytes := rawHash(toBeSigned)
+	txidBytes := sha512.Sum512_256(toBeSigned)
 	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
 	return
 }
@@ -304,13 +299,13 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 			return
 		}
 
-		txID := rawHash(rawTransactionBytesToSign(tx))
-		group.Transactions = append(group.Transactions, txID)
+		txID := sha512.Sum512_256(rawTransactionBytesToSign(tx))
+		group.TxGroupHashes = append(group.TxGroupHashes, txID)
 	}
 
 	encoded := msgpack.Encode(group)
 
 	// Prepend the hashable prefix and hash it
 	msgParts := [][]byte{tgidPrefix, encoded}
-	return rawHash(bytes.Join(msgParts, nil)), nil
+	return sha512.Sum512_256(bytes.Join(msgParts, nil)), nil
 }

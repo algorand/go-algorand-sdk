@@ -73,9 +73,9 @@ type Header struct {
 type TxGroup struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	// Transactions specifies a list of transactions that must appear
+	// TxGroupHashes specifies a list of hashes of transactions that must appear
 	// together, sequentially, in a block in order for the group to be
 	// valid.  Each hash in the list is a hash of a transaction with
 	// the `Group` field omitted.
-	Transactions []Digest `codec:"txlist"`
+	TxGroupHashes []Digest `codec:"txlist"`
 }

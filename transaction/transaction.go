@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 
@@ -194,6 +195,30 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 	}
 
 	return tx, nil
+}
+
+// AssignGroupID computes and return list of transactions with Group field set.
+// - txns is a list of transactions to process
+// - account specifies a sender field of transaction to return. Set to empty string to return all of them
+func AssignGroupID(txns []types.Transaction, account string) (result []types.Transaction, err error) {
+	gid, err := crypto.ComputeGroupID(txns)
+	if err != nil {
+		return
+	}
+	var decoded types.Address
+	if account != "" {
+		decoded, err = types.DecodeAddress(account)
+		if err != nil {
+			return
+		}
+	}
+	for _, tx := range txns {
+		if account == "" || bytes.Compare(tx.Sender[:], decoded[:]) == 0 {
+			tx.Group = gid
+			result = append(result, tx)
+		}
+	}
+	return result, nil
 }
 
 // EstimateSize returns the estimated length of the encoded transaction
