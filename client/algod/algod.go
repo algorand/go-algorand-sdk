@@ -30,22 +30,42 @@ var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
 
+// Struct for custom headers.
+type Header struct {
+	Key string
+	Value string
+}
+
 // Client manages the REST interface for a calling user.
 type Client struct {
 	serverURL url.URL
 	apiToken  string
+	headers  []*Header
 }
 
-// MakeClient is the factory for constructing a Client for a given endpoint
+// MakeClient is the factory for constructing a Client for a given endpoint.
 func MakeClient(address string, apiToken string) (c Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
 		return
 	}
+
 	c = Client{
 		serverURL: *url,
 		apiToken:  apiToken,
 	}
+	return
+}
+
+// MakeClientWithHeader is the factory for constructing a Client for a given endpoint with additional user defined headers.
+func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c Client, err error) {
+	c, err = MakeClient(address, apiToken)
+	if err != nil {
+		return
+	}
+
+	c.headers = append(c.headers, headers...)
+
 	return
 }
 
@@ -81,14 +101,15 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool) error {
+func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
 	var err error
 	queryURL := client.serverURL
-	queryURL.Path = path
 
 	// Handle version prefix
 	if !unversionedPaths[path] {
-		queryURL.Path = strings.Join([]string{apiVersionPathPrefix, path}, "")
+		queryURL.Path += strings.Join([]string{apiVersionPathPrefix, path}, "")
+	} else {
+		queryURL.Path += path
 	}
 
 	var req *http.Request
@@ -125,6 +146,10 @@ func (client Client) submitForm(response interface{}, path string, request inter
 	if path != healthCheckEndpoint {
 		req.Header.Set(authHeader, client.apiToken)
 	}
+	// Add the client headers.
+	for _, header := range client.headers {
+		req.Header.Add(header.Key, header.Value)
+	}
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
@@ -145,23 +170,23 @@ func (client Client) submitForm(response interface{}, path string, request inter
 }
 
 // get performs a GET request to the specific path against the server
-func (client Client) get(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "GET", false /* encodeJSON */)
+func (client Client) get(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "GET", false /* encodeJSON */, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client Client) post(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "POST", true /* encodeJSON */)
+func (client Client) post(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "POST", true /* encodeJSON */, headers)
 }
 
 // as post, but with MethodPut
-func (client Client) put(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */)
+func (client Client) put(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */, headers)
 }
 
 // as post, but with MethodPatch
-func (client Client) patch(response interface{}, path string, request interface{}) error {
-	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */)
+func (client Client) patch(response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */, headers)
 }
