@@ -150,6 +150,10 @@ func (client Client) submitForm(response interface{}, path string, request inter
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
 	}
+	// Add the request headers.
+	for _, header := range headers {
+		req.Header.Add(header.Key, header.Value)
+	}
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
