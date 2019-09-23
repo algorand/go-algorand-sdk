@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -156,4 +157,68 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 		Index:   1234,
 	}
 	require.Equal(t, expectedAssetConfigTxn, tx)
+}
+
+func TestComputeGroupID(t *testing.T) {
+	// compare regular transactions created in SDK with 'goal clerk send' result
+	// compare transaction group created in SDK with 'goal clerk group' result
+	const address = "UPYAFLHSIPMJOHVXU2MPLQ46GXJKSDCEMZ6RLCQ7GWB5PRDKJUWKKXECXI"
+	const fromAddress, toAddress = address, address
+	const fee = 1000
+	const amount = 2000
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+
+	const firstRound1 = 710399
+	note1 := byteFromBase64("wRKw5cJ0CMo=")
+	tx1, err := MakePaymentTxnWithFlatFee(
+		fromAddress, toAddress, fee, amount, firstRound1, firstRound1+1000,
+		note1, "", genesisID, genesisHash,
+	)
+	require.NoError(t, err)
+
+	const firstRound2 = 710515
+	note2 := byteFromBase64("dBlHI6BdrIg=")
+	tx2, err := MakePaymentTxnWithFlatFee(
+		fromAddress, toAddress, fee, amount, firstRound2, firstRound2+1000,
+		note2, "", genesisID, genesisHash,
+	)
+	require.NoError(t, err)
+
+	const goldenTx1 = "gaN0eG6Ko2FtdM0H0KNmZWXNA+iiZnbOAArW/6NnZW6rZGV2bmV0LXYxLjCiZ2jEILAtz+3tknW6iiStLW4gnSvbXUqW3ul3ghinaDc5pY9Bomx2zgAK2uekbm90ZcQIwRKw5cJ0CMqjcmN2xCCj8AKs8kPYlx63ppj1w5410qkMRGZ9FYofNYPXxGpNLKNzbmTEIKPwAqzyQ9iXHremmPXDnjXSqQxEZn0Vih81g9fEak0spHR5cGWjcGF5"
+	const goldenTx2 = "gaN0eG6Ko2FtdM0H0KNmZWXNA+iiZnbOAArXc6NnZW6rZGV2bmV0LXYxLjCiZ2jEILAtz+3tknW6iiStLW4gnSvbXUqW3ul3ghinaDc5pY9Bomx2zgAK21ukbm90ZcQIdBlHI6BdrIijcmN2xCCj8AKs8kPYlx63ppj1w5410qkMRGZ9FYofNYPXxGpNLKNzbmTEIKPwAqzyQ9iXHremmPXDnjXSqQxEZn0Vih81g9fEak0spHR5cGWjcGF5"
+
+	// goal clerk send dumps unsigned transaction as signed with empty signature in order to save tx type
+	stx1 := types.SignedTxn{Sig: types.Signature{}, Msig: types.MultisigSig{}, Txn: tx1}
+	stx2 := types.SignedTxn{Sig: types.Signature{}, Msig: types.MultisigSig{}, Txn: tx2}
+	require.Equal(t, byteFromBase64(goldenTx1), msgpack.Encode(stx1))
+	require.Equal(t, byteFromBase64(goldenTx2), msgpack.Encode(stx2))
+
+	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
+
+	// goal clerk group sets Group to every transaction and concatenate them in output file
+	// simulating that behavior here
+	stx1.Txn.Group = gid
+	stx2.Txn.Group = gid
+
+	var txg []byte
+	txg = append(txg, msgpack.Encode(stx1)...)
+	txg = append(txg, msgpack.Encode(stx2)...)
+
+	const goldenTxg = "gaN0eG6Lo2FtdM0H0KNmZWXNA+iiZnbOAArW/6NnZW6rZGV2bmV0LXYxLjCiZ2jEILAtz+3tknW6iiStLW4gnSvbXUqW3ul3ghinaDc5pY9Bo2dycMQgLiQ9OBup9H/bZLSfQUH2S6iHUM6FQ3PLuv9FNKyt09SibHbOAAra56Rub3RlxAjBErDlwnQIyqNyY3bEIKPwAqzyQ9iXHremmPXDnjXSqQxEZn0Vih81g9fEak0so3NuZMQgo/ACrPJD2Jcet6aY9cOeNdKpDERmfRWKHzWD18RqTSykdHlwZaNwYXmBo3R4boujYW10zQfQo2ZlZc0D6KJmds4ACtdzo2dlbqtkZXZuZXQtdjEuMKJnaMQgsC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0GjZ3JwxCAuJD04G6n0f9tktJ9BQfZLqIdQzoVDc8u6/0U0rK3T1KJsds4ACttbpG5vdGXECHQZRyOgXayIo3JjdsQgo/ACrPJD2Jcet6aY9cOeNdKpDERmfRWKHzWD18RqTSyjc25kxCCj8AKs8kPYlx63ppj1w5410qkMRGZ9FYofNYPXxGpNLKR0eXBlo3BheQ=="
+
+	require.Equal(t, byteFromBase64(goldenTxg), txg)
+
+	// check AssignGroupID, do not validate correctness of Group field calculation
+	result, err := AssignGroupID([]types.Transaction{tx1, tx2}, "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4")
+	require.NoError(t, err)
+	require.Equal(t, 0, len(result))
+
+	result, err = AssignGroupID([]types.Transaction{tx1, tx2}, address)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(result))
+
+	result, err = AssignGroupID([]types.Transaction{tx1, tx2}, "")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(result))
 }

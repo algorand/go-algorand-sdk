@@ -40,10 +40,12 @@ type Digest [hashLenBytes]byte
 
 const microAlgoConversionFactor = 1e6
 
+// ToAlgos converts amount in microAlgos to Algos
 func (microalgos MicroAlgos) ToAlgos() float64 {
 	return float64(microalgos) / microAlgoConversionFactor
 }
 
+// ToMicroAlgos converts amount in Algos to microAlgos
 func ToMicroAlgos(algos float64) MicroAlgos {
 	return MicroAlgos(math.Round(algos * microAlgoConversionFactor))
 }
