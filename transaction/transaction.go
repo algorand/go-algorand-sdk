@@ -195,9 +195,9 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 }
 
 // MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
-// - account is a checksummed, human-readable address for which we register the given participation key.
+// - account is a checksummed, human-readable address which will send the transaction.
 // - fee is fee per byte as received from algod SuggestedFee API call.
-// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
 // - lastRound is the last round this txn is valid
 // - note is a byte array
 // - genesis id corresponds to the id of the network
@@ -283,9 +283,9 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 }
 
 // MakeAssetCreateTxnWithFlatFee constructs an asset creation transaction using the passed parameters.
-// - account is a checksummed, human-readable address for which we register the given participation key.
-// - fee is a flat fee
-// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - account is a checksummed, human-readable address which will send the transaction.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
