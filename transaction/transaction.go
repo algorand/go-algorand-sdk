@@ -307,7 +307,8 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 	}
 
 	return tx, nil
-  
+}
+
 // AssignGroupID computes and return list of transactions with Group field set.
 // - txns is a list of transactions to process
 // - account specifies a sender field of transaction to return. Set to empty string to return all of them
