@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+	"fmt"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -13,6 +14,9 @@ import (
 
 // txidPrefix is prepended to a transaction when computing its txid
 var txidPrefix = []byte("TX")
+
+// tgidPrefix is prepended to a transaction group when computing the group ID
+var tgidPrefix = []byte("TG")
 
 // bidPrefix is prepended to a bid when signing it
 var bidPrefix = []byte("aB")
@@ -283,4 +287,25 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, preStx
 	}
 	txid, stxBytes, err = MergeMultisigTransactions(partStxBytes, preStxBytes)
 	return
+}
+
+// ComputeGroupID returns group ID for a group of transactions
+func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
+	var group types.TxGroup
+	empty := types.Digest{}
+	for _, tx := range txgroup {
+		if tx.Group != empty {
+			err = fmt.Errorf("transaction %v already has a group %v", tx, tx.Group)
+			return
+		}
+
+		txID := sha512.Sum512_256(rawTransactionBytesToSign(tx))
+		group.TxGroupHashes = append(group.TxGroupHashes, txID)
+	}
+
+	encoded := msgpack.Encode(group)
+
+	// Prepend the hashable prefix and hash it
+	msgParts := [][]byte{tgidPrefix, encoded}
+	return sha512.Sum512_256(bytes.Join(msgParts, nil)), nil
 }
