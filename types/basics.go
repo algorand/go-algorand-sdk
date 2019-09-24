@@ -14,6 +14,8 @@ const (
 	PaymentTx TxType = "pay"
 	// KeyRegistrationTx is the TxType for key registration transactions
 	KeyRegistrationTx TxType = "keyreg"
+	// AssetConfigTx creates, re-configures, or destroys an asset
+	AssetConfigTx TxType = "acfg"
 )
 
 const masterDerivationKeyLenBytes = 32
