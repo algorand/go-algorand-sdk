@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
@@ -159,7 +157,46 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	}
 	copy(expectedAssetCreationTxn.AssetParams.UnitName[:], []byte(unitName))
 	copy(expectedAssetCreationTxn.AssetParams.AssetName[:], []byte(assetName))
-  require.Equal(t, expectedAssetCreationTxn, tx)
+	require.Equal(t, expectedAssetCreationTxn, tx)
+}
+
+func TestMakeAssetConfigTxn(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const creator = addr
+	const manager = addr
+	const reserve = addr
+	const freeze = addr
+	const clawback = addr
+	tx, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
+		creator, 1234, manager, reserve, freeze, clawback)
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+	expectedAssetConfigTxn := types.Transaction{
+		Type: types.AssetConfigTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         3790,
+			FirstValid:  322575,
+			LastValid:   323575,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	expectedAssetConfigTxn.AssetParams = types.AssetParams{
+		Manager:  a,
+		Reserve:  a,
+		Freeze:   a,
+		Clawback: a,
+	}
+	expectedAssetConfigTxn.ConfigAsset = types.AssetID{
+		Creator: a,
+		Index:   1234,
+	}
+	require.Equal(t, expectedAssetConfigTxn, tx)
 }
 
 func TestComputeGroupID(t *testing.T) {

@@ -5,12 +5,16 @@ const assetNameLen = 32
 
 // AssetID is a name of an asset.
 type AssetID struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
 	Creator Address `codec:"c"`
 	Index   uint64  `codec:"i"`
 }
 
 // AssetParams describes the parameters of an asset.
 type AssetParams struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
 	// Total specifies the total number of units of this asset
 	// created.
 	Total uint64 `codec:"t"`

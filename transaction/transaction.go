@@ -81,7 +81,6 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is a flat fee
 func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (types.Transaction, error) {
-	// Decode from address
 	tx, err := MakePaymentTxn(from, to, fee, amount, firstRound, lastRound, note, closeRemainderTo, genesisID, genesisHash)
 	if err != nil {
 		return types.Transaction{}, err
@@ -223,28 +222,24 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 			return tx, err
 		}
 	}
-
 	if reserve != "" {
 		tx.AssetParams.Reserve, err = types.DecodeAddress(reserve)
 		if err != nil {
 			return tx, err
 		}
 	}
-
 	if freeze != "" {
 		tx.AssetParams.Freeze, err = types.DecodeAddress(freeze)
 		if err != nil {
 			return tx, err
 		}
 	}
-
 	if clawback != "" {
 		tx.AssetParams.Clawback, err = types.DecodeAddress(clawback)
 		if err != nil {
 			return tx, err
 		}
 	}
-
 	if len(unitName) > len(tx.AssetParams.UnitName) {
 		return tx, fmt.Errorf("asset unit name %s too long (max %d bytes)", unitName, len(tx.AssetParams.UnitName))
 	}
@@ -272,6 +267,88 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 		GenesisHash: types.Digest(ghBytes),
 		GenesisID:   genesisID,
 		Note:        note,
+	}
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+	return tx, nil
+}
+
+// MakeAssetConfigTxn creates a tx template for changing the
+// keys for an asset. An empty string means a zero key (which
+// cannot be changed after becoming zero); to keep a key
+// unchanged, you must specify that key.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string, creator string,
+	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
+	var tx types.Transaction
+
+	tx.Type = types.AssetConfigTx
+
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return tx, err
+	}
+
+	ghBytes, err := byte32FromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Header = types.Header{
+		Sender:      accountAddr,
+		Fee:         types.MicroAlgos(feePerByte),
+		FirstValid:  types.Round(firstRound),
+		LastValid:   types.Round(lastRound),
+		GenesisHash: types.Digest(ghBytes),
+		GenesisID:   genesisID,
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.ConfigAsset = types.AssetID{
+		Creator: creatorAddr,
+		Index:   index,
+	}
+
+	if newManager != "" {
+		tx.Type = types.AssetConfigTx
+		tx.AssetParams.Manager, err = types.DecodeAddress(newManager)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if newReserve != "" {
+		tx.AssetParams.Reserve, err = types.DecodeAddress(newReserve)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if newFreeze != "" {
+		tx.AssetParams.Freeze, err = types.DecodeAddress(newFreeze)
+		if err != nil {
+			return tx, err
+		}
+	}
+
+	if newClawback != "" {
+		tx.AssetParams.Clawback, err = types.DecodeAddress(newClawback)
+		if err != nil {
+			return tx, err
+		}
 	}
 
 	// Update fee
@@ -306,6 +383,25 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 		tx.Fee = MinTxnFee
 	}
 
+	return tx, nil
+}
+
+// MakeAssetConfigTxnWithFlatFee creates a tx template for changing the
+// keys for an asset. An empty string means a zero key (which
+// cannot be changed after becoming zero); to keep a key
+// unchanged, you must specify that key.
+func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash, creator string,
+	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
+	tx, err := MakeAssetConfigTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index, newManager, newReserve, newFreeze, newClawback)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 	return tx, nil
 }
 
