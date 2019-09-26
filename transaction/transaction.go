@@ -281,9 +281,9 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // keys for an asset. An empty string means a zero key (which
 // cannot be changed after becoming zero); to keep a key
 // unchanged, you must specify that key.
-// - account is a checksummed, human-readable address for which we register the given participation key.
-// - fee is a flat fee
-// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
+// - account is a checksummed, human-readable address that will send the transaction
+// - fee is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
@@ -361,6 +361,30 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	return tx, nil
 }
 
+// MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
+// All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
+// - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
+// - fee is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - index is the asset index
+func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	creator string, index uint64) (types.Transaction, error) {
+	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
+	tx, err := MakeAssetConfigTxn(account, feePerByte, firstRound, lastRound, note, genesisID, genesisHash,
+		creator, index, "", "", "", "")
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	return tx, nil
+}
+
 // MakeAssetCreateTxnWithFlatFee constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address which will send the transaction.
 // - fee is fee per byte as received from algod SuggestedFee API call.
@@ -403,6 +427,22 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 		tx.Fee = MinTxnFee
 	}
 	return tx, nil
+}
+
+// MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
+// All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
+// - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
+// - fee is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - index is the asset index
+func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
+		creator, index, "", "", "", "")
+	return tx, err
 }
 
 // AssignGroupID computes and return list of transactions with Group field set.

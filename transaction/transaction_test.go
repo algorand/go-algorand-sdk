@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/base64"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
@@ -195,6 +196,38 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 	expectedAssetConfigTxn.ConfigAsset = types.AssetID{
 		Creator: a,
 		Index:   1234,
+	}
+	require.Equal(t, expectedAssetConfigTxn, tx)
+}
+
+func TestMakeAssetDestroyTxn(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const creator = addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+	expectedAssetConfigTxn := types.Transaction{
+		Type: types.AssetConfigTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         2290,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	expectedAssetConfigTxn.AssetParams = types.AssetParams{}
+	expectedAssetConfigTxn.ConfigAsset = types.AssetID{
+		Creator: a,
+		Index:   assetIndex,
 	}
 	require.Equal(t, expectedAssetConfigTxn, tx)
 }
