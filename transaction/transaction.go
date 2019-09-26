@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -196,6 +195,88 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 	return tx, nil
 }
 
+// MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
+// - account is a checksummed, human-readable address which will send the transaction.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
+// - lastRound is the last round this txn is valid
+// - note is a byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// Asset creation parameters:
+// - see asset.go
+func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
+	var tx types.Transaction
+	var err error
+
+	tx.Type = types.AssetConfigTx
+	tx.AssetParams = types.AssetParams{
+		Total:         total,
+		DefaultFrozen: defaultFrozen,
+	}
+
+	if manager != "" {
+		tx.AssetParams.Manager, err = types.DecodeAddress(manager)
+		if err != nil {
+			return tx, err
+		}
+	}
+	if reserve != "" {
+		tx.AssetParams.Reserve, err = types.DecodeAddress(reserve)
+		if err != nil {
+			return tx, err
+		}
+	}
+	if freeze != "" {
+		tx.AssetParams.Freeze, err = types.DecodeAddress(freeze)
+		if err != nil {
+			return tx, err
+		}
+	}
+	if clawback != "" {
+		tx.AssetParams.Clawback, err = types.DecodeAddress(clawback)
+		if err != nil {
+			return tx, err
+		}
+	}
+	if len(unitName) > len(tx.AssetParams.UnitName) {
+		return tx, fmt.Errorf("asset unit name %s too long (max %d bytes)", unitName, len(tx.AssetParams.UnitName))
+	}
+	copy(tx.AssetParams.UnitName[:], []byte(unitName))
+
+	if len(assetName) > len(tx.AssetParams.AssetName) {
+		return tx, fmt.Errorf("asset name %s too long (max %d bytes)", assetName, len(tx.AssetParams.AssetName))
+	}
+	copy(tx.AssetParams.AssetName[:], []byte(assetName))
+
+	// Fill in header
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	ghBytes, err := byte32FromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Header = types.Header{
+		Sender:      accountAddr,
+		Fee:         types.MicroAlgos(feePerByte),
+		FirstValid:  types.Round(firstRound),
+		LastValid:   types.Round(lastRound),
+		GenesisHash: types.Digest(ghBytes),
+		GenesisID:   genesisID,
+		Note:        note,
+	}
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+	return tx, nil
+}
+
 // MakeAssetConfigTxn creates a tx template for changing the
 // keys for an asset. An empty string means a zero key (which
 // cannot be changed after becoming zero); to keep a key
@@ -206,12 +287,6 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
-// KeyReg parameters:
-// - votePK is a base64-encoded string corresponding to the root participation public key
-// - selectionKey is a base64-encoded string corresponding to the vrf public key
-// - voteFirst is the first round this participation key is valid
-// - voteLast is the last round this participation key is valid
-// - voteKeyDilution is the dilution for the 2-level participation key
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string, creator string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
 	var tx types.Transaction
@@ -282,6 +357,27 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	return tx, nil
+}
+
+// MakeAssetCreateTxnWithFlatFee constructs an asset creation transaction using the passed parameters.
+// - account is a checksummed, human-readable address which will send the transaction.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// Asset creation parameters:
+// - see asset.go
+func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	total uint64, defaultFrozen bool, manager string, reserve string, freeze string, clawback string, unitName string, assetName string) (types.Transaction, error) {
+	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
 
 	if tx.Fee < MinTxnFee {
 		tx.Fee = MinTxnFee

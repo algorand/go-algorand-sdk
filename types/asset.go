@@ -1,5 +1,8 @@
 package types
 
+const assetUnitNameLen = 8
+const assetNameLen = 32
+
 // AssetID is a name of an asset.
 type AssetID struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -22,10 +25,10 @@ type AssetParams struct {
 
 	// UnitName specifies a hint for the name of a unit of
 	// this asset.
-	UnitName [8]byte `codec:"un"`
+	UnitName [assetUnitNameLen]byte `codec:"un"`
 
 	// AssetName specifies a hint for the name of the asset.
-	AssetName [32]byte `codec:"an"`
+	AssetName [assetNameLen]byte `codec:"an"`
 
 	// Manager specifies an account that is allowed to change the
 	// non-zero addresses in this AssetParams.
