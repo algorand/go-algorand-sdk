@@ -98,6 +98,136 @@ type Account struct {
 	//
 	// required: true
 	Status string `json:"status"`
+
+	// Participation is the participation information currently associated with the account, if any.
+	// This field is optional and may not be set even if participation information is registered.
+	// In future REST API versions, this field may become required.
+	//
+	// required: false
+	Participation Participation `json:"participation,omitempty"`
+
+	// AssetParams specifies the parameters of assets created by this account.
+	//
+	// required: false
+	AssetParams map[uint64]AssetParams `json:"thisassettotal,omitempty"`
+
+	// Assets specifies the holdings of assets by this account,
+	// indexed by the asset ID.
+	//
+	// required: false
+	Assets map[uint64]AssetHolding `json:"assets,omitempty"`
+}
+
+// AssetParams specifies the parameters for an asset.
+// swagger:model AssetParams
+type AssetParams struct {
+	// Creator specifies the address that created this asset.
+	// This is the address where the parameters for this asset
+	// can be found, and also the address where unwanted asset
+	// units can be sent in the worst case.
+	//
+	// required: true
+	Creator string `json:"creator"`
+
+	// Total specifies the total number of units of this asset.
+	//
+	// required: true
+	Total uint64 `json:"total"`
+
+	// DefaultFrozen specifies whether holdings in this asset
+	// are frozen by default.
+	//
+	// required: false
+	DefaultFrozen bool `json:"defaultfrozen"`
+
+	// UnitName specifies the name of a unit of this asset,
+	// as supplied by the creator.
+	//
+	// required: false
+	UnitName string `json:"unitname"`
+
+	// AssetName specifies the name of this asset,
+	// as supplied by the creator.
+	//
+	// required: false
+	AssetName string `json:"assetname"`
+
+	// ManagerAddr specifies the address used to manage the keys of this
+	// asset and to destroy it.
+	//
+	// required: false
+	ManagerAddr string `json:"managerkey"`
+
+	// ReserveAddr specifies the address holding reserve (non-minted)
+	// units of this asset.
+	//
+	// required: false
+	ReserveAddr string `json:"reserveaddr"`
+
+	// FreezeAddr specifies the address used to freeze holdings of
+	// this asset.  If empty, freezing is not permitted.
+	//
+	// required: false
+	FreezeAddr string `json:"freezeaddr"`
+
+	// ClawbackAddr specifies the address used to clawback holdings of
+	// this asset.  If empty, clawback is not permitted.
+	//
+	// required: false
+	ClawbackAddr string `json:"clawbackaddr"`
+}
+
+// AssetHolding specifies the holdings of a particular asset.
+// swagger:model AssetHolding
+type AssetHolding struct {
+	// Creator specifies the address that created this asset.
+	// This is the address where the parameters for this asset
+	// can be found, and also the address where unwanted asset
+	// units can be sent in the worst case.
+	//
+	// required: true
+	Creator string `json:"creator"`
+
+	// Amount specifies the number of units held.
+	//
+	// required: true
+	Amount uint64 `json:"amount"`
+
+	// Frozen specifies whether this holding is frozen.
+	//
+	// required: false
+	Frozen bool `json:"frozen"`
+}
+
+// Participation Description
+// swagger:model Participation
+type Participation struct { // Round and Address fields are redundant if Participation embedded in Account. Exclude for now.
+	// ParticipationPK is the root participation public key (if any) currently registered for this round
+	//
+	// required: true
+	// swagger:strfmt byte
+	ParticipationPK []byte `json:"partpkb64"`
+
+	// VRFPK is the selection public key (if any) currently registered for this round
+	//
+	// required: true
+	// swagger:strfmt byte
+	VRFPK []byte `json:"vrfpkb64"`
+
+	// VoteFirst is the first round for which this participation is valid.
+	//
+	// required: true
+	VoteFirst uint64 `json:"votefst"`
+
+	// VoteLast is the last round for which this participation is valid.
+	//
+	// required: true
+	VoteLast uint64 `json:"votelst"`
+
+	// VoteKeyDilution is the number of subkeys in for each batch of participation keys.
+	//
+	// required: true
+	VoteKeyDilution uint64 `json:"votekd"`
 }
 
 // Bytes is a byte array
