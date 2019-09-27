@@ -202,7 +202,36 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 }
 
 func TestMakeAssetFreezeTxn(t *testing.T) {
-	t.FailNow() // fail until I fix this :) TODO EJR
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const creator = addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const freezeSetting = true
+	const target = creator
+	tx, err := MakeAssetFreezeTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex, target, freezeSetting)
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+	expectedAssetFreezeTxn := types.Transaction{
+		Type: types.AssetFreezeTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         2720,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	expectedAssetFreezeTxn.FreezeAsset.Creator = a
+	expectedAssetFreezeTxn.FreezeAsset.Index = assetIndex
+	expectedAssetFreezeTxn.AssetFrozen = freezeSetting
+	expectedAssetFreezeTxn.FreezeAccount = a
+	require.Equal(t, expectedAssetFreezeTxn, tx)
 }
 
 func TestComputeGroupID(t *testing.T) {
