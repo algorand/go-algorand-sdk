@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
@@ -197,6 +199,10 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 		Index:   1234,
 	}
 	require.Equal(t, expectedAssetConfigTxn, tx)
+}
+
+func TestMakeAssetFreezeTxn(t *testing.T) {
+	t.FailNow() // fail until I fix this :) TODO EJR
 }
 
 func TestComputeGroupID(t *testing.T) {
