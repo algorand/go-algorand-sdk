@@ -432,7 +432,7 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
-// - fee is a fee per byte
+// - fee is a flat fee
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
