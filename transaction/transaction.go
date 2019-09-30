@@ -385,6 +385,67 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 	return tx, nil
 }
 
+// MakeAssetFreezeTxn constructs a transaction that freezes or unfreezes an account's asset holdings
+// It must be issued by the freeze address for the asset
+// - account is a checksummed, human-readable address which will send the transaction.
+// - fee is fee per byte as received from algod SuggestedFee API call.
+// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
+// - lastRound is the last round this txn is valid
+// - note is an optional arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the creator address for the asset
+// - assetIndex is the index for tracking the asset
+// - target is the account to be frozen or unfrozen
+// - newFreezeSetting is the new state of the target account
+func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	creator string, assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
+	var tx types.Transaction
+
+	tx.Type = types.AssetFreezeTx
+
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return tx, err
+	}
+
+	ghBytes, err := byte32FromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Header = types.Header{
+		Sender:      accountAddr,
+		Fee:         types.MicroAlgos(fee),
+		FirstValid:  types.Round(firstRound),
+		LastValid:   types.Round(lastRound),
+		GenesisHash: types.Digest(ghBytes),
+		GenesisID:   genesisID,
+		Note:        note,
+	}
+
+	tx.FreezeAsset.Index = assetIndex
+	tx.FreezeAsset.Creator, err = types.DecodeAddress(creator)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.FreezeAccount, err = types.DecodeAddress(target)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.AssetFrozen = newFreezeSetting
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * fee)
+
+	return tx, nil
+}
+
 // MakeAssetCreateTxnWithFlatFee constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address which will send the transaction.
 // - fee is fee per byte as received from algod SuggestedFee API call.
@@ -443,6 +504,22 @@ func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound u
 	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
 		creator, index, "", "", "", "")
 	return tx, err
+}
+
+// MakeAssetFreezeTxnWithFlatFee is as MakeAssetFreezeTxn, but taking a flat fee rather than a fee per byte.
+func MakeAssetFreezeTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+	creator string, assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
+	tx, err := MakeAssetFreezeTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, assetIndex, target, newFreezeSetting)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
 }
 
 // AssignGroupID computes and return list of transactions with Group field set.

@@ -14,6 +14,7 @@ type Transaction struct {
 	KeyregTxnFields
 	PaymentTxnFields
 	AssetConfigTxnFields
+	AssetFreezeTxnFields
 }
 
 // SignedTxn wraps a transaction and a signature. The encoding of this struct

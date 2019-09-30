@@ -16,6 +16,8 @@ const (
 	KeyRegistrationTx TxType = "keyreg"
 	// AssetConfigTx creates, re-configures, or destroys an asset
 	AssetConfigTx TxType = "acfg"
+	// AssetFreezeTx changes the freeze status of an asset
+	AssetFreezeTx TxType = "afrz"
 )
 
 const masterDerivationKeyLenBytes = 32
