@@ -1,14 +1,15 @@
 package crypto
 
 import (
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/mnemonic"
+	"bytes"
 	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -63,6 +64,15 @@ func TestSignMultisigTransaction(t *testing.T) {
 	require.EqualValues(t, expectedBytes, txBytes)
 	expectedTxid := "KY6I7NQXQDAMDUCAVATI45BAODW6NRYQKFH4KIHLH2HQI4DO4XBA"
 	require.Equal(t, expectedTxid, txid)
+
+	// decode and verify
+	var stx types.SignedTxn
+	err = msgpack.Decode(txBytes, &stx)
+	require.NoError(t, err)
+	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+
+	verified := VerifyMultisig(fromAddr, bytesToSign, stx.Msig)
+	require.False(t, verified) // not enough signatures
 }
 
 func TestAppendMultisigTransaction(t *testing.T) {
@@ -74,6 +84,25 @@ func TestAppendMultisigTransaction(t *testing.T) {
 	require.EqualValues(t, expectedBytes, txBytes)
 	expectedTxid := "KY6I7NQXQDAMDUCAVATI45BAODW6NRYQKFH4KIHLH2HQI4DO4XBA"
 	require.Equal(t, expectedTxid, txid)
+
+	// decode and verify
+	var stx types.SignedTxn
+	err = msgpack.Decode(txBytes, &stx)
+	require.NoError(t, err)
+	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+
+	fromAddr, err := ma.Address()
+	require.NoError(t, err)
+
+	verified := VerifyMultisig(fromAddr, bytesToSign, stx.Msig)
+	require.True(t, verified)
+
+	// now change fee and ensure signature verification fails
+	idx := bytes.IndexAny(bytesToSign, "fee")
+	require.NotEqual(t, -1, idx)
+	bytesToSign[idx+4] = 1
+	verified = VerifyMultisig(fromAddr, bytesToSign, stx.Msig)
+	require.False(t, verified)
 }
 
 func TestSignMultisigTransactionKeyReg(t *testing.T) {
@@ -131,4 +160,148 @@ func TestSignBytes(t *testing.T) {
 		message[0] = message[0] + 1
 	}
 	require.False(t, VerifyBytes(account.PublicKey, message, signature))
+}
+
+func TestMakeLogicSigBasic(t *testing.T) {
+	// basic checks and contracts without delegation
+	var program []byte
+	var args [][]byte
+	var sk ed25519.PrivateKey
+	var pk MultisigAccount
+
+	// check empty LogicSig
+	lsig, err := MakeLogicSig(program, args, sk, pk)
+	require.Error(t, err)
+	require.Equal(t, types.LogicSig{}, lsig)
+
+	program = []byte{1, 32, 1, 1, 34}
+	programHash := "6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY"
+	contractSender, err := types.DecodeAddress(programHash)
+	require.NoError(t, err)
+
+	lsig, err = MakeLogicSig(program, args, sk, pk)
+	require.NoError(t, err)
+	require.Equal(t, program, lsig.Logic)
+	require.Equal(t, args, lsig.Args)
+	require.Equal(t, types.Signature{}, lsig.Sig)
+	require.True(t, lsig.Msig.Blank())
+	verified := VerifyLogicSig(lsig, contractSender)
+	require.True(t, verified)
+
+	// check arguments
+	args = make([][]byte, 2)
+	args[0] = []byte{1, 2, 3}
+	args[1] = []byte{4, 5, 6}
+	lsig, err = MakeLogicSig(program, args, sk, pk)
+	require.NoError(t, err)
+	require.Equal(t, program, lsig.Logic)
+	require.Equal(t, args, lsig.Args)
+	require.Equal(t, types.Signature{}, lsig.Sig)
+	require.True(t, lsig.Msig.Blank())
+	verified = VerifyLogicSig(lsig, contractSender)
+	require.True(t, verified)
+
+	// check serialization
+	var lsig1 types.LogicSig
+	encoded := msgpack.Encode(lsig)
+	err = msgpack.Decode(encoded, &lsig1)
+	require.NoError(t, err)
+	require.Equal(t, lsig, lsig1)
+
+	// check verification of modified program fails
+	programMod := make([]byte, len(program))
+	copy(programMod[:], program)
+	programMod[3] = 2
+	lsig, err = MakeLogicSig(programMod, args, sk, pk)
+	require.NoError(t, err)
+	verified = VerifyLogicSig(lsig, contractSender)
+	require.False(t, verified)
+
+	// TODO: check invalid program fails
+	// copy(programMod[:], program)
+	// programMod[0] = 2
+	// lsig, err := MakeLogicSig(program, args, sk, pk)
+	// require.Error(t, err)
+
+}
+
+func TestMakeLogicSigSingle(t *testing.T) {
+	var program []byte
+	var args [][]byte
+	var sk ed25519.PrivateKey
+	var pk MultisigAccount
+
+	acc := GenerateAccount()
+	program = []byte{1, 32, 1, 1, 34}
+	sk = acc.PrivateKey
+	lsig, err := MakeLogicSig(program, args, sk, pk)
+	require.NoError(t, err)
+	require.NotEqual(t, types.Signature{}, lsig.Sig)
+	require.True(t, lsig.Msig.Blank())
+
+	var sender types.Address
+	copy(sender[:], acc.PublicKey)
+
+	verified := VerifyLogicSig(lsig, sender)
+	require.True(t, verified)
+
+	// check serialization
+	var lsig1 types.LogicSig
+	encoded := msgpack.Encode(lsig)
+	err = msgpack.Decode(encoded, &lsig1)
+	require.NoError(t, err)
+	require.Equal(t, lsig, lsig1)
+}
+
+func TestMakeLogicSigMulti(t *testing.T) {
+	var program []byte
+	var args [][]byte
+	var sk ed25519.PrivateKey
+	var pk MultisigAccount
+
+	ma, sk1, sk2, _ := makeTestMultisigAccount(t)
+	program = []byte{1, 32, 1, 1, 34}
+	sender, err := ma.Address()
+	require.NoError(t, err)
+	acc := GenerateAccount()
+	sk = acc.PrivateKey
+
+	lsig, err := MakeLogicSig(program, args, sk1, ma)
+	require.NoError(t, err)
+	require.Equal(t, program, lsig.Logic)
+	require.Equal(t, args, lsig.Args)
+	require.Equal(t, types.Signature{}, lsig.Sig)
+	require.False(t, lsig.Msig.Blank())
+
+	verified := VerifyLogicSig(lsig, sender)
+	require.False(t, verified) // not enough signatures
+
+	err = AppendMultisigToLogicSig(&lsig, sk)
+	require.Error(t, err) // sk not part of multisig
+
+	err = AppendMultisigToLogicSig(&lsig, sk2)
+	require.NoError(t, err)
+
+	verified = VerifyLogicSig(lsig, sender)
+	require.True(t, verified)
+
+	// combine sig and multisig, ensure it fails
+	lsigf, err := MakeLogicSig(program, args, sk, pk)
+	require.NoError(t, err)
+	lsig.Sig = lsigf.Sig
+
+	verified = VerifyLogicSig(lsig, sender)
+	require.False(t, verified) // sig + msig
+
+	// remove sig and ensure things are good
+	lsig.Sig = types.Signature{}
+	verified = VerifyLogicSig(lsig, sender)
+	require.True(t, verified)
+
+	// check serialization
+	var lsig1 types.LogicSig
+	encoded := msgpack.Encode(lsig)
+	err = msgpack.Decode(encoded, &lsig1)
+	require.NoError(t, err)
+	require.Equal(t, lsig, lsig1)
 }
