@@ -25,6 +25,7 @@ type SignedTxn struct {
 
 	Sig  Signature   `codec:"sig"`
 	Msig MultisigSig `codec:"msig"`
+	Lsig LogicSig    `codec:"lsig"`
 	Txn  Transaction `codec:"txn"`
 }
 

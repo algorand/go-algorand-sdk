@@ -115,3 +115,18 @@ func (ma MultisigAccount) Validate() (err error) {
 	}
 	return
 }
+
+// Blank return true if MultisigAccount is empty
+// struct containing []ed25519.PublicKey cannot be compared
+func (ma MultisigAccount) Blank() bool {
+	if ma.Version != 0 {
+		return false
+	}
+	if ma.Threshold != 0 {
+		return false
+	}
+	if ma.Pks != nil {
+		return false
+	}
+	return true
+}
