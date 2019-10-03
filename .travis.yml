@@ -10,5 +10,5 @@ install:
   - chmod +x ~/sdkupdate.sh
 
 script:
-  - make
+  - make build
   - ~/sdkupdate.sh --go

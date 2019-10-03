@@ -142,7 +142,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3890,
+			Fee:         3850,
 			FirstValid:  322575,
 			LastValid:   323575,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
