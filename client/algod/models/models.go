@@ -99,13 +99,6 @@ type Account struct {
 	// required: true
 	Status string `json:"status"`
 
-	// Participation is the participation information currently associated with the account, if any.
-	// This field is optional and may not be set even if participation information is registered.
-	// In future REST API versions, this field may become required.
-	//
-	// required: false
-	Participation Participation `json:"participation,omitempty"`
-
 	// AssetParams specifies the parameters of assets created by this account.
 	//
 	// required: false
@@ -197,37 +190,6 @@ type AssetHolding struct {
 	//
 	// required: false
 	Frozen bool `json:"frozen"`
-}
-
-// Participation Description
-// swagger:model Participation
-type Participation struct { // Round and Address fields are redundant if Participation embedded in Account. Exclude for now.
-	// ParticipationPK is the root participation public key (if any) currently registered for this round
-	//
-	// required: true
-	// swagger:strfmt byte
-	ParticipationPK []byte `json:"partpkb64"`
-
-	// VRFPK is the selection public key (if any) currently registered for this round
-	//
-	// required: true
-	// swagger:strfmt byte
-	VRFPK []byte `json:"vrfpkb64"`
-
-	// VoteFirst is the first round for which this participation is valid.
-	//
-	// required: true
-	VoteFirst uint64 `json:"votefst"`
-
-	// VoteLast is the last round for which this participation is valid.
-	//
-	// required: true
-	VoteLast uint64 `json:"votelst"`
-
-	// VoteKeyDilution is the number of subkeys in for each batch of participation keys.
-	//
-	// required: true
-	VoteKeyDilution uint64 `json:"votekd"`
 }
 
 // Bytes is a byte array
