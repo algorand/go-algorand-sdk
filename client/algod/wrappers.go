@@ -90,6 +90,12 @@ func (client Client) AccountInformation(address string, headers ...*Header) (res
 	return
 }
 
+// AssetInformation also gets the AssetInformationResponse associated with the passed asset creator and index
+func (client Client) AssetInformation(creator string, index uint64, headers ...*Header) (response models.AssetParams, err error) {
+	err = client.get(&response, fmt.Sprintf("/account/%s/assets/%d", creator, index), nil, headers)
+	return
+}
+
 // TransactionInformation gets information about a specific transaction involving a specific account
 // it will only return information about transactions submitted to the node queried
 func (client Client) TransactionInformation(accountAddress, transactionID string, headers ...*Header) (response models.Transaction, err error) {
@@ -122,7 +128,7 @@ func (client Client) TransactionByID(transactionID string, headers ...*Header) (
 }
 
 // SuggestedFee gets the recommended transaction fee from the node
-func (client Client,) SuggestedFee(headers ...*Header) (response models.TransactionFee, err error) {
+func (client Client) SuggestedFee(headers ...*Header) (response models.TransactionFee, err error) {
 	err = client.get(&response, "/transactions/fee", nil, headers)
 	return
 }

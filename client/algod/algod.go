@@ -30,9 +30,9 @@ var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
 
-// Struct for custom headers.
+// Header is a struct for custom headers.
 type Header struct {
-	Key string
+	Key   string
 	Value string
 }
 
@@ -40,7 +40,7 @@ type Header struct {
 type Client struct {
 	serverURL url.URL
 	apiToken  string
-	headers  []*Header
+	headers   []*Header
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
@@ -57,7 +57,7 @@ func MakeClient(address string, apiToken string) (c Client, err error) {
 	return
 }
 
-// MakeClientWithHeader is the factory for constructing a Client for a given endpoint with additional user defined headers.
+// MakeClientWithHeaders is the factory for constructing a Client for a given endpoint with additional user defined headers.
 func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c Client, err error) {
 	c, err = MakeClient(address, apiToken)
 	if err != nil {
