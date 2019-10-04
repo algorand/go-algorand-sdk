@@ -217,12 +217,11 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	verified = VerifyLogicSig(lsig, contractSender)
 	require.False(t, verified)
 
-	// TODO: check invalid program fails
-	// copy(programMod[:], program)
-	// programMod[0] = 2
-	// lsig, err := MakeLogicSig(program, args, sk, pk)
-	// require.Error(t, err)
-
+	// check invalid program fails
+	copy(programMod[:], program)
+	programMod[0] = 2
+	lsig, err = MakeLogicSig(programMod, args, sk, pk)
+	require.Error(t, err)
 }
 
 func TestMakeLogicSigSingle(t *testing.T) {
