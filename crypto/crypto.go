@@ -381,7 +381,7 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 // VerifyLogicSig verifies LogicSig against assumed sender address
 func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
-	if !logic.CheckProgram(lsig.Logic) {
+	if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
 		return false
 	}
 
@@ -459,8 +459,11 @@ func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, er
 // 2. If no pk provides, it returns Sig delegated LogicSig
 // 3. If both sk and pk specified the function returns Multisig delegated LogicSig
 func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, pk MultisigAccount) (lsig types.LogicSig, err error) {
-	if len(program) == 0 || !logic.CheckProgram(program) {
+	if len(program) == 0 {
 		err = fmt.Errorf("invalid program")
+		return
+	}
+	if err = logic.CheckProgram(program, args); err != nil {
 		return
 	}
 
