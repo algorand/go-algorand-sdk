@@ -699,3 +699,76 @@ func submitGroup() {
 	}
 }
 ```
+
+## Working with LogicSig
+
+Example creates a delegating LogicSig signature signed by a MultiSig account.
+A program is "int 0" that is evaluates to `FALSE` and does not actually permits the transaction.
+
+```golang
+package main
+
+import (
+	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/client/algod"
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
+	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/types"
+)
+
+// CHANGE ME
+const algodAddress = "http://localhost:8080"
+const algodToken = "6218386c0d964e371f34bbff4adf543dab14a7d9720c11c6f11970774d4575de"
+
+func doLogSig() {
+	// ignore error checking for readability
+
+	addr1, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
+	addr2, err := types.DecodeAddress("BFRTECKTOOE7A5LHCF3TTEOH2A7BW46IYT2SX5VP6ANKEXHZYJY77SJTVM")
+	mn1 := "auction inquiry lava second expand liberty glass involve ginger illness length room item discover ahead table doctor term tackle cement bonus profit right above catch"
+	sk1, err := mnemonic.ToPrivateKey(mn1)
+	mn2 := "since during average anxiety protect cherry club long lawsuit loan expand embark forum theory winter park twenty ball kangaroo cram burst board host ability left"
+	sk2, err := mnemonic.ToPrivateKey(mn2)
+
+	ma, err := crypto.MultisigAccountWithParams(1, 2, []types.Address{
+		addr1,
+		addr2,
+	})
+
+	program := []byte{1, 32, 1, 0, 34} // int 0 => never transfer money
+	var args [][]byte
+	lsig, err := crypto.MakeLogicSig(program, args, sk1, ma)
+	err = crypto.AppendMultisigToLogicSig(&lsig, sk2)
+
+	sender, err := ma.Address()
+	_ = crypto.VerifyLogicSig(lsig, sender)
+
+	const receiver = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	const fee = 1000
+	const amount = 2000
+	var note []byte
+	const genesisID = "XYZ"      // replace me
+	genesisHash := []byte("ABC") // replace me
+
+	const firstRound = 710399
+	tx, err := transaction.MakePaymentTxnWithFlatFee(
+		sender.String(), receiver, fee, amount, firstRound, firstRound+1000,
+		note, "", genesisID, genesisHash,
+	)
+
+	txid, stx, err := crypto.SignLogicsigTransaction(lsig, tx)
+	if err != nil {
+		fmt.Printf("Signing failed with %v", err)
+		return
+	}
+	fmt.Printf("Signed tx: %v\n", txid)
+
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	_, err = algodClient.SendRawTransaction(stx)
+	if err != nil {
+		fmt.Printf("Sending failed with %v\n", err)
+	}
+}
+```
