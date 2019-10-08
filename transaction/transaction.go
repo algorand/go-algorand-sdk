@@ -803,16 +803,6 @@ func MakeAssetBurnTransactionWithFlatFee(account, reserve string, amount, fee, f
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(account, reserve, "", amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
-
-	if err != nil {
-		return types.Transaction{}, err
-	}
-
-	tx.Fee = types.MicroAlgos(fee)
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
 	return tx, err
 }
 
