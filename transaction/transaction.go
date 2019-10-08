@@ -361,6 +361,80 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	return tx, nil
 }
 
+// MakeAssetTransferTxn creates a tx for sending some asset from an asset holder to another user
+// the recipient must have marked themselves as willing to accept the asset
+// - account is a checksummed, human-readable address that will send the transaction and assets
+// - recipient is a checksummed, human-readable address what will receive the assets
+// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
+// - amount is the number of assets to send
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	var tx types.Transaction
+
+	tx.Type = types.AssetTransferTx
+
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return tx, err
+	}
+
+	ghBytes, err := byte32FromBase64(genesisHash)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Header = types.Header{
+		Sender:      accountAddr,
+		Fee:         types.MicroAlgos(feePerByte),
+		FirstValid:  types.Round(firstRound),
+		LastValid:   types.Round(lastRound),
+		GenesisHash: types.Digest(ghBytes),
+		GenesisID:   genesisID,
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.XferAsset = types.AssetID{
+		Creator: creatorAddr,
+		Index:   index,
+	}
+
+	recipientAddr, err := types.DecodeAddress(recipient)
+	if err != nil {
+		return tx, err
+	}
+	tx.AssetReceiver = recipientAddr
+
+	if closeAssetsTo != "" {
+		closeToAddr, err := types.DecodeAddress(closeAssetsTo)
+		if err != nil {
+			return tx, err
+		}
+		tx.AssetCloseTo = closeToAddr
+	}
+
+	tx.AssetAmount = amount
+
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	return tx, nil
+}
+
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
@@ -369,6 +443,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
 // - index is the asset index
 func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
 	creator string, index uint64) (types.Transaction, error) {
@@ -478,6 +553,34 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash, creator string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index, newManager, newReserve, newFreeze, newClawback)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
+}
+
+// MakeAssetTransferTxnWithFlatFee creates a tx for sending some asset from an asset holder to another user
+// the recipient must have marked themselves as willing to accept the asset
+// - account is a checksummed, human-readable address that will send the transaction and assets
+// - recipient is a checksummed, human-readable address what will receive the assets
+// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
+// - amount is the number of assets to send
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, amount, fee, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetTransferTxn(account, recipient, closeAssetsTo, amount, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
 	if err != nil {
 		return types.Transaction{}, err
 	}
