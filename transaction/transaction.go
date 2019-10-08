@@ -507,6 +507,46 @@ func MakeAssetRevocationTransaction(account, target, recipient string, amount, f
 	return tx, err
 }
 
+// MakeAssetMintTransaction creates a tx for minting more of an asset (transferring from the reserve account)
+// Note that this is just an asset transfer transaction where sender=reserve
+// - reserve is a checksummed, human-readable address that will send the transaction. it must be the asset's reserve to be considered a minting, but this is not enforced by the function.
+// - recipient is a checksummed, human-readable address; it will receive the revoked assets
+// - amount is the number of assets to mint
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetMintTransaction(reserve, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetTransferTxn(reserve, recipient, "", amount,
+		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	return tx, err
+}
+
+// MakeAssetBurnTransaction creates for burning an asset (transferring to the reserve account)
+// Note that this is just an asset transfer transaction where recipient=reserve
+// - account is a checksummed, human-readable address that will send the transaction.
+// - reserve is a checksummed, human-readable address; it will receive the revoked assets and must be the reserve account to be considered a burn. this is not enforced by the function
+// - amount is the number of assets to "burn"
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetBurnTransaction(account, reserve string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetTransferTxn(account, reserve, "", amount,
+		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	return tx, err
+}
+
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
@@ -724,6 +764,66 @@ func MakeAssetRevocationTransactionWithFlatFee(account, target, recipient string
 		tx.Fee = MinTxnFee
 	}
 	return tx, nil
+}
+
+// MakeAssetMintTransactionWithFlatFee creates a tx for minting more of an asset (transferring from the reserve account)
+// Note that this is just an asset transfer transaction where sender=reserve
+// - reserve is a checksummed, human-readable address that will send the transaction. it must be the asset's reserve to be considered a minting, but this is not enforced by the function.
+// - recipient is a checksummed, human-readable address; it will receive the revoked assets
+// - amount is the number of assets to send
+// - fee is the flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetMintTransactionWithFlatFee(reserve, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetMintTransaction(reserve, recipient, amount,
+		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, err
+}
+
+// MakeAssetBurnTransactionWithFlatFee creates for burning an asset (transferring to the reserve account)
+// Note that this is just an asset transfer transaction where recipient=reserve
+// - account is a checksummed, human-readable address that will send the transaction.
+// - reserve is a checksummed, human-readable address; it will receive the revoked assets and must be the reserve account to be considered a burn. this is not enforced by the function
+// - amount is the number of assets to send
+// - fee is the flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetBurnTransactionWithFlatFee(account, reserve string, amount, fee, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetBurnTransaction(account, reserve, amount,
+		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, err
 }
 
 // MakeAssetDestroyTxnWithFlatFee creates a tx template for destroying an asset, removing it from the record.
