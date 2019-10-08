@@ -285,6 +285,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - fee is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
 // - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string, creator string,
@@ -310,6 +311,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 		LastValid:   types.Round(lastRound),
 		GenesisHash: types.Digest(ghBytes),
 		GenesisID:   genesisID,
+		Note:        note,
 	}
 
 	creatorAddr, err := types.DecodeAddress(creator)
@@ -370,6 +372,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 // - feePerByte is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
 // - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
@@ -397,6 +400,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 		LastValid:   types.Round(lastRound),
 		GenesisHash: types.Digest(ghBytes),
 		GenesisID:   genesisID,
+		Note:        note,
 	}
 
 	creatorAddr, err := types.DecodeAddress(creator)
@@ -440,6 +444,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - feePerByte is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
 // - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
@@ -448,6 +453,39 @@ func MakeAssetAcceptanceTransaction(account string, feePerByte, firstRound, last
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(account, account, "", 0,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	return tx, err
+}
+
+// MakeAssetRevocationTransaction creates a tx for revoking an asset from an account and sending it to another
+// - account is a checksummed, human-readable address; it must be the revocation manager / clawback address from the asset's parameters
+// - target is a checksummed, human-readable address; it is the account whose assets will be revoked
+// - recipient is a checksummed, human-readable address; it will receive the revoked assets
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetRevocationTransaction(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetTransferTxn(account, recipient, "", amount,
+		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+
+	targetAddr, err := types.DecodeAddress(target)
+	if err != nil {
+		return tx, err
+	}
+	tx.AssetSender = targetAddr
+
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
 	return tx, err
 }
 
@@ -633,7 +671,36 @@ func MakeAssetAcceptanceTransactionWithFlatFee(account string, fee, firstRound, 
 	return tx, nil
 }
 
-// MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
+// MakeAssetRevocationTransactionWithFlatFee creates a tx for revoking an asset from an account and sending it to another
+// - account is a checksummed, human-readable address; it must be the revocation manager / clawback address from the asset's parameters
+// - target is a checksummed, human-readable address; it is the account whose assets will be revoked
+// - recipient is a checksummed, human-readable address; it will receive the revoked assets
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetRevocationTransactionWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetRevocationTransaction(account, target, recipient, amount, fee, firstRound, lastRound,
+		note, genesisID, genesisHash, creator, index)
+
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
+}
+
+// MakeAssetDestroyTxnWithFlatFee creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
 // - fee is a flat fee
