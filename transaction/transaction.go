@@ -700,7 +700,8 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // - index is the asset index
 func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetTransferTxn(account, recipient, closeAssetsTo, amount, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	tx, err := MakeAssetTransferTxn(account, recipient, closeAssetsTo, amount,
+		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -724,17 +725,9 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 // - index is the asset index
 func MakeAssetAcceptanceTransactionWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetAcceptanceTransaction(account, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-
-	tx.Fee = types.MicroAlgos(fee)
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-	return tx, nil
+	tx, err := MakeAssetTransferTxnWithFlatFee(account, account, "", 0,
+		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	return tx, err
 }
 
 // MakeAssetRevocationTransactionWithFlatFee creates a tx for revoking an asset from an account and sending it to another
