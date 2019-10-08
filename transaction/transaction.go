@@ -435,6 +435,22 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	return tx, nil
 }
 
+// MakeAssetAcceptanceTransaction creates a tx for marking an asset as willing to be accepted by an account
+// - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetAcceptanceTransaction(account string, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetTransferTxn(account, account, "", 0,
+		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	return tx, err
+}
+
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager

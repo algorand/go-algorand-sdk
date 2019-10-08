@@ -271,6 +271,11 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 	require.True(t, false)
 }
 
+func TestMakeAssetAcceptanceTxn(t *testing.T) {
+	// TODO ejr always fail for now
+	require.True(t, false)
+}
+
 func TestComputeGroupID(t *testing.T) {
 	// compare regular transactions created in SDK with 'goal clerk send' result
 	// compare transaction group created in SDK with 'goal clerk group' result
