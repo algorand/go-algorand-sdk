@@ -781,18 +781,8 @@ func MakeAssetRevocationTransactionWithFlatFee(account, target, recipient string
 // - index is the asset index
 func MakeAssetMintTransactionWithFlatFee(reserve, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetMintTransaction(reserve, recipient, amount,
+	tx, err := MakeAssetTransferTxnWithFlatFee(reserve, recipient, "", amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
-
-	if err != nil {
-		return types.Transaction{}, err
-	}
-
-	tx.Fee = types.MicroAlgos(fee)
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
 	return tx, err
 }
 
@@ -811,7 +801,7 @@ func MakeAssetMintTransactionWithFlatFee(reserve, recipient string, amount, fee,
 // - index is the asset index
 func MakeAssetBurnTransactionWithFlatFee(account, reserve string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetBurnTransaction(account, reserve, amount,
+	tx, err := MakeAssetTransferTxnWithFlatFee(account, reserve, "", amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
 
 	if err != nil {
