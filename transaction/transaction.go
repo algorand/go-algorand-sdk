@@ -374,7 +374,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 }
 
 // MakeAssetTransferTxn creates a tx for sending some asset from an asset holder to another user
-// the recipient must have marked themselves as willing to accept the asset
+// the recipient address must have previously issued an asset acceptance transaction for this asset
 // - account is a checksummed, human-readable address that will send the transaction and assets
 // - recipient is a checksummed, human-readable address what will receive the assets
 // - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
@@ -686,7 +686,7 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 }
 
 // MakeAssetTransferTxnWithFlatFee creates a tx for sending some asset from an asset holder to another user
-// the recipient must have marked themselves as willing to accept the asset
+// the recipient address must have previously issued an asset acceptance transaction for this asset
 // - account is a checksummed, human-readable address that will send the transaction and assets
 // - recipient is a checksummed, human-readable address what will receive the assets
 // - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
@@ -713,7 +713,7 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 	return tx, nil
 }
 
-// MakeAssetAcceptanceTransactionWithFlatFee creates a tx for marking an asset as willing to be accepted by an account
+// MakeAssetAcceptanceTransactionWithFlatFee creates a tx for marking an account as willing to accept an asset
 // - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
 // - fee is a flat fee
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
