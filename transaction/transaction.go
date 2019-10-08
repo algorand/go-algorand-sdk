@@ -453,7 +453,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	return tx, nil
 }
 
-// MakeAssetAcceptanceTransaction creates a tx for marking an asset as willing to be accepted by an account
+// MakeAssetAcceptanceTransaction creates a tx for marking an account as willing to accept the given asset
 // - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
 // - feePerByte is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
