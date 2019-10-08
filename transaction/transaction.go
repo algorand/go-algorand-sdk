@@ -268,12 +268,18 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 		GenesisID:   genesisID,
 		Note:        note,
 	}
+
 	// Update fee
 	eSize, err := estimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
 	return tx, nil
 }
 
@@ -360,6 +366,10 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
 
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
 	return tx, nil
 }
 
@@ -436,6 +446,10 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
 
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
 	return tx, nil
 }
 
@@ -484,7 +498,11 @@ func MakeAssetRevocationTransaction(account, target, recipient string, amount, f
 	if err != nil {
 		return types.Transaction{}, err
 	}
+
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 
 	return tx, err
 }
@@ -504,12 +522,16 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
 	tx, err := MakeAssetConfigTxn(account, feePerByte, firstRound, lastRound, note, genesisID, genesisHash,
 		creator, index, "", "", "", "")
+
 	// Update fee
 	eSize, err := estimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 
 	return tx, nil
 }
@@ -571,6 +593,10 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 		return types.Transaction{}, err
 	}
 	tx.Fee = types.MicroAlgos(eSize * fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
 
 	return tx, nil
 }
