@@ -609,6 +609,30 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 	return tx, nil
 }
 
+// MakeAssetAcceptanceTransactionWithFlatFee creates a tx for marking an asset as willing to be accepted by an account
+// - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
+// - fee is a flat fee
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator is the address of the asset creator
+// - index is the asset index
+func MakeAssetAcceptanceTransactionWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	tx, err := MakeAssetAcceptanceTransaction(account, fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	tx.Fee = types.MicroAlgos(fee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
+}
+
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
