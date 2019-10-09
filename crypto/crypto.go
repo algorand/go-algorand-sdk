@@ -154,27 +154,27 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error)
 type signer func() (signature types.Signature, err error)
 
 // Service function to make a single signature in Multisig
-func multisigSingle(sk ed25519.PrivateKey, pk MultisigAccount, customSigner signer) (msig types.MultisigSig, myIndex int, err error) {
-	// check that sk.pk exists in the pk list
-	myIndex = len(pk.Pks)
-	myPk := sk.Public().(ed25519.PublicKey)
-	for i := 0; i < len(pk.Pks); i++ {
-		if bytes.Equal(myPk, pk.Pks[i]) {
+func multisigSingle(sk ed25519.PrivateKey, ma MultisigAccount, customSigner signer) (msig types.MultisigSig, myIndex int, err error) {
+	// check that sk.pk exists in the list of public keys in MultisigAccount ma
+	myIndex = len(ma.Pks)
+	myPublicKey := sk.Public().(ed25519.PublicKey)
+	for i := 0; i < len(ma.Pks); i++ {
+		if bytes.Equal(myPublicKey, ma.Pks[i]) {
 			myIndex = i
 		}
 	}
-	if myIndex == len(pk.Pks) {
+	if myIndex == len(ma.Pks) {
 		err = errMsigInvalidSecretKey
 		return
 	}
 
 	// now, create the signed transaction
-	msig.Version = pk.Version
-	msig.Threshold = pk.Threshold
-	msig.Subsigs = make([]types.MultisigSubsig, len(pk.Pks))
-	for i := 0; i < len(pk.Pks); i++ {
-		c := make([]byte, len(pk.Pks[i]))
-		copy(c, pk.Pks[i])
+	msig.Version = ma.Version
+	msig.Threshold = ma.Threshold
+	msig.Subsigs = make([]types.MultisigSubsig, len(ma.Pks))
+	for i := 0; i < len(ma.Pks); i++ {
+		c := make([]byte, len(ma.Pks[i]))
+		copy(c, ma.Pks[i])
 		msig.Subsigs[i].Key = c
 	}
 	rawSig, err := customSigner()
@@ -188,17 +188,17 @@ func multisigSingle(sk ed25519.PrivateKey, pk MultisigAccount, customSigner sign
 // SignMultisigTransaction signs the given transaction, and multisig preimage, with the
 // private key, returning the bytes of a signed transaction with the multisig field
 // partially populated, ready to be passed to other multisig signers to sign or broadcast.
-func SignMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	err = pk.Validate()
+func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	err = ma.Validate()
 	if err != nil {
 		return
 	}
 	// check that the address of txn matches the preimage
-	pkAddr, err := pk.Address()
+	maAddress, err := ma.Address()
 	if err != nil {
 		return
 	}
-	if tx.Sender != pkAddr { // array value comparison is fine
+	if tx.Sender != maAddress { // array value comparison is fine
 		err = errMsigBadTxnSender
 		return
 	}
@@ -209,7 +209,7 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, tx types
 		return rawSig, err
 	}
 
-	sig, _, err := multisigSingle(sk, pk, customSigner)
+	sig, _, err := multisigSingle(sk, ma, customSigner)
 	if err != nil {
 		return
 	}
@@ -297,13 +297,13 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 // returning an encoded signed multisig transaction including the signature.
 // While we could compute the multisig preimage from the multisig blob, we ask the caller
 // to pass it back in, to explicitly check that they know who they are signing as.
-func AppendMultisigTransaction(sk ed25519.PrivateKey, pk MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
+func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
 	preStx := types.SignedTxn{}
 	err = msgpack.Decode(preStxBytes, &preStx)
 	if err != nil {
 		return
 	}
-	_, partStxBytes, err := SignMultisigTransaction(sk, pk, preStx.Txn)
+	_, partStxBytes, err := SignMultisigTransaction(sk, ma, preStx.Txn)
 	if err != nil {
 		return
 	}
@@ -319,6 +319,11 @@ func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) 
 	}
 
 	if msigAddress, err := msigAccount.Address(); err != nil || msigAddress != addr {
+		return false
+	}
+
+	// check that we don't have too many multisig subsigs
+	if len(msig.Subsigs) > 255 {
 		return false
 	}
 
@@ -339,7 +344,7 @@ func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) 
 	}
 
 	// checks individual signature verifies
-	var verifiedCount int
+	var verifiedCount uint8
 	for _, subsigi := range msig.Subsigs {
 		if (subsigi.Sig != types.Signature{}) {
 			if !ed25519.Verify(subsigi.Key, message, subsigi.Sig[:]) {
@@ -349,7 +354,7 @@ func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) 
 		}
 	}
 
-	if verifiedCount < int(msig.Threshold) {
+	if verifiedCount < msig.Threshold {
 		return false
 	}
 
@@ -385,15 +390,8 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 		return false
 	}
 
-	hasSig := false
-	hasMsig := false
-
-	if lsig.Sig != (types.Signature{}) {
-		hasSig = true
-	}
-	if !lsig.Msig.Blank() {
-		hasMsig = true
-	}
+	hasSig := lsig.Sig != (types.Signature{})
+	hasMsig := !lsig.Msig.Blank()
 
 	// require only one or zero sig
 	if hasSig && hasMsig {
@@ -401,8 +399,7 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 	}
 
 	result = false
-	parts := [][]byte{programPrefix, lsig.Logic}
-	toBeSigned := bytes.Join(parts, nil)
+	toBeSigned := programToSign(lsig.Logic)
 	// logic sig, compare hashes
 	if !hasSig && !hasMsig {
 		result = types.Digest(sha512.Sum512_256(toBeSigned)) == types.Digest(sender)
@@ -411,10 +408,10 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 
 	if hasSig {
 		result = ed25519.Verify(sender[:], toBeSigned, lsig.Sig[:])
-	} else {
-		result = VerifyMultisig(sender, toBeSigned, lsig.Msig)
+		return
 	}
 
+	result = VerifyMultisig(sender, toBeSigned, lsig.Msig)
 	return
 }
 
@@ -425,7 +422,7 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 
 	if !VerifyLogicSig(lsig, tx.Header.Sender) {
-		err = fmt.Errorf("invalid signature")
+		err = errLsigInvalidSignature
 		return
 	}
 
@@ -441,9 +438,14 @@ func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 	return
 }
 
-func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, err error) {
+func programToSign(program []byte) []byte {
 	parts := [][]byte{programPrefix, program}
 	toBeSigned := bytes.Join(parts, nil)
+	return toBeSigned
+}
+
+func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, err error) {
+	toBeSigned := programToSign(program)
 	rawSig := ed25519.Sign(sk, toBeSigned)
 	n := copy(sig[:], rawSig)
 	if n != len(sig) {
@@ -455,25 +457,25 @@ func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, er
 
 // MakeLogicSig produces a new LogicSig signature.
 // The function can work in three modes:
-// 1. If no sk and pk provided then it returns contract-only LogicSig
-// 2. If no pk provides, it returns Sig delegated LogicSig
-// 3. If both sk and pk specified the function returns Multisig delegated LogicSig
-func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, pk MultisigAccount) (lsig types.LogicSig, err error) {
+// 1. If no sk and ma provided then it returns contract-only LogicSig
+// 2. If no ma provides, it returns Sig delegated LogicSig
+// 3. If both sk and ma specified the function returns Multisig delegated LogicSig
+func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
 	if len(program) == 0 {
-		err = fmt.Errorf("invalid program")
+		err = errLsigInvalidProgram
 		return
 	}
 	if err = logic.CheckProgram(program, args); err != nil {
 		return
 	}
 
-	if sk == nil && pk.Blank() {
+	if sk == nil && ma.Blank() {
 		lsig.Logic = program
 		lsig.Args = args
 		return
 	}
 
-	if pk.Blank() {
+	if ma.Blank() {
 		var sig types.Signature
 		sig, err = signProgram(sk, program)
 		if err != nil {
@@ -487,7 +489,7 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, pk Multi
 	}
 
 	// Format Multisig
-	err = pk.Validate()
+	err = ma.Validate()
 	if err != nil {
 		return
 	}
@@ -497,7 +499,7 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, pk Multi
 		return signProgram(sk, program)
 	}
 
-	msig, _, err := multisigSingle(sk, pk, customSigner)
+	msig, _, err := multisigSingle(sk, ma, customSigner)
 	if err != nil {
 		return
 	}
@@ -512,10 +514,10 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, pk Multi
 // AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
 func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error {
 	if lsig.Msig.Blank() {
-		return fmt.Errorf("empty msig")
+		return errLsigEmptyMsig
 	}
 
-	pk, err := MultisigAccountFromSig(lsig.Msig)
+	ma, err := MultisigAccountFromSig(lsig.Msig)
 	if err != nil {
 		return err
 	}
@@ -524,7 +526,7 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 		return signProgram(sk, lsig.Logic)
 	}
 
-	msig, idx, err := multisigSingle(sk, pk, customSigner)
+	msig, idx, err := multisigSingle(sk, ma, customSigner)
 	if err != nil {
 		return err
 	}

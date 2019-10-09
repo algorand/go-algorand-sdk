@@ -722,7 +722,7 @@ import (
 const algodAddress = "http://localhost:8080"
 const algodToken = "6218386c0d964e371f34bbff4adf543dab14a7d9720c11c6f11970774d4575de"
 
-func doLogSig() {
+func main() {
 	// ignore error checking for readability
 
 	addr1, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")

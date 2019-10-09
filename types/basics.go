@@ -24,6 +24,12 @@ const (
 
 const masterDerivationKeyLenBytes = 32
 
+// LogicSigMaxSize is a max TEAL program size (with args)
+const LogicSigMaxSize = 1000
+
+// LogicSigMaxCost is a max execution const of a TEAL program
+const LogicSigMaxCost = 20000
+
 // MicroAlgos are the base unit of currency in Algorand
 type MicroAlgos uint64
 

@@ -2,6 +2,8 @@ package crypto
 
 import (
 	"crypto/sha512"
+	"fmt"
+
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/types"
@@ -129,4 +131,17 @@ func (ma MultisigAccount) Blank() bool {
 		return false
 	}
 	return true
+}
+
+// LogicSigAddress returns contract (escrow) address
+func LogicSigAddress(lsig types.LogicSig) types.Address {
+	toBeSigned := programToSign(lsig.Logic)
+	checksum := sha512.Sum512_256(toBeSigned)
+
+	var addr types.Address
+	n := copy(addr[:], checksum[:])
+	if n != ed25519.PublicKeySize {
+		panic(fmt.Sprintf("Generated public key has length of %d, expected %d", n, ed25519.PublicKeySize))
+	}
+	return addr
 }

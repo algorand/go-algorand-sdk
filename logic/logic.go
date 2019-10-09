@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 type langSpec struct {
@@ -30,11 +32,14 @@ type operation struct {
 var spec *langSpec
 var opcodes []operation
 
-const maxCost = 20000
-const maxLength = 1000
-
 // CheckProgram performs basic program validation: instruction count and program cost
 func CheckProgram(program []byte, args [][]byte) error {
+	const intcblockOpcode = 32
+	const bytecblockOpcode = 38
+	if program == nil || len(program) == 0 {
+		return fmt.Errorf("empty program")
+	}
+
 	if spec == nil {
 		spec = new(langSpec)
 		if err := json.Unmarshal(langSpecJson, spec); err != nil {
@@ -54,7 +59,7 @@ func CheckProgram(program []byte, args [][]byte) error {
 	for _, arg := range args {
 		length += len(arg)
 	}
-	if length >= maxLength {
+	if length > types.LogicSigMaxSize {
 		return fmt.Errorf("program too long")
 	}
 
@@ -76,12 +81,12 @@ func CheckProgram(program []byte, args [][]byte) error {
 		var err error
 		if size == 0 {
 			switch op.Opcode {
-			case 32: // intcblock
+			case intcblockOpcode:
 				size, err = checkIntConstBlock(program, pc)
 				if err != nil {
 					return err
 				}
-			case 38: // bytecblock
+			case bytecblockOpcode:
 				size, err = checkByteConstBlock(program, pc)
 				if err != nil {
 					return err
@@ -93,7 +98,7 @@ func CheckProgram(program []byte, args [][]byte) error {
 		pc = pc + size
 	}
 
-	if cost > maxCost {
+	if cost > types.LogicSigMaxCost {
 		return fmt.Errorf("program too costly to run")
 	}
 
@@ -111,7 +116,7 @@ func checkIntConstBlock(program []byte, pc int) (size int, err error) {
 	size += bytesUsed
 	for i := uint64(0); i < numInts; i++ {
 		if pc+size >= len(program) {
-			err = fmt.Errorf("bytecblock ran past end of program")
+			err = fmt.Errorf("intcblock ran past end of program")
 			return
 		}
 		_, bytesUsed = binary.Uvarint(program[pc+size:])
@@ -128,7 +133,7 @@ func checkByteConstBlock(program []byte, pc int) (size int, err error) {
 	size = 1
 	numInts, bytesUsed := binary.Uvarint(program[pc+size:])
 	if bytesUsed <= 0 {
-		err = fmt.Errorf("could not decode []byte] const block size at pc=%d", pc+size)
+		err = fmt.Errorf("could not decode []byte const block size at pc=%d", pc+size)
 		return
 	}
 
