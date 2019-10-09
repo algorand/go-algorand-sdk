@@ -187,6 +187,7 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	require.True(t, lsig.Msig.Blank())
 	verified := VerifyLogicSig(lsig, contractSender)
 	require.True(t, verified)
+	require.Equal(t, LogicSigAddress(lsig), contractSender)
 
 	// check arguments
 	args = make([][]byte, 2)
