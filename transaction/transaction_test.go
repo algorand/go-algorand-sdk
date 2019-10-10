@@ -317,8 +317,45 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 }
 
 func TestMakeAssetAcceptanceTxn(t *testing.T) {
-	// TODO ejr always fail for now
-	require.True(t, false)
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const sender, creator = addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const amountToSend = 1
+
+	tx, err := MakeAssetAcceptanceTransaction(sender, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(sender)
+	require.NoError(t, err)
+
+	expectedAssetAcceptanceTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         2670,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetAcceptanceTxn.XferAsset = expectedAssetID
+	expectedAssetAcceptanceTxn.AssetReceiver = sendAddr
+	expectedAssetAcceptanceTxn.AssetAmount = 0
+
+	require.Equal(t, expectedAssetAcceptanceTxn, tx)
 }
 
 func TestMakeAssetRevocationTransaction(t *testing.T) {
