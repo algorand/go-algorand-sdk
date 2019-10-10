@@ -463,7 +463,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetAcceptanceTransaction(account string, feePerByte, firstRound, lastRound uint64, note []byte,
+func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(account, account, "", 0,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -482,7 +482,7 @@ func MakeAssetAcceptanceTransaction(account string, feePerByte, firstRound, last
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetRevocationTransaction(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(account, recipient, "", amount,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -520,7 +520,7 @@ func MakeAssetRevocationTransaction(account, target, recipient string, amount, f
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetMintTransaction(reserve, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+func MakeAssetMintTxn(reserve, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(reserve, recipient, "", amount,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -540,7 +540,7 @@ func MakeAssetMintTransaction(reserve, recipient string, amount, feePerByte, fir
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetBurnTransaction(account, reserve string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+func MakeAssetBurnTxn(account, reserve string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(account, reserve, "", amount,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -723,7 +723,7 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetAcceptanceTransactionWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
+func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(account, account, "", 0,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -742,9 +742,9 @@ func MakeAssetAcceptanceTransactionWithFlatFee(account string, fee, firstRound, 
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetRevocationTransactionWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
+func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetRevocationTransaction(account, target, recipient, amount, fee, firstRound, lastRound,
+	tx, err := MakeAssetRevocationTxn(account, target, recipient, amount, fee, firstRound, lastRound,
 		note, genesisID, genesisHash, creator, index)
 
 	if err != nil {
@@ -772,7 +772,7 @@ func MakeAssetRevocationTransactionWithFlatFee(account, target, recipient string
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetMintTransactionWithFlatFee(reserve, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
+func MakeAssetMintTxnWithFlatFee(reserve, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(reserve, recipient, "", amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
@@ -792,7 +792,7 @@ func MakeAssetMintTransactionWithFlatFee(reserve, recipient string, amount, fee,
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetBurnTransactionWithFlatFee(account, reserve string, amount, fee, firstRound, lastRound uint64, note []byte,
+func MakeAssetBurnTxnWithFlatFee(account, reserve string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(account, reserve, "", amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, creator, index)
