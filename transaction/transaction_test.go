@@ -267,6 +267,10 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 }
 
 func TestMakeAssetTransferTxn(t *testing.T) {
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
 	const sender, recipient, creator, closeAssetsTo = addr, addr, addr, addr
@@ -316,10 +320,7 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 	require.Equal(t, expectedAssetTransferTxn, tx)
 
 	// now compare tx against a golden
-	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
 	const signedGolden = "gqNzaWfEQGkk9CtvOKnn4nU59xmPGoZvYv+6TCu5B95PgwQ/YytwE9dr199ehEqAnSS0C2SaO4YhEBAk+JVOiwZiRq/w1gijdHhuiqRhYW10AaZhY2xvc2XEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pGFyY3bEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9o2ZlZc0MRKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/4o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaVheGZlcqR4YWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAQ=="
-	private, err := mnemonic.ToPrivateKey(addrSK)
-	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
 	require.NoError(t, err)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
