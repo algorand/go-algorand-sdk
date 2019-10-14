@@ -284,9 +284,9 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 }
 
 // MakeAssetConfigTxn creates a tx template for changing the
-// keys for an asset. An empty string means a zero key (which
-// cannot be changed after becoming zero); to keep a key
-// unchanged, you must specify that key.
+// key configuration for an existing asset. An empty string means
+// a zero key (which cannot be changed after becoming zero);
+// to keep a key unchanged, you must specify that key.
 // - account is a checksummed, human-readable address that will send the transaction
 // - fee is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
