@@ -284,16 +284,22 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 }
 
 // MakeAssetConfigTxn creates a tx template for changing the
-// key configuration for an existing asset. An empty string means
-// a zero key (which cannot be changed after becoming zero);
-// to keep a key unchanged, you must specify that key.
+// key configuration of an existing asset.
+// Important notes -
+// 	* Every asset config transaction is a fresh one. No parameters will be inherited from the current config.
+// 	* Once an address is set to to the empty string, IT CAN NEVER BE CHANGED AGAIN. For example, if you want to keep
+//    The current manager, you must specify its address again.
+//	Parameters -
 // - account is a checksummed, human-readable address that will send the transaction
-// - fee is a fee per byte
+// - feePerByte  is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
 // - lastRound is the last round this txn is valid
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - creator the address of the asset creator
+// - index is the asset index id
+// - for newManager, newReserve, newFreeze, newClawback see asset.go
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string, creator string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
 	var tx types.Transaction
@@ -315,7 +321,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 		Fee:         types.MicroAlgos(feePerByte),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: types.Digest(ghBytes),
+		GenesisHash: ghBytes,
 		GenesisID:   genesisID,
 		Note:        note,
 	}
