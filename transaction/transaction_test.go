@@ -239,7 +239,7 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	const creator = addr
 	const assetIndex = 1
 	const firstValidRound = 322575
-	const lastValidRound = 323575
+	const lastValidRound = 323576
 	const freezeSetting = true
 	const target = creator
 	tx, err := MakeAssetFreezeTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex, target, freezeSetting)
@@ -264,6 +264,13 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	expectedAssetFreezeTxn.AssetFrozen = freezeSetting
 	expectedAssetFreezeTxn.FreezeAccount = a
 	require.Equal(t, expectedAssetFreezeTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQJsNp4Hm5qYBN1Foa8nGd3zeMFxGFJiAxuf3/L1A4MTgR521fId0nIYtMwbJha5zRpN/0UuNoq91IkOK7LVhzACjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAaNmZWXNCqCiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetTransferTxn(t *testing.T) {
