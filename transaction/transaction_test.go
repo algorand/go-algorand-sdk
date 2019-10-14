@@ -239,7 +239,7 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	const creator = addr
 	const assetIndex = 1
 	const firstValidRound = 322575
-	const lastValidRound = 323575
+	const lastValidRound = 323576
 	const freezeSetting = true
 	const target = creator
 	tx, err := MakeAssetFreezeTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex, target, freezeSetting)
@@ -264,6 +264,257 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	expectedAssetFreezeTxn.AssetFrozen = freezeSetting
 	expectedAssetFreezeTxn.FreezeAccount = a
 	require.Equal(t, expectedAssetFreezeTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQJsNp4Hm5qYBN1Foa8nGd3zeMFxGFJiAxuf3/L1A4MTgR521fId0nIYtMwbJha5zRpN/0UuNoq91IkOK7LVhzACjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAaNmZWXNCqCiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
+}
+
+func TestMakeAssetTransferTxn(t *testing.T) {
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const sender, recipient, creator, closeAssetsTo = addr, addr, addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323576
+	const amountToSend = 1
+
+	tx, err := MakeAssetTransferTxn(sender, recipient, closeAssetsTo, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(sender)
+	require.NoError(t, err)
+
+	expectedAssetTransferTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         3140,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetTransferTxn.XferAsset = expectedAssetID
+
+	receiveAddr, err := types.DecodeAddress(recipient)
+	require.NoError(t, err)
+	expectedAssetTransferTxn.AssetReceiver = receiveAddr
+
+	closeAddr, err := types.DecodeAddress(closeAssetsTo)
+	require.NoError(t, err)
+	expectedAssetTransferTxn.AssetCloseTo = closeAddr
+
+	expectedAssetTransferTxn.AssetAmount = amountToSend
+
+	require.Equal(t, expectedAssetTransferTxn, tx)
+
+	// now compare tx against a golden
+	const signedGolden = "gqNzaWfEQGkk9CtvOKnn4nU59xmPGoZvYv+6TCu5B95PgwQ/YytwE9dr199ehEqAnSS0C2SaO4YhEBAk+JVOiwZiRq/w1gijdHhuiqRhYW10AaZhY2xvc2XEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pGFyY3bEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9o2ZlZc0MRKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/4o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaVheGZlcqR4YWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAQ=="
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
+}
+
+func TestMakeAssetAcceptanceTxn(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const sender, creator = addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const amountToSend = 1
+
+	tx, err := MakeAssetAcceptanceTxn(sender, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(sender)
+	require.NoError(t, err)
+
+	expectedAssetAcceptanceTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         2670,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetAcceptanceTxn.XferAsset = expectedAssetID
+	expectedAssetAcceptanceTxn.AssetReceiver = sendAddr
+	expectedAssetAcceptanceTxn.AssetAmount = 0
+
+	require.Equal(t, expectedAssetAcceptanceTxn, tx)
+}
+
+func TestMakeAssetRevocationTransaction(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const revoker, recipient, revoked, creator = addr, addr, addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const amountToSend = 1
+
+	tx, err := MakeAssetRevocationTxn(revoker, revoked, recipient, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(revoker)
+	require.NoError(t, err)
+
+	expectedAssetRevocationTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         3140,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetRevocationTxn.XferAsset = expectedAssetID
+
+	receiveAddr, err := types.DecodeAddress(recipient)
+	require.NoError(t, err)
+	expectedAssetRevocationTxn.AssetReceiver = receiveAddr
+
+	expectedAssetRevocationTxn.AssetAmount = amountToSend
+
+	targetAddr, err := types.DecodeAddress(revoked)
+	require.NoError(t, err)
+	expectedAssetRevocationTxn.AssetSender = targetAddr
+
+	require.Equal(t, expectedAssetRevocationTxn, tx)
+}
+
+func TestMakeAssetMintTransaction(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const reserve, recipient, creator = addr, addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const amountToSend = 1
+
+	tx, err := MakeAssetMintTxn(reserve, recipient, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(reserve)
+	require.NoError(t, err)
+
+	expectedAssetMintTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         2730,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetMintTxn.XferAsset = expectedAssetID
+
+	receiveAddr, err := types.DecodeAddress(recipient)
+	require.NoError(t, err)
+	expectedAssetMintTxn.AssetReceiver = receiveAddr
+
+	expectedAssetMintTxn.AssetAmount = amountToSend
+
+	require.Equal(t, expectedAssetMintTxn, tx)
+}
+
+func TestMakeAssetBurnTransaction(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const reserve, sender, creator = addr, addr, addr
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+	const amountToSend = 1
+
+	tx, err := MakeAssetBurnTxn(sender, reserve, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(sender)
+	require.NoError(t, err)
+
+	expectedAssetBurnTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         2730,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	creatorAddr, err := types.DecodeAddress(creator)
+	require.NoError(t, err)
+
+	expectedAssetID := types.AssetID{
+		Creator: creatorAddr,
+		Index:   assetIndex,
+	}
+	expectedAssetBurnTxn.XferAsset = expectedAssetID
+
+	receiveAddr, err := types.DecodeAddress(reserve)
+	require.NoError(t, err)
+	expectedAssetBurnTxn.AssetReceiver = receiveAddr
+
+	expectedAssetBurnTxn.AssetAmount = amountToSend
+
+	require.Equal(t, expectedAssetBurnTxn, tx)
 }
 
 func TestComputeGroupID(t *testing.T) {
