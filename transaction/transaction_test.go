@@ -176,7 +176,6 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 func TestMakeAssetConfigTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const creator = addr
 	const manager = addr
 	const reserve = addr
 	const freeze = addr
@@ -186,7 +185,7 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 		assetIndex, manager, reserve, freeze, clawback)
 	require.NoError(t, err)
 
-	a, err := types.DecodeAddress(creator)
+	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
 	expectedAssetConfigTxn := types.Transaction{
 		Type: types.AssetConfigTx,
