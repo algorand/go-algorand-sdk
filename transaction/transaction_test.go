@@ -164,6 +164,13 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	copy(expectedAssetCreationTxn.AssetParams.URL[:], []byte(testURL))
 	copy(expectedAssetCreationTxn.AssetParams.MetadataHash[:], []byte(metadataHash))
 	require.Equal(t, expectedAssetCreationTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQGgrTyL9vDPnfdHhNycCFm+reimO11pXK0jNcvWigQ5iHUzg3OrY5QlNTUXRcCrLP07K256WPy+5aRtrYvwMgwWjdHhuh6RhcGFyiaJhbcQgc29tZWhhc2gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACiYW7EIHRlc3Rjb2luAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAomF1xCB3ZWJzaXRlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bsQIdHN0AAAAAACjZmVlzRHuomZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetConfigTxn(t *testing.T) {
@@ -201,6 +208,13 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 	}
 	expectedAssetConfigTxn.ConfigAsset = types.AssetIndex(assetIndex)
 	require.Equal(t, expectedAssetConfigTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQBBkfw5n6UevuIMDo2lHyU4dS80JCCQ/vTRUcTx5m0ivX68zTKyuVRrHaTbxbRRc3YpJ4zeVEnC9Fiw3Wf4REwejdHhuiKRhcGFyhKFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRjYWlkzQTSo2ZlZc0NSKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetDestroyTxn(t *testing.T) {
@@ -216,7 +230,7 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	a, err := types.DecodeAddress(creator)
 	require.NoError(t, err)
 
-	expectedAssetConfigTxn := types.Transaction{
+	expectedAssetDestroyTxn := types.Transaction{
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
@@ -227,9 +241,16 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 			GenesisID:   "",
 		},
 	}
-	expectedAssetConfigTxn.AssetParams = types.AssetParams{}
-	expectedAssetConfigTxn.ConfigAsset = types.AssetIndex(assetIndex)
-	require.Equal(t, expectedAssetConfigTxn, tx)
+	expectedAssetDestroyTxn.AssetParams = types.AssetParams{}
+	expectedAssetDestroyTxn.ConfigAsset = types.AssetIndex(assetIndex)
+	require.Equal(t, expectedAssetDestroyTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQPd0mv/T/t92g08WiJ9f/l0QsiHhFu8D9hSYt5z7cExhSStmVN5WV9wHRUOyAy6SFC72OutIi58rNxOcc+ZmTASjdHhuh6RjYWlkAaNmZWXNB2yiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetFreezeTxn(t *testing.T) {
@@ -356,6 +377,13 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 	expectedAssetAcceptanceTxn.AssetAmount = 0
 
 	require.Equal(t, expectedAssetAcceptanceTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQJ7q2rOT8Sb/wB0F87ld+1zMprxVlYqbUbe+oz0WM63FctIi+K9eYFSqT26XBZ4Rr3+VTJpBE+JLKs8nctl9hgijdHhuiKRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCOiiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetRevocationTransaction(t *testing.T) {
@@ -400,6 +428,13 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	expectedAssetRevocationTxn.AssetSender = targetAddr
 
 	require.Equal(t, expectedAssetRevocationTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQHIBdz/aZdjl3qE8j9IPedxw6HoFvI91fDwiMHNe+v6XDqRSm7BoFIUoRzSsaRXt3TCh4nEwhD/qxsXvYBbB+AGjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCr6iZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestComputeGroupID(t *testing.T) {
