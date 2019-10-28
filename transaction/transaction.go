@@ -50,7 +50,6 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	tx.ConfigAsset = types.AssetIndex(index)
 
 	if newManager != "" {
-		tx.Type = types.AssetConfigTx
 		tx.AssetParams.Manager, err = types.DecodeAddress(newManager)
 		if err != nil {
 			return
