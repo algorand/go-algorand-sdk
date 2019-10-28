@@ -168,6 +168,21 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	return
 }
 
+// MakeAssetAcceptanceTxn creates a tx for marking an account as willing to accept the given asset
+// - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - index is the asset index
+func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash string, index uint64) (encoded []byte, err error) {
+	return MakeAssetTransferTxn(account, account, "", 0,
+		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, index)
+}
+
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 func MakePaymentTxn(from, to string, feePerByte, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (encoded []byte, err error) {

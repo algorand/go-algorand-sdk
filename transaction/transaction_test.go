@@ -164,3 +164,48 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
+
+func TestMakeAssetAcceptanceTxn(t *testing.T) {
+	const sender = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const assetIndex = 1
+	const firstValidRound = 322575
+	const lastValidRound = 323575
+
+	encoded, err := MakeAssetAcceptanceTxn(sender, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, assetIndex)
+	require.NoError(t, err)
+
+	sendAddr, err := types.DecodeAddress(sender)
+	require.NoError(t, err)
+
+	expectedAssetAcceptanceTxn := types.Transaction{
+		Type: types.AssetTransferTx,
+		Header: types.Header{
+			Sender:      sendAddr,
+			Fee:         2280,
+			FirstValid:  firstValidRound,
+			LastValid:   lastValidRound,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+
+	expectedAssetID := types.AssetIndex(assetIndex)
+	expectedAssetAcceptanceTxn.XferAsset = expectedAssetID
+	expectedAssetAcceptanceTxn.AssetReceiver = sendAddr
+	expectedAssetAcceptanceTxn.AssetAmount = 0
+
+	var decoded types.Transaction
+	err = msgpack.Decode(encoded, &decoded)
+	require.NoError(t, err)
+
+	require.Equal(t, expectedAssetAcceptanceTxn, decoded)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	newStxBytes, err := crypto.SignTransaction(private, encoded)
+	signedGolden := "gqNzaWfEQJ7q2rOT8Sb/wB0F87ld+1zMprxVlYqbUbe+oz0WM63FctIi+K9eYFSqT26XBZ4Rr3+VTJpBE+JLKs8nctl9hgijdHhuiKRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCOiiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
+}
