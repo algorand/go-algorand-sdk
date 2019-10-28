@@ -141,8 +141,8 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	}
 	tx.AssetReceiver = recipientAddr
 
-	var closeToAddr types.Address
 	if closeAssetsTo != "" {
+		var closeToAddr types.Address
 		closeToAddr, err = types.DecodeAddress(closeAssetsTo)
 		if err != nil {
 			return
