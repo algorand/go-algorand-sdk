@@ -21,7 +21,7 @@ const minFee = 1000
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
-func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string, creator string,
+func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (encoded []byte, err error) {
 	var tx types.Transaction
 
@@ -42,19 +42,12 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 		Fee:         types.Algos(feePerByte),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: types.Digest(ghBytes),
+		GenesisHash: ghBytes,
 		GenesisID:   genesisID,
+		Note:        note,
 	}
 
-	creatorAddr, err := types.DecodeAddress(creator)
-	if err != nil {
-		return
-	}
-
-	tx.ConfigAsset = types.AssetID{
-		Creator: creatorAddr,
-		Index:   index,
-	}
+	tx.ConfigAsset = types.AssetIndex(index)
 
 	if newManager != "" {
 		tx.Type = types.AssetConfigTx
@@ -116,7 +109,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 // - creator is the address of the asset creator
 // - index is the asset index
 func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash, creator string, index uint64) (encoded []byte, err error) {
+	genesisID, genesisHash string, index uint64) (encoded []byte, err error) {
 	var tx types.Transaction
 
 	tx.Type = types.AssetTransferTx
@@ -141,15 +134,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 		Note:        note,
 	}
 
-	creatorAddr, err := types.DecodeAddress(creator)
-	if err != nil {
-		return
-	}
-
-	tx.XferAsset = types.AssetID{
-		Creator: creatorAddr,
-		Index:   index,
-	}
+	tx.XferAsset = types.AssetIndex(index)
 
 	recipientAddr, err := types.DecodeAddress(recipient)
 	if err != nil {

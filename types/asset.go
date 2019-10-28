@@ -2,14 +2,12 @@ package types
 
 const assetUnitNameLen = 8
 const assetNameLen = 32
+const assetURLLen = 32
+const assetMetadataHashLen = 32
 
-// AssetID is a name of an asset.
-type AssetID struct {
-	_struct struct{} `codec:",omitempty,omitemptyarray"`
-
-	Creator Address `codec:"c"`
-	Index   uint64  `codec:"i"`
-}
+// AssetIndex is the unique integer index of an asset that can be used to look
+// up the creator of the asset, whose balance record contains the AssetParams
+type AssetIndex uint64
 
 // AssetParams describes the parameters of an asset.
 type AssetParams struct {
@@ -29,6 +27,14 @@ type AssetParams struct {
 
 	// AssetName specifies a hint for the name of the asset.
 	AssetName [assetNameLen]byte `codec:"an"`
+
+	// URL specifies a URL where more information about the asset can be
+	// retrieved
+	URL [assetURLLen]byte `codec:"au"`
+
+	// MetadataHash specifies a commitment to some unspecified asset
+	// metadata. The format of this metadata is up to the application.
+	MetadataHash [assetMetadataHashLen]byte `codec:"am"`
 
 	// Manager specifies an account that is allowed to change the
 	// non-zero addresses in this AssetParams.
