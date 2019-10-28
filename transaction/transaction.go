@@ -229,6 +229,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 		Type: types.PaymentTx,
 		Header: types.Header{
 			Sender:      fromAddr,
+			Fee:         types.Algos(fee),
 			FirstValid:  types.Round(firstRound),
 			LastValid:   types.Round(lastRound),
 			Note:        note,
