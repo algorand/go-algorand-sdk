@@ -233,7 +233,7 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         1900,
+			Fee:         1880,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -248,7 +248,7 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
-	signedGolden := "gqNzaWfEQPd0mv/T/t92g08WiJ9f/l0QsiHhFu8D9hSYt5z7cExhSStmVN5WV9wHRUOyAy6SFC72OutIi58rNxOcc+ZmTASjdHhuh6RjYWlkAaNmZWXNB2yiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
+	signedGolden := "gqNzaWfEQBSP7HtzD/Lvn4aVvaNpeR4T93dQgo4LvywEwcZgDEoc/WVl3aKsZGcZkcRFoiWk8AidhfOZzZYutckkccB8RgGjdHhuh6RjYWlkAaNmZWXNB1iiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
@@ -405,7 +405,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 		Type: types.AssetTransferTx,
 		Header: types.Header{
 			Sender:      sendAddr,
-			Fee:         2750,
+			Fee:         2730,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -432,7 +432,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
-	signedGolden := "gqNzaWfEQHIBdz/aZdjl3qE8j9IPedxw6HoFvI91fDwiMHNe+v6XDqRSm7BoFIUoRzSsaRXt3TCh4nEwhD/qxsXvYBbB+AGjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCr6iZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	signedGolden := "gqNzaWfEQHsgfEAmEHUxLLLR9s+Y/yq5WeoGo/jAArCbany+7ZYwExMySzAhmV7M7S8+LBtJalB4EhzEUMKmt3kNKk6+vAWjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCqqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 

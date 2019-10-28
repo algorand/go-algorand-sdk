@@ -381,23 +381,11 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	return tx, nil
 }
 
-// MakeAssetTransferTxn creates a tx for sending some asset from an asset holder to another user
-// the recipient address must have previously issued an asset acceptance transaction for this asset
-// - account is a checksummed, human-readable address that will send the transaction and assets
-// - recipient is a checksummed, human-readable address what will receive the assets
-// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
-// - amount is the number of assets to send
-// - feePerByte is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
-// - lastRound is the last round this txn is valid
-// - note is an arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
-// - index is the asset index
-func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+// transferAssetBuilder is a helper that builds asset transfer transactions:
+// either a normal asset transfer, or an asset revocation
+func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget string, amount, feePerByte,
+	firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	var tx types.Transaction
-
 	tx.Type = types.AssetTransferTx
 
 	accountAddr, err := types.DecodeAddress(account)
@@ -436,6 +424,14 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 		tx.AssetCloseTo = closeToAddr
 	}
 
+	if revocationTarget != "" {
+		revokedAddr, err := types.DecodeAddress(revocationTarget)
+		if err != nil {
+			return tx, err
+		}
+		tx.AssetSender = revokedAddr
+	}
+
 	tx.AssetAmount = amount
 
 	// Update fee
@@ -452,6 +448,26 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 	return tx, nil
 }
 
+// MakeAssetTransferTxn creates a tx for sending some asset from an asset holder to another user
+// the recipient address must have previously issued an asset acceptance transaction for this asset
+// - account is a checksummed, human-readable address that will send the transaction and assets
+// - recipient is a checksummed, human-readable address what will receive the assets
+// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
+// - amount is the number of assets to send
+// - feePerByte is a fee per byte
+// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
+// - lastRound is the last round this txn is valid
+// - note is an arbitrary byte array
+// - genesis id corresponds to the id of the network
+// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - index is the asset index
+func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
+	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	revocationTarget := "" // no asset revocation, this is normal asset transfer
+	return transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget, amount, feePerByte, firstRound, lastRound,
+		note, genesisID, genesisHash, index)
+}
+
 // MakeAssetAcceptanceTxn creates a tx for marking an account as willing to accept the given asset
 // - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
 // - feePerByte is a fee per byte
@@ -463,9 +479,8 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - index is the asset index
 func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetTransferTxn(account, account, "", 0,
+	return MakeAssetTransferTxn(account, account, "", 0,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, index)
-	return tx, err
 }
 
 // MakeAssetRevocationTxn creates a tx for revoking an asset from an account and sending it to another
@@ -481,27 +496,9 @@ func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound ui
 // - index is the asset index
 func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
-	tx, err := MakeAssetTransferTxn(account, recipient, "", amount,
-		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, index)
-
-	targetAddr, err := types.DecodeAddress(target)
-	if err != nil {
-		return tx, err
-	}
-	tx.AssetSender = targetAddr
-
-	// Update fee
-	eSize, err := estimateSize(tx)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-
-	tx.Fee = types.MicroAlgos(eSize * feePerByte)
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, err
+	closeAssetsTo := "" // no close-out, this is an asset revocation
+	return transferAssetBuilder(account, recipient, closeAssetsTo, target, amount, feePerByte, firstRound, lastRound,
+		note, genesisID, genesisHash, index)
 }
 
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
@@ -519,17 +516,7 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 	tx, err := MakeAssetConfigTxn(account, feePerByte, firstRound, lastRound, note, genesisID, genesisHash,
 		index, "", "", "", "")
 
-	// Update fee
-	eSize, err := estimateSize(tx)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	tx.Fee = types.MicroAlgos(eSize * feePerByte)
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	return tx, err
 }
 
 // MakeAssetFreezeTxn constructs a transaction that freezes or unfreezes an account's asset holdings
