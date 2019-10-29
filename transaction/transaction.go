@@ -215,6 +215,9 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 	tx.AssetParams = types.AssetParams{
 		Total:         total,
 		DefaultFrozen: defaultFrozen,
+		UnitName:      unitName,
+		AssetName:     assetName,
+		URL:           url,
 	}
 
 	if manager != "" {
@@ -241,20 +244,6 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 			return tx, err
 		}
 	}
-	if len(unitName) > len(tx.AssetParams.UnitName) {
-		return tx, fmt.Errorf("asset unit name %s too long (max %d bytes)", unitName, len(tx.AssetParams.UnitName))
-	}
-	copy(tx.AssetParams.UnitName[:], []byte(unitName))
-
-	if len(assetName) > len(tx.AssetParams.AssetName) {
-		return tx, fmt.Errorf("asset name %s too long (max %d bytes)", assetName, len(tx.AssetParams.AssetName))
-	}
-	copy(tx.AssetParams.AssetName[:], []byte(assetName))
-
-	if len(url) > len(tx.AssetParams.URL) {
-		return tx, fmt.Errorf("asset url %s too long (max %d bytes)", url, len(tx.AssetParams.URL))
-	}
-	copy(tx.AssetParams.URL[:], []byte(url))
 
 	if len(metadataHash) > len(tx.AssetParams.MetadataHash) {
 		return tx, fmt.Errorf("asset name %s too long (max %d bytes)", metadataHash, len(tx.AssetParams.MetadataHash))

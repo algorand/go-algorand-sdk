@@ -1,8 +1,5 @@
 package types
 
-const assetUnitNameLen = 8
-const assetNameLen = 32
-const assetURLLen = 32
 const assetMetadataHashLen = 32
 
 // AssetIndex is the unique integer index of an asset that can be used to look
@@ -23,14 +20,14 @@ type AssetParams struct {
 
 	// UnitName specifies a hint for the name of a unit of
 	// this asset.
-	UnitName [assetUnitNameLen]byte `codec:"un"`
+	UnitName string `codec:"un"`
 
 	// AssetName specifies a hint for the name of the asset.
-	AssetName [assetNameLen]byte `codec:"an"`
+	AssetName string `codec:"an"`
 
 	// URL specifies a URL where more information about the asset can be
 	// retrieved
-	URL [assetURLLen]byte `codec:"au"`
+	URL string `codec:"au"`
 
 	// MetadataHash specifies a commitment to some unspecified asset
 	// metadata. The format of this metadata is up to the application.
