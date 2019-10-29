@@ -245,7 +245,22 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 		}
 	}
 
-	if len(metadataHash) > len(tx.AssetParams.MetadataHash) {
+	if len(assetName) > types.AssetNameMaxLen {
+		return tx, fmt.Errorf("asset name too long: %d > %d", len(assetName), types.AssetNameMaxLen)
+	}
+	tx.AssetParams.AssetName = assetName
+
+	if len(url) > types.AssetURLMaxLen {
+		return tx, fmt.Errorf("asset url too long: %d > %d", len(url), types.AssetURLMaxLen)
+	}
+	tx.AssetParams.URL = url
+
+	if len(unitName) > types.AssetUnitNameMaxLen {
+		return tx, fmt.Errorf("asset unit name too long: %d > %d", len(unitName), types.AssetUnitNameMaxLen)
+	}
+	tx.AssetParams.UnitName = unitName
+
+	if len(metadataHash) > types.AssetMetadataHashLen {
 		return tx, fmt.Errorf("asset metadata hash %s too long (max %d bytes)", metadataHash, len(tx.AssetParams.MetadataHash))
 	}
 	copy(tx.AssetParams.MetadataHash[:], []byte(metadataHash))
