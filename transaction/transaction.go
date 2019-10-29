@@ -22,7 +22,7 @@ const minFee = 1000
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	index uint64, newManager, newReserve, newFreeze, newClawback string) (encoded []byte, err error) {
+	index uint64, newManager, newReserve, newFreeze, newClawback, assetName, unitName, url string, metadataHash []byte) (encoded []byte, err error) {
 	var tx types.Transaction
 
 	tx.Type = types.AssetConfigTx
@@ -76,6 +76,30 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 			return
 		}
 	}
+
+	if len(assetName) > types.AssetNameMaxLen {
+		err = fmt.Errorf("asset name too long: %d > %d", len(assetName), types.AssetNameMaxLen)
+		return
+	}
+	tx.AssetParams.AssetName = assetName
+
+	if len(url) > types.AssetURLMaxLen {
+		err = fmt.Errorf("asset url too long: %d > %d", len(url), types.AssetURLMaxLen)
+		return
+	}
+	tx.AssetParams.URL = url
+
+	if len(unitName) > types.AssetUnitNameMaxLen {
+		err = fmt.Errorf("asset unit name too long: %d > %d", len(unitName), types.AssetUnitNameMaxLen)
+		return
+	}
+	tx.AssetParams.UnitName = unitName
+
+	if len(metadataHash) > types.AssetMetadataHashLen {
+		err = fmt.Errorf("asset metadata hash too long: %d > %d", len(metadataHash), types.AssetMetadataHashLen)
+		return
+	}
+	copy(tx.AssetParams.MetadataHash[:], metadataHash)
 
 	// Update fee
 	eSize, err := estimateSize(tx)

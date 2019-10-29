@@ -68,7 +68,7 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 	const clawback = addr
 	const assetIndex = 1234
 	encoded, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
-		assetIndex, manager, reserve, freeze, clawback)
+		assetIndex, manager, reserve, freeze, clawback, "", "", "", nil)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
