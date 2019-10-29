@@ -1,9 +1,16 @@
 package types
 
-const assetUnitNameLen = 8
-const assetNameLen = 32
-const assetURLLen = 32
-const assetMetadataHashLen = 32
+// AssetNameMaxLen is the max length in bytes for the asset name
+const AssetNameMaxLen = 32
+
+// AssetUnitNameMaxLen is the max length in bytes for the asset unit name
+const AssetUnitNameMaxLen = 8
+
+// AssetURLMaxLen is the max length in bytes for the asset url
+const AssetURLMaxLen = 32
+
+// AssetMetadataHashLen is the length of the AssetMetadataHash in bytes
+const AssetMetadataHashLen = 32
 
 // AssetIndex is the unique integer index of an asset that can be used to look
 // up the creator of the asset, whose balance record contains the AssetParams
@@ -23,18 +30,18 @@ type AssetParams struct {
 
 	// UnitName specifies a hint for the name of a unit of
 	// this asset.
-	UnitName [assetUnitNameLen]byte `codec:"un"`
+	UnitName string `codec:"un"`
 
 	// AssetName specifies a hint for the name of the asset.
-	AssetName [assetNameLen]byte `codec:"an"`
+	AssetName string `codec:"an"`
 
 	// URL specifies a URL where more information about the asset can be
 	// retrieved
-	URL [assetURLLen]byte `codec:"au"`
+	URL string `codec:"au"`
 
 	// MetadataHash specifies a commitment to some unspecified asset
 	// metadata. The format of this metadata is up to the application.
-	MetadataHash [assetMetadataHashLen]byte `codec:"am"`
+	MetadataHash [AssetMetadataHashLen]byte `codec:"am"`
 
 	// Manager specifies an account that is allowed to change the
 	// non-zero addresses in this AssetParams.
