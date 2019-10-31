@@ -60,8 +60,8 @@ type AssetConfigTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// ConfigAsset is the asset being configured or destroyed.
-	// A zero value (including the creator address) means allocation.
-	ConfigAsset AssetID `codec:"caid"`
+	// A zero value means allocation.
+	ConfigAsset AssetIndex `codec:"caid"`
 
 	// AssetParams are the parameters for the asset being
 	// created or re-configured.  A zero value means destruction.
@@ -72,7 +72,7 @@ type AssetConfigTxnFields struct {
 type AssetTransferTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	XferAsset AssetID `codec:"xaid"`
+	XferAsset AssetIndex `codec:"xaid"`
 
 	// AssetAmount is the amount of asset to transfer.
 	// A zero amount transferred to self allocates that asset
@@ -91,7 +91,7 @@ type AssetTransferTxnFields struct {
 	// AssetCloseTo indicates that the asset should be removed
 	// from the account's Assets map, and specifies where the remaining
 	// asset holdings should be transferred.  It's always valid to transfer
-	// remaining asset holdings to the AssetID account.
+	// remaining asset holdings to the creator account.
 	AssetCloseTo Address `codec:"aclose"`
 }
 
@@ -104,7 +104,7 @@ type AssetFreezeTxnFields struct {
 	FreezeAccount Address `codec:"fadd"`
 
 	// FreezeAsset is the asset ID being frozen or un-frozen.
-	FreezeAsset AssetID `codec:"faid"`
+	FreezeAsset AssetIndex `codec:"faid"`
 
 	// AssetFrozen is the new frozen value.
 	AssetFrozen bool `codec:"afrz"`

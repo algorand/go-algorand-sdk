@@ -132,8 +132,10 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const clawback = addr
 	const unitName = "tst"
 	const assetName = "testcoin"
+	const testURL = "website"
+	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
 	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
-		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName)
+		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -142,7 +144,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3850,
+			Fee:         4020,
 			FirstValid:  322575,
 			LastValid:   323575,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -156,31 +158,40 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 		Reserve:       a,
 		Freeze:        a,
 		Clawback:      a,
+		UnitName:      unitName,
+		AssetName:     assetName,
+		URL:           testURL,
 	}
-	copy(expectedAssetCreationTxn.AssetParams.UnitName[:], []byte(unitName))
-	copy(expectedAssetCreationTxn.AssetParams.AssetName[:], []byte(assetName))
+	copy(expectedAssetCreationTxn.AssetParams.MetadataHash[:], []byte(metadataHash))
 	require.Equal(t, expectedAssetCreationTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQEDd1OMRoQI/rzNlU4iiF50XQXmup3k5czI9hEsNqHT7K4KsfmA/0DUVkbzOwtJdRsHS8trm3Arjpy9r7AXlbAujdHhuh6RhcGFyiaJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bqN0c3SjZmVlzQ+0omZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetConfigTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const creator = addr
 	const manager = addr
 	const reserve = addr
 	const freeze = addr
 	const clawback = addr
+	const assetIndex = 1234
 	tx, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
-		creator, 1234, manager, reserve, freeze, clawback)
+		assetIndex, manager, reserve, freeze, clawback)
 	require.NoError(t, err)
 
-	a, err := types.DecodeAddress(creator)
+	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
 	expectedAssetConfigTxn := types.Transaction{
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3790,
+			Fee:         3400,
 			FirstValid:  322575,
 			LastValid:   323575,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -194,11 +205,15 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 		Freeze:   a,
 		Clawback: a,
 	}
-	expectedAssetConfigTxn.ConfigAsset = types.AssetID{
-		Creator: a,
-		Index:   1234,
-	}
+	expectedAssetConfigTxn.ConfigAsset = types.AssetIndex(assetIndex)
 	require.Equal(t, expectedAssetConfigTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQBBkfw5n6UevuIMDo2lHyU4dS80JCCQ/vTRUcTx5m0ivX68zTKyuVRrHaTbxbRRc3YpJ4zeVEnC9Fiw3Wf4REwejdHhuiKRhcGFyhKFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRjYWlkzQTSo2ZlZc0NSKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetDestroyTxn(t *testing.T) {
@@ -208,59 +223,61 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex)
+	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(creator)
 	require.NoError(t, err)
 
-	expectedAssetConfigTxn := types.Transaction{
+	expectedAssetDestroyTxn := types.Transaction{
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         2290,
+			Fee:         1880,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
 			GenesisID:   "",
 		},
 	}
-	expectedAssetConfigTxn.AssetParams = types.AssetParams{}
-	expectedAssetConfigTxn.ConfigAsset = types.AssetID{
-		Creator: a,
-		Index:   assetIndex,
-	}
-	require.Equal(t, expectedAssetConfigTxn, tx)
+	expectedAssetDestroyTxn.AssetParams = types.AssetParams{}
+	expectedAssetDestroyTxn.ConfigAsset = types.AssetIndex(assetIndex)
+	require.Equal(t, expectedAssetDestroyTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQBSP7HtzD/Lvn4aVvaNpeR4T93dQgo4LvywEwcZgDEoc/WVl3aKsZGcZkcRFoiWk8AidhfOZzZYutckkccB8RgGjdHhuh6RjYWlkAaNmZWXNB1iiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetFreezeTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const creator = addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323576
 	const freezeSetting = true
-	const target = creator
-	tx, err := MakeAssetFreezeTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, creator, assetIndex, target, freezeSetting)
+	const target = addr
+	tx, err := MakeAssetFreezeTxn(addr, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex, target, freezeSetting)
 	require.NoError(t, err)
 
-	a, err := types.DecodeAddress(creator)
+	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
 
 	expectedAssetFreezeTxn := types.Transaction{
 		Type: types.AssetFreezeTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         2720,
+			Fee:         2330,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
 			GenesisID:   "",
 		},
 	}
-	expectedAssetFreezeTxn.FreezeAsset.Creator = a
-	expectedAssetFreezeTxn.FreezeAsset.Index = assetIndex
+	expectedAssetFreezeTxn.FreezeAsset = types.AssetIndex(assetIndex)
 	expectedAssetFreezeTxn.AssetFrozen = freezeSetting
 	expectedAssetFreezeTxn.FreezeAccount = a
 	require.Equal(t, expectedAssetFreezeTxn, tx)
@@ -269,7 +286,7 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
-	signedGolden := "gqNzaWfEQJsNp4Hm5qYBN1Foa8nGd3zeMFxGFJiAxuf3/L1A4MTgR521fId0nIYtMwbJha5zRpN/0UuNoq91IkOK7LVhzACjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAaNmZWXNCqCiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
+	signedGolden := "gqNzaWfEQAhru5V2Xvr19s4pGnI0aslqwY4lA2skzpYtDTAN9DKSH5+qsfQQhm4oq+9VHVj7e1rQC49S28vQZmzDTVnYDQGjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkAaNmZWXNCRqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
@@ -280,14 +297,14 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const sender, recipient, creator, closeAssetsTo = addr, addr, addr, addr
+	const sender, recipient, closeAssetsTo = addr, addr, addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323576
 	const amountToSend = 1
 
 	tx, err := MakeAssetTransferTxn(sender, recipient, closeAssetsTo, amountToSend, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -297,7 +314,7 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 		Type: types.AssetTransferTx,
 		Header: types.Header{
 			Sender:      sendAddr,
-			Fee:         3140,
+			Fee:         2750,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -305,13 +322,7 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 		},
 	}
 
-	creatorAddr, err := types.DecodeAddress(creator)
-	require.NoError(t, err)
-
-	expectedAssetID := types.AssetID{
-		Creator: creatorAddr,
-		Index:   assetIndex,
-	}
+	expectedAssetID := types.AssetIndex(assetIndex)
 	expectedAssetTransferTxn.XferAsset = expectedAssetID
 
 	receiveAddr, err := types.DecodeAddress(recipient)
@@ -327,23 +338,21 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 	require.Equal(t, expectedAssetTransferTxn, tx)
 
 	// now compare tx against a golden
-	const signedGolden = "gqNzaWfEQGkk9CtvOKnn4nU59xmPGoZvYv+6TCu5B95PgwQ/YytwE9dr199ehEqAnSS0C2SaO4YhEBAk+JVOiwZiRq/w1gijdHhuiqRhYW10AaZhY2xvc2XEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pGFyY3bEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9o2ZlZc0MRKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/4o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaVheGZlcqR4YWlkgqFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFpAQ=="
+	const signedGolden = "gqNzaWfEQNkEs3WdfFq6IQKJdF1n0/hbV9waLsvojy9pM1T4fvwfMNdjGQDy+LeesuQUfQVTneJD4VfMP7zKx4OUlItbrwSjdHhuiqRhYW10AaZhY2xvc2XEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pGFyY3bEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9o2ZlZc0KvqJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/4o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaVheGZlcqR4YWlkAQ=="
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
 	require.NoError(t, err)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetAcceptanceTxn(t *testing.T) {
-	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const sender = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const sender, creator = addr, addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-	const amountToSend = 1
 
 	tx, err := MakeAssetAcceptanceTxn(sender, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -353,7 +362,7 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 		Type: types.AssetTransferTx,
 		Header: types.Header{
 			Sender:      sendAddr,
-			Fee:         2670,
+			Fee:         2280,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -361,31 +370,32 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 		},
 	}
 
-	creatorAddr, err := types.DecodeAddress(creator)
-	require.NoError(t, err)
-
-	expectedAssetID := types.AssetID{
-		Creator: creatorAddr,
-		Index:   assetIndex,
-	}
+	expectedAssetID := types.AssetIndex(assetIndex)
 	expectedAssetAcceptanceTxn.XferAsset = expectedAssetID
 	expectedAssetAcceptanceTxn.AssetReceiver = sendAddr
 	expectedAssetAcceptanceTxn.AssetAmount = 0
 
 	require.Equal(t, expectedAssetAcceptanceTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQJ7q2rOT8Sb/wB0F87ld+1zMprxVlYqbUbe+oz0WM63FctIi+K9eYFSqT26XBZ4Rr3+VTJpBE+JLKs8nctl9hgijdHhuiKRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCOiiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestMakeAssetRevocationTransaction(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	const revoker, recipient, revoked, creator = addr, addr, addr, addr
+	const revoker, recipient, revoked = addr, addr, addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
 	const amountToSend = 1
 
 	tx, err := MakeAssetRevocationTxn(revoker, revoked, recipient, amountToSend, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, creator, assetIndex)
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(revoker)
@@ -395,7 +405,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 		Type: types.AssetTransferTx,
 		Header: types.Header{
 			Sender:      sendAddr,
-			Fee:         3140,
+			Fee:         2730,
 			FirstValid:  firstValidRound,
 			LastValid:   lastValidRound,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -403,13 +413,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 		},
 	}
 
-	creatorAddr, err := types.DecodeAddress(creator)
-	require.NoError(t, err)
-
-	expectedAssetID := types.AssetID{
-		Creator: creatorAddr,
-		Index:   assetIndex,
-	}
+	expectedAssetID := types.AssetIndex(assetIndex)
 	expectedAssetRevocationTxn.XferAsset = expectedAssetID
 
 	receiveAddr, err := types.DecodeAddress(recipient)
@@ -423,6 +427,13 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	expectedAssetRevocationTxn.AssetSender = targetAddr
 
 	require.Equal(t, expectedAssetRevocationTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQHsgfEAmEHUxLLLR9s+Y/yq5WeoGo/jAArCbany+7ZYwExMySzAhmV7M7S8+LBtJalB4EhzEUMKmt3kNKk6+vAWjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCqqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
 func TestComputeGroupID(t *testing.T) {

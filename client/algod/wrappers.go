@@ -91,8 +91,8 @@ func (client Client) AccountInformation(address string, headers ...*Header) (res
 }
 
 // AssetInformation also gets the AssetInformationResponse associated with the passed asset creator and index
-func (client Client) AssetInformation(creator string, index uint64, headers ...*Header) (response models.AssetParams, err error) {
-	err = client.get(&response, fmt.Sprintf("/account/%s/assets/%d", creator, index), nil, headers)
+func (client Client) AssetInformation(index uint64, headers ...*Header) (response models.AssetParams, err error) {
+	err = client.get(&response, fmt.Sprintf("/asset/%d", index), nil, headers)
 	return
 }
 

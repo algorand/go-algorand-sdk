@@ -1,15 +1,20 @@
 package types
 
-const assetUnitNameLen = 8
-const assetNameLen = 32
+// AssetNameMaxLen is the max length in bytes for the asset name
+const AssetNameMaxLen = 32
 
-// AssetID is a name of an asset.
-type AssetID struct {
-	_struct struct{} `codec:",omitempty,omitemptyarray"`
+// AssetUnitNameMaxLen is the max length in bytes for the asset unit name
+const AssetUnitNameMaxLen = 8
 
-	Creator Address `codec:"c"`
-	Index   uint64  `codec:"i"`
-}
+// AssetURLMaxLen is the max length in bytes for the asset url
+const AssetURLMaxLen = 32
+
+// AssetMetadataHashLen is the length of the AssetMetadataHash in bytes
+const AssetMetadataHashLen = 32
+
+// AssetIndex is the unique integer index of an asset that can be used to look
+// up the creator of the asset, whose balance record contains the AssetParams
+type AssetIndex uint64
 
 // AssetParams describes the parameters of an asset.
 type AssetParams struct {
@@ -25,10 +30,18 @@ type AssetParams struct {
 
 	// UnitName specifies a hint for the name of a unit of
 	// this asset.
-	UnitName [assetUnitNameLen]byte `codec:"un"`
+	UnitName string `codec:"un"`
 
 	// AssetName specifies a hint for the name of the asset.
-	AssetName [assetNameLen]byte `codec:"an"`
+	AssetName string `codec:"an"`
+
+	// URL specifies a URL where more information about the asset can be
+	// retrieved
+	URL string `codec:"au"`
+
+	// MetadataHash specifies a commitment to some unspecified asset
+	// metadata. The format of this metadata is up to the application.
+	MetadataHash [AssetMetadataHashLen]byte `codec:"am"`
 
 	// Manager specifies an account that is allowed to change the
 	// non-zero addresses in this AssetParams.
