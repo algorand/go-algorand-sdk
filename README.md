@@ -73,6 +73,14 @@ func main() {
 }
 ```
 
+# Building sources
+
+```
+make build
+```
+
+The build process includes generating some files. Refer to `Makefile` for details.
+
 # Examples
 
 ## algod client
