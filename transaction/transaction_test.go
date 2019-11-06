@@ -94,7 +94,9 @@ func TestKeyRegTxn(t *testing.T) {
 
 func TestMakeKeyRegTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
-	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, []byte{45, 67}, "", "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	ghBytes := byteFromBase64(genesisHash)
+	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, []byte{45, 67}, "", ghBytes,
 		"Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11)
 	require.NoError(t, err)
 
@@ -134,7 +136,8 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const assetName = "testcoin"
 	const testURL = "website"
 	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
-	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
+	ghBytes := byteFromBase64(genesisHash)
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", ghBytes,
 		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
 
@@ -176,12 +179,13 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 func TestMakeAssetConfigTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	ghBytes := byteFromBase64(genesisHash)
 	const manager = addr
 	const reserve = addr
 	const freeze = addr
 	const clawback = addr
 	const assetIndex = 1234
-	tx, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
+	tx, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", ghBytes,
 		assetIndex, manager, reserve, freeze, clawback)
 	require.NoError(t, err)
 
@@ -223,7 +227,8 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex)
+	ghBytes := byteFromBase64(genesisHash)
+	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", ghBytes, assetIndex)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(creator)
@@ -260,7 +265,8 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	const lastValidRound = 323576
 	const freezeSetting = true
 	const target = addr
-	tx, err := MakeAssetFreezeTxn(addr, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex, target, freezeSetting)
+	ghBytes := byteFromBase64(genesisHash)
+	tx, err := MakeAssetFreezeTxn(addr, 10, firstValidRound, lastValidRound, nil, "", ghBytes, assetIndex, target, freezeSetting)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -302,9 +308,9 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 	const firstValidRound = 322575
 	const lastValidRound = 323576
 	const amountToSend = 1
-
+	ghBytes := byteFromBase64(genesisHash)
 	tx, err := MakeAssetTransferTxn(sender, recipient, closeAssetsTo, amountToSend, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, assetIndex)
+		lastValidRound, nil, "", ghBytes, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -350,9 +356,9 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-
+	ghBytes := byteFromBase64(genesisHash)
 	tx, err := MakeAssetAcceptanceTxn(sender, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, assetIndex)
+		lastValidRound, nil, "", ghBytes, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -393,9 +399,9 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	const firstValidRound = 322575
 	const lastValidRound = 323575
 	const amountToSend = 1
-
+	ghBytes := byteFromBase64(genesisHash)
 	tx, err := MakeAssetRevocationTxn(revoker, revoked, recipient, amountToSend, 10, firstValidRound,
-		lastValidRound, nil, "", genesisHash, assetIndex)
+		lastValidRound, nil, "", ghBytes, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(revoker)

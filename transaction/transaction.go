@@ -108,7 +108,7 @@ func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRou
 // - voteFirst is the first round this participation key is valid
 // - voteLast is the last round this participation key is valid
 // - voteKeyDilution is the dilution for the 2-level participation key
-func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
 	// Decode account address
 	accountAddr, err := types.DecodeAddress(account)
@@ -116,10 +116,13 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 		return types.Transaction{}, err
 	}
 
-	ghBytes, err := byte32FromBase64(genesisHash)
-	if err != nil {
-		return types.Transaction{}, err
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("payment transaction must contain a genesisHash")
 	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
 
 	votePKBytes, err := byte32FromBase64(voteKey)
 	if err != nil {
@@ -139,7 +142,7 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 			FirstValid:  types.Round(firstRound),
 			LastValid:   types.Round(lastRound),
 			Note:        note,
-			GenesisHash: types.Digest(ghBytes),
+			GenesisHash: types.Digest(gh),
 			GenesisID:   genesisID,
 		},
 		KeyregTxnFields: types.KeyregTxnFields{
@@ -179,7 +182,7 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 // - voteFirst is the first round this participation key is valid
 // - voteLast is the last round this participation key is valid
 // - voteKeyDilution is the dilution for the 2-level participation key
-func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
+func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
 	tx, err := MakeKeyRegTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution)
 	if err != nil {
@@ -205,7 +208,7 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	total uint64, defaultFrozen bool, manager, reserve, freeze, clawback string,
 	unitName, assetName, url, metadataHash string) (types.Transaction, error) {
 	var tx types.Transaction
@@ -270,16 +273,20 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 	if err != nil {
 		return types.Transaction{}, err
 	}
-	ghBytes, err := byte32FromBase64(genesisHash)
-	if err != nil {
-		return types.Transaction{}, err
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("payment transaction must contain a genesisHash")
 	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
+
 	tx.Header = types.Header{
 		Sender:      accountAddr,
 		Fee:         types.MicroAlgos(feePerByte),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: types.Digest(ghBytes),
+		GenesisHash: types.Digest(gh),
 		GenesisID:   genesisID,
 		Note:        note,
 	}
@@ -314,7 +321,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index id
 // - for newManager, newReserve, newFreeze, newClawback see asset.go
-func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
 	var tx types.Transaction
 
@@ -325,17 +332,20 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 		return tx, err
 	}
 
-	ghBytes, err := byte32FromBase64(genesisHash)
-	if err != nil {
-		return types.Transaction{}, err
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("payment transaction must contain a genesisHash")
 	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
 
 	tx.Header = types.Header{
 		Sender:      accountAddr,
 		Fee:         types.MicroAlgos(feePerByte),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: ghBytes,
+		GenesisHash: gh,
 		GenesisID:   genesisID,
 		Note:        note,
 	}
@@ -388,7 +398,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 // transferAssetBuilder is a helper that builds asset transfer transactions:
 // either a normal asset transfer, or an asset revocation
 func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget string, amount, feePerByte,
-	firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	var tx types.Transaction
 	tx.Type = types.AssetTransferTx
 
@@ -397,17 +407,20 @@ func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget st
 		return tx, err
 	}
 
-	ghBytes, err := byte32FromBase64(genesisHash)
-	if err != nil {
-		return types.Transaction{}, err
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("payment transaction must contain a genesisHash")
 	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
 
 	tx.Header = types.Header{
 		Sender:      accountAddr,
 		Fee:         types.MicroAlgos(feePerByte),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: types.Digest(ghBytes),
+		GenesisHash: types.Digest(gh),
 		GenesisID:   genesisID,
 		Note:        note,
 	}
@@ -466,7 +479,7 @@ func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget st
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	revocationTarget := "" // no asset revocation, this is normal asset transfer
 	return transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget, amount, feePerByte, firstRound, lastRound,
 		note, genesisID, genesisHash, index)
@@ -482,7 +495,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	return MakeAssetTransferTxn(account, account, "", 0,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, index)
 }
@@ -499,7 +512,7 @@ func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound ui
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	closeAssetsTo := "" // no close-out, this is an asset revocation
 	return transferAssetBuilder(account, recipient, closeAssetsTo, target, amount, feePerByte, firstRound, lastRound,
 		note, genesisID, genesisHash, index)
@@ -514,7 +527,7 @@ func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByt
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
-func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	index uint64) (types.Transaction, error) {
 	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
 	tx, err := MakeAssetConfigTxn(account, feePerByte, firstRound, lastRound, note, genesisID, genesisHash,
@@ -535,7 +548,7 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 // - assetIndex is the index for tracking the asset
 // - target is the account to be frozen or unfrozen
 // - newFreezeSetting is the new state of the target account
-func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
 	var tx types.Transaction
 
@@ -546,17 +559,20 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 		return tx, err
 	}
 
-	ghBytes, err := byte32FromBase64(genesisHash)
-	if err != nil {
-		return types.Transaction{}, err
+	// Decode GenesisHash
+	if len(genesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("payment transaction must contain a genesisHash")
 	}
+
+	var gh types.Digest
+	copy(gh[:], genesisHash)
 
 	tx.Header = types.Header{
 		Sender:      accountAddr,
 		Fee:         types.MicroAlgos(fee),
 		FirstValid:  types.Round(firstRound),
 		LastValid:   types.Round(lastRound),
-		GenesisHash: types.Digest(ghBytes),
+		GenesisHash: types.Digest(gh),
 		GenesisID:   genesisID,
 		Note:        note,
 	}
@@ -592,7 +608,7 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	total uint64, defaultFrozen bool, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
 	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
 		total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
@@ -613,7 +629,7 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // keys for an asset. An empty string means a zero key (which
 // cannot be changed after becoming zero); to keep a key
 // unchanged, you must specify that key.
-func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
 		index, newManager, newReserve, newFreeze, newClawback)
@@ -642,7 +658,7 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, amount, fee, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxn(account, recipient, closeAssetsTo, amount,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, index)
 	if err != nil {
@@ -666,7 +682,7 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(account, account, "", 0,
 		fee, firstRound, lastRound, note, genesisID, genesisHash, index)
 	return tx, err
@@ -684,7 +700,7 @@ func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRoun
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
 func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
+	genesisID string, genesisHash []byte, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetRevocationTxn(account, target, recipient, amount, fee, firstRound, lastRound,
 		note, genesisID, genesisHash, index)
 
@@ -709,7 +725,7 @@ func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
-func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
 		index, "", "", "", "")
@@ -717,7 +733,7 @@ func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound u
 }
 
 // MakeAssetFreezeTxnWithFlatFee is as MakeAssetFreezeTxn, but taking a flat fee rather than a fee per byte.
-func MakeAssetFreezeTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
+func MakeAssetFreezeTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash []byte,
 	creator string, assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
 	tx, err := MakeAssetFreezeTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
 		assetIndex, target, newFreezeSetting)

@@ -788,7 +788,7 @@ the other accounts. The creating user can also do things like specify a name for
 addr := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4" // the account issuing the transaction; the asset creator
 fee := uint64(10) // the number of microAlgos per byte to pay as a transaction fee
 defaultFrozen := false // whether user accounts will need to be unfrozen before transacting
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=" // hash of the genesis block of the network to be used
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=") // hash of the genesis block of the network to be used
 totalIssuance := uint64(100) // total number of this asset in circulation
 reserve := addr // specified address is considered the asset reserve (it has no special privileges, this is only informational)
 freeze := addr // specified address can freeze or unfreeze user asset holdings
@@ -824,7 +824,7 @@ firstRound := uint64(322575)
 lastRound := uint64(322575)
 note := nil
 genesisID := ""
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 assetIndex := uint64(1234)
 reserve := addr
 freeze := addr
@@ -848,7 +848,7 @@ firstRound := uint64(322575)
 lastRound := uint64(322575) 
 note := nil
 genesisID := ""
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 assetIndex := uint64(1234)
 
 // if all outstanding assets are held by the asset creator,
@@ -867,7 +867,7 @@ firstRound := uint64(322575)
 lastRound := uint64(322575)
 note := nil
 genesisID := ""
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 assetIndex := uint64(1234)
 
 // signing and sending "txn" allows sender to begin accepting asset specified by creator and index
@@ -888,7 +888,7 @@ firstRound := uint64(322575)
 lastRound := uint64(322575) 
 note := nil
 genesisID := ""
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 assetIndex := uint64(1234)
 amount := uint64(10)
 
@@ -908,7 +908,7 @@ firstRound := uint64(322575)
 lastRound := uint64(322575) 
 note := nil
 genesisID := ""
-genesisHash := "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 assetIndex := uint64(1234)
 amount := uint64(10)
 
