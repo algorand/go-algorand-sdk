@@ -11,6 +11,9 @@ import (
 
 const minFee = 1000
 
+// gomobile does not allow uint64 arguments
+var errNegativeArgument = fmt.Errorf("all integer arguments must be >= 0")
+
 // MakeAssetConfigTxn creates a tx template for changing the
 // keys for an asset. An empty string means a zero key (which
 // cannot be changed after becoming zero); to keep a key
@@ -21,9 +24,13 @@ const minFee = 1000
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
-func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	index uint64, newManager, newReserve, newFreeze, newClawback, assetName, unitName, url string, metadataHash []byte) (encoded []byte, err error) {
+func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound int64, note []byte, genesisID, genesisHash string,
+	index int64, newManager, newReserve, newFreeze, newClawback, assetName, unitName, url string, metadataHash []byte) (encoded []byte, err error) {
 	var tx types.Transaction
+
+	if index < 0 || feePerByte < 0 || firstRound < 0 || lastRound < 0 {
+		return nil, errNegativeArgument
+	}
 
 	tx.Type = types.AssetConfigTx
 
@@ -106,7 +113,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	if err != nil {
 		return
 	}
-	tx.Fee = types.Algos(eSize * feePerByte)
+	tx.Fee = types.Algos(eSize * uint64(feePerByte))
 
 	if tx.Fee < minFee {
 		tx.Fee = minFee
@@ -131,9 +138,13 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - creator is the address of the asset creator
 // - index is the asset index
-func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (encoded []byte, err error) {
+func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound int64, note []byte,
+	genesisID, genesisHash string, index int64) (encoded []byte, err error) {
 	var tx types.Transaction
+
+	if index < 0 || amount < 0 || feePerByte < 0 || firstRound < 0 || lastRound < 0 {
+		return nil, errNegativeArgument
+	}
 
 	tx.Type = types.AssetTransferTx
 
@@ -174,14 +185,14 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 		tx.AssetCloseTo = closeToAddr
 	}
 
-	tx.AssetAmount = amount
+	tx.AssetAmount = uint64(amount)
 
 	// Update fee
 	eSize, err := estimateSize(tx)
 	if err != nil {
 		return
 	}
-	tx.Fee = types.Algos(eSize * feePerByte)
+	tx.Fee = types.Algos(eSize * uint64(feePerByte))
 
 	if tx.Fee < minFee {
 		tx.Fee = minFee
@@ -201,15 +212,26 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
-func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
-	genesisID, genesisHash string, index uint64) (encoded []byte, err error) {
+func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound int64, note []byte,
+	genesisID, genesisHash string, index int64) (encoded []byte, err error) {
+
+	if index < 0 || feePerByte < 0 || firstRound < 0 || lastRound < 0 {
+		return nil, errNegativeArgument
+	}
+
 	return MakeAssetTransferTxn(account, account, "", 0,
 		feePerByte, firstRound, lastRound, note, genesisID, genesisHash, index)
 }
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-func MakePaymentTxn(from, to string, feePerByte, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (encoded []byte, err error) {
+func MakePaymentTxn(from, to string, feePerByte, amount, firstRound, lastRound int64, note []byte,
+	closeRemainderTo, genesisID string, genesisHash []byte) (encoded []byte, err error) {
+
+	if feePerByte < 0 || amount < 0 || firstRound < 0 || lastRound < 0 {
+		return nil, errNegativeArgument
+	}
+
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
 	if err != nil {
