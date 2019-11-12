@@ -14,6 +14,7 @@ const MinTxnFee = 1000
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is fee per byte as received from algod SuggestedFee API call
+// for information on leases, see types/transaction.go
 func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte, lease [32]byte) (types.Transaction, error) {
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
@@ -103,6 +104,7 @@ func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRou
 // - note is a byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // KeyReg parameters:
 // - votePK is a base64-encoded string corresponding to the root participation public key
 // - selectionKey is a base64-encoded string corresponding to the vrf public key
@@ -175,6 +177,7 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 // - note is a byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // KeyReg parameters:
 // - votePK is a base64-encoded string corresponding to the root participation public key
 // - selectionKey is a base64-encoded string corresponding to the vrf public key
@@ -205,6 +208,7 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - note is a byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // Asset creation parameters:
 // - see asset.go
 func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, lease [32]byte,
@@ -315,6 +319,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index id
 // - for newManager, newReserve, newFreeze, newClawback see asset.go
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, lease [32]byte,
@@ -469,6 +474,7 @@ func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget st
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -485,6 +491,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -502,6 +509,7 @@ func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound ui
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -518,6 +526,7 @@ func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByt
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, lease [32]byte,
 	index uint64) (types.Transaction, error) {
@@ -537,6 +546,7 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 // - note is an optional arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - assetIndex is the index for tracking the asset
 // - target is the account to be frozen or unfrozen
 // - newFreezeSetting is the new state of the target account
@@ -596,6 +606,7 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // Asset creation parameters:
 // - see asset.go
 func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, lease [32]byte,
@@ -646,6 +657,7 @@ func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -670,6 +682,7 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -688,6 +701,7 @@ func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRoun
 // - note is an arbitrary byte array
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, lease [32]byte, index uint64) (types.Transaction, error) {
@@ -714,6 +728,7 @@ func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount
 // - lastRound is the last round this txn is valid
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - lease - for information on leases, see types/transaction.go
 // - index is the asset index
 func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, lease [32]byte,
 	creator string, index uint64) (types.Transaction, error) {
