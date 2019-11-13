@@ -113,7 +113,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, owner, receiverOne, receiverTwo} // TODO ordering
+	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, owner, receiverOne, receiverTwo}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err
