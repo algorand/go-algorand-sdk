@@ -18,10 +18,6 @@ type Split struct {
 	receiverTwo string
 }
 
-const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
-
-var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
-
 // GetAddress returns the contract address
 func (contract Split) GetAddress() string {
 	return contract.address
@@ -109,15 +105,19 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 //  - owner: the address to refund funds to on timeout
 //  - maxFee: half of the maximum fee used by each split forwarding group transaction
 func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, minPay, maxFee uint64) (Split, error) {
+	const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
 		return Split{}, err
 	}
+
+	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
 	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, owner, receiverOne, receiverTwo}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err
 	}
+
 	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
 	addressBytes := sha512.Sum512_256(injectedBytes)
 	address := types.Address(addressBytes)
