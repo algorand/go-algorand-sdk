@@ -32,7 +32,28 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool) ([]ty
 	return nil, nil
 }
 
-// TODO document
+// MakeSplit splits money sent to some account to two recipients at some ratio.
+// This is a contract account.
+//
+// This allows either a two-transaction group, for executing a
+// split, or single transaction, for closing the account.
+//
+// Withdrawals from this account are allowed as a group transaction which
+// sends receiverOne and receiverTwo amounts with exactly the ratio of
+// ratn/ratd.  At least minPay must be sent to receiverOne.
+// (CloseRemainderTo must be zero.)
+//
+// After expiryRound passes, all funds can be refunded to owner.
+//
+// Parameters:
+//  - receiverOne: the first recipient in the split account
+//  - receiverTwo: the second recipient in the split account
+//  - ratn: fraction of money to be paid to the first recipient (numerator)
+//  - ratd: fraction of money to be paid to the first recipient (denominator)
+//  - minPay: minimum amount to be paid out of the account
+//  - expiryRound: the round at which the account expires
+//  - owner: the address to refund funds to on timeout
+//  - maxFee: half of the maximum fee used by each split forwarding group transaction
 func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, minPay, maxFee uint64) (Split, error) {
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
