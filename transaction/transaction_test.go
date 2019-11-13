@@ -48,7 +48,7 @@ func TestMakePaymentTxn(t *testing.T) {
 	require.Equal(t, referenceTxID, id)
 }
 
-// should fail on a lack of GenesisH[32]byte{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}ash
+// should fail on a lack of GenesisHash
 func TestMakePaymentTxn2(t *testing.T) {
 	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
