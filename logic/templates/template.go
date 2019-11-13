@@ -25,15 +25,11 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 			buffer := make([]byte, 1)
 			decodedLength = binary.PutUvarint(buffer, valueAsUint)
 			result = replace(result, buffer, offsets[i], 1)
-
-			if decodedLength != 0 {
-				for j, _ := range offsets {
-					offsets[j] = offsets[j] + uint64(decodedLength) - 1
-				}
-			}
 		} else if addressString, ok := value.(string); ok {
-			address, err := types.DecodeAddress(addressString)
-			if err != nil {
+			// TODO ejr: decodedLength isn't updated in this case, is that right?
+			address, decodeErr := types.DecodeAddress(addressString)
+			if decodeErr != nil {
+				err = decodeErr // fix "err is shadowed during return" error
 				return
 			}
 			addressLen := uint64(32)
@@ -41,6 +37,7 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 			copy(addressBytes, address[:])
 			result = replace(result, addressBytes, offsets[i], addressLen)
 		}
+
 		if decodedLength != 0 {
 			for j, _ := range offsets {
 				offsets[j] = offsets[j] + uint64(decodedLength) - 1
