@@ -21,3 +21,15 @@ func TestSplit(t *testing.T) {
 	goldenProgram := "ASAIAcCWsQICAMDEBx5kkE4mAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
 	require.Equal(t, goldenProgram, c.GetProgram())
 }
+
+func TestDelegatedFee(t *testing.T) {
+	require.Equal(t, 0, 1)
+}
+
+func TestPeriodicPayment(t *testing.T) {
+	require.Equal(t, 0, 1)
+}
+
+func TestLimitOrder(t *testing.T) {
+	require.Equal(t, 0, 1)
+}
