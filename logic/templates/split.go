@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"crypto/sha512"
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -65,5 +66,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 		return Split{}, err
 	}
 	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
-	return Split{address: "", program: injectedProgram}, err
+	addressBytes := sha512.Sum512_256(injectedBytes)
+	address := types.Address(addressBytes)
+	return Split{address: address.String(), program: injectedProgram}, err
 }

@@ -26,7 +26,6 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 			decodedLength = binary.PutUvarint(buffer, valueAsUint)
 			result = replace(result, buffer, offsets[i], 1)
 		} else if addressString, ok := value.(string); ok {
-			// TODO ejr: decodedLength isn't updated in this case, is that right?
 			address, decodeErr := types.DecodeAddress(addressString)
 			if decodeErr != nil {
 				err = decodeErr // fix "err is shadowed during return" error
