@@ -24,7 +24,7 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 		if valueAsUint, ok := value.(uint64); ok {
 			buffer := make([]byte, 8)
 			decodedLength = binary.PutUvarint(buffer, valueAsUint)
-			result = replace(result, buffer, offsets[i], uint64(decodedLength)) // TODO ejr should the last arg here just always be 1?
+			result = replace(result, buffer, offsets[i], uint64(1))
 		} else if addressString, ok := value.(string); ok {
 			address, decodeErr := types.DecodeAddress(addressString)
 			if decodeErr != nil {
