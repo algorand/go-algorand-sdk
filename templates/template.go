@@ -25,6 +25,8 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 	for i, value := range values {
 		decodedLength := 0
 		if valueAsUint, ok := value.(uint64); ok {
+			// make the exact minimum buffer needed and no larger
+			// because otherwise there will be extra bytes inserted
 			sizingBuffer := make([]byte, 32)
 			decodedLength = binary.PutUvarint(sizingBuffer, valueAsUint)
 			fillingBuffer := make([]byte, decodedLength)
