@@ -7,8 +7,12 @@ import (
 )
 
 func replace(buf, newBytes []byte, offset, placeholderLength uint64) []byte {
-	output := append(buf[:offset], newBytes...)
-	return append(output, buf[(offset+placeholderLength):]...)
+	firstChunk := make([]byte, len(buf[:offset]))
+	copy(firstChunk, buf[:offset])
+	firstChunkAmended := append(firstChunk, newBytes...)
+	secondChunk := make([]byte, len(buf[(offset+placeholderLength):]))
+	copy(secondChunk, buf[(offset+placeholderLength):])
+	return append(firstChunkAmended, secondChunk...)
 }
 
 func inject(original []byte, offsets []uint64, values []interface{}) (result []byte, err error) {
@@ -20,11 +24,12 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 
 	for i, value := range values {
 		decodedLength := 0
-
 		if valueAsUint, ok := value.(uint64); ok {
-			buffer := make([]byte, 8)
-			decodedLength = binary.PutUvarint(buffer, valueAsUint)
-			result = replace(result, buffer, offsets[i], uint64(1))
+			sizingBuffer := make([]byte, 32)
+			decodedLength = binary.PutUvarint(sizingBuffer, valueAsUint)
+			fillingBuffer := make([]byte, decodedLength)
+			decodedLength = binary.PutUvarint(fillingBuffer, valueAsUint)
+			result = replace(result, fillingBuffer, offsets[i], uint64(1))
 		} else if addressString, ok := value.(string); ok {
 			address, decodeErr := types.DecodeAddress(addressString)
 			if decodeErr != nil {
