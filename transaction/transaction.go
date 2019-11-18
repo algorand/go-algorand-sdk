@@ -757,6 +757,42 @@ func AssignGroupID(txns []types.Transaction, account string) (result []types.Tra
 	return result, nil
 }
 
+// AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction
+// - txn: the types.Transaction to modify
+// - lease: the [32]byte lease to add to the header
+// - feePerByte: the new feePerByte
+func AddLease(tx types.Transaction, lease [32]byte, feePerByte uint64) (types.Transaction, error) {
+	tx.Header.Lease = lease
+	tx.Header.Fee = types.MicroAlgos(feePerByte)
+	// Update fee
+	eSize, err := estimateSize(tx)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+	tx.Fee = types.MicroAlgos(eSize * feePerByte)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
+}
+
+// AddLeaseWithFlatFee adds the passed lease (see types/transaction.go) to the header of the passed transaction
+// - txn: the types.Transaction to modify
+// - lease: the [32]byte lease to add to the header
+// - feePerByte: the new feePerByte
+func AddLeaseWithFlatFee(tx types.Transaction, lease [32]byte, flatFee uint64) (types.Transaction, error) {
+	tx.Header.Lease = lease
+	tx.Header.Fee = 0
+	// Update fee
+	tx.Fee = types.MicroAlgos(flatFee)
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+	return tx, nil
+}
+
 // EstimateSize returns the estimated length of the encoded transaction
 func estimateSize(txn types.Transaction) (uint64, error) {
 	key := crypto.GenerateAccount()
