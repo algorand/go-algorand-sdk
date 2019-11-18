@@ -100,7 +100,19 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	}
 
 	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
-	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, owner, receiverOne, receiverTwo}
+	ownerAddr, err := types.DecodeAddress(owner)
+	if err != nil {
+		return Split{}, err
+	}
+	receiverOneAddr, err := types.DecodeAddress(receiverOne)
+	if err != nil {
+		return Split{}, err
+	}
+	receiverTwoAddr, err := types.DecodeAddress(receiverTwo)
+	if err != nil {
+		return Split{}, err
+	}
+	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err
@@ -108,6 +120,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 
 	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
 	address := crypto.AddressFromProgram(injectedBytes)
-	split := Split{address: address.String(), program: injectedProgram, ratn: ratn, ratd: ratd, receiverOne: receiverOne, receiverTwo: receiverTwo}
+	split := Split{ratn: ratn, ratd: ratd, receiverOne: receiverOne, receiverTwo: receiverTwo}
+	split.ContractTemplate = ContractTemplate{address: address.String(), program: injectedProgram}
 	return split, err
 }
