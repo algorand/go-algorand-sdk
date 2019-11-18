@@ -120,7 +120,15 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 
 	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
 	address := crypto.AddressFromProgram(injectedBytes)
-	split := Split{ratn: ratn, ratd: ratd, receiverOne: receiverOne, receiverTwo: receiverTwo}
-	split.ContractTemplate = ContractTemplate{address: address.String(), program: injectedProgram}
+	split := Split{
+		ContractTemplate: ContractTemplate{
+			address: address.String(),
+			program: injectedProgram,
+		},
+		ratn:        ratn,
+		ratd:        ratd,
+		receiverOne: receiverOne,
+		receiverTwo: receiverTwo,
+	}
 	return split, err
 }
