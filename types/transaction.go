@@ -126,13 +126,6 @@ type Header struct {
 	// transaction group (and, if so, specifies the hash
 	// of a TxGroup).
 	Group Digest `codec:"grp"`
-
-	// Lease enforces mutual exclusion of transactions.  If this field is
-	// nonzero, then once the transaction is confirmed, it acquires the
-	// lease identified by the (Sender, Lease) pair of the transaction until
-	// the LastValid round passes.  While this transaction possesses the
-	// lease, no other transaction specifying this lease can be confirmed.
-	Lease [32]byte `codec:"lx"`
 }
 
 // TxGroup describes a group of transactions that must appear
