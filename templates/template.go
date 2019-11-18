@@ -6,6 +6,21 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+type ContractTemplate struct {
+	address string
+	program string
+}
+
+// GetAddress returns the contract address
+func (contract Split) GetAddress() string {
+	return contract.address
+}
+
+// GetProgram returns b64-encoded version of the program
+func (contract Split) GetProgram() string {
+	return contract.program
+}
+
 func replace(buf, newBytes []byte, offset, placeholderLength uint64) []byte {
 	firstChunk := make([]byte, len(buf[:offset]))
 	copy(firstChunk, buf[:offset])
@@ -27,7 +42,7 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 		if valueAsUint, ok := value.(uint64); ok {
 			// make the exact minimum buffer needed and no larger
 			// because otherwise there will be extra bytes inserted
-			sizingBuffer := make([]byte, 32)
+			sizingBuffer := make([]byte, binary.MaxVarintLen64)
 			decodedLength = binary.PutUvarint(sizingBuffer, valueAsUint)
 			fillingBuffer := make([]byte, decodedLength)
 			decodedLength = binary.PutUvarint(fillingBuffer, valueAsUint)

@@ -22,7 +22,7 @@ func TestSplit(t *testing.T) {
 	require.Equal(t, goldenAddress, c.GetAddress())
 }
 
-func TestDelegatedFee(t *testing.T) {
+func TestDynamicFee(t *testing.T) {
 	require.Equal(t, 0, 1)
 }
 

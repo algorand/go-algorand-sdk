@@ -9,22 +9,11 @@ import (
 )
 
 type Split struct {
-	address     string
-	program     string
+	ContractTemplate
 	ratn        uint64
 	ratd        uint64
 	receiverOne string
 	receiverTwo string
-}
-
-// GetAddress returns the contract address
-func (contract Split) GetAddress() string {
-	return contract.address
-}
-
-// GetProgram returns b64-encoded version of the program
-func (contract Split) GetProgram() string {
-	return contract.program
 }
 
 //GetSendFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
