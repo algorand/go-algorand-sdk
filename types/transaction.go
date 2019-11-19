@@ -1,10 +1,5 @@
 package types
 
-import (
-	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/transaction"
-)
-
 // Transaction describes a transaction that can appear in a block.
 type Transaction struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -150,49 +145,4 @@ type TxGroup struct {
 	// valid.  Each hash in the list is a hash of a transaction with
 	// the `Group` field omitted.
 	TxGroupHashes []Digest `codec:"txlist"`
-}
-
-// EstimateSize returns the estimated length of the encoded transaction
-func (txn Transaction) EstimateSize() (uint64, error) {
-	key := crypto.GenerateAccount()
-	_, stx, err := crypto.SignTransaction(key.PrivateKey, txn)
-	if err != nil {
-		return 0, err
-	}
-	return uint64(len(stx)), nil
-}
-
-// AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction
-// - txn: the types.Transaction to modify
-// - lease: the [32]byte lease to add to the header
-// - feePerByte: the new feePerByte
-func (txn Transaction) AddLease(lease [32]byte, feePerByte uint64) error {
-	txn.Header.Lease = lease
-	txn.Header.Fee = MicroAlgos(feePerByte)
-	// Update fee
-	eSize, err := txn.EstimateSize()
-	if err != nil {
-		return err
-	}
-	txn.Fee = MicroAlgos(eSize * feePerByte)
-
-	if txn.Fee < transaction.MinTxnFee {
-		txn.Fee = transaction.MinTxnFee
-	}
-	return nil
-}
-
-// AddLeaseWithFlatFee adds the passed lease (see types/transaction.go) to the header of the passed transaction
-// - txn: the types.Transaction to modify
-// - lease: the [32]byte lease to add to the header
-// - feePerByte: the new feePerByte
-func (txn Transaction) AddLeaseWithFlatFee(lease [32]byte, flatFee uint64) {
-	txn.Header.Lease = lease
-	txn.Header.Fee = 0
-	// Update fee
-	txn.Fee = MicroAlgos(flatFee)
-
-	if txn.Fee < transaction.MinTxnFee {
-		txn.Fee = transaction.MinTxnFee
-	}
 }
