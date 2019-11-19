@@ -54,7 +54,7 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 			copy(addressBytes, address[:])
 			result = replace(result, addressBytes, offsets[i], addressLen)
 		} else if b64string, ok := value.(string); ok {
-			// always assume a string is a len-32 b64string replaceing a len-32 b64 string
+			// always assume a string is a len-32 b64string replacing a len-32 b64 string
 			decodeBytes, decodeErr := base64.StdEncoding.DecodeString(b64string)
 			if decodeErr != nil {
 				err = decodeErr
