@@ -69,7 +69,7 @@ func TestMakePaymentTxnWithLease(t *testing.T) {
 	lease := [32]byte{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
 	txn, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", gh)
 	require.NoError(t, err)
-	txn, err = AddLease(txn, lease, 4)
+	txn.AddLease(lease, 4)
 	require.NoError(t, err)
 
 	key, err := mnemonic.ToPrivateKey(mn)
