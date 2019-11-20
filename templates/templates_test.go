@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"encoding/base64"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -17,7 +18,7 @@ func TestSplit(t *testing.T) {
 	// Outputs
 	require.NoError(t, err)
 	goldenProgram := "ASAIAcCWsQICAMDEBx5kkE4mAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
-	require.Equal(t, goldenProgram, c.GetProgram())
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "KPYGWKTV7CKMPMTLQRNGMEQRSYTYDHUOFNV4UDSBDLC44CLIJPQWRTCPBU"
 	require.Equal(t, goldenAddress, c.GetAddress())
 }
@@ -34,7 +35,7 @@ func TestHTLC(t *testing.T) {
 	// Outputs
 	require.NoError(t, err)
 	goldenProgram := "ASAE6AcBAMDPJCYDIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMQEiDjEQIxIQMQcyAxIQMQgkEhAxCSgSLQEpEhAxCSoSMQIlDRAREA=="
-	require.Equal(t, goldenProgram, c.GetProgram())
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "KNBD7ATNUVQ4NTLOI72EEUWBVMBNKMPHWVBCETERV2W7T2YO6CVMLJRBM4"
 	require.Equal(t, goldenAddress, c.GetAddress())
 }

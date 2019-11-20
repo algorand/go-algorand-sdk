@@ -9,7 +9,7 @@ import (
 
 type ContractTemplate struct {
 	address string
-	program string
+	program []byte
 }
 
 // GetAddress returns the contract address
@@ -17,8 +17,8 @@ func (contract ContractTemplate) GetAddress() string {
 	return contract.address
 }
 
-// GetProgram returns b64-encoded version of the program
-func (contract ContractTemplate) GetProgram() string {
+// GetProgram returns the program bytes
+func (contract ContractTemplate) GetProgram() []byte {
 	return contract.program
 }
 

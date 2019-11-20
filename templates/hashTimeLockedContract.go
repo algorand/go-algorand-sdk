@@ -62,12 +62,11 @@ func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxF
 		return HTLC{}, err
 	}
 
-	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
 	address := crypto.AddressFromProgram(injectedBytes)
 	htlc := HTLC{
 		ContractTemplate: ContractTemplate{
 			address: address.String(),
-			program: injectedProgram,
+			program: injectedBytes,
 		},
 	}
 	return htlc, err

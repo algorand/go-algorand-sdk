@@ -46,11 +46,7 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 	tx1.Group = gid
 	tx2.Group = gid
 
-	progBytes, err := base64.StdEncoding.DecodeString(contract.program)
-	if err != nil {
-		return nil, err
-	}
-	logicSig, err := crypto.MakeLogicSig(progBytes, nil, nil, crypto.MultisigAccount{})
+	logicSig, err := crypto.MakeLogicSig(contract.program, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
 	}
@@ -118,12 +114,11 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 		return Split{}, err
 	}
 
-	injectedProgram := base64.StdEncoding.EncodeToString(injectedBytes)
 	address := crypto.AddressFromProgram(injectedBytes)
 	split := Split{
 		ContractTemplate: ContractTemplate{
 			address: address.String(),
-			program: injectedProgram,
+			program: injectedBytes,
 		},
 		ratn:        ratn,
 		ratd:        ratd,
