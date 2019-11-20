@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// Split template representation
 type Split struct {
 	ContractTemplate
 	ratn        uint64
