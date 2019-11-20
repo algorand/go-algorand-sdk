@@ -319,11 +319,8 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	index uint64, newManager, newReserve, newFreeze, newClawback string, strictEmptyAddressChecking bool) (types.Transaction, error) {
 	var tx types.Transaction
 
-	if strictEmptyAddressChecking {
-		anyAddressEmpty := newManager == "" || newReserve == "" || newFreeze == "" || newClawback == ""
-		if anyAddressEmpty {
-			return tx, fmt.Errorf("strict empty address checking requested but empty address supplied to one or more manager addresses")
-		}
+	if strictEmptyAddressChecking && (newManager == "" || newReserve == "" || newFreeze == "" || newClawback == "") {
+		return tx, fmt.Errorf("strict empty address checking requested but empty address supplied to one or more manager addresses")
 	}
 
 	tx.Type = types.AssetConfigTx
