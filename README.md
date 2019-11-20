@@ -823,7 +823,7 @@ such as the reserve address. To keep an address the same, it must be re-specifie
 Supplying an empty address is the same as turning the associated feature off for this asset. Once a special address
 is set to the empty address, it can never change again. For example, if an asset configuration transaction specifying
 `clawback=""` were issued, the associated asset could never be revoked from asset holders, and `clawback=""` would be
-true for all time. The `strictEmptyAddressChecking` argument can help guard against this, it makes
+true for all time. The `strictEmptyAddressChecking` argument can help guard against this, it causes
 `MakeAssetConfigTxn` return error if any management address is set to empty.                 
 
 ```golang
