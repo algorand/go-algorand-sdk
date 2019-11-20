@@ -24,6 +24,9 @@ const (
 
 const masterDerivationKeyLenBytes = 32
 
+// MaxTxGroupSize is max number of transactions in a single group
+const MaxTxGroupSize = 16
+
 // LogicSigMaxSize is a max TEAL program size (with args)
 const LogicSigMaxSize = 1000
 
