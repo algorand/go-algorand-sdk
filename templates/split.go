@@ -31,11 +31,11 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 	}
 
 	from := contract.address
-	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne, fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash, [32]byte{})
+	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne, fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo, fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash, [32]byte{})
+	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo, fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
