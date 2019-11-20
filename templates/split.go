@@ -12,8 +12,8 @@ type Split struct {
 	ContractTemplate
 	ratn        uint64
 	ratd        uint64
-	receiverOne string
-	receiverTwo string
+	receiverOne types.Address
+	receiverTwo types.Address
 }
 
 //GetSendFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
@@ -31,11 +31,11 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 	}
 
 	from := contract.address
-	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne, fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo, fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
+	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 		},
 		ratn:        ratn,
 		ratd:        ratd,
-		receiverOne: receiverOne,
-		receiverTwo: receiverTwo,
+		receiverOne: receiverOneAddr,
+		receiverTwo: receiverTwoAddr,
 	}
 	return split, err
 }
