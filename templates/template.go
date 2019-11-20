@@ -54,22 +54,25 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 			copy(addressBytes, address[:])
 			result = replace(result, addressBytes, offsets[i], addressLen)
 		} else if b64string, ok := value.(string); ok {
-			// always assume a string is a len-32 b64string replacing a len-32 b64 string
 			decodeBytes, decodeErr := base64.StdEncoding.DecodeString(b64string)
 			if decodeErr != nil {
 				err = decodeErr
 				return
 			}
+			// do the same thing as in the uint64 case to trim empty bytes:
+			// first fill one buffer to figure out the number of bytes to be written,
+			// then fill a second buffer of exactly the right size
 			sizingBuffer := make([]byte, binary.MaxVarintLen64)
-			sizeLength := binary.PutUvarint(sizingBuffer, uint64(len(decodeBytes)))
-			fillingBuffer := make([]byte, sizeLength)
-			binary.PutUvarint(fillingBuffer, uint64(len(decodeBytes)))
+			numBytesWritten := binary.PutUvarint(sizingBuffer, uint64(len(decodeBytes)))
+			fillingBuffer := make([]byte, numBytesWritten)
+			binary.PutUvarint(fillingBuffer, uint64(len(decodeBytes))) // indicate length of b64 bytes
+			// want to write [length of b64 bytes, b64 bytes]
 			decodeBytes = append(fillingBuffer, decodeBytes...)
 			result = replace(result, decodeBytes, offsets[i], uint64(33))
 		}
 
 		if decodedLength != 0 {
-			for j, _ := range offsets {
+			for j := range offsets {
 				offsets[j] = offsets[j] + uint64(decodedLength) - 1
 			}
 		}
