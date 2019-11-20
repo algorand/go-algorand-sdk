@@ -363,6 +363,12 @@ func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) 
 
 // ComputeGroupID returns group ID for a group of transactions
 func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
+	// MaxTxGroupSize is max number of transactions in a single group
+	const MaxTxGroupSize = 16
+	if len(txgroup) > MaxTxGroupSize {
+		err = fmt.Errorf("txgroup too large, %v > max size %v", len(txgroup), MaxTxGroupSize)
+		return
+	}
 	var group types.TxGroup
 	empty := types.Digest{}
 	for _, tx := range txgroup {
