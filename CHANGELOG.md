@@ -1,3 +1,11 @@
+# 1.2.0
+# Added
+- Added support for Algorand Standardized Assets (ASA)
+- Added support for Algorand Smart Contracts (ASC) 
+    - Added support for Hashed Time Lock Contract (HTLC) 
+    - Added support for Split contract
+- Added support for Group Transactions
+- Added support for leases
 # 1.1.3
 # Added
 - Signing and verifying arbitrary bytes
