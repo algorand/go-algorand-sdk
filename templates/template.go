@@ -60,7 +60,12 @@ func inject(original []byte, offsets []uint64, values []interface{}) (result []b
 				err = decodeErr
 				return
 			}
-			result = replace(result, decodeBytes, offsets[i], uint64(32))
+			sizingBuffer := make([]byte, binary.MaxVarintLen64)
+			sizeLength := binary.PutUvarint(sizingBuffer, uint64(len(decodeBytes)))
+			fillingBuffer := make([]byte, sizeLength)
+			binary.PutUvarint(fillingBuffer, uint64(len(decodeBytes)))
+			decodeBytes = append(fillingBuffer, decodeBytes...)
+			result = replace(result, decodeBytes, offsets[i], uint64(33))
 		}
 
 		if decodedLength != 0 {

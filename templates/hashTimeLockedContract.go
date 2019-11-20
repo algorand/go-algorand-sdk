@@ -55,7 +55,7 @@ func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxF
 	if err != nil {
 		return HTLC{}, err
 	}
-	var referenceOffsets = []uint64{ /*fee*/ 3 /*expiryRound*/, 6 /*receiver*/, 10 /*hashImage*/, 43 /*owner*/, 76}
+	var referenceOffsets = []uint64{ /*fee*/ 3 /*expiryRound*/, 6 /*receiver*/, 10 /*hashImage*/, 42 /*owner*/, 76}
 	injectionVector := []interface{}{maxFee, expiryRound, receiverAddr, hashImage, ownerAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
