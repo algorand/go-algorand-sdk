@@ -455,6 +455,12 @@ func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, er
 	return
 }
 
+func AddressFromProgram(program []byte) types.Address {
+	toBeHashed := programToSign(program)
+	hash := sha512.Sum512_256(toBeHashed)
+	return types.Address(hash)
+}
+
 // MakeLogicSig produces a new LogicSig signature.
 // The function can work in three modes:
 // 1. If no sk and ma provided then it returns contract-only LogicSig
