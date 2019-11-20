@@ -314,9 +314,14 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index id
 // - for newManager, newReserve, newFreeze, newClawback see asset.go
+// - strictEmptyAddressChecking: if true, disallow empty admin accounts from being set (preventing accidental disable of admin features)
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
+	index uint64, newManager, newReserve, newFreeze, newClawback string, strictEmptyAddressChecking bool) (types.Transaction, error) {
 	var tx types.Transaction
+
+	if strictEmptyAddressChecking && (newManager == "" || newReserve == "" || newFreeze == "" || newClawback == "") {
+		return tx, fmt.Errorf("strict empty address checking requested but empty address supplied to one or more manager addresses")
+	}
 
 	tx.Type = types.AssetConfigTx
 
@@ -518,7 +523,7 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 	index uint64) (types.Transaction, error) {
 	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
 	tx, err := MakeAssetConfigTxn(account, feePerByte, firstRound, lastRound, note, genesisID, genesisHash,
-		index, "", "", "", "")
+		index, "", "", "", "", false)
 
 	return tx, err
 }
@@ -614,9 +619,9 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // cannot be changed after becoming zero); to keep a key
 // unchanged, you must specify that key.
 func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	index uint64, newManager, newReserve, newFreeze, newClawback string) (types.Transaction, error) {
+	index uint64, newManager, newReserve, newFreeze, newClawback string, strictEmptyAddressChecking bool) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
-		index, newManager, newReserve, newFreeze, newClawback)
+		index, newManager, newReserve, newFreeze, newClawback, strictEmptyAddressChecking)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -712,7 +717,7 @@ func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount
 func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
-		index, "", "", "", "")
+		index, "", "", "", "", false)
 	return tx, err
 }
 
