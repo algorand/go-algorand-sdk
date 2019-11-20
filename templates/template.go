@@ -7,6 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// ContractTemplate template representation
 type ContractTemplate struct {
 	address string
 	program []byte

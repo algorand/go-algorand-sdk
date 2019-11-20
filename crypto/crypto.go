@@ -459,6 +459,7 @@ func signProgram(sk ed25519.PrivateKey, program []byte) (sig types.Signature, er
 	return
 }
 
+// AddressFromProgram returns escrow account address derived from TEAL bytecode
 func AddressFromProgram(program []byte) types.Address {
 	toBeHashed := programToSign(program)
 	hash := sha512.Sum512_256(toBeHashed)
