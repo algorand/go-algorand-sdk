@@ -720,7 +720,7 @@ func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount
 func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
-		index, "", "", "", "")
+		index, "", "", "", "", false)
 	return tx, err
 }
 
