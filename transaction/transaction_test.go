@@ -158,8 +158,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const assetName = "testcoin"
 	const testURL = "website"
 	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
-	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
-		total, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash, total, 0, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)

@@ -205,15 +205,14 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
-func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	total uint64, defaultFrozen bool, manager, reserve, freeze, clawback string,
-	unitName, assetName, url, metadataHash string) (types.Transaction, error) {
+func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, total uint64, decimals uint32, defaultFrozen bool, manager, reserve, freeze, clawback string, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
 	var tx types.Transaction
 	var err error
 
 	tx.Type = types.AssetConfigTx
 	tx.AssetParams = types.AssetParams{
 		Total:         total,
+		Decimals:      decimals,
 		DefaultFrozen: defaultFrozen,
 		UnitName:      unitName,
 		AssetName:     assetName,
@@ -598,9 +597,8 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 // Asset creation parameters:
 // - see asset.go
 func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
-	total uint64, defaultFrozen bool, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
-	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
-		total, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
+	total uint64, decimals uint32, defaultFrozen bool, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
+	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, total, decimals, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
 	if err != nil {
 		return types.Transaction{}, err
 	}
