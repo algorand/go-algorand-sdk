@@ -2,8 +2,6 @@ package templates
 
 import (
 	"encoding/base64"
-	"fmt"
-	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -43,28 +41,18 @@ func TestHTLC(t *testing.T) {
 }
 
 func TestLimitOrder(t *testing.T) {
-	const referenceProgram = "ASAKAAEFAgYEBwgJCiYBIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMRYiEjEQIxIQMQEkDhAyBCMSQABVMgQlEjEIIQQNEDEJMgMSEDMBECEFEhAzAREhBhIQMwEUKBIQMwETMgMSEDMBEiEHHTUCNQExCCEIHTUENQM0ATQDDUAAJDQBNAMSNAI0BA8QQAAWADEJKBIxAiEJDRAxBzIDEhAxCCISEBA="
-	referenceAsBytes, _ := base64.StdEncoding.DecodeString(referenceProgram)
-	addressToFind := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
-	addressBytes, _ := types.DecodeAddress(addressToFind)
-	for position, _ := range referenceAsBytes {
-		if addressBytes[0] == referenceAsBytes[position] && addressBytes[1] == referenceAsBytes[position+1] && addressBytes[2] == referenceAsBytes[position+2] {
-			fmt.Printf("found the address at position %d \n", position)
-		}
-	}
-
-	return
-	//// Inputs
-	//owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
-	//ratn, ratd := uint64(30), uint64(100) // for N algos, swap for (ratn/ratd)*N assets
-	//expiryRound := uint64(123456)
-	//minTrade := uint64(10000)
-	//maxFee := uint64(5000000)
-	//c, err := MakeLimitOrder(owner, ratn, ratd, expiryRound, minTrade, maxFee)
-	//// Outputs
-	//require.NoError(t, err)
-	//goldenProgram := "ASAIAcCWsQICAMDEBx5kkE4mAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
-	//require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
-	//goldenAddress := "KPYGWKTV7CKMPMTLQRNGMEQRSYTYDHUOFNV4UDSBDLC44CLIJPQWRTCPBU"
-	//require.Equal(t, goldenAddress, c.GetAddress())
+	// Inputs
+	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
+	assetid := uint64(12345)
+	ratn, ratd := uint64(30), uint64(100) // for N algos, swap for (ratn/ratd)*N assets
+	expiryRound := uint64(123456)
+	minTrade := uint64(10000)
+	maxFee := uint64(5000000)
+	c, err := MakeLimitOrder(owner, assetid, ratn, ratd, expiryRound, minTrade, maxFee)
+	// Outputs
+	require.NoError(t, err)
+	goldenProgram := "ASAIAcCWsQICAMDEBx5kkE4mAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	goldenAddress := "KPYGWKTV7CKMPMTLQRNGMEQRSYTYDHUOFNV4UDSBDLC44CLIJPQWRTCPBU"
+	require.Equal(t, goldenAddress, c.GetAddress())
 }

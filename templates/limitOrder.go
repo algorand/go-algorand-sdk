@@ -9,8 +9,6 @@ import (
 // Split template representation
 type LimitOrder struct {
 	ContractTemplate
-	ratn uint64
-	ratd uint64
 }
 
 // GetSwapAssetsTransaction returns a group transaction array which transfer funds according to the contract's ratio
@@ -64,12 +62,12 @@ func MakeLimitOrder(owner string, assetID, ratn, ratd, expiryRound, minTrade, ma
 		return LimitOrder{}, err
 	}
 
-	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
+	var referenceOffsets = []uint64{ /*maxFee*/ 5 /*minTrade*/, 7 /*assetID*/, 9 /*ratd*/, 10 /*ratn*/, 11 /*expiryRound*/, 12 /*ownerAddr*/, 16}
 	ownerAddr, err := types.DecodeAddress(owner)
 	if err != nil {
 		return LimitOrder{}, err
 	}
-	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minTrade, ownerAddr}
+	injectionVector := []interface{}{maxFee, minTrade, assetID, ratd, ratn, expiryRound, ownerAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return LimitOrder{}, err
@@ -81,8 +79,6 @@ func MakeLimitOrder(owner string, assetID, ratn, ratd, expiryRound, minTrade, ma
 			address: address.String(),
 			program: injectedBytes,
 		},
-		ratn: ratn,
-		ratd: ratd,
 	}
 	return lo, err
 }
