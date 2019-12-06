@@ -5,30 +5,32 @@ import (
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
-	"golang.org/x/crypto/ed25519"
 )
 
 // Split template representation
 type LimitOrder struct {
 	ContractTemplate
+	assetID uint64
+	owner   string
 }
 
 // GetSwapAssetsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // assetAmount: amount of assets to be sent
 // contract: byteform of the contract from the payer
 // secretKey: secret key for signing transactions
-// the first payment sends money (Algos) from contract to the recipient (we'll call him Bob), closing the rest of the account to Alice
-// the second payment sends money (the asset) from Bob to the Alice
-func GetSwapAssetsTransaction(assetAmount uint64, program []byte, secretKey ed25519.PrivateKey) ([]byte, error) {
-
-	contractAddress := crypto.AddressFromProgram(program)
-
-	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), bobAddress, fee, algoAmount, firstRound, lastRound, nil, ownerAddress, "", genesisHash)
+// the first payment sends money (Algos) from contract to the recipient (we'll call him Buyer), closing the rest of the account to Owner
+// the second payment sends money (the asset) from Buyer to the Owner
+// these transactions will be rejected if they do not meet or beat the ratio set at contract creation
+func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secretKey []byte, fee, algoAmount, firstRound, lastRound uint64, genesisHash []byte) ([]byte, error) {
+	var buyerAddress types.Address
+	copy(buyerAddress[:], secretKey[32:])
+	contractAddress := crypto.AddressFromProgram(contract)
+	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, algoAmount, firstRound, lastRound, nil, lo.owner, "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
 
-	assetsForAlgos, err := transaction.MakeAssetTransferTxn(bobAddress, ownerAddress, "", assetAmount, fee, firstRound, lastRound, nil, ownerAddress, "", assetIndex)
+	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, "", assetAmount, fee, firstRound, lastRound, nil, lo.owner, "", lo.assetID)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,7 @@ func GetSwapAssetsTransaction(assetAmount uint64, program []byte, secretKey ed25
 	algosForAssets.Group = gid
 	assetsForAlgos.Group = gid
 
-	logicSig, err := crypto.MakeLogicSig(program, nil, nil, crypto.MultisigAccount{})
+	logicSig, err := crypto.MakeLogicSig(contract, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +114,8 @@ func MakeLimitOrder(owner string, assetID, ratn, ratd, expiryRound, minTrade, ma
 			address: address.String(),
 			program: injectedBytes,
 		},
+		owner:   owner,
+		assetID: assetID,
 	}
 	return lo, err
 }
