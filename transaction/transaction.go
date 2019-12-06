@@ -211,6 +211,10 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 	var tx types.Transaction
 	var err error
 
+	if decimals > types.AssetMaxNumberOfDecimals {
+		return tx, fmt.Errorf("cannot create an asset with number of decimals %d (more than maximum %d)", decimals, types.AssetMaxNumberOfDecimals)
+	}
+
 	tx.Type = types.AssetConfigTx
 	tx.AssetParams = types.AssetParams{
 		Total:         total,

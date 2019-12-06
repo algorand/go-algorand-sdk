@@ -12,6 +12,9 @@ const AssetURLMaxLen = 32
 // AssetMetadataHashLen is the length of the AssetMetadataHash in bytes
 const AssetMetadataHashLen = 32
 
+// AssetMaxNumberOfDecimals is the maximum value of the Decimals field
+const AssetMaxNumberOfDecimals = 19
+
 // AssetIndex is the unique integer index of an asset that can be used to look
 // up the creator of the asset, whose balance record contains the AssetParams
 type AssetIndex uint64
