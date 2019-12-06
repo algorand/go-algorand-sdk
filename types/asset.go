@@ -12,6 +12,9 @@ const AssetURLMaxLen = 32
 // AssetMetadataHashLen is the length of the AssetMetadataHash in bytes
 const AssetMetadataHashLen = 32
 
+// AssetMaxNumberOfDecimals is the maximum value of the Decimals field
+const AssetMaxNumberOfDecimals = 19
+
 // AssetIndex is the unique integer index of an asset that can be used to look
 // up the creator of the asset, whose balance record contains the AssetParams
 type AssetIndex uint64
@@ -23,6 +26,13 @@ type AssetParams struct {
 	// Total specifies the total number of units of this asset
 	// created.
 	Total uint64 `codec:"t"`
+
+	// Decimals specifies the number of digits to display after the decimal
+	// place when displaying this asset. A value of 0 represents an asset
+	// that is not divisible, a value of 1 represents an asset divisible
+	// into tenths, and so on. This value must be between 0 and 19
+	// (inclusive).
+	Decimals uint32 `codec:"dc"`
 
 	// DefaultFrozen specifies whether slots for this asset
 	// in user accounts are frozen by default or not.
