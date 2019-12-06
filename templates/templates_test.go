@@ -25,7 +25,7 @@ func TestSplit(t *testing.T) {
 
 func TestHTLC(t *testing.T) {
 	// Inputs
-	owner := "ç"
+	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
 	receiver := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
 	hashFn := "sha256"
 	hashImg := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
