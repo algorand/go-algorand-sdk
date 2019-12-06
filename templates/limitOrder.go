@@ -3,7 +3,9 @@ package templates
 import (
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
+	"golang.org/x/crypto/ed25519"
 )
 
 // Split template representation
@@ -12,16 +14,47 @@ type LimitOrder struct {
 }
 
 // GetSwapAssetsTransaction returns a group transaction array which transfer funds according to the contract's ratio
-// amount: amount of assets to be sent
+// assetAmount: amount of assets to be sent
 // contract: byteform of the contract from the payer
 // secretKey: secret key for signing transactions
-func GetSwapAssetsTransaction() ([]byte, error) {
+// the first payment sends money (Algos) from contract to the recipient (we'll call him Bob), closing the rest of the account to Alice
+// the second payment sends money (the asset) from Bob to the Alice
+func GetSwapAssetsTransaction(assetAmount uint64, program []byte, secretKey ed25519.PrivateKey) ([]byte, error) {
 
-	var stx1 []byte
-	var stx2 []byte
+	contractAddress := crypto.AddressFromProgram(program)
+
+	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), bobAddress, fee, algoAmount, firstRound, lastRound, nil, ownerAddress, "", genesisHash)
+	if err != nil {
+		return nil, err
+	}
+
+	assetsForAlgos, err := transaction.MakeAssetTransferTxn(bobAddress, ownerAddress, "", assetAmount, fee, firstRound, lastRound, nil, ownerAddress, "", assetIndex)
+	if err != nil {
+		return nil, err
+	}
+	gid, err := crypto.ComputeGroupID([]types.Transaction{algosForAssets, assetsForAlgos})
+	if err != nil {
+		return nil, err
+	}
+	algosForAssets.Group = gid
+	assetsForAlgos.Group = gid
+
+	logicSig, err := crypto.MakeLogicSig(program, nil, nil, crypto.MultisigAccount{})
+	if err != nil {
+		return nil, err
+	}
+	_, algosForAssetsSigned, err := crypto.SignLogicsigTransaction(logicSig, algosForAssets)
+	if err != nil {
+		return nil, err
+	}
+	_, assetsForAlgosSigned, err := crypto.SignTransaction(secretKey, assetsForAlgos)
+	if err != nil {
+		return nil, err
+	}
+
 	var signedGroup []byte
-	signedGroup = append(signedGroup, stx1...)
-	signedGroup = append(signedGroup, stx2...)
+	signedGroup = append(signedGroup, assetsForAlgosSigned...)
+	signedGroup = append(signedGroup, algosForAssetsSigned...)
 
 	return signedGroup, nil
 }
