@@ -196,6 +196,58 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
+func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	const defaultFrozen = false
+	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+	const total = 100
+	const decimals = 1
+	const reserve = addr
+	const freeze = addr
+	const clawback = addr
+	const unitName = "tst"
+	const assetName = "testcoin"
+	const testURL = "website"
+	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash, total, decimals, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
+	require.NoError(t, err)
+
+	a, err := types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expectedAssetCreationTxn := types.Transaction{
+		Type: types.AssetConfigTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         4060,
+			FirstValid:  322575,
+			LastValid:   323575,
+			GenesisHash: byte32ArrayFromBase64(genesisHash),
+			GenesisID:   "",
+		},
+	}
+	expectedAssetCreationTxn.AssetParams = types.AssetParams{
+		Total:         total,
+		Decimals:      decimals,
+		DefaultFrozen: defaultFrozen,
+		Manager:       a,
+		Reserve:       a,
+		Freeze:        a,
+		Clawback:      a,
+		UnitName:      unitName,
+		AssetName:     assetName,
+		URL:           testURL,
+	}
+	copy(expectedAssetCreationTxn.AssetParams.MetadataHash[:], []byte(metadataHash))
+	require.Equal(t, expectedAssetCreationTxn, tx)
+
+	const addrSK = "awful drop leaf tennis indoor begin mandate discover uncle seven only coil atom any hospital uncover make any climb actor armed measure need above hundred"
+	private, err := mnemonic.ToPrivateKey(addrSK)
+	require.NoError(t, err)
+	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	signedGolden := "gqNzaWfEQCj5xLqNozR5ahB+LNBlTG+d0gl0vWBrGdAXj1ibsCkvAwOsXs5KHZK1YdLgkdJecQiWm4oiZ+pm5Yg0m3KFqgqjdHhuh6RhcGFyiqJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aJkYwGhZsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hbcQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hcsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hdGSidW6jdHN0o2ZlZc0P3KJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
+	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
+}
+
 func TestMakeAssetConfigTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
