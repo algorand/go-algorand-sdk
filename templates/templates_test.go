@@ -2,8 +2,6 @@ package templates
 
 import (
 	"encoding/base64"
-	"encoding/binary"
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -43,35 +41,19 @@ func TestHTLC(t *testing.T) {
 }
 
 func TestPeriodicPayment(t *testing.T) {
-	const referenceProgram = "ASAHARAPAA4NESYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
-	referenceBytes, _ := base64.StdEncoding.DecodeString(referenceProgram)
-
-	sizingBuffer := make([]byte, binary.MaxVarintLen64)
-	valueAsUint := uint64(13)
-	decodedLength := binary.PutUvarint(sizingBuffer, valueAsUint)
-	fillingBuffer := make([]byte, decodedLength)
-	_ = binary.PutUvarint(fillingBuffer, valueAsUint)
-
-	for position, byte := range referenceBytes {
-		if byte == fillingBuffer[0] {
-			fmt.Println("hit:")
-			fmt.Println(position)
-		}
-	}
-
-	//// Inputs
-	//receiver := "SKXZDBHECM6AS73GVPGJHMIRDMJKEAN5TUGMUPSKJCQ44E6M6TC2H2UJ3I"
-	//artificial lease = AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg=
-	//amount := 500000
-	//withdrawalWindow := 95
-	//period := 100
-	//maxFee := uint64(1000)
-	//expiryRound := uint64(2445756)
-	//c, err := MakePeriodicPayment(receiver, amount, withdrawalWindow, period, maxFee, expiryRound)
-	//// Outputs
-	//require.NoError(t, err)
-	//goldenProgram := "ASAHAegHZABfoMIevKOVASYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
-	//require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
-	//goldenAddress := "JMS3K4LSHPULANJIVQBTEDP5PZK6HHMDQS4OKHIMHUZZ6OILYO3FVQW7IY"
-	//require.Equal(t, goldenAddress, c.GetAddress())
+	// Inputs
+	receiver := "SKXZDBHECM6AS73GVPGJHMIRDMJKEAN5TUGMUPSKJCQ44E6M6TC2H2UJ3I"
+	artificialLease := "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg="
+	amount := uint64(500000)
+	withdrawalWindow := uint64(95)
+	period := uint64(100)
+	maxFee := uint64(1000)
+	expiryRound := uint64(2445756)
+	c, err := MakePeriodicPaymentWithLease(receiver, artificialLease, amount, withdrawalWindow, period, maxFee, expiryRound)
+	// Outputs
+	require.NoError(t, err)
+	goldenProgram := "ASAHAegHZABfoMIevKOVASYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	goldenAddress := "JMS3K4LSHPULANJIVQBTEDP5PZK6HHMDQS4OKHIMHUZZ6OILYO3FVQW7IY"
+	require.Equal(t, goldenAddress, c.GetAddress())
 }
