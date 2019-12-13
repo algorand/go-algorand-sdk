@@ -25,6 +25,15 @@ func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid, lastValid uin
 	if err != nil {
 		return nil, err
 	}
+
+	leaseBytes, err := base64.StdEncoding.DecodeString(c.leaseBase64)
+	if err != nil {
+		return nil, err
+	}
+	lease := [32]byte{}
+	copy(lease[:], leaseBytes)
+	txn.AddLease(lease, fee)
+
 	logicSig, err := crypto.MakeLogicSig(c.program, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
