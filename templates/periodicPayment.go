@@ -69,7 +69,7 @@ func MakePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow
 		return PeriodicPayment{}, err
 	}
 
-	var referenceOffsets = []uint64{ /*fee*/ 4 /*period*/, 5 /*withdrawWindow*/, 7 /*amount*/, 8 /*expiryRound*/, 9 /*lease*/, 13 /*receiver*/, 46}
+	var referenceOffsets = []uint64{ /*fee*/ 4 /*period*/, 5 /*withdrawWindow*/, 7 /*amount*/, 8 /*expiryRound*/, 9 /*lease*/, 12 /*receiver*/, 46}
 	injectionVector := []interface{}{maxFee, period, withdrawWindow, amount, expiryRound, lease, receiverAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
