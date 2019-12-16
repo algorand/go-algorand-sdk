@@ -49,7 +49,7 @@ func TestPeriodicPayment(t *testing.T) {
 	period := uint64(100)
 	maxFee := uint64(1000)
 	expiryRound := uint64(2445756)
-	c, err := MakePeriodicPaymentWithLease(receiver, artificialLease, amount, withdrawalWindow, period, maxFee, expiryRound)
+	c, err := MakePeriodicPaymentWithLease(receiver, artificialLease, amount, withdrawalWindow, period, expiryRound, maxFee)
 	// Outputs
 	require.NoError(t, err)
 	goldenProgram := "ASAHAegHZABfoMIevKOVASYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"

@@ -57,17 +57,17 @@ func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid, lastValid uin
 //  - amount: the maximum number of funds allowed for a single withdrawal
 //  - withdrawWindow: the duration of a withdrawal period
 //  - period: the time between a pair of withdrawal periods
-//  - maxFee: maximum fee used by the withdrawal transaction
 //  - expiryRound: the round at which the account expires
-func MakePeriodicPayment(receiver string, amount, withdrawWindow, period, maxFee, expiryRound uint64) (PeriodicPayment, error) {
+//  - maxFee: maximum fee used by the withdrawal transaction
+func MakePeriodicPayment(receiver string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {
 	leaseBytes := make([]byte, 32)
 	crypto.RandomBytes(leaseBytes)
 	leaseString := base64.StdEncoding.EncodeToString(leaseBytes)
-	return MakePeriodicPaymentWithLease(receiver, leaseString, amount, withdrawWindow, period, maxFee, expiryRound)
+	return MakePeriodicPaymentWithLease(receiver, leaseString, amount, withdrawWindow, period, expiryRound, maxFee)
 }
 
 // MakePeriodicPaymentWithLease is as MakePeriodicPayment, but the caller can specify the lease (using b64 string)
-func MakePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow, period, maxFee, expiryRound uint64) (PeriodicPayment, error) {
+func MakePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {
 	const referenceProgram = "ASAHAQYFAAQDByYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
