@@ -53,7 +53,7 @@ func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid, lastValid uin
 // are available to receiver.
 //
 // Parameters:
-//  - receiver: address which is authorized to make withdrawals
+//  - receiver: address which is authorized to receive withdrawals
 //  - amount: the maximum number of funds allowed for a single withdrawal
 //  - withdrawWindow: the duration of a withdrawal period
 //  - period: the time between a pair of withdrawal periods
