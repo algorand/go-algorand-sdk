@@ -66,8 +66,7 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	return signedGroup, nil
 }
 
-// MakeLimitOrder allows a user to exchange some number of N assets for D algos.
-// This is a contract account.
+// MakeLimitOrder allows a user to exchange some number of assets for some number of algos.
 // Fund the contract with some number of Algos to limit the maximum number of
 // Algos you're willing to trade for some other asset.
 //
