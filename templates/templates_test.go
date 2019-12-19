@@ -39,3 +39,20 @@ func TestHTLC(t *testing.T) {
 	goldenAddress := "KNBD7ATNUVQ4NTLOI72EEUWBVMBNKMPHWVBCETERV2W7T2YO6CVMLJRBM4"
 	require.Equal(t, goldenAddress, c.GetAddress())
 }
+
+func TestDynamicFee(t *testing.T) {
+	// Inputs
+	receiver := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
+	amount := uint64(5000)
+	firstValid := uint64(12345)
+	lastValid := uint64(12346)
+	closeRemainder := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
+	artificialLease := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	c, err := MakeDynamicFeeWithLease(receiver, closeRemainder, artificialLease, amount, firstValid, lastValid)
+	// Outputs
+	require.NoError(t, err)
+	goldenProgram := "ASAFAgGIJ7lgumAmAyD+vKC7FEpaTqe0OKRoGsgObKEFvLYH/FZTJclWlfaiEyDmmpYeby1feshmB5JlUr6YI17TM2PKiJGLuck4qRW2+SB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaTIEIhIzABAjEhAzAAcxABIQMwAIMQESEDEWIxIQMRAjEhAxBygSEDEJKRIQMQgkEhAxAiUSEDEEIQQSEDEGKhIQ"
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	goldenAddress := "GCI4WWDIWUFATVPOQ372OZYG52EULPUZKI7Y34MXK3ZJKIBZXHD2H5C5TI"
+	require.Equal(t, goldenAddress, c.GetAddress())
+}
