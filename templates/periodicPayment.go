@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -13,14 +14,20 @@ type PeriodicPayment struct {
 	amount      uint64
 	receiver    types.Address
 	leaseBase64 string
+	period      uint64
+	duration    uint64
 }
 
 // GetWithdrawalTransaction returns a signed transaction extracting funds from the contract
 // fee: the fee to pay in microAlgos
 // firstValid: the first round on which the txn will be valid
-// lastValid: the final round on which the txn will be valid
 // genesisHash: the hash representing the network for the txn
-func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid, lastValid uint64, genesisHash []byte) ([]byte, error) {
+func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid uint64, genesisHash []byte) ([]byte, error) {
+	if firstValid%c.period != 0 {
+		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, c.period)
+	}
+	lastValid := firstValid + c.duration
+
 	txn, err := transaction.MakePaymentTxn(c.GetAddress(), c.receiver.String(), fee, c.amount, firstValid, lastValid, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
@@ -94,6 +101,8 @@ func MakePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow
 		amount:      amount,
 		leaseBase64: lease,
 		receiver:    receiverAddr,
+		period:      period,
+		duration:    withdrawWindow,
 	}
 	return periodicPayment, err
 }
