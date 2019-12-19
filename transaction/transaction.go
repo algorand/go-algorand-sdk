@@ -64,7 +64,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 	}
 
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -152,7 +152,7 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 	}
 
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -290,7 +290,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 	}
 
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -382,7 +382,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 	}
 
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -449,7 +449,7 @@ func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget st
 	tx.AssetAmount = amount
 
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -580,7 +580,7 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 
 	tx.AssetFrozen = newFreezeSetting
 	// Update fee
-	eSize, err := estimateSize(tx)
+	eSize, err := EstimateSize(tx)
 	if err != nil {
 		return types.Transaction{}, err
 	}
@@ -767,7 +767,7 @@ func AssignGroupID(txns []types.Transaction, account string) (result []types.Tra
 }
 
 // EstimateSize returns the estimated length of the encoded transaction
-func estimateSize(txn types.Transaction) (uint64, error) {
+func EstimateSize(txn types.Transaction) (uint64, error) {
 	key := crypto.GenerateAccount()
 	_, stx, err := crypto.SignTransaction(key.PrivateKey, txn)
 	if err != nil {
