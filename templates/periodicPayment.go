@@ -70,11 +70,11 @@ func MakePeriodicPayment(receiver string, amount, withdrawWindow, period, expiry
 	leaseBytes := make([]byte, 32)
 	crypto.RandomBytes(leaseBytes)
 	leaseString := base64.StdEncoding.EncodeToString(leaseBytes)
-	return MakePeriodicPaymentWithLease(receiver, leaseString, amount, withdrawWindow, period, expiryRound, maxFee)
+	return makePeriodicPaymentWithLease(receiver, leaseString, amount, withdrawWindow, period, expiryRound, maxFee)
 }
 
-// MakePeriodicPaymentWithLease is as MakePeriodicPayment, but the caller can specify the lease (using b64 string)
-func MakePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {
+// makePeriodicPaymentWithLease is as MakePeriodicPayment, but the caller can specify the lease (using b64 string)
+func makePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {
 	const referenceProgram = "ASAHAQYFAAQDByYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
