@@ -34,24 +34,33 @@ var opcodes []operation
 
 // CheckProgram performs basic program validation: instruction count and program cost
 func CheckProgram(program []byte, args [][]byte) error {
+	_, _, err := ReadProgram(program, args)
+	return err
+}
+
+// ReadProgram is used to validate a program as well as extract found variables
+func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
 	const intcblockOpcode = 32
 	const bytecblockOpcode = 38
 	if program == nil || len(program) == 0 {
-		return fmt.Errorf("empty program")
+		err = fmt.Errorf("empty program")
+		return
 	}
 
 	if spec == nil {
 		spec = new(langSpec)
-		if err := json.Unmarshal(langSpecJson, spec); err != nil {
-			return err
+		if err = json.Unmarshal(langSpecJson, spec); err != nil {
+			return
 		}
 	}
 	version, vlen := binary.Uvarint(program)
 	if vlen <= 0 {
-		return fmt.Errorf("version parsing error")
+		err = fmt.Errorf("version parsing error")
+		return
 	}
 	if int(version) > spec.EvalMaxVersion {
-		return fmt.Errorf("unsupported version")
+		err = fmt.Errorf("unsupported version")
+		return
 	}
 
 	cost := 0
@@ -60,7 +69,8 @@ func CheckProgram(program []byte, args [][]byte) error {
 		length += len(arg)
 	}
 	if length > types.LogicSigMaxSize {
-		return fmt.Errorf("program too long")
+		err = fmt.Errorf("program too long")
+		return
 	}
 
 	if opcodes == nil {
@@ -73,39 +83,49 @@ func CheckProgram(program []byte, args [][]byte) error {
 	for pc := vlen; pc < len(program); {
 		op := opcodes[program[pc]]
 		if op.Name == "" {
-			return fmt.Errorf("invalid instruction")
+			err = fmt.Errorf("invalid instruction")
+			return
 		}
 
 		cost = cost + op.Cost
 		size := op.Size
-		var err error
 		if size == 0 {
 			switch op.Opcode {
 			case intcblockOpcode:
-				size, err = checkIntConstBlock(program, pc)
+				readSize, foundInts, err := readIntConstBlock(program, pc)
+				size = readSize // using "readSize" with readInt above, and setting "size = readSize", avoids a bug with variable shadowing
+				ints = append(ints, foundInts...)
 				if err != nil {
-					return err
+					return
 				}
 			case bytecblockOpcode:
-				size, err = checkByteConstBlock(program, pc)
+				readSize, foundBytes, err := readByteConstBlock(program, pc)
+				size = readSize // using "readSize" with readByte above, and setting "size = readSize", avoids a bug with variable shadowing
+				byteArrays = append(byteArrays, foundBytes...)
 				if err != nil {
-					return err
+					return
 				}
 			default:
-				return fmt.Errorf("invalid instruction")
+				err = fmt.Errorf("invalid instruction")
+				return
 			}
 		}
 		pc = pc + size
 	}
 
 	if cost > types.LogicSigMaxCost {
-		return fmt.Errorf("program too costly to run")
+		err = fmt.Errorf("program too costly to run")
 	}
 
-	return nil
+	return
 }
 
 func checkIntConstBlock(program []byte, pc int) (size int, err error) {
+	size, _, err = readIntConstBlock(program, pc)
+	return
+}
+
+func readIntConstBlock(program []byte, pc int) (size int, ints []uint64, err error) {
 	size = 1
 	numInts, bytesUsed := binary.Uvarint(program[pc+size:])
 	if bytesUsed <= 0 {
@@ -119,17 +139,23 @@ func checkIntConstBlock(program []byte, pc int) (size int, err error) {
 			err = fmt.Errorf("intcblock ran past end of program")
 			return
 		}
-		_, bytesUsed = binary.Uvarint(program[pc+size:])
+		num, bytesUsed := binary.Uvarint(program[pc+size:])
 		if bytesUsed <= 0 {
 			err = fmt.Errorf("could not decode int const[%d] at pc=%d", i, pc+size)
 			return
 		}
+		ints = append(ints, num)
 		size += bytesUsed
 	}
 	return
 }
 
 func checkByteConstBlock(program []byte, pc int) (size int, err error) {
+	size, _, err = readByteConstBlock(program, pc)
+	return
+}
+
+func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, err error) {
 	size = 1
 	numInts, bytesUsed := binary.Uvarint(program[pc+size:])
 	if bytesUsed <= 0 {
@@ -154,6 +180,8 @@ func checkByteConstBlock(program []byte, pc int) (size int, err error) {
 			return
 		}
 		size += int(itemLen)
+		byteArray := program[pc+size : pc+size+int(itemLen)]
+		byteArrays = append(byteArrays, byteArray)
 	}
 	return
 }
