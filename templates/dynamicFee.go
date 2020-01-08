@@ -127,18 +127,18 @@ func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash 
 		return
 	}
 
-	contractLease := byteArrays[0]
+	contractLease := byteArrays[1]
 	// Convert the byteArrays[1] to receiver
-	var receiver types.Address
-	n := copy(receiver[:], byteArrays[1])
+	var receiver types.Address //byteArrays[0]
+	n := copy(receiver[:], byteArrays[0])
 	if n != ed25519.PublicKeySize {
 		err = fmt.Errorf("address generated from receiver bytes is the wrong size")
 		return
 	}
 	fmt.Println(receiver.String())
-	// Convert the byteArrays[2] to closeRemainderTo
+	// Convert the byteArrays[1] to closeRemainderTo
 	var closeRemainderTo types.Address
-	n = copy(closeRemainderTo[:], byteArrays[2])
+	n = copy(closeRemainderTo[:], byteArrays[0])
 	if n != ed25519.PublicKeySize {
 		err = fmt.Errorf("address generated from closeRemainderTo bytes is the wrong size")
 		return

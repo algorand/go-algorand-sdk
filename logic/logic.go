@@ -40,6 +40,8 @@ func CheckProgram(program []byte, args [][]byte) error {
 
 // ReadProgram is used to validate a program as well as extract found variables
 func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
+	fmt.Println("behold the program:")
+	fmt.Println(program)
 	const intcblockOpcode = 32
 	const bytecblockOpcode = 38
 	if program == nil || len(program) == 0 {
@@ -100,7 +102,10 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 				}
 			case bytecblockOpcode:
 				var foundByteArrays [][]byte
+				fmt.Println("found the byte arrays:")
+				fmt.Println(pc)
 				size, foundByteArrays, err = readByteConstBlock(program, pc)
+				fmt.Println(foundByteArrays)
 				byteArrays = append(byteArrays, foundByteArrays...)
 				if err != nil {
 					return
@@ -170,7 +175,7 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 			return
 		}
 		size += int(itemLen)
-		byteArray := program[pc+size : pc+size+int(itemLen)]
+		byteArray := program[pc+size+1 : pc+size+int(itemLen)+1]
 		byteArrays = append(byteArrays, byteArray)
 	}
 	return
