@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
+	"golang.org/x/crypto/ed25519"
 )
 
 // PeriodicPayment template representation
@@ -19,29 +21,37 @@ type PeriodicPayment struct {
 }
 
 // GetWithdrawalTransaction returns a signed transaction extracting funds from the contract
-// fee: the fee to pay in microAlgos
+// contract: the bytearray defining the contract, received from the payer
 // firstValid: the first round on which the txn will be valid
 // genesisHash: the hash representing the network for the txn
-func (c PeriodicPayment) GetWithdrawalTransaction(fee, firstValid uint64, genesisHash []byte) ([]byte, error) {
-	if firstValid%c.period != 0 {
-		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, c.period)
-	}
-	lastValid := firstValid + c.duration
-
-	txn, err := transaction.MakePaymentTxn(c.GetAddress(), c.receiver.String(), fee, c.amount, firstValid, lastValid, nil, "", "", genesisHash)
+func GetWithdrawalTransaction(contract []byte, firstValid uint64, genesisHash []byte) ([]byte, error) {
+	address := crypto.AddressFromProgram(contract)
+	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return nil, err
 	}
+	contractLease := byteArrays[0]
+	// Convert the byteArrays[1] to an address
+	var receiver types.Address
+	n := copy(receiver[:], byteArrays[1])
+	if n != ed25519.PublicKeySize {
+		return nil, fmt.Errorf("address generated from receiver bytes is the wrong size")
+	}
+	fee, period, withdrawWindow, amount := ints[1], ints[2], ints[4], ints[5]
+	if firstValid%period != 0 {
+		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, period)
+	}
+	lastValid := firstValid + withdrawWindow
 
-	leaseBytes, err := base64.StdEncoding.DecodeString(c.leaseBase64)
+	txn, err := transaction.MakePaymentTxn(address.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
 	lease := [32]byte{}
-	copy(lease[:], leaseBytes)
+	copy(lease[:], contractLease) // convert from []byte to [32]byte
 	txn.AddLease(lease, fee)
 
-	logicSig, err := crypto.MakeLogicSig(c.program, nil, nil, crypto.MultisigAccount{})
+	logicSig, err := crypto.MakeLogicSig(contract, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
 	}

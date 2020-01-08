@@ -92,16 +92,16 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 		if size == 0 {
 			switch op.Opcode {
 			case intcblockOpcode:
-				readSize, foundInts, err := readIntConstBlock(program, pc)
-				size = readSize // using "readSize" with readInt above, and setting "size = readSize", avoids a bug with variable shadowing
+				var foundInts []uint64
+				size, foundInts, err = readIntConstBlock(program, pc)
 				ints = append(ints, foundInts...)
 				if err != nil {
 					return
 				}
 			case bytecblockOpcode:
-				readSize, foundBytes, err := readByteConstBlock(program, pc)
-				size = readSize // using "readSize" with readByte above, and setting "size = readSize", avoids a bug with variable shadowing
-				byteArrays = append(byteArrays, foundBytes...)
+				var foundByteArrays [][]byte
+				size, foundByteArrays, err = readByteConstBlock(program, pc)
+				byteArrays = append(byteArrays, foundByteArrays...)
 				if err != nil {
 					return
 				}
@@ -117,11 +117,6 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 		err = fmt.Errorf("program too costly to run")
 	}
 
-	return
-}
-
-func checkIntConstBlock(program []byte, pc int) (size int, err error) {
-	size, _, err = readIntConstBlock(program, pc)
 	return
 }
 
@@ -147,11 +142,6 @@ func readIntConstBlock(program []byte, pc int) (size int, ints []uint64, err err
 		ints = append(ints, num)
 		size += bytesUsed
 	}
-	return
-}
-
-func checkByteConstBlock(program []byte, pc int) (size int, err error) {
-	size, _, err = readByteConstBlock(program, pc)
 	return
 }
 
