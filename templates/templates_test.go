@@ -2,7 +2,6 @@ package templates
 
 import (
 	"encoding/base64"
-	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -51,21 +50,24 @@ func TestDynamicFee(t *testing.T) {
 	artificialLease := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	c, err := makeDynamicFeeWithLease(receiver, closeRemainder, artificialLease, amount, firstValid, lastValid)
 	require.NoError(t, err)
-	accountOne := crypto.GenerateAccount()
 	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, err := base64.StdEncoding.DecodeString(goldenGenesisHash)
 	require.NoError(t, err)
 	contractBytes := c.GetProgram()
-	txn, lsig, err := SignDynamicFee(contractBytes, accountOne.PrivateKey, genesisBytes)
+	privateKeyOneB64 := "cv8E0Ln24FSkwDgGeuXKStOTGcze5u8yldpXxgrBxumFPYdMJymqcGoxdDeyuM8t6Kxixfq0PJCyJP71uhYT7w=="
+	privateKeyOne, err := base64.StdEncoding.DecodeString(privateKeyOneB64)
 	require.NoError(t, err)
-	accountTwo := crypto.GenerateAccount()
-	stxns, err := GetDynamicFeeTransactions(txn, lsig, accountTwo.PrivateKey, 1234)
+	txn, lsig, err := SignDynamicFee(contractBytes, privateKeyOne, genesisBytes)
+	require.NoError(t, err)
+	privateKeyTwoB64 := "2qjz96Vj9M6YOqtNlfJUOKac13EHCXyDty94ozCjuwwriI+jzFgStFx9E6kEk1l4+lFsW4Te2PY1KV8kNcccRg=="
+	privateKeyTwo, err := base64.StdEncoding.DecodeString(privateKeyTwoB64)
+	stxns, err := GetDynamicFeeTransactions(txn, lsig, privateKeyTwo, 1234)
 	require.NoError(t, err)
 	// Outputs
 	goldenProgram := "ASAFAgGIJ7lgumAmAyD+vKC7FEpaTqe0OKRoGsgObKEFvLYH/FZTJclWlfaiEyDmmpYeby1feshmB5JlUr6YI17TM2PKiJGLuck4qRW2+SB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaTIEIhIzABAjEhAzAAcxABIQMwAIMQESEDEWIxIQMRAjEhAxBygSEDEJKRIQMQgkEhAxAiUSEDEEIQQSEDEGKhIQ"
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(contractBytes))
 	goldenAddress := "GCI4WWDIWUFATVPOQ372OZYG52EULPUZKI7Y34MXK3ZJKIBZXHD2H5C5TI"
 	require.Equal(t, goldenAddress, c.GetAddress())
-	goldenStxns := ""
+	goldenStxns := "gqRsc2lngqFsxLEBIAUCAYgnuWC6YCYDIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpMgQiEjMAECMSEDMABzEAEhAzAAgxARIQMRYjEhAxECMSEDEHKBIQMQkpEhAxCCQSEDECJRIQMQQhBBIQMQYqEhCjc2lnxEAhLNdfdDp9Wbi0YwsEQCpP7TVHbHG7y41F4MoESNW/vL1guS+5Wj4f5V9fmM63/VKTSMFidHOSwm5o+pbV5lYHo3R4boujYW10zROIpWNsb3NlxCDmmpYeby1feshmB5JlUr6YI17TM2PKiJGLuck4qRW2+aNmZWXOAAWq6qJmds0wOaJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjZ3JwxCBRpaRVpA3ImXU4/ENcrzp+jsooLVHC7bF5kCGUK0KORaJsds0wOqJseMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjcmN2xCD+vKC7FEpaTqe0OKRoGsgObKEFvLYH/FZTJclWlfaiE6NzbmTEIIU9h0wnKapwajF0N7K4zy3orGLF+rQ8kLIk/vW6FhPvpHR5cGWjcGF5gqNzaWfEQAilsGaC4M4zfYN5QpvREdHEC0DjI2ZWCXSIwwyUWHg2dzd5gKR2Cqu+iUmiCU1hOTTiOump3PILTgWeG0ZkUAajdHhuiqNhbXTOAAWq6qNmZWXOAATzvqJmds0wOaJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjZ3JwxCBRpaRVpA3ImXU4/ENcrzp+jsooLVHC7bF5kCGUK0KORaJsds0wOqJseMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjcmN2xCCFPYdMJymqcGoxdDeyuM8t6Kxixfq0PJCyJP71uhYT76NzbmTEICuIj6PMWBK0XH0TqQSTWXj6UWxbhN7Y9jUpXyQ1xxxGpHR5cGWjcGF5"
 	require.Equal(t, goldenStxns, base64.StdEncoding.EncodeToString(stxns))
 }
