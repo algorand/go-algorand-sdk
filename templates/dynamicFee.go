@@ -2,7 +2,9 @@ package templates
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"golang.org/x/crypto/ed25519"
@@ -11,12 +13,6 @@ import (
 // DynamicFee template representation
 type DynamicFee struct {
 	ContractTemplate
-	receiver       types.Address
-	closeRemainder types.Address
-	firstValid     uint64
-	lastValid      uint64
-	amount         uint64
-	leaseBase64    string
 }
 
 // MakeDynamicFee contract allows you to create a transaction without
@@ -34,11 +30,11 @@ func MakeDynamicFee(receiver, closeRemainder string, amount, firstValid, lastVal
 	leaseBytes := make([]byte, 32)
 	crypto.RandomBytes(leaseBytes)
 	leaseString := base64.StdEncoding.EncodeToString(leaseBytes)
-	return MakeDynamicFeeWithLease(receiver, closeRemainder, leaseString, amount, firstValid, lastValid)
+	return makeDynamicFeeWithLease(receiver, closeRemainder, leaseString, amount, firstValid, lastValid)
 }
 
-// MakeDynamicFeeWithLease is as MakeDynamicFee, but the caller can specify the lease (using b64 string)
-func MakeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, firstValid, lastValid uint64) (DynamicFee, error) {
+// makeDynamicFeeWithLease is as MakeDynamicFee, but the caller can specify the lease (using b64 string)
+func makeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, firstValid, lastValid uint64) (DynamicFee, error) {
 	const referenceProgram = "ASAFAgEHBgUmAyD+vKC7FEpaTqe0OKRoGsgObKEFvLYH/FZTJclWlfaiEyDmmpYeby1feshmB5JlUr6YI17TM2PKiJGLuck4qRW2+SB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaTIEIhIzABAjEhAzAAcxABIQMwAIMQESEDEWIxIQMRAjEhAxBygSEDEJKRIQMQgkEhAxAiUSEDEEIQQSEDEGKhIQ"
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
@@ -66,12 +62,6 @@ func MakeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, fir
 			address: address.String(),
 			program: injectedBytes,
 		},
-		receiver:       receiverAddr,
-		closeRemainder: closeRemainderAddr,
-		firstValid:     firstValid,
-		lastValid:      lastValid,
-		amount:         amount,
-		leaseBase64:    lease,
 	}
 	return dynamicFee, err
 }
@@ -86,9 +76,7 @@ func MakeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, fir
 // fee - fee per byte for both transactions
 // firstValid - first protocol round on which both transactions will be valid
 // lastValid - last protocol round on which both transactions will be valid
-func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, privateKey ed25519.PrivateKey, fee, firstValid, lastValid uint64) ([]byte, error) {
-	txn.FirstValid = types.Round(firstValid)
-	txn.LastValid = types.Round(lastValid)
+func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, privateKey ed25519.PrivateKey, fee uint64) ([]byte, error) {
 	txn.Fee = types.MicroAlgos(fee)
 	eSize, err := transaction.EstimateSize(txn)
 	if err != nil {
@@ -104,7 +92,7 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 	copy(address[:], privateKey[ed25519.PublicKeySize:])
 	genesisHash := make([]byte, 32)
 	copy(genesisHash[:], txn.GenesisHash[:])
-	feePayTxn, err := transaction.MakePaymentTxn(address.String(), txn.Sender.String(), fee, uint64(txn.Fee), firstValid, lastValid, nil, "", "", genesisHash)
+	feePayTxn, err := transaction.MakePaymentTxn(address.String(), txn.Sender.String(), fee, uint64(txn.Fee), uint64(txn.FirstValid), uint64(txn.LastValid), nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
@@ -125,18 +113,48 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 	return append(stx1Bytes, stx2Bytes...), nil
 }
 
-// SignDynamicFee returns the main transaction and signed logic needed to complete the
+// SignDynamicFee takes in the contract bytes and returns the main transaction and signed logic needed to complete the
 // transfer. These should be sent to the fee payer, who can use
 // GetDynamicFeeTransactions() to update fields and create the auxiliary
 // transaction.
-func (c DynamicFee) SignDynamicFee(privateKey ed25519.PrivateKey, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
-	sender := types.Address{}
-	copy(sender[:], privateKey[ed25519.PublicKeySize:])
-	fee := uint64(0)
-	txn, err = transaction.MakePaymentTxn(sender.String(), c.receiver.String(), fee, c.amount, c.firstValid, c.lastValid, nil, c.closeRemainder.String(), "", genesisHash)
+// Parameters:
+// contract - the bytearray representing the contract in question
+// privateKey - the privateKey that will sign the delegated LogicSig
+// genesisHash - the bytearray representing the network for the txns
+func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
+	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return
 	}
-	lsig, err = crypto.MakeLogicSig(c.GetProgram(), nil, privateKey, crypto.MultisigAccount{})
+
+	contractLease := byteArrays[0]
+	// Convert the byteArrays[1] to receiver
+	var receiver types.Address
+	n := copy(receiver[:], byteArrays[1])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from receiver bytes is the wrong size")
+		return
+	}
+	fmt.Println(receiver.String())
+	// Convert the byteArrays[2] to closeRemainderTo
+	var closeRemainderTo types.Address
+	n = copy(closeRemainderTo[:], byteArrays[2])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from closeRemainderTo bytes is the wrong size")
+		return
+	}
+	amount, firstValid, lastValid := ints[2], ints[3], ints[4]
+
+	sender := types.Address{}
+	copy(sender[:], privateKey[ed25519.PublicKeySize:])
+	fee := uint64(0)
+	txn, err = transaction.MakePaymentTxn(sender.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, closeRemainderTo.String(), "", genesisHash)
+	if err != nil {
+		return
+	}
+	lease := [32]byte{}
+	copy(lease[:], contractLease) // convert from []byte to [32]byte
+	txn.AddLease(lease, fee)
+	lsig, err = crypto.MakeLogicSig(contract, nil, privateKey, crypto.MultisigAccount{})
 	return
 }

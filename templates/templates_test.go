@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/base64"
+	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -48,11 +49,23 @@ func TestDynamicFee(t *testing.T) {
 	lastValid := uint64(12346)
 	closeRemainder := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
 	artificialLease := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
-	c, err := MakeDynamicFeeWithLease(receiver, closeRemainder, artificialLease, amount, firstValid, lastValid)
-	// Outputs
+	c, err := makeDynamicFeeWithLease(receiver, closeRemainder, artificialLease, amount, firstValid, lastValid)
 	require.NoError(t, err)
+	accountOne := crypto.GenerateAccount()
+	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	genesisBytes, err := base64.StdEncoding.DecodeString(goldenGenesisHash)
+	require.NoError(t, err)
+	contractBytes := c.GetProgram()
+	txn, lsig, err := SignDynamicFee(contractBytes, accountOne.PrivateKey, genesisBytes)
+	require.NoError(t, err)
+	accountTwo := crypto.GenerateAccount()
+	stxns, err := GetDynamicFeeTransactions(txn, lsig, accountTwo.PrivateKey, 1234)
+	require.NoError(t, err)
+	// Outputs
 	goldenProgram := "ASAFAgGIJ7lgumAmAyD+vKC7FEpaTqe0OKRoGsgObKEFvLYH/FZTJclWlfaiEyDmmpYeby1feshmB5JlUr6YI17TM2PKiJGLuck4qRW2+SB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaTIEIhIzABAjEhAzAAcxABIQMwAIMQESEDEWIxIQMRAjEhAxBygSEDEJKRIQMQgkEhAxAiUSEDEEIQQSEDEGKhIQ"
-	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(contractBytes))
 	goldenAddress := "GCI4WWDIWUFATVPOQ372OZYG52EULPUZKI7Y34MXK3ZJKIBZXHD2H5C5TI"
 	require.Equal(t, goldenAddress, c.GetAddress())
+	goldenStxns := ""
+	require.Equal(t, goldenStxns, base64.StdEncoding.EncodeToString(stxns))
 }
