@@ -170,7 +170,7 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 			return
 		}
 		size += int(itemLen)
-		byteArray := program[pc+size : pc+size+int(itemLen)]
+		byteArray := program[pc+size+1 : pc+size+int(itemLen)+1]
 		byteArrays = append(byteArrays, byteArray)
 	}
 	return
