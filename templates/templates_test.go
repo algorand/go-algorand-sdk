@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/base64"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -53,7 +54,15 @@ func TestPeriodicPayment(t *testing.T) {
 	// Outputs
 	require.NoError(t, err)
 	goldenProgram := "ASAHAegHZABfoMIevKOVASYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
-	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	contractBytes := c.GetProgram()
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(contractBytes))
 	goldenAddress := "JMS3K4LSHPULANJIVQBTEDP5PZK6HHMDQS4OKHIMHUZZ6OILYO3FVQW7IY"
 	require.Equal(t, goldenAddress, c.GetAddress())
+	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	genesisBytes, err := base64.StdEncoding.DecodeString(goldenGenesisHash)
+	require.NoError(t, err)
+	stx, err := GetPeriodicPaymentWithdrawalTransaction(contractBytes, 1200, genesisBytes)
+	require.NoError(t, err)
+	goldenStx := "xQFmgqRsc2lngaFsxJkBIAcB6AdkAF+gwh68o5UBJgIgAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwggkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MUxECISMQEjDhAxAiQYJRIQMQQhBDECCBIQMQYoEhAxCTIDEjEHKRIQMQghBRIQMQkpEjEHMgMSEDECIQYNEDEIJRIQERCjdHhuiaNhbXTOAAehIKNmZWXOAAQDWKJmds0EsKJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmibHbNBQ+ibHjEICCSr5GE5BM8CX9mq8yTsREbEqIBvZ0Myj5KSKHOE8z0o3JjdsQgMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQmjc25kxCBLJbVxcjvosDUorAMyDf1+VeOdg4S45R0MPTOfOQvDtqR0eXBlo3BheQ=="
+	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(msgpack.Encode(stx)))
 }

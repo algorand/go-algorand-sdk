@@ -13,18 +13,13 @@ import (
 // PeriodicPayment template representation
 type PeriodicPayment struct {
 	ContractTemplate
-	amount      uint64
-	receiver    types.Address
-	leaseBase64 string
-	period      uint64
-	duration    uint64
 }
 
-// GetWithdrawalTransaction returns a signed transaction extracting funds from the contract
+// GetPeriodicPaymentWithdrawalTransaction returns a signed transaction extracting funds from the contract
 // contract: the bytearray defining the contract, received from the payer
 // firstValid: the first round on which the txn will be valid
 // genesisHash: the hash representing the network for the txn
-func GetWithdrawalTransaction(contract []byte, firstValid uint64, genesisHash []byte) ([]byte, error) {
+func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid uint64, genesisHash []byte) ([]byte, error) {
 	address := crypto.AddressFromProgram(contract)
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
@@ -108,11 +103,6 @@ func makePeriodicPaymentWithLease(receiver, lease string, amount, withdrawWindow
 			address: address.String(),
 			program: injectedBytes,
 		},
-		amount:      amount,
-		leaseBase64: lease,
-		receiver:    receiverAddr,
-		period:      period,
-		duration:    withdrawWindow,
 	}
 	return periodicPayment, err
 }
