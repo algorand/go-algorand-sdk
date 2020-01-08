@@ -25,13 +25,13 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid uint64,
 	if err != nil {
 		return nil, err
 	}
-	// Convert the byteArrays[0] to receiver
+	contractLease := byteArrays[0]
+	// Convert the byteArrays[1] to receiver
 	var receiver types.Address
-	n := copy(receiver[:], byteArrays[0])
+	n := copy(receiver[:], byteArrays[1])
 	if n != ed25519.PublicKeySize {
 		return nil, fmt.Errorf("address generated from receiver bytes is the wrong size")
 	}
-	contractLease := byteArrays[1]
 	fee, period, withdrawWindow, amount := ints[1], ints[2], ints[4], ints[5]
 	if firstValid%period != 0 {
 		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, period)

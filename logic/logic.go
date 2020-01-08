@@ -169,9 +169,9 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 			err = fmt.Errorf("bytecblock ran past end of program")
 			return
 		}
-		size += int(itemLen)
-		byteArray := program[pc+size+1 : pc+size+int(itemLen)+1]
+		byteArray := program[pc+size : pc+size+int(itemLen)]
 		byteArrays = append(byteArrays, byteArray)
+		size += int(itemLen)
 	}
 	return
 }
