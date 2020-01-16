@@ -2,8 +2,11 @@ package templates
 
 import (
 	"encoding/base64"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSplit(t *testing.T) {
@@ -59,6 +62,10 @@ func TestDynamicFee(t *testing.T) {
 	require.NoError(t, err)
 	txn, lsig, err := SignDynamicFee(contractBytes, privateKeyOne, genesisBytes)
 	require.NoError(t, err)
+	goldenLsig := "gqFsxLEBIAUCAYgnuWC6YCYDIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpMgQiEjMAECMSEDMABzEAEhAzAAgxARIQMRYjEhAxECMSEDEHKBIQMQkpEhAxCCQSEDECJRIQMQQhBBIQMQYqEhCjc2lnxEAhLNdfdDp9Wbi0YwsEQCpP7TVHbHG7y41F4MoESNW/vL1guS+5Wj4f5V9fmM63/VKTSMFidHOSwm5o+pbV5lYH"
+	require.Equal(t, goldenLsig, base64.StdEncoding.EncodeToString(msgpack.Encode(lsig)))
+	goldenTxn := "iqNhbXTNE4ilY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmds0wOaJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmibHbNMDqibHjEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpo3JjdsQg/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohOjc25kxCCFPYdMJymqcGoxdDeyuM8t6Kxixfq0PJCyJP71uhYT76R0eXBlo3BheQ=="
+	require.Equal(t, goldenTxn, base64.StdEncoding.EncodeToString(msgpack.Encode(txn)))
 	privateKeyTwoB64 := "2qjz96Vj9M6YOqtNlfJUOKac13EHCXyDty94ozCjuwwriI+jzFgStFx9E6kEk1l4+lFsW4Te2PY1KV8kNcccRg=="
 	privateKeyTwo, err := base64.StdEncoding.DecodeString(privateKeyTwoB64)
 	stxns, err := GetDynamicFeeTransactions(txn, lsig, privateKeyTwo, 1234)
