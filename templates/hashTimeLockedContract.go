@@ -12,7 +12,7 @@ type HTLC struct {
 	ContractTemplate
 }
 
-// MakeHTLC allows a user to recieve the Algo prior to a deadline (in terms of a round) by proving a knowledge
+// MakeHTLC allows a user to receive the Algo prior to a deadline (in terms of a round) by proving a knowledge
 // of a special value or to forfeit the ability to claim, returning it to the payer.
 // This contract is usually used to perform cross-chained atomic swaps
 //
@@ -22,8 +22,7 @@ type HTLC struct {
 // 2. To owner if txn.FirstValid > expiry_round
 // ...
 //
-//Parameters
-//----------
+// Parameters:
 // - owner : string an address that can receive the asset after the expiry round
 // - receiver: string address to receive Algos
 // - hashFunction : string the hash function to be used (must be either sha256 or keccak256)
