@@ -159,7 +159,8 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 			err = fmt.Errorf("bytecblock ran past end of program")
 			return
 		}
-		itemLen, bytesUsed := binary.Uvarint(program[pc+size:])
+		scanTarget := program[pc+size:]
+		itemLen, bytesUsed := binary.Uvarint(scanTarget)
 		if bytesUsed <= 0 {
 			err = fmt.Errorf("could not decode []byte const[%d] at pc=%d", i, pc+size)
 			return
