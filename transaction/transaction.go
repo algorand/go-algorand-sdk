@@ -266,7 +266,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 	tx.AssetParams.UnitName = unitName
 
 	if len(metadataHash) > types.AssetMetadataHashLen {
-		return tx, fmt.Errorf("asset metadata hash %s too long (max %d bytes)", metadataHash, len(tx.AssetParams.MetadataHash))
+		return tx, fmt.Errorf("asset metadata hash '%s' too long: %d > %d)", metadataHash, len(metadataHash), types.AssetMetadataHashLen)
 	}
 	copy(tx.AssetParams.MetadataHash[:], []byte(metadataHash))
 
