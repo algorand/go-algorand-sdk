@@ -19,18 +19,18 @@ type LimitOrder struct {
 // contract: byteform of the contract from the payer
 // secretKey: secret key for signing transactions
 // fee: fee per byte used for the transactions
-// algoAmount: number of algos to transfer
+// microAlgoAmount: number of microAlgos to transfer
 // firstRound: first round on which these txns will be valid
 // lastRound: last round on which these txns will be valid
 // genesisHash: genesisHash indicating the network for the txns
 // the first payment sends money (Algos) from contract to the recipient (we'll call him Buyer), closing the rest of the account to Owner
 // the second payment sends money (the asset) from Buyer to the Owner
 // these transactions will be rejected if they do not meet the restrictions set by the contract
-func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secretKey []byte, fee, algoAmount, firstRound, lastRound uint64, genesisHash []byte) ([]byte, error) {
+func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secretKey []byte, fee, microAlgoAmount, firstRound, lastRound uint64, genesisHash []byte) ([]byte, error) {
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
 	contractAddress := crypto.AddressFromProgram(contract)
-	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, algoAmount, firstRound, lastRound, nil, lo.owner, "", genesisHash)
+	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, microAlgoAmount, firstRound, lastRound, nil, lo.owner, "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
