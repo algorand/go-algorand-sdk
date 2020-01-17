@@ -43,6 +43,32 @@ func TestHTLC(t *testing.T) {
 	require.Equal(t, goldenAddress, c.GetAddress())
 }
 
+func TestPeriodicPayment(t *testing.T) {
+	// Inputs
+	receiver := "SKXZDBHECM6AS73GVPGJHMIRDMJKEAN5TUGMUPSKJCQ44E6M6TC2H2UJ3I"
+	artificialLease := "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg="
+	amount := uint64(500000)
+	withdrawalWindow := uint64(95)
+	period := uint64(100)
+	maxFee := uint64(1000)
+	expiryRound := uint64(2445756)
+	c, err := makePeriodicPaymentWithLease(receiver, artificialLease, amount, withdrawalWindow, period, expiryRound, maxFee)
+	// Outputs
+	require.NoError(t, err)
+	goldenProgram := "ASAHAegHZABfoMIevKOVASYCIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFMRAiEjEBIw4QMQIkGCUSEDEEIQQxAggSEDEGKBIQMQkyAxIxBykSEDEIIQUSEDEJKRIxBzIDEhAxAiEGDRAxCCUSEBEQ"
+	contractBytes := c.GetProgram()
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(contractBytes))
+	goldenAddress := "JMS3K4LSHPULANJIVQBTEDP5PZK6HHMDQS4OKHIMHUZZ6OILYO3FVQW7IY"
+	require.Equal(t, goldenAddress, c.GetAddress())
+	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	genesisBytes, err := base64.StdEncoding.DecodeString(goldenGenesisHash)
+	require.NoError(t, err)
+	stx, err := GetPeriodicPaymentWithdrawalTransaction(contractBytes, 1200, genesisBytes)
+	require.NoError(t, err)
+	goldenStx := "gqRsc2lngaFsxJkBIAcB6AdkAF+gwh68o5UBJgIgAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwggkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MUxECISMQEjDhAxAiQYJRIQMQQhBDECCBIQMQYoEhAxCTIDEjEHKRIQMQghBRIQMQkpEjEHMgMSEDECIQYNEDEIJRIQERCjdHhuiaNhbXTOAAehIKNmZWXOAAQDWKJmds0EsKJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmibHbNBQ+ibHjEIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIo3JjdsQgkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MWjc25kxCBLJbVxcjvosDUorAMyDf1+VeOdg4S45R0MPTOfOQvDtqR0eXBlo3BheQ=="
+	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
+}
+
 func TestDynamicFee(t *testing.T) {
 	// Inputs
 	receiver := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
