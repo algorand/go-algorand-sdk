@@ -20,6 +20,7 @@ type LimitOrder struct {
 // secretKey: secret key for signing transactions
 // fee: fee per byte used for the transactions
 // microAlgoAmount: number of microAlgos to transfer
+
 // firstRound: first round on which these txns will be valid
 // lastRound: last round on which these txns will be valid
 // genesisHash: genesisHash indicating the network for the txns
