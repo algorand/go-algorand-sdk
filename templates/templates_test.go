@@ -120,5 +120,4 @@ func TestLimitOrder(t *testing.T) {
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "LXQWT2XLIVNFS54VTLR63UY5K6AMIEWI7YTVE6LB4RWZDBZKH22ZO3S36I"
 	require.Equal(t, goldenAddress, c.GetAddress())
-
 }
