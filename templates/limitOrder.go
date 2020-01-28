@@ -35,8 +35,7 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	if err != nil {
 		return nil, err
 	}
-
-	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, "", assetAmount, fee, firstRound, lastRound, nil, lo.owner, "", lo.assetID)
+	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, "", assetAmount, fee, firstRound, lastRound, nil, lo.owner, base64.StdEncoding.EncodeToString(genesisHash), lo.assetID)
 	if err != nil {
 		return nil, err
 	}
