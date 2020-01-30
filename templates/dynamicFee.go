@@ -98,7 +98,7 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 	}
 	feePayTxn.AddLease(txn.Lease, fee)
 
-	txnGroup := []types.Transaction{txn, feePayTxn}
+	txnGroup := []types.Transaction{feePayTxn, txn}
 
 	updatedTxns, err := transaction.AssignGroupID(txnGroup, "")
 
