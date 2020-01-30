@@ -102,11 +102,11 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 
 	updatedTxns, err := transaction.AssignGroupID(txnGroup, "")
 
-	_, stx1Bytes, err := crypto.SignLogicsigTransaction(lsig, updatedTxns[0])
+	_, stx1Bytes, err := crypto.SignLogicsigTransaction(lsig, updatedTxns[1])
 	if err != nil {
 		return nil, err
 	}
-	_, stx2Bytes, err := crypto.SignTransaction(privateKey, updatedTxns[1])
+	_, stx2Bytes, err := crypto.SignTransaction(privateKey, updatedTxns[0])
 	if err != nil {
 		return nil, err
 	}
