@@ -20,14 +20,12 @@ type Split struct {
 //GetSendFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // the returned byte array is suitable for passing to SendRawTransaction
 // amount: uint64 number of assets to be transferred total
-// precise: handles rounding error. When False, the amount will be divided as closely as possible but one account will get
-// 			slightly more. When true, returns an error.
-func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
+func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
 	ratio := contract.ratn / contract.ratd
 	amountForReceiverOne := amount * ratio
 	amountForReceiverTwo := amount * (1 - ratio)
 	remainder := amount - amountForReceiverOne - amountForReceiverTwo
-	if precise && remainder != 0 {
+	if remainder != 0 {
 		return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
 	}
 
