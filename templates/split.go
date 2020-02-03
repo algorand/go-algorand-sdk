@@ -21,25 +21,17 @@ type Split struct {
 // the returned byte array is suitable for passing to SendRawTransaction
 // amount: uint64 number of assets to be transferred total
 func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
-	ratio := contract.ratn / contract.ratd
-	amountForReceiverOne := amount * ratio
-	amountForReceiverTwo := amount * (1 - ratio)
-	remainder := amount - amountForReceiverOne - amountForReceiverTwo
-	if remainder != 0 {
-		return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
-	}
-
+	amountForReceiverOne := amount * contract.ratn / contract.ratd
+	amountForReceiverTwo := amount - amountForReceiverOne
 	from := contract.address
 	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(tx1)
 	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(tx2)
 	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
 	if err != nil {
 		return nil, err
