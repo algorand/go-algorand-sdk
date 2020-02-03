@@ -34,10 +34,12 @@ func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRou
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(tx1)
 	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(tx2)
 	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
 	if err != nil {
 		return nil, err
