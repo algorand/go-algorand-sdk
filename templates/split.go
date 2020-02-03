@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
+	"golang.org/x/crypto/ed25519"
 )
 
 // Split template representation
@@ -17,21 +19,44 @@ type Split struct {
 	receiverTwo types.Address
 }
 
-//GetSendFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
+//GetSplitFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // the returned byte array is suitable for passing to SendRawTransaction
+// contract: the bytecode of the contract to be used
 // amount: uint64 number of assets to be transferred total
-func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
-	if amount%contract.ratd != 0 {
-		return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
-	}
-	amountForReceiverOne := amount / (contract.ratd * contract.ratn)
-	amountForReceiverTwo := amount - amountForReceiverOne
-	from := contract.address
-	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+func GetSplitFundsTransaction(contract []byte, amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
+	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
+	// unconfirmed ones
+	ratn := ints[5]
+	ratd := ints[6]
+	// Convert the byteArrays[0] to receiver
+	var receiverOne types.Address //byteArrays[0]
+	n := copy(receiverOne[:], byteArrays[1])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from receiver bytes is the wrong size")
+		return nil, err
+	}
+	// Convert the byteArrays[1] to receiverTwo
+	var receiverTwo types.Address
+	n = copy(receiverTwo[:], byteArrays[2])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from closeRemainderTo bytes is the wrong size")
+		return nil, err
+	}
+	//if amount % ratd != 0 {
+	//	return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
+	//}
+	amountForReceiverOne := amount / (ratd * ratn)
+	amountForReceiverTwo := amount - amountForReceiverOne
+
+	from := crypto.AddressFromProgram(contract)
+	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+	if err != nil {
+		return nil, err
+	}
+	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +67,7 @@ func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRou
 	tx1.Group = gid
 	tx2.Group = gid
 
-	logicSig, err := crypto.MakeLogicSig(contract.program, nil, nil, crypto.MultisigAccount{})
+	logicSig, err := crypto.MakeLogicSig(contract, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
 	}
