@@ -21,7 +21,10 @@ type Split struct {
 // the returned byte array is suitable for passing to SendRawTransaction
 // amount: uint64 number of assets to be transferred total
 func (contract Split) GetSendFundsTransaction(amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
-	amountForReceiverOne := amount * contract.ratn / contract.ratd
+	if amount%contract.ratd != 0 {
+		return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
+	}
+	amountForReceiverOne := amount / (contract.ratd * contract.ratn)
 	amountForReceiverTwo := amount - amountForReceiverOne
 	from := contract.address
 	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
