@@ -38,17 +38,17 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, firstRound, lastRo
 		err = fmt.Errorf("address generated from receiver bytes is the wrong size")
 		return nil, err
 	}
-	// Convert the byteArrays[1] to receiverTwo
+	// Convert the byteArrays[2] to receiverTwo
 	var receiverTwo types.Address
 	n = copy(receiverTwo[:], byteArrays[2])
 	if n != ed25519.PublicKeySize {
 		err = fmt.Errorf("address generated from closeRemainderTo bytes is the wrong size")
 		return nil, err
 	}
-	//if amount % ratd != 0 {
-	//	return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
-	//}
-	amountForReceiverOne := amount / (ratd * ratn)
+
+	ratio := float64(ratn) / float64(ratd)
+	amountForReceiverOneFloat := float64(amount) / (1 + ratio)
+	amountForReceiverOne := uint64(amountForReceiverOneFloat)
 	amountForReceiverTwo := amount - amountForReceiverOne
 
 	from := crypto.AddressFromProgram(contract)

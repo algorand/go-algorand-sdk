@@ -24,6 +24,10 @@ func TestSplit(t *testing.T) {
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "KPYGWKTV7CKMPMTLQRNGMEQRSYTYDHUOFNV4UDSBDLC44CLIJPQWRTCPBU"
 	require.Equal(t, goldenAddress, c.GetAddress())
+	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	genesisBytes, _ := base64.StdEncoding.DecodeString(goldenGenesisHash)
+	_, err = GetSplitFundsTransaction(c.GetProgram(), 2*100000*ratd/ratn, 1, 100, 10000, genesisBytes)
+	require.NoError(t, err)
 }
 
 func TestHTLC(t *testing.T) {
