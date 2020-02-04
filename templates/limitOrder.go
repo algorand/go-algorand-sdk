@@ -60,6 +60,7 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	}
 
 	var signedGroup []byte
+	signedGroup = append(signedGroup, algosForAssetsSigned...)
 	signedGroup = append(signedGroup, assetsForAlgosSigned...)
 	signedGroup = append(signedGroup, algosForAssetsSigned...)
 
