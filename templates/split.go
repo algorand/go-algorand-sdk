@@ -22,8 +22,12 @@ type Split struct {
 //GetSplitFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // the returned byte array is suitable for passing to SendRawTransaction
 // contract: the bytecode of the contract to be used
-// amount: uint64 number of assets to be transferred total
-func GetSplitFundsTransaction(contract []byte, amount uint64, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
+// amount: uint64 total number of algos to be transferred (payment1_amount + payment2_amount)
+// firstRound: uint64 first protocol round on which the txn is valid
+// lastRound: uint64 last protocol round on which the txn is valid
+// fee: uint64 the fee per byte, in microalgos, to be used for each txn
+// genesisHash: byte slice representing the network for the transactions
+func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return nil, err
@@ -100,14 +104,19 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, firstRound, lastRo
 //
 // After expiryRound passes, all funds can be refunded to owner.
 //
+// Split ratio:
+// firstRecipient_amount * ratd == secondRecipient_amount * ratn
+// or phrased another way
+// firstRecipient_amount == secondRecipient_amount * (ratn/ratd)
+//
 // Parameters:
 //  - owner: the address to refund funds to on timeout
 //  - receiverOne: the first recipient in the split account
 //  - receiverTwo: the second recipient in the split account
-//  - ratn: fraction of money to be paid to the first recipient (numerator)
-//  - ratd: fraction of money to be paid to the first recipient (denominator)
+//  - ratn: fraction determines resource split ratio (numerator)
+//  - ratd: fraction determines resource split ratio (denominator)
 //  - expiryRound: the round at which the account expires
-//  - minPay: minimum amount to be paid out of the account
+//  - minPay: minimum amount to be paid out of the account to receiverOne
 //  - maxFee: half of the maximum fee used by each split forwarding group transaction
 func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, minPay, maxFee uint64) (Split, error) {
 	const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
