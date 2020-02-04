@@ -141,6 +141,7 @@ func (client Client) SuggestedParams(headers ...*Header) (response models.Transa
 
 // SendRawTransaction gets the bytes of a SignedTxn and broadcasts it to the network
 func (client Client) SendRawTransaction(stx []byte, headers ...*Header) (response models.TransactionID, err error) {
+	fmt.Println("sendrawtransaciton was called")
 	err = client.post(&response, "/transactions", stx, headers)
 	return
 }
