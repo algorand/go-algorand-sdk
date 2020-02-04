@@ -103,10 +103,6 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 
 	updatedTxns, err := transaction.AssignGroupID(txnGroup, "")
 
-	fmt.Println(updatedTxns[0])
-	fmt.Println(crypto.TxIDFromTransaction(updatedTxns[0]))
-	fmt.Println(updatedTxns[1])
-	fmt.Println(crypto.TxIDFromTransaction(updatedTxns[1]))
 	_, stx1Bytes, err := crypto.SignTransaction(privateKey, updatedTxns[0])
 	if err != nil {
 		return nil, err
@@ -124,10 +120,8 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 // transaction.
 // Parameters:
 // contract - the bytearray representing the contract in question
-// privateKey - the privateKey that will sign the delegated LogicSig
 // genesisHash - the bytearray representing the network for the txns
-func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
-	fmt.Println(privateKey) //keep compiler happy
+func SignDynamicFee(contract []byte, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return
