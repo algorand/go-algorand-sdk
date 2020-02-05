@@ -49,7 +49,7 @@ func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fe
 		return nil, err
 	}
 
-	ratio := float64(ratn) / float64(ratd)
+	ratio := float64(ratd) / float64(ratn)
 	amountForReceiverOneFloat := float64(amount) / (1 + ratio)
 	amountForReceiverOne := uint64(amountForReceiverOneFloat)
 	amountForReceiverTwo := amount - amountForReceiverOne
