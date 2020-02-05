@@ -79,12 +79,6 @@ func txIDFromTransaction(tx types.Transaction) (txid string) {
 	return
 }
 
-// TxIDFromTransaction is the exported version of txIDFromTransaction
-func TxIDFromTransaction(tx types.Transaction) (txid string) {
-	txid = txIDFromTransaction(tx)
-	return
-}
-
 // rawSignTransaction signs the msgpack-encoded tx (with prepended "TX" prefix), and returns the sig and txid
 func rawSignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (s types.Signature, txid string, err error) {
 	toBeSigned := rawTransactionBytesToSign(tx)
