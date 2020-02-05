@@ -3,12 +3,14 @@ package templates
 import (
 	"encoding/base64"
 	"fmt"
+	"math"
+
+	"golang.org/x/crypto/ed25519"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
-	"golang.org/x/crypto/ed25519"
-	"math"
 )
 
 // Split template representation
