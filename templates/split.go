@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"golang.org/x/crypto/ed25519"
+	"math"
 )
 
 // Split template representation
@@ -51,8 +52,12 @@ func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fe
 
 	ratio := float64(ratd) / float64(ratn)
 	amountForReceiverOneFloat := float64(amount) / (1 + ratio)
-	amountForReceiverOne := uint64(amountForReceiverOneFloat)
+	amountForReceiverOne := uint64(math.Round(amountForReceiverOneFloat))
 	amountForReceiverTwo := amount - amountForReceiverOne
+	if ratd*amountForReceiverOne != ratn*amountForReceiverTwo {
+		err = fmt.Errorf("could not split funds in a way that satisfied the contract ratio (%d * %d != %d * %d)", ratd, amountForReceiverOne, ratn, amountForReceiverTwo)
+		return nil, err
+	}
 
 	from := crypto.AddressFromProgram(contract)
 	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
