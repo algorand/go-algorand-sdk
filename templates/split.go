@@ -32,9 +32,8 @@ func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fe
 	if err != nil {
 		return nil, err
 	}
-	// unconfirmed ones
-	ratn := ints[5]
-	ratd := ints[6]
+	ratn := ints[6]
+	ratd := ints[5]
 	// Convert the byteArrays[0] to receiver
 	var receiverOne types.Address //byteArrays[0]
 	n := copy(receiverOne[:], byteArrays[1])
@@ -124,8 +123,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-
-	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
+	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratd*/, 8 /*ratn*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
 	ownerAddr, err := types.DecodeAddress(owner)
 	if err != nil {
 		return Split{}, err
@@ -138,7 +136,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
+	injectionVector := []interface{}{maxFee, expiryRound, ratd, ratn, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err
