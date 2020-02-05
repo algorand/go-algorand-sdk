@@ -79,6 +79,20 @@ func txIDFromTransaction(tx types.Transaction) (txid string) {
 	return
 }
 
+// TransactionID is the unique identifier for a Transaction in progress
+func TransactionID(tx types.Transaction) (txid []byte) {
+	toBeSigned := rawTransactionBytesToSign(tx)
+	txid32 := sha512.Sum512_256(toBeSigned)
+	txid = txid32[:]
+	return
+}
+
+// TransactionIDString is a base32 representation of a TransactionID
+func TransactionIDString(tx types.Transaction) (txid string) {
+	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(TransactionID(tx))
+	return
+}
+
 // rawSignTransaction signs the msgpack-encoded tx (with prepended "TX" prefix), and returns the sig and txid
 func rawSignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (s types.Signature, txid string, err error) {
 	toBeSigned := rawTransactionBytesToSign(tx)

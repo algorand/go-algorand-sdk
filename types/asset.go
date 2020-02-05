@@ -69,3 +69,11 @@ type AssetParams struct {
 	// of this asset from any account.
 	Clawback Address `codec:"c"`
 }
+
+var zeroAP = AssetParams{}
+
+// IsZero returns true if the AssetParams struct is completely empty.
+// The AssetParams zero object is used in destroying an asset.
+func (ap AssetParams) IsZero() bool {
+	return ap == zeroAP
+}
