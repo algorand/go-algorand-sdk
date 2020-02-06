@@ -53,7 +53,7 @@ func TestHTLC(t *testing.T) {
 	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, 0, 1, 100, nil, receiver, "", genesisBytes)
 	require.NoError(t, err)
 	goldenStx := "gqRsc2lngqNhcmeRxCB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGkg/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIFNCP4JtpWHGzW5H9EJSwasC1THntUIiTJGurfnrDvCqpHR5cGWjcGF5"
-	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, hashImg)
+	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, hashImg) // stx would not actually unlock this HTLC, this is just an encode/decode check
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
@@ -84,6 +84,8 @@ func TestPeriodicPayment(t *testing.T) {
 }
 
 func TestDynamicFee(t *testing.T) {
+	// TODO EJR 2/6/2020 this fails for now but just get it compiling so cucumber tests can be tested
+
 	// Inputs
 	receiver := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
 	amount := uint64(5000)
@@ -98,7 +100,7 @@ func TestDynamicFee(t *testing.T) {
 	require.NoError(t, err)
 	contractBytes := c.GetProgram()
 	require.NoError(t, err)
-	txn, lsig, err := SignDynamicFee(contractBytes, genesisBytes)
+	txn, lsig, err := SignDynamicFee(contractBytes, nil, genesisBytes)
 	require.NoError(t, err)
 	goldenLsig := "gaFsxLEBIAUCAYgnuWC6YCYDIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpMgQiEjMAECMSEDMABzEAEhAzAAgxARIQMRYjEhAxECMSEDEHKBIQMQkpEhAxCCQSEDECJRIQMQQhBBIQMQYqEhA="
 	require.Equal(t, goldenLsig, base64.StdEncoding.EncodeToString(msgpack.Encode(lsig)))

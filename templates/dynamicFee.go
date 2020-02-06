@@ -121,7 +121,7 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 // Parameters:
 // contract - the bytearray representing the contract in question
 // genesisHash - the bytearray representing the network for the txns
-func SignDynamicFee(contract []byte, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
+func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return
@@ -143,16 +143,18 @@ func SignDynamicFee(contract []byte, genesisHash []byte) (txn types.Transaction,
 	}
 	contractLease := byteArrays[2]
 	amount, firstValid, lastValid := ints[2], ints[3], ints[4]
+	address := types.Address{}
+	copy(address[:], privateKey[ed25519.PublicKeySize:])
 
-	sender := crypto.AddressFromProgram(contract)
 	fee := uint64(0)
-	txn, err = transaction.MakePaymentTxn(sender.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, closeRemainderTo.String(), "", genesisHash)
+	txn, err = transaction.MakePaymentTxn(address.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, closeRemainderTo.String(), "", genesisHash)
 	if err != nil {
 		return
 	}
 	lease := [32]byte{}
 	copy(lease[:], contractLease) // convert from []byte to [32]byte
 	txn.AddLease(lease, fee)
-	lsig, err = crypto.MakeLogicSig(contract, nil, nil, crypto.MultisigAccount{})
+	lsig, err = crypto.MakeLogicSig(contract, nil, privateKey, crypto.MultisigAccount{})
+
 	return
 }
