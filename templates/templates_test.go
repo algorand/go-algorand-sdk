@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/transaction"
 
 	"github.com/stretchr/testify/require"
 )
@@ -47,6 +48,13 @@ func TestHTLC(t *testing.T) {
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "KNBD7ATNUVQ4NTLOI72EEUWBVMBNKMPHWVBCETERV2W7T2YO6CVMLJRBM4"
 	require.Equal(t, goldenAddress, c.GetAddress())
+	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=" // also used as hashImg coincidentally; no significance to using both as the same string
+	genesisBytes, _ := base64.StdEncoding.DecodeString(genesisHash)
+	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, 0, 1, 100, nil, receiver, "", genesisBytes)
+	require.NoError(t, err)
+	goldenStx := "gqRsc2lngqNhcmeRxCB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGkg/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIFNCP4JtpWHGzW5H9EJSwasC1THntUIiTJGurfnrDvCqpHR5cGWjcGF5"
+	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, hashImg)
+	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
 func TestPeriodicPayment(t *testing.T) {
@@ -69,9 +77,9 @@ func TestPeriodicPayment(t *testing.T) {
 	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, err := base64.StdEncoding.DecodeString(goldenGenesisHash)
 	require.NoError(t, err)
-	stx, err := GetPeriodicPaymentWithdrawalTransaction(contractBytes, 1200, maxFee, genesisBytes)
+	stx, err := GetPeriodicPaymentWithdrawalTransaction(contractBytes, 1200, 0, genesisBytes)
 	require.NoError(t, err)
-	goldenStx := "gqRsc2lngaFsxJkBIAcB6AdkAF+gwh68o5UBJgIgAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwggkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MUxECISMQEjDhAxAiQYJRIQMQQhBDECCBIQMQYoEhAxCTIDEjEHKRIQMQghBRIQMQkpEjEHMgMSEDECIQYNEDEIJRIQERCjdHhuiaNhbXTOAAehIKNmZWXOAAQDWKJmds0EsKJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmibHbNBQ+ibHjEIAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIo3JjdsQgkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MWjc25kxCBLJbVxcjvosDUorAMyDf1+VeOdg4S45R0MPTOfOQvDtqR0eXBlo3BheQ=="
+	goldenStx := "gqRsc2lngaFsxJkBIAcB6AdkAF+gwh68o5UBJgIgAQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwggkq+RhOQTPAl/ZqvMk7ERGxKiAb2dDMo+SkihzhPM9MUxECISMQEjDhAxAiQYJRIQMQQhBDECCBIQMQYoEhAxCTIDEjEHKRIQMQghBRIQMQkpEjEHMgMSEDECIQYNEDEIJRIQERCjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbNBLCiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2zQUPomx4xCABAgMEBQYHCAECAwQFBgcIAQIDBAUGBwgBAgMEBQYHCKNyY3bEIJKvkYTkEzwJf2arzJOxERsSogG9nQzKPkpIoc4TzPTFo3NuZMQgSyW1cXI76LA1KKwDMg39flXjnYOEuOUdDD0znzkLw7akdHlwZaNwYXk="
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
