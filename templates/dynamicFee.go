@@ -45,9 +45,12 @@ func makeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, fir
 	if err != nil {
 		return DynamicFee{}, err
 	}
-	closeRemainderAddr, err := types.DecodeAddress(closeRemainder)
-	if err != nil {
-		return DynamicFee{}, err
+	var closeRemainderAddr types.Address
+	if closeRemainder != "" {
+		closeRemainderAddr, err = types.DecodeAddress(closeRemainder)
+		if err != nil {
+			return DynamicFee{}, err
+		}
 	}
 
 	var referenceOffsets = []uint64{ /*amount*/ 5 /*firstValid*/, 6 /*lastValid*/, 7 /*receiver*/, 11 /*closeRemainder*/, 44 /*lease*/, 76}
