@@ -18,8 +18,9 @@ type PeriodicPayment struct {
 // GetPeriodicPaymentWithdrawalTransaction returns a signed transaction extracting funds from the contract
 // contract: the bytearray defining the contract, received from the payer
 // firstValid: the first round on which the txn will be valid
+// fee: the fee in microalgos per byte of the payment txn
 // genesisHash: the hash representing the network for the txn
-func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid uint64, genesisHash []byte) ([]byte, error) {
+func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee uint64, genesisHash []byte) ([]byte, error) {
 	address := crypto.AddressFromProgram(contract)
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
@@ -32,7 +33,7 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid uint64,
 	if n != ed25519.PublicKeySize {
 		return nil, fmt.Errorf("address generated from receiver bytes is the wrong size")
 	}
-	fee, period, withdrawWindow, amount := ints[1], ints[2], ints[4], ints[5]
+	period, withdrawWindow, amount := ints[2], ints[4], ints[5]
 	if firstValid%period != 0 {
 		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, period)
 	}

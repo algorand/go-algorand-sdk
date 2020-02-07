@@ -31,15 +31,15 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
 	contractAddress := crypto.AddressFromProgram(contract)
-	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, microAlgoAmount, firstRound, lastRound, nil, lo.owner, "", genesisHash)
+	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, microAlgoAmount, firstRound, lastRound, nil, "", "", genesisHash)
+	if err != nil {
+		return nil, err
+	}
+	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, lo.owner, assetAmount, fee, firstRound, lastRound, nil, "", base64.StdEncoding.EncodeToString(genesisHash), lo.assetID)
 	if err != nil {
 		return nil, err
 	}
 
-	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, "", assetAmount, fee, firstRound, lastRound, nil, lo.owner, "", lo.assetID)
-	if err != nil {
-		return nil, err
-	}
 	gid, err := crypto.ComputeGroupID([]types.Transaction{algosForAssets, assetsForAlgos})
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	}
 
 	var signedGroup []byte
-	signedGroup = append(signedGroup, assetsForAlgosSigned...)
 	signedGroup = append(signedGroup, algosForAssetsSigned...)
+	signedGroup = append(signedGroup, assetsForAlgosSigned...)
 
 	return signedGroup, nil
 }
