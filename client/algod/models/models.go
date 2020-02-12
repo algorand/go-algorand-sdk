@@ -549,6 +549,30 @@ type Version struct {
 	GenesisID string `json:"genesis_id"`
 	// required: true
 	GenesisHash Bytes `json:"genesis_hash_b64"`
+	// required: true
+	Build BuildVersion `json:"build"`
+}
+
+// BuildVersion contains the current algod build version information.
+type BuildVersion struct {
+	// required: true
+	// Algorand's major version number
+	Major int `json:"major"`
+	// required: true
+	// Algorand's minor version number
+	Minor int `json:"minor"`
+	// required: true
+	// Algorand's Build Number
+	BuildNumber int `json:"build_number"`
+	// required: true
+	// Hash of commit the build is based on
+	CommitHash string `json:"commit_hash"`
+	// required: true
+	// Branch the build is based on
+	Branch string `json:"branch"`
+	// required: true
+	// Branch-derived release channel the build is based on
+	Channel string `json:"channel"`
 }
 
 // VersionsResponse is the response to 'GET /versions'
