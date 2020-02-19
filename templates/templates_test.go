@@ -38,22 +38,24 @@ func TestHTLC(t *testing.T) {
 	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
 	receiver := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
 	hashFn := "sha256"
-	hashImg := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	hashImg := "EHZhE08h/HwCIj1Qq56zYAvD/8NxJCOh5Hux+anb9V8="
 	expiryRound := uint64(600000)
 	maxFee := uint64(1000)
 	c, err := MakeHTLC(owner, receiver, hashFn, hashImg, expiryRound, maxFee)
 	// Outputs
 	require.NoError(t, err)
-	goldenProgram := "ASAE6AcBAMDPJCYDIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMQEiDjEQIxIQMQcyAxIQMQgkEhAxCSgSLQEpEhAxCSoSMQIlDRAREA=="
+	goldenProgram := "ASAE6AcBAMDPJCYDIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IBB2YRNPIfx8AiI9UKues2ALw//DcSQjoeR7sfmp2/VfIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMQEiDjEQIxIQMQcyAxIQMQgkEhAxCSgSLQEpEhAxCSoSMQIlDRAREA=="
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
-	goldenAddress := "KNBD7ATNUVQ4NTLOI72EEUWBVMBNKMPHWVBCETERV2W7T2YO6CVMLJRBM4"
+	goldenAddress := "FBZIR3RWVT2BTGVOG25H3VAOLVD54RTCRNRLQCCJJO6SVSCT5IVDYKNCSU"
 	require.Equal(t, goldenAddress, c.GetAddress())
-	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=" // also used as hashImg coincidentally; no significance to using both as the same string
+	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, _ := base64.StdEncoding.DecodeString(genesisHash)
 	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, 0, 1, 100, nil, receiver, "", genesisBytes)
 	require.NoError(t, err)
-	goldenStx := "gqRsc2lngqNhcmeRxCB/g7Flf/H8U7ktwYFIodZd/C1LH6PWdyhK3dIAEm2QaaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGkg/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIFNCP4JtpWHGzW5H9EJSwasC1THntUIiTJGurfnrDvCqpHR5cGWjcGF5"
-	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, hashImg) // stx would not actually unlock this HTLC, this is just an encode/decode check
+	preImageAsBase64 := "cHJlaW1hZ2U="
+	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)
+	require.NoError(t, err)
+	goldenStx := "gqRsc2lngqNhcmeRxAhwcmVpbWFnZaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgEHZhE08h/HwCIj1Qq56zYAvD/8NxJCOh5Hux+anb9V8g/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIChyiO42rPQZmq42un3UDl1H3kZii2K4CElLvSrIU+oqpHR5cGWjcGF5"
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
