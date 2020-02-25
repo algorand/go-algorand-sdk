@@ -170,7 +170,10 @@ func responseReadAll(resp *http.Response, maxContentLength int64) (body []byte, 
 // BlockRaw gets the raw block msgpack bytes for the given round
 func (client Client) BlockRaw(round uint64, headers ...*Header) (blockbytes []byte, err error) {
 	var resp *http.Response
-	resp, err = client.submitFormRaw(fmt.Sprintf("/block/%d?raw=1", round), nil, "GET", false, headers)
+	request := struct {
+		Raw string `url:"raw"`
+	}{Raw: "1"}
+	resp, err = client.submitFormRaw(fmt.Sprintf("/block/%d", round), request, "GET", false, headers)
 	if err != nil {
 		return
 	}
