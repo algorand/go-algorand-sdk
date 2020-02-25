@@ -26,11 +26,11 @@ func (a Address) String() string {
 	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(checksumAddress)
 }
 
-var zeroAddr = [hashLenBytes]byte{}
+var ZeroAddress Address = [hashLenBytes]byte{}
 
 // IsZero returs true if the Address is all zero bytes.
 func (a Address) IsZero() bool {
-	return a == zeroAddr
+	return a == ZeroAddress
 }
 
 // DecodeAddress turns a checksum address string into an Address object. It

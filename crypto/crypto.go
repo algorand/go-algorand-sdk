@@ -66,7 +66,7 @@ func rawTransactionBytesToSign(tx types.Transaction) []byte {
 	return bytes.Join(msgParts, nil)
 }
 
-// txID computes a transaction id from raw transaction bytes
+// txID computes a transaction id base32 string from raw transaction bytes
 func txIDFromRawTxnBytesToSign(toBeSigned []byte) (txid string) {
 	txidBytes := sha512.Sum512_256(toBeSigned)
 	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
@@ -75,7 +75,8 @@ func txIDFromRawTxnBytesToSign(toBeSigned []byte) (txid string) {
 
 // txIDFromTransaction is a convenience function for generating txID from txn
 func txIDFromTransaction(tx types.Transaction) (txid string) {
-	txid = txIDFromRawTxnBytesToSign(rawTransactionBytesToSign(tx))
+	txidBytes := TransactionID(tx)
+	txid = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
 	return
 }
 

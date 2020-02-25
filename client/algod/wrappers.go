@@ -178,6 +178,7 @@ func (client Client) BlockRaw(round uint64, headers ...*Header) (blockbytes []by
 		return
 	}
 	defer resp.Body.Close()
+	// Current blocks are about 1MB. 10MB should be a safe backstop.
 	return responseReadAll(resp, 10000000)
 }
 
