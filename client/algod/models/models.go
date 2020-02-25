@@ -535,6 +535,99 @@ type AssetFreezeTransactionType struct {
 	NewFreezeStatus bool `json:"freeze"`
 }
 
+// KeyregTransactionType contains the additional fields for a keyreg Transaction
+// swagger:model KeyregTransactionType
+type KeyregTransactionType struct {
+	// VotePK is the participation public key used in key registration transactions
+	//
+	// required: false
+	// swagger:strfmt byte
+	VotePK []byte `json:"votekey"`
+
+	// SelectionPK is the VRF public key used in key registration transactions
+	//
+	// required: false
+	// swagger:strfmt byte
+	SelectionPK []byte `json:"selkey"`
+
+	// VoteFirst is the first round this participation key is valid
+	//
+	// required: false
+	VoteFirst uint64 `json:"votefst"`
+
+	// VoteLast is the last round this participation key is valid
+	//
+	// required: false
+	VoteLast uint64 `json:"votelst"`
+
+	// VoteKeyDilution is the dilution for the 2-level participation key
+	//
+	// required: false
+	VoteKeyDilution uint64 `json:"votekd"`
+}
+
+// AssetConfigTransactionType contains the additional fields for an asset config transaction
+// swagger:model AssetConfigTransactionType
+type AssetConfigTransactionType struct {
+	// AssetID is the asset being configured (or empty if creating)
+	//
+	// required: false
+	AssetID uint64 `json:"id"`
+
+	// Params specifies the new asset parameters (or empty if deleting)
+	//
+	// required: false
+	Params AssetParams `json:"params"`
+}
+
+// AssetTransferTransactionType contains the additional fields for an asset transfer transaction
+// swagger:model AssetTransferTransactionType
+type AssetTransferTransactionType struct {
+	// AssetID is the asset being configured (or empty if creating)
+	//
+	// required: true
+	AssetID uint64 `json:"id"`
+
+	// Amount is the amount being transferred.
+	//
+	// required: true
+	Amount uint64 `json:"amt"`
+
+	// Sender is the source account (if using clawback).
+	//
+	// required: false
+	Sender string `json:"snd"`
+
+	// Receiver is the recipient account.
+	//
+	// required: true
+	Receiver string `json:"rcv"`
+
+	// CloseTo is the destination for remaining funds (if closing).
+	//
+	// required: false
+	CloseTo string `json:"closeto"`
+}
+
+// AssetFreezeTransactionType contains the additional fields for an asset freeze transaction
+// swagger:model AssetFreezeTransactionType
+type AssetFreezeTransactionType struct {
+	// AssetID is the asset being configured (or empty if creating)
+	//
+	// required: true
+	AssetID uint64 `json:"id"`
+
+	// Account specifies the account where the asset is being frozen or thawed.
+	//
+	// required: true
+	Account string `json:"acct"`
+
+	// NewFreezeStatus specifies the new freeze status.
+	//
+	// required: true
+	NewFreezeStatus bool `json:"freeze"`
+}
+
 // TransactionList contains a list of transactions
 // swagger:model TransactionList
 type TransactionList struct {

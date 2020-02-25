@@ -71,3 +71,21 @@ func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxF
 	}
 	return htlc, err
 }
+
+// SignTransactionWithHTLCUnlock accepts a transaction, such as a payment, and builds the HTLC-unlocking signature around that transaction
+func SignTransactionWithHTLCUnlock(program []byte, txn types.Transaction, preImageAsBase64 string) (txid string, stx []byte, err error) {
+	preImageAsArgument, err := base64.StdEncoding.DecodeString(preImageAsBase64)
+	if err != nil {
+		return
+	}
+	args := make([][]byte, 1)
+	args[0] = preImageAsArgument
+	var blankMultisig crypto.MultisigAccount
+	lsig, err := crypto.MakeLogicSig(program, args, nil, blankMultisig)
+	if err != nil {
+		return
+	}
+	txn.Receiver = types.Address{} //txn must have no receiver but MakePayment et al disallow this.
+	txid, stx, err = crypto.SignLogicsigTransaction(lsig, txn)
+	return
+}
