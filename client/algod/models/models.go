@@ -476,10 +476,10 @@ type TransactionFee struct {
 	Fee uint64 `json:"fee"`
 }
 
-// SuggestedParams contains the parameters that help a client construct
+// TransactionParams contains the parameters that help a client construct
 // a new transaction.
-// swagger:model SuggestedParams
-type SuggestedParams struct {
+// swagger:model TransactionParams
+type TransactionParams struct {
 	// Fee is the suggested transaction fee
 	// Fee is in units of micro-Algos per byte.
 	// Fee may fall to zero but transactions must still have a fee of

@@ -136,7 +136,7 @@ func (client Client) SuggestedFee(headers ...*Header) (response models.Transacti
 }
 
 // SuggestedParams gets the suggested transaction parameters
-func (client Client) SuggestedParams(headers ...*Header) (response models.SuggestedParams, err error) {
+func (client Client) SuggestedParams(headers ...*Header) (response models.TransactionParams, err error) {
 	err = client.get(&response, "/transactions/params", nil, headers)
 	return
 }
