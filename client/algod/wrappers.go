@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // Status retrieves the StatusResponse from the running node
@@ -136,8 +137,15 @@ func (client Client) SuggestedFee(headers ...*Header) (response models.Transacti
 }
 
 // SuggestedParams gets the suggested transaction parameters
-func (client Client) SuggestedParams(headers ...*Header) (response models.TransactionParams, err error) {
-	err = client.get(&response, "/transactions/params", nil, headers)
+func (client Client) SuggestedParams(headers ...*Header) (response types.SuggestedParams, err error) {
+	var httpResponse models.TransactionParams
+	err = client.get(&httpResponse, "/transactions/params", nil, headers)
+	response.FlatFee = false
+	response.Fee = httpResponse.Fee
+	response.GenesisID = httpResponse.GenesisID
+	response.GenesisHash = httpResponse.GenesisHash
+	response.LastRound = httpResponse.LastRound
+	response.ConsensusVersion = httpResponse.ConsensusVersion
 	return
 }
 
