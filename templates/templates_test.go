@@ -50,7 +50,7 @@ func TestHTLC(t *testing.T) {
 	require.Equal(t, goldenAddress, c.GetAddress())
 	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, _ := base64.StdEncoding.DecodeString(genesisHash)
-	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, 0, 1, 100, nil, receiver, "", genesisBytes)
+	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver)
 	require.NoError(t, err)
 	preImageAsBase64 := "cHJlaW1hZ2U="
 	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)

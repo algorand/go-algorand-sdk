@@ -141,10 +141,11 @@ func (client Client) SuggestedParams(headers ...*Header) (response types.Suggest
 	var httpResponse models.TransactionParams
 	err = client.get(&httpResponse, "/transactions/params", nil, headers)
 	response.FlatFee = false
-	response.Fee = httpResponse.Fee
+	response.Fee = types.MicroAlgos(httpResponse.Fee)
 	response.GenesisID = httpResponse.GenesisID
 	response.GenesisHash = httpResponse.GenesisHash
-	response.LastRound = httpResponse.LastRound
+	response.FirstRoundValid = types.Round(httpResponse.LastRound)
+	response.LastRoundValid = types.Round(httpResponse.LastRound + 1000)
 	response.ConsensusVersion = httpResponse.ConsensusVersion
 	return
 }

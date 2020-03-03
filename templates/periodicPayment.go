@@ -39,7 +39,7 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee ui
 	}
 	lastValid := firstValid + withdrawWindow
 
-	txn, err := transaction.MakePaymentTxn(address.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, "", "", genesisHash)
+	txn, err := transaction.MakePaymentTxn(address.String(), receiver.String(), amount, nil, "")
 	if err != nil {
 		return nil, err
 	}

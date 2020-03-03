@@ -31,11 +31,11 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, contract, secr
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
 	contractAddress := crypto.AddressFromProgram(contract)
-	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), fee, microAlgoAmount, firstRound, lastRound, nil, "", "", genesisHash)
+	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), microAlgoAmount, nil, "", )
 	if err != nil {
 		return nil, err
 	}
-	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, lo.owner, assetAmount, fee, firstRound, lastRound, nil, "", base64.StdEncoding.EncodeToString(genesisHash), lo.assetID)
+	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, assetAmount, nil,, lo.owner, lo.assetID)
 	if err != nil {
 		return nil, err
 	}

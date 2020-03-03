@@ -62,11 +62,11 @@ func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fe
 	}
 
 	from := crypto.AddressFromProgram(contract)
-	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), amountForReceiverOne, nil, "")
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
+	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), amountForReceiverTwo, nil, "")
 	if err != nil {
 		return nil, err
 	}

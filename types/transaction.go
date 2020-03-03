@@ -156,7 +156,7 @@ type SuggestedParams struct {
 	// Fee is in units of micro-Algos per byte.
 	// Fee may fall to zero but transactions must still have a fee of
 	// at least MinTxnFee for the current network protocol.
-	Fee uint64
+	Fee MicroAlgos
 
 	// Genesis ID
 	GenesisID string
@@ -164,8 +164,11 @@ type SuggestedParams struct {
 	// Genesis hash
 	GenesisHash []byte
 
-	// LastRound indicates the last round seen
-	LastRound uint64
+	// FirstRoundValid is the first protocol round on which the txn is valid
+	FirstRoundValid Round
+
+	// LastRoundValid is the final protocol round on which the txn may be committed
+	LastRoundValid Round
 
 	// ConsensusVersion indicates the consensus protocol version
 	// as of LastRound.
