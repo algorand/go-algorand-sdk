@@ -96,7 +96,17 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 	copy(address[:], privateKey[ed25519.PublicKeySize:])
 	genesisHash := make([]byte, 32)
 	copy(genesisHash[:], txn.GenesisHash[:])
-	feePayTxn, err := transaction.MakePaymentTxn(address.String(), txn.Sender.String(), uint64(txn.Fee), nil, "")
+
+	params := types.SuggestedParams{
+		Fee:             txn.Fee,
+		GenesisID:       txn.GenesisID,
+		GenesisHash:     genesisHash,
+		FirstRoundValid: txn.FirstValid,
+		LastRoundValid:  txn.LastValid,
+		FlatFee:         false,
+	}
+
+	feePayTxn, err := transaction.MakePaymentTxn(address.String(), txn.Sender.String(), uint64(txn.Fee), nil, "", params)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +160,16 @@ func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash 
 	copy(address[:], privateKey[ed25519.PublicKeySize:])
 
 	fee := uint64(0)
-	txn, err = transaction.MakePaymentTxn(address.String(), receiver.String(), amount, nil, closeRemainderTo.String())
+	params := types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       "",
+		GenesisHash:     genesisHash,
+		FirstRoundValid: types.Round(firstValid),
+		LastRoundValid:  types.Round(lastValid),
+		FlatFee:         false,
+	}
+
+	txn, err = transaction.MakePaymentTxn(address.String(), receiver.String(), amount, nil, closeRemainderTo.String(), params)
 	if err != nil {
 		return
 	}
