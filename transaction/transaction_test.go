@@ -137,7 +137,7 @@ func TestMakeKeyRegTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	ghAsArray := byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 	params := types.SuggestedParams{
-		Fee:             4,
+		Fee:             10,
 		FirstRoundValid: 322575,
 		LastRoundValid:  323575,
 		GenesisHash:     ghAsArray[:],
