@@ -98,7 +98,7 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 	copy(genesisHash[:], txn.GenesisHash[:])
 
 	params := types.SuggestedParams{
-		Fee:             txn.Fee,
+		Fee:             types.MicroAlgos(fee),
 		GenesisID:       txn.GenesisID,
 		GenesisHash:     genesisHash,
 		FirstRoundValid: txn.FirstValid,
