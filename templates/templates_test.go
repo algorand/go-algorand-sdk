@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/base64"
+	"github.com/algorand/go-algorand-sdk/types"
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -28,7 +29,13 @@ func TestSplit(t *testing.T) {
 	goldenGenesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, _ := base64.StdEncoding.DecodeString(goldenGenesisHash)
 	goldenStx := "gqRsc2lngaFsxM4BIAgBwJaxAgIAwMQHZB6QTiYDILO3BCfT4PJw36+yT68lZyyjP9vs0NLqLfcc6S9Ol/5iILepSkiAcZYTz/Us+H1IYJqVI3shohN55ZJdt+xLnCxfILiQFDfxnzNzBZUDKbhLy+kUH9zRcLpHiac+L0QEAOw8MRAiEjEBIwwQMgQkEkAAGTEJKBIxBzIDEhAxCCUSEDECIQQNECJAAC4zAAAzAQASMQkyAxIQMwAHKRIQMwEHKhIQMwAIIQULMwEIIQYLEhAzAAghBw8QEKN0eG6Jo2FtdM4ABJPgo2ZlZc4AId/gomZ2AaJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjZ3JwxCBLA74bTV35FJNL1h0K9ZbRU24b4M1JRkD1YTogvvDXbqJsdmSjcmN2xCC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsX6NzbmTEIDjx8HKnDaFoZSEjASK6mVBaawWJIylwGzyT0Rh4WuMSpHR5cGWjcGF5gqRsc2lngaFsxM4BIAgBwJaxAgIAwMQHZB6QTiYDILO3BCfT4PJw36+yT68lZyyjP9vs0NLqLfcc6S9Ol/5iILepSkiAcZYTz/Us+H1IYJqVI3shohN55ZJdt+xLnCxfILiQFDfxnzNzBZUDKbhLy+kUH9zRcLpHiac+L0QEAOw8MRAiEjEBIwwQMgQkEkAAGTEJKBIxBzIDEhAxCCUSEDECIQQNECJAAC4zAAAzAQASMQkyAxIQMwAHKRIQMwEHKhIQMwAIIQULMwEIIQYLEhAzAAghBw8QEKN0eG6Jo2FtdM4AD0JAo2ZlZc4AId/gomZ2AaJnaMQgf4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGmjZ3JwxCBLA74bTV35FJNL1h0K9ZbRU24b4M1JRkD1YTogvvDXbqJsdmSjcmN2xCC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPKNzbmTEIDjx8HKnDaFoZSEjASK6mVBaawWJIylwGzyT0Rh4WuMSpHR5cGWjcGF5"
-	stx, err := GetSplitFundsTransaction(c.GetProgram(), minPay*(ratd+ratn))
+	params := types.SuggestedParams{
+		Fee:             10000,
+		FirstRoundValid: 1,
+		LastRoundValid:  100,
+		GenesisHash:     genesisBytes,
+	}
+	stx, err := GetSplitFundsTransaction(c.GetProgram(), minPay*(ratd+ratn), params)
 	require.NoError(t, err)
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
@@ -50,7 +57,14 @@ func TestHTLC(t *testing.T) {
 	require.Equal(t, goldenAddress, c.GetAddress())
 	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
 	genesisBytes, _ := base64.StdEncoding.DecodeString(genesisHash)
-	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver)
+	params := types.SuggestedParams{
+		Fee:             0,
+		FirstRoundValid: 1,
+		LastRoundValid:  100,
+		GenesisID:       "",
+		GenesisHash:     genesisBytes,
+	}
+	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver, params)
 	require.NoError(t, err)
 	preImageAsBase64 := "cHJlaW1hZ2U="
 	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)
