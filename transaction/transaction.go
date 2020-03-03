@@ -80,12 +80,8 @@ func MakePaymentTxn(from, to string, amount uint64, note []byte, closeRemainderT
 
 // MakeKeyRegTxn constructs a keyreg transaction using the passed parameters.
 // - account is a checksummed, human-readable address for which we register the given participation key.
-// - fee is fee per byte as received from algod SuggestedFee API call.
-// - firstRound is the first round this txn is valid (txn semantics unrelated to key registration)
-// - lastRound is the last round this txn is valid
 // - note is a byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // KeyReg parameters:
 // - votePK is a base64-encoded string corresponding to the root participation public key
 // - selectionKey is a base64-encoded string corresponding to the vrf public key
@@ -154,12 +150,8 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 
 // MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address which will send the transaction.
-// - fee is fee per byte as received from algod SuggestedFee API call.
-// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
-// - lastRound is the last round this txn is valid
 // - note is a byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // Asset creation parameters:
 // - see asset.go
 func MakeAssetCreateTxn(account string, note []byte, params types.SuggestedParams, total uint64, decimals uint32, defaultFrozen bool, manager, reserve, freeze, clawback string, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
@@ -271,12 +263,8 @@ func MakeAssetCreateTxn(account string, note []byte, params types.SuggestedParam
 //    The current manager, you must specify its address again.
 //	Parameters -
 // - account is a checksummed, human-readable address that will send the transaction
-// - feePerByte  is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
-// - lastRound is the last round this txn is valid
 // - note is an arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // - index is the asset index id
 // - for newManager, newReserve, newFreeze, newClawback see asset.go
 // - strictEmptyAddressChecking: if true, disallow empty admin accounts from being set (preventing accidental disable of admin features)
@@ -428,14 +416,10 @@ func transferAssetBuilder(account, recipient string, amount uint64, note []byte,
 // the recipient address must have previously issued an asset acceptance transaction for this asset
 // - account is a checksummed, human-readable address that will send the transaction and assets
 // - recipient is a checksummed, human-readable address what will receive the assets
-// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
 // - amount is the number of assets to send
-// - feePerByte is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
-// - lastRound is the last round this txn is valid
 // - note is an arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+// - closeAssetsTo is a checksummed, human-readable address that behaves as a close-to address for the asset transaction; the remaining assets not sent to recipient will be sent to closeAssetsTo. Leave blank for no close-to behavior.
 // - index is the asset index
 func MakeAssetTransferTxn(account, recipient string, amount uint64, note []byte, params types.SuggestedParams, closeAssetsTo string, index uint64) (types.Transaction, error) {
 	revocationTarget := "" // no asset revocation, this is normal asset transfer
@@ -444,12 +428,8 @@ func MakeAssetTransferTxn(account, recipient string, amount uint64, note []byte,
 
 // MakeAssetAcceptanceTxn creates a tx for marking an account as willing to accept the given asset
 // - account is a checksummed, human-readable address that will send the transaction and begin accepting the asset
-// - feePerByte is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
-// - lastRound is the last round this txn is valid
 // - note is an arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // - index is the asset index
 func MakeAssetAcceptanceTxn(account string, note []byte, params types.SuggestedParams, index uint64) (types.Transaction, error) {
 	return MakeAssetTransferTxn(account, account, 0, note, params, "", index)
@@ -459,12 +439,8 @@ func MakeAssetAcceptanceTxn(account string, note []byte, params types.SuggestedP
 // - account is a checksummed, human-readable address; it must be the revocation manager / clawback address from the asset's parameters
 // - target is a checksummed, human-readable address; it is the account whose assets will be revoked
 // - recipient is a checksummed, human-readable address; it will receive the revoked assets
-// - feePerByte is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
-// - lastRound is the last round this txn is valid
-// - note is an arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - amount defines the number of assets to clawback
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // - index is the asset index
 func MakeAssetRevocationTxn(account, target string, amount uint64, recipient string, note []byte, params types.SuggestedParams, index uint64) (types.Transaction, error) {
 	closeAssetsTo := "" // no close-out, this is an asset revocation
@@ -474,11 +450,7 @@ func MakeAssetRevocationTxn(account, target string, amount uint64, recipient str
 // MakeAssetDestroyTxn creates a tx template for destroying an asset, removing it from the record.
 // All outstanding asset amount must be held by the creator, and this transaction must be issued by the asset manager.
 // - account is a checksummed, human-readable address that will send the transaction; it also must be the asset manager
-// - fee is a fee per byte
-// - firstRound is the first round this txn is valid (txn semantics unrelated to asset management)
-// - lastRound is the last round this txn is valid
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // - index is the asset index
 func MakeAssetDestroyTxn(account string, note []byte, params types.SuggestedParams, index uint64) (types.Transaction, error) {
 	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
@@ -488,12 +460,8 @@ func MakeAssetDestroyTxn(account string, note []byte, params types.SuggestedPara
 // MakeAssetFreezeTxn constructs a transaction that freezes or unfreezes an account's asset holdings
 // It must be issued by the freeze address for the asset
 // - account is a checksummed, human-readable address which will send the transaction.
-// - fee is fee per byte as received from algod SuggestedFee API call.
-// - firstRound is the first round this txn is valid (txn semantics unrelated to the asset)
-// - lastRound is the last round this txn is valid
 // - note is an optional arbitrary byte array
-// - genesis id corresponds to the id of the network
-// - genesis hash corresponds to the base64-encoded hash of the genesis of the network
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 // - assetIndex is the index for tracking the asset
 // - target is the account to be frozen or unfrozen
 // - newFreezeSetting is the new state of the target account
