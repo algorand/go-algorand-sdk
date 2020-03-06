@@ -406,13 +406,13 @@ func main() {
 
 	// Get the suggested transaction parameters
 	txParams, err := algodClient.SuggestedParams()
-        if err != nil {
-                fmt.Printf("error getting suggested tx params: %s\n", err)
-                return
-        }
+		if err != nil {
+				fmt.Printf("error getting suggested tx params: %s\n", err)
+				return
+		}
 
 	// Make transaction
-	tx, err := transaction.MakePaymentTxn(fromAddr, toAddr, 1000, nil, "", txParams)
+	tx, err := future.MakePaymentTxn(fromAddr, toAddr, 1000, nil, "", txParams)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -469,13 +469,13 @@ func main() {
 	const amount = 20000
 	const firstRound = 642715
 	const lastRound = firstRound + 1000
-    params := types.SuggestedParams {
-        Fee: types.MicroAlgos(fee),
-        FirstRoundValid: firstRound,
-        LastRoundValid: lastRound,
-        GenesisHash: []byte("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="),
-    }
-	tx, err := transaction.MakePaymentTxn(
+	params := types.SuggestedParams {
+		Fee: types.MicroAlgos(fee),
+		FirstRoundValid: firstRound,
+		LastRoundValid: lastRound,
+		GenesisHash: []byte("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="),
+	}
+	tx, err := future.MakePaymentTxn(
 		account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4",
 		amount, nil, "", params
 	)
@@ -566,19 +566,19 @@ if err != nil {
 }
 fromAddr, _ := ma.Address()
 params := types.SuggestedParams {
-    Fee: types.MicroAlgos(fee), // fee per byte, unless FlatFee is true
-    FlatFee: false,
-    FirstRoundValid: types.Round(100000),
-    LastRoundValid: types.Round(101000),
-    GenesisHash: []byte, // cannot be empty in practice
+	Fee: types.MicroAlgos(fee), // fee per byte, unless FlatFee is true
+	FlatFee: false,
+	FirstRoundValid: types.Round(100000),
+	LastRoundValid: types.Round(101000),
+	GenesisHash: []byte, // cannot be empty in practice
 }
-txn, err := transaction.MakePaymentTxn(
+txn, err := future.MakePaymentTxn(
 	fromAddr.String(),
 	"INSERTTOADDRESHERE",
 	10000,  // amount
-	nil,    // note
-	"",     // closeRemainderTo
-    params  
+	nil,	// note
+	"",	 // closeRemainderTo
+	params  
 )
 txid, txBytes, err := crypto.SignMultisigTransaction(secretKey, ma, txn)
 if err != nil {
@@ -659,19 +659,19 @@ func submitGroup() {
 	const fee = 1000
 	const amount1 = 2000
 	var note []byte
-	const genesisID = "XYZ"      // replace me
+	const genesisID = "XYZ"	  // replace me
 	genesisHash := []byte("ABC") // replace me
 
 	const firstRound1 = 710399
-    params := types.SuggestedParams {
-        Fee: types.MicroAlgos(fee),
-        FlatFee: true,
-        FirstRoundValid: types.Round(firstRound1),
-        LastRoundValid: types.Round(firstRound1+1000),
-        GenesisHash: genesisHash, 
-        GenesisID: genesisID,
-    }
-	tx1, err := transaction.MakePaymentTxn(
+	params := types.SuggestedParams {
+		Fee: types.MicroAlgos(fee),
+		FlatFee: true,
+		FirstRoundValid: types.Round(firstRound1),
+		LastRoundValid: types.Round(firstRound1+1000),
+		GenesisHash: genesisHash, 
+		GenesisID: genesisID,
+	}
+	tx1, err := future.MakePaymentTxn(
 		address1, address2, amount1,
 		note, "", params
 	)
@@ -681,10 +681,10 @@ func submitGroup() {
 	}
 
 	const firstRound2 = 710515
-    params.FirstRoundValid = types.Round(firstRound2)
-    params.LastRoundValid = types.Round(firstRound2 + 1000)
+	params.FirstRoundValid = types.Round(firstRound2)
+	params.LastRoundValid = types.Round(firstRound2 + 1000)
 	const amount2 = 1500
-	tx2, err := transaction.MakePaymentTxn(
+	tx2, err := future.MakePaymentTxn(
 		address2, address3, amount2,
 		note, "", params
 	)
@@ -775,19 +775,19 @@ func main() {
 	const fee = 1000
 	const amount = 2000
 	var note []byte
-	const genesisID = "XYZ"      // replace me
+	const genesisID = "XYZ"	  // replace me
 	genesisHash := []byte("ABC") // replace me
 
 	const firstRound = 710399
-    params := types.SuggestedParams {
-        Fee: types.MicroAlgos(fee),
-        FlatFee: true,
-        FirstRoundValid: types.Round(firstRound),
-        LastRoundValid: types.Round(firstRound+1000),
-        GenesisHash: genesisHash, 
-        GenesisID: genesisID,
-    }
-	tx, err := transaction.MakePaymentTxn(
+	params := types.SuggestedParams {
+		Fee: types.MicroAlgos(fee),
+		FlatFee: true,
+		FirstRoundValid: types.Round(firstRound),
+		LastRoundValid: types.Round(firstRound+1000),
+		GenesisHash: genesisHash, 
+		GenesisID: genesisID,
+	}
+	tx, err := future.MakePaymentTxn(
 		sender.String(), receiver, amount,
 		note, "", params
 	)
@@ -816,7 +816,7 @@ Asset creation: This allows a user to issue a new asset. The user can define the
 whether there is an account that can revoke assets, whether there is an account that can freeze user accounts, 
 whether there is an account that can be considered the asset reserve, and whether there is an account that can change
 the other accounts. The creating user can also do things like specify a name for the asset.
-                                                                        
+																		
 ```golang
 addr := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4" // the account issuing the transaction; the asset creator
 fee := types.MicroAlgos(10) // the number of microAlgos per byte to pay as a transaction fee
@@ -838,17 +838,17 @@ assetURL := "http://someurl" // optional string pointing to a URL relating to th
 assetMetadataHash := "thisIsSomeLength32HashCommitment" // optional hash commitment of some sort relating to the asset. 32 character length.
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 
 // signing and sending "txn" allows "addr" to create an asset
 txn, err = MakeAssetCreateTxn(addr, note, params,
-    totalIssuance, decimals, defaultFrozen, manager, reserve, freeze, clawback,
-    unitName, assetName, assetURL, assetMetadataHash)
+	totalIssuance, decimals, defaultFrozen, manager, reserve, freeze, clawback,
+	unitName, assetName, assetURL, assetMetadataHash)
 ```
 
 
@@ -858,7 +858,7 @@ Supplying an empty address is the same as turning the associated feature off for
 is set to the empty address, it can never change again. For example, if an asset configuration transaction specifying
 `clawback=""` were issued, the associated asset could never be revoked from asset holders, and `clawback=""` would be
 true for all time. The `strictEmptyAddressChecking` argument can help guard against this, it causes
-`MakeAssetConfigTxn` return error if any management address is set to empty.                 
+`MakeAssetConfigTxn` return error if any management address is set to empty.				 
 
 ```golang
 addr := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
@@ -876,17 +876,17 @@ manager := addr
 strictEmptyAddressChecking := true
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 
 // signing and sending "txn" will allow the asset manager to change:
 // asset manager, asset reserve, asset freeze manager, asset revocation manager 
 txn, err = MakeAssetConfigTxn(addr, note, params,
-    assetIndex, manager, reserve, freeze, clawback, strictEmptyAddressChecking)
+	assetIndex, manager, reserve, freeze, clawback, strictEmptyAddressChecking)
 ```
 
 
@@ -904,11 +904,11 @@ genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8Fmnr
 assetIndex := uint64(1234)
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 // if all outstanding assets are held by the asset creator,
 // the asset creator can sign and issue "txn" to remove the asset from the ledger. 
@@ -917,7 +917,7 @@ txn, err = MakeAssetDestroyTxn(addr, note, params, assetIndex)
 
 Begin accepting an asset: Before a user can begin transacting with an asset, the user must first issue an asset acceptance transaction.
 This is a special case of the asset transfer transaction, where the user sends 0 assets to themself. After issuing this transaction,
-the user can begin transacting with the asset. Each new accepted asset increases the user's minimum balance.                                                                                                                               
+the user can begin transacting with the asset. Each new accepted asset increases the user's minimum balance.																															   
 
 ```golang
 addr := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
@@ -930,11 +930,11 @@ genesisHash, _ := base64.StdEncoding.DecodeString("SGO1GKSzyE7IEPItTxCByw9x8Fmnr
 assetIndex := uint64(1234)
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 // signing and sending "txn" allows sender to begin accepting asset specified by creator and index
 txn, err = MakeAssetAcceptanceTxn(addr, note, params, assetIndex)
@@ -943,7 +943,7 @@ txn, err = MakeAssetAcceptanceTxn(addr, note, params, assetIndex)
 
 Transfer an asset: This allows users to transact with assets, after they have issued asset acceptance transactions. The
 optional `closeRemainderTo` argument can be used to stop transacting with a particular asset. Note: A frozen account can always close
-out to the asset creator.                                                                                                             
+out to the asset creator.																											 
 ```golang
 addr := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4" 
 sender := addr
@@ -959,11 +959,11 @@ assetIndex := uint64(1234)
 amount := uint64(10)
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 
 // signing and sending "txn" will send "amount" assets from "sender" to "recipient"
@@ -974,7 +974,7 @@ Revoke an asset: This allows an asset's revocation manager to transfer assets on
 issued by the asset's revocation manager.
 ```golang
 revocationManager := "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4" // txn signed by this address
-recipient := "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"         // assets sent to this address
+recipient := "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"		 // assets sent to this address
 revocationTarget := "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"  // assets come from this address
 fee := types.MicroAlgos(10)
 firstRound := types.Round(322575) 
@@ -986,11 +986,11 @@ assetIndex := uint64(1234)
 amount := uint64(10)
 
 params := types.SuggestedParams {
-    Fee: fee,
-    FirstRoundValid: firstRound,
-    LastRoundValid: lastRound,
-    GenesisHash: genesisHash, 
-    GenesisID: genesisID,
+	Fee: fee,
+	FirstRoundValid: firstRound,
+	LastRoundValid: lastRound,
+	GenesisHash: genesisHash, 
+	GenesisID: genesisID,
 }
 
 // signing and sending "txn" will send "amount" assets from "revocationTarget" to "recipient",
