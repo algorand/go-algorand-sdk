@@ -34,14 +34,7 @@ func TestMakePaymentTxn(t *testing.T) {
 	const golden = "gqNzaWfEQPhUAZ3xkDDcc8FvOVo6UinzmKBCqs0woYSfodlmBMfQvGbeUx3Srxy3dyJDzv7rLm26BRv9FnL2/AuT7NYfiAWjdHhui6NhbXTNA+ilY2xvc2XEIEDpNJKIJWTLzpxZpptnVCaJ6aHDoqnqW2Wm6KRCH/xXo2ZlZc0EmKJmds0wsqNnZW6sZGV2bmV0LXYzMy4womdoxCAmCyAJoJOohot5WHIvpeVG7eftF+TYXEx4r7BFJpDt0qJsds00mqRub3RlxAjqABVHQ2y/lqNyY3bEIHts4k/rW6zAsWTinCIsV/X2PcOH1DkEglhBHF/hD3wCo3NuZMQg5/D4TQaBHfnzHI2HixFV9GcdUaGFwgCQhmf0SVhwaKGkdHlwZaNwYXk="
 	gh := byteFromBase64("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI=")
 
-	params := types.SuggestedParams{
-		Fee:             4,
-		FirstRoundValid: 12466,
-		LastRoundValid:  13466,
-		GenesisID:       "devnet-v33.0",
-		GenesisHash:     gh,
-	}
-	txn, err := MakePaymentTxn(fromAddress, toAddress, 1000, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", params)
+	txn, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", gh)
 	require.NoError(t, err)
 
 	key, err := mnemonic.ToPrivateKey(mn)
@@ -59,14 +52,10 @@ func TestMakePaymentTxn(t *testing.T) {
 func TestMakePaymentTxn2(t *testing.T) {
 	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
-	params := types.SuggestedParams{
-		Fee:             4,
-		FirstRoundValid: 12466,
-		LastRoundValid:  13466,
-		GenesisID:       "devnet-v33.0",
-	}
-	_, err := MakePaymentTxn(fromAddress, toAddress, 1000, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", params)
+
+	_, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", []byte{})
 	require.Error(t, err)
+
 }
 
 func TestMakePaymentTxnWithLease(t *testing.T) {
@@ -76,15 +65,9 @@ func TestMakePaymentTxnWithLease(t *testing.T) {
 	const mn = "advice pudding treat near rule blouse same whisper inner electric quit surface sunny dismiss leader blood seat clown cost exist hospital century reform able sponsor"
 	const golden = "gqNzaWfEQOMmFSIKsZvpW0txwzhmbgQjxv6IyN7BbV5sZ2aNgFbVcrWUnqPpQQxfPhV/wdu9jzEPUU1jAujYtcNCxJ7ONgejdHhujKNhbXTNA+ilY2xvc2XEIEDpNJKIJWTLzpxZpptnVCaJ6aHDoqnqW2Wm6KRCH/xXo2ZlZc0FLKJmds0wsqNnZW6sZGV2bmV0LXYzMy4womdoxCAmCyAJoJOohot5WHIvpeVG7eftF+TYXEx4r7BFJpDt0qJsds00mqJseMQgAQIDBAECAwQBAgMEAQIDBAECAwQBAgMEAQIDBAECAwSkbm90ZcQI6gAVR0Nsv5ajcmN2xCB7bOJP61uswLFk4pwiLFf19j3Dh9Q5BIJYQRxf4Q98AqNzbmTEIOfw+E0GgR358xyNh4sRVfRnHVGhhcIAkIZn9ElYcGihpHR5cGWjcGF5"
 	gh := byteFromBase64("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI=")
-	params := types.SuggestedParams{
-		Fee:             4,
-		FirstRoundValid: 12466,
-		LastRoundValid:  13466,
-		GenesisID:       "devnet-v33.0",
-		GenesisHash:     gh,
-	}
+
 	lease := [32]byte{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
-	txn, err := MakePaymentTxn(fromAddress, toAddress, 1000, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", params)
+	txn, err := MakePaymentTxn(fromAddress, toAddress, 4, 1000, 12466, 13466, byteFromBase64("6gAVR0Nsv5Y="), "IDUTJEUIEVSMXTU4LGTJWZ2UE2E6TIODUKU6UW3FU3UKIQQ77RLUBBBFLA", "devnet-v33.0", gh)
 	require.NoError(t, err)
 	txn.AddLease(lease, 4)
 	require.NoError(t, err)
@@ -135,14 +118,8 @@ func TestKeyRegTxn(t *testing.T) {
 
 func TestMakeKeyRegTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
-	ghAsArray := byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: 322575,
-		LastRoundValid:  323575,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeKeyRegTxn(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11)
+	tx, err := MakeKeyRegTxn(addr, 10, 322575, 323575, []byte{45, 67}, "", "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
+		"Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -173,7 +150,6 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const defaultFrozen = false
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const total = 100
 	const reserve = addr
 	const freeze = addr
@@ -182,13 +158,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const assetName = "testcoin"
 	const testURL = "website"
 	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: 322575,
-		LastRoundValid:  323575,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetCreateTxn(addr, nil, params, total, 0, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash, total, 0, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -230,7 +200,6 @@ func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const defaultFrozen = false
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const total = 100
 	const decimals = 1
 	const reserve = addr
@@ -240,13 +209,7 @@ func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
 	const assetName = "testcoin"
 	const testURL = "website"
 	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: 322575,
-		LastRoundValid:  323575,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetCreateTxn(addr, nil, params, total, decimals, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
+	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash, total, decimals, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -288,19 +251,13 @@ func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
 func TestMakeAssetConfigTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const manager = addr
 	const reserve = addr
 	const freeze = addr
 	const clawback = addr
 	const assetIndex = 1234
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: 322575,
-		LastRoundValid:  323575,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetConfigTxn(addr, nil, params, assetIndex, manager, reserve, freeze, clawback, false)
+	tx, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
+		assetIndex, manager, reserve, freeze, clawback, false)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -337,37 +294,24 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 func TestMakeAssetConfigTxnStrictChecking(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const manager = addr
 	const reserve = addr
 	const freeze = ""
 	const clawback = addr
 	const assetIndex = 1234
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: 322575,
-		LastRoundValid:  323575,
-		GenesisHash:     ghAsArray[:],
-	}
-	_, err := MakeAssetConfigTxn(addr, nil, params, assetIndex, manager, reserve, freeze, clawback, true)
+	_, err := MakeAssetConfigTxn(addr, 10, 322575, 323575, nil, "", genesisHash,
+		assetIndex, manager, reserve, freeze, clawback, true)
 	require.Error(t, err)
 }
 
 func TestMakeAssetDestroyTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const creator = addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: firstValidRound,
-		LastRoundValid:  lastValidRound,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetDestroyTxn(creator, nil, params, assetIndex)
+	tx, err := MakeAssetDestroyTxn(creator, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(creator)
@@ -399,19 +343,12 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 func TestMakeAssetFreezeTxn(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323576
 	const freezeSetting = true
 	const target = addr
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: firstValidRound,
-		LastRoundValid:  lastValidRound,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetFreezeTxn(addr, nil, params, assetIndex, target, freezeSetting)
+	tx, err := MakeAssetFreezeTxn(addr, 10, firstValidRound, lastValidRound, nil, "", genesisHash, assetIndex, target, freezeSetting)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -448,19 +385,14 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const sender, recipient, closeAssetsTo = addr, addr, addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323576
 	const amountToSend = 1
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: firstValidRound,
-		LastRoundValid:  lastValidRound,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetTransferTxn(sender, recipient, amountToSend, nil, params, closeAssetsTo, assetIndex)
+
+	tx, err := MakeAssetTransferTxn(sender, recipient, closeAssetsTo, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -503,17 +435,12 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 func TestMakeAssetAcceptanceTxn(t *testing.T) {
 	const sender = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: firstValidRound,
-		LastRoundValid:  lastValidRound,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetAcceptanceTxn(sender, nil, params, assetIndex)
+
+	tx, err := MakeAssetAcceptanceTxn(sender, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(sender)
@@ -549,20 +476,14 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 func TestMakeAssetRevocationTransaction(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	const genesisHash = "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
-	ghAsArray := byte32ArrayFromBase64(genesisHash)
 	const revoker, recipient, revoked = addr, addr, addr
 	const assetIndex = 1
 	const firstValidRound = 322575
 	const lastValidRound = 323575
 	const amountToSend = 1
 
-	params := types.SuggestedParams{
-		Fee:             10,
-		FirstRoundValid: firstValidRound,
-		LastRoundValid:  lastValidRound,
-		GenesisHash:     ghAsArray[:],
-	}
-	tx, err := MakeAssetRevocationTxn(revoker, revoked, amountToSend, recipient, nil, params, assetIndex)
+	tx, err := MakeAssetRevocationTxn(revoker, revoked, recipient, amountToSend, 10, firstValidRound,
+		lastValidRound, nil, "", genesisHash, assetIndex)
 	require.NoError(t, err)
 
 	sendAddr, err := types.DecodeAddress(revoker)
@@ -614,29 +535,19 @@ func TestComputeGroupID(t *testing.T) {
 	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
 
 	const firstRound1 = 710399
-	params1 := types.SuggestedParams{
-		Fee:             fee,
-		FirstRoundValid: firstRound1,
-		LastRoundValid:  firstRound1 + 1000,
-		GenesisHash:     genesisHash,
-		GenesisID:       genesisID,
-		FlatFee:         true,
-	}
 	note1 := byteFromBase64("wRKw5cJ0CMo=")
-	tx1, err := MakePaymentTxn(fromAddress, toAddress, amount, note1, "", params1)
+	tx1, err := MakePaymentTxnWithFlatFee(
+		fromAddress, toAddress, fee, amount, firstRound1, firstRound1+1000,
+		note1, "", genesisID, genesisHash,
+	)
 	require.NoError(t, err)
 
 	const firstRound2 = 710515
-	params2 := types.SuggestedParams{
-		Fee:             fee,
-		FirstRoundValid: firstRound2,
-		LastRoundValid:  firstRound2 + 1000,
-		GenesisHash:     genesisHash,
-		GenesisID:       genesisID,
-		FlatFee:         true,
-	}
 	note2 := byteFromBase64("dBlHI6BdrIg=")
-	tx2, err := MakePaymentTxn(fromAddress, toAddress, amount, note2, "", params2)
+	tx2, err := MakePaymentTxnWithFlatFee(
+		fromAddress, toAddress, fee, amount, firstRound2, firstRound2+1000,
+		note2, "", genesisID, genesisHash,
+	)
 	require.NoError(t, err)
 
 	const goldenTx1 = "gaN0eG6Ko2FtdM0H0KNmZWXNA+iiZnbOAArW/6NnZW6rZGV2bmV0LXYxLjCiZ2jEILAtz+3tknW6iiStLW4gnSvbXUqW3ul3ghinaDc5pY9Bomx2zgAK2uekbm90ZcQIwRKw5cJ0CMqjcmN2xCCj8AKs8kPYlx63ppj1w5410qkMRGZ9FYofNYPXxGpNLKNzbmTEIKPwAqzyQ9iXHremmPXDnjXSqQxEZn0Vih81g9fEak0spHR5cGWjcGF5"
@@ -690,15 +601,10 @@ func TestLogicSig(t *testing.T) {
 	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
 	note := byteFromBase64("8xMCTuLQ810=")
 
-	params := types.SuggestedParams{
-		Fee:             fee,
-		FirstRoundValid: firstRound,
-		LastRoundValid:  firstRound + 1000,
-		GenesisHash:     genesisHash,
-		GenesisID:       genesisID,
-		FlatFee:         true,
-	}
-	tx, err := MakePaymentTxn(fromAddress, toAddress, amount, note, "", params)
+	tx, err := MakePaymentTxnWithFlatFee(
+		fromAddress, toAddress, fee, amount, firstRound, firstRound+1000,
+		note, "", genesisID, genesisHash,
+	)
 	require.NoError(t, err)
 
 	// goal clerk send -o tx3 -a 2000 --fee 1000 -d ~/.algorand -w test -L sig.lsig --argb64 MTIz --argb64 NDU2 \
