@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/types"
 	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
-	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // Status retrieves the StatusResponse from the running node
@@ -137,7 +137,14 @@ func (client Client) SuggestedFee(headers ...*Header) (response models.Transacti
 }
 
 // SuggestedParams gets the suggested transaction parameters
-func (client Client) SuggestedParams(headers ...*Header) (response types.SuggestedParams, err error) {
+func (client Client) SuggestedParams(headers ...*Header) (response models.TransactionParams, err error) {
+	err = client.get(&response, "/transactions/params", nil, headers)
+	return
+}
+
+// BuildSuggestedParams gets the suggested transaction parameters and
+// builds a types.SuggestedParams to pass to transaction builders (see package future)
+func (client Client) BuildSuggestedParams(headers ...*Header) (response types.SuggestedParams, err error) {
 	var httpResponse models.TransactionParams
 	err = client.get(&httpResponse, "/transactions/params", nil, headers)
 	response.FlatFee = false
