@@ -112,10 +112,7 @@ func main() {
 		return
 	}
 
-	// Sign a sample transaction using this library, *not* kmd
-	genID := txParams.GenesisID
-	genHash := txParams.GenesisHash
-	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 1, 100, 300, 400, nil, "", genID, genHash)
+	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 100, nil, "", txParams)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return

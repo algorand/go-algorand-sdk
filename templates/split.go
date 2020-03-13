@@ -26,11 +26,8 @@ type Split struct {
 // the returned byte array is suitable for passing to SendRawTransaction
 // contract: the bytecode of the contract to be used
 // amount: uint64 total number of algos to be transferred (payment1_amount + payment2_amount)
-// firstRound: uint64 first protocol round on which the txn is valid
-// lastRound: uint64 last protocol round on which the txn is valid
-// fee: uint64 the fee per byte, in microalgos, to be used for each txn
-// genesisHash: byte slice representing the network for the transactions
-func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
+// params: is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+func GetSplitFundsTransaction(contract []byte, amount uint64, params types.SuggestedParams) ([]byte, error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return nil, err
@@ -62,11 +59,11 @@ func GetSplitFundsTransaction(contract []byte, amount, firstRound, lastRound, fe
 	}
 
 	from := crypto.AddressFromProgram(contract)
-	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), amountForReceiverOne, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
+	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), amountForReceiverTwo, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
