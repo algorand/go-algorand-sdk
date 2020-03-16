@@ -1,39 +1,42 @@
-package algod
+package indexer
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-querystring/query"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/google/go-querystring/query"
 )
 
+// Header is a struct for custom headers.
+// TODO (ejr) is the usage of custom headers necessary for this?
+type Header struct {
+	Key   string
+	Value string
+}
+
+//TODO: should algod.go be made into a common used by indexer? or is it custom enough that it needs to be written separately?
+
 const (
-	authHeader           = "X-Algo-API-Token" // TODO EJR support new token structure
-	healthCheckEndpoint  = "/health"
-	apiVersionPathPrefix = "/v2" // TODO EJR support v1 and v2
+	authHeader           = "X-Indexer-API-Token" // TODO EJR support new token structure
+	healthCheckEndpoint  = "/health"             // TODO EJR this is dead code that can be removed?
+	apiVersionPathPrefix = "/v2"                 // TODO EJR support v1 and v2
 )
 
 // unversionedPaths ais a set of paths that should not be prefixed by the API version
 var unversionedPaths = map[string]bool{
-	"/versions": true,
-	"/health":   true,
+	//none right now
 }
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
+// TODO (ejr) do these need to be updated?
 var rawRequestPaths = map[string]bool{
 	"/transactions": true,
-}
-
-// Header is a struct for custom headers.
-type Header struct {
-	Key   string
-	Value string
 }
 
 // Client manages the REST interface for a calling user.
@@ -72,6 +75,7 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (
 // extractError checks if the response signifies an error (for now, StatusCode != 200).
 // If so, it returns the error.
 // Otherwise, it returns nil.
+// TODO EJR new errors can be handled here likely
 func extractError(resp *http.Response) error {
 	if resp.StatusCode == 200 {
 		return nil
@@ -79,14 +83,6 @@ func extractError(resp *http.Response) error {
 
 	errorBuf, _ := ioutil.ReadAll(resp.Body) // ignore returned error
 	return fmt.Errorf("HTTP %v: %s", resp.Status, errorBuf)
-}
-
-// stripTransaction gets a transaction of the form "tx-XXXXXXXX" and truncates the "tx-" part, if it starts with "tx-"
-func stripTransaction(tx string) string {
-	if strings.HasPrefix(tx, "tx-") {
-		return strings.SplitAfter(tx, "-")[1]
-	}
-	return tx
 }
 
 // mergeRawQueries merges two raw queries, appending an "&" if both are non-empty
@@ -101,7 +97,7 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client Client) submitFormRaw(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
+func (client Client) submitFormRaw(ctx context.Context, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 
 	// Handle version prefix
@@ -155,9 +151,15 @@ func (client Client) submitFormRaw(path string, request interface{}, requestMeth
 	}
 
 	httpClient := &http.Client{}
+	req = req.WithContext(ctx)
 	resp, err = httpClient.Do(req)
 
 	if err != nil {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
 		return nil, err
 	}
 
@@ -169,8 +171,8 @@ func (client Client) submitFormRaw(path string, request interface{}, requestMeth
 	return resp, nil
 }
 
-func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
-	resp, err := client.submitFormRaw(path, request, requestMethod, encodeJSON, headers)
+func (client Client) submitForm(ctx context.Context, response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
+	resp, err := client.submitFormRaw(ctx, path, request, requestMethod, encodeJSON, headers)
 	if err != nil {
 		return err
 	}
@@ -182,23 +184,6 @@ func (client Client) submitForm(response interface{}, path string, request inter
 }
 
 // get performs a GET request to the specific path against the server
-func (client Client) get(response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(response, path, request, "GET", false /* encodeJSON */, headers)
-}
-
-// post sends a POST request to the given path with the given request object.
-// No query parameters will be sent if request is nil.
-// response must be a pointer to an object as post writes the response there.
-func (client Client) post(response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(response, path, request, "POST", true /* encodeJSON */, headers)
-}
-
-// as post, but with MethodPut
-func (client Client) put(response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */, headers)
-}
-
-// as post, but with MethodPatch
-func (client Client) patch(response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */, headers)
+func (client Client) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+	return client.submitForm(ctx, response, path, request, "GET", false /* encodeJSON */, headers)
 }

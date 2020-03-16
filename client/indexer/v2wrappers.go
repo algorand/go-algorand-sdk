@@ -1,33 +1,79 @@
 package indexer
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"github.com/algorand/go-algorand-sdk/client/indexer/models"
+)
 
-type AssetBalancesResponse struct {
-	// A simplified version of AssetHolding
-	Balances []MiniAssetHolding `json:"balances"`
+// TODO all of these need special error types instead of just dumping the response error - see indexer.go:extractError
 
-	// Round at which the results are valid.
-	Round uint64 `json:"round"`
-}
-
-type GetAssetHoldingParams struct {
-	Limit   uint64 `url:"limit,omitempty"`
-	Offset  uint64 `url:"offset,omitempty"`
-	Round   uint64 `url:"round,omitempty"`
-	CurrencyGreaterThan     uint64 `url:"currency-greater-than,omitempty"`
-	CurrencyLessThan        uint64 `url:"currency-less-than,omitempty"`
-}
-
-type MiniAssetHolding struct {
-	Address  string `json:"address"`
-	Amount   uint64 `json:"amount"`
-	IsFrozen bool   `json:"isFrozen"`
-}
-
-func (client Client) GetAssetHoldings(assetIndex uint64, params getAssetHoldingParams, headers ...*Header) (validRound uint64, holders []models.MiniAssetHolding, err) {
-	var response models.GetAssetHoldingResponse
-	err = client.get(&response, fmt.Sprintf("/assets/%d/balances", assetIndex), params, headers)
+func (client Client) LookupAssetBalances(ctx context.Context, assetIndex uint64, params models.LookupAssetBalancesParams, headers ...*Header) (validRound uint64, holders []models.MiniAssetHolding, err error) {
+	var response models.AssetBalancesResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d/balances", assetIndex), params, headers)
 	validRound = response.Round
 	holders = response.Balances
+	return
+}
+
+func (client Client) LookupAssetTransactions(ctx context.Context, assetIndex uint64, params models.LookupAssetTransactionsParams, headers ...*Header) (validRound uint64, transactions []models.Transaction, err error) {
+	var response models.TransactionsResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d/transactions", assetIndex), params, headers)
+	validRound = response.Round
+	transactions = response.Transactions
+	return
+}
+
+func (client Client) LookupAccountTransactions(ctx context.Context, account string, params models.LookupAccountTransactionsParams, headers ...*Header) (validRound uint64, transactions []models.Transaction, err error) {
+	var response models.TransactionsResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions", account), params, headers)
+	validRound = response.Round
+	transactions = response.Transactions
+	return
+}
+
+func (client Client) LookupBlock(ctx context.Context, round uint64, headers ...*Header) (block models.Block, err error) {
+	var response models.BlockResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d", round), nil, headers)
+	block = models.Block(response)
+	return
+}
+
+func (client Client) LookupAccountByID(ctx context.Context, account string, params models.LookupAccountByIDParams, headers ...*Header) (validRound uint64, result models.Account, err error) {
+	var response models.LookupAccountByIDResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s", account), params, headers)
+	validRound = response.Round
+	result = response.Accounts
+	return
+}
+
+func (client Client) LookupAssetByID(ctx context.Context, assetIndex uint64, headers ...*Header) (validRound uint64, result models.Asset, err error) {
+	var response models.LookupAssetByIDResponse
+	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d", assetIndex), nil, headers)
+	validRound = response.Round
+	result = response.Asset
+	return
+}
+
+func (client Client) SearchAccounts(ctx context.Context, params models.SearchAccountsParams, headers ...*Header) (result []models.Account, err error) {
+	var response models.AccountsResponse
+	err = client.get(ctx, &response, "/accounts", params, headers)
+	result = response.Accounts
+	return
+}
+
+func (client Client) SearchForTransactions(ctx context.Context, params models.SearchForTransactionsParams, headers ...*Header) (validRound uint64, result []models.Transaction, err error) {
+	var response models.TransactionsResponse
+	err = client.get(ctx, &response, "/transactions", params, headers)
+	validRound = response.Round
+	result = response.Transactions
+	return
+}
+
+func (client Client) SearchForAssets(ctx context.Context, params models.SearchForAssetsParams, headers ...*Header) (validRound uint64, result []models.Asset, err error) {
+	var response models.AssetsResponse
+	err = client.get(ctx, &response, "/assets", params, headers)
+	validRound = response.Round
+	result = response.Assets
 	return
 }
