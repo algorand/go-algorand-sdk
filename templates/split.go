@@ -3,12 +3,12 @@ package templates
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/future"
 	"math"
 
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
