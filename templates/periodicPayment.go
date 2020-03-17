@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"golang.org/x/crypto/ed25519"
 )
@@ -45,7 +45,7 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee ui
 		LastRoundValid:  types.Round(lastValid),
 		FlatFee:         false,
 	}
-	txn, err := transaction.MakePaymentTxn(address.String(), receiver.String(), amount, nil, "", params)
+	txn, err := future.MakePaymentTxn(address.String(), receiver.String(), amount, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
