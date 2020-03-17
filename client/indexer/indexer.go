@@ -24,8 +24,8 @@ type Header struct {
 
 const (
 	authHeader           = "X-Indexer-API-Token" // TODO EJR support new token structure
-	healthCheckEndpoint  = "/health"             // TODO EJR this is dead code that can be removed?
-	apiVersionPathPrefix = "/v2"                 // TODO EJR support v1 and v2
+	healthCheckEndpoint  = "/health"             // TODO EJR indexer has different auth scheme
+	apiVersionPathPrefix = "/v2"                 // TODO EJR support v1 and v2; indexer does not have version prefix I don't think
 )
 
 // unversionedPaths ais a set of paths that should not be prefixed by the API version
@@ -34,7 +34,7 @@ var unversionedPaths = map[string]bool{
 }
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
-// TODO (ejr) do these need to be updated?
+// TODO (ejr) these need to be updated
 var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
@@ -138,6 +138,7 @@ func (client Client) submitFormRaw(ctx context.Context, path string, request int
 
 	// If we add another endpoint that does not require auth, we should add a
 	// requiresAuth argument to submitForm rather than checking here
+	// TODO requiresAuth will need to be used for algodclient v2 shutdown and keyreg
 	if path != healthCheckEndpoint {
 		req.Header.Set(authHeader, client.apiToken)
 	}
