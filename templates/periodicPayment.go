@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"golang.org/x/crypto/ed25519"
 )
@@ -38,8 +38,14 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee ui
 		return nil, fmt.Errorf("firstValid round %d was not a multiple of the contract period %d", firstValid, period)
 	}
 	lastValid := firstValid + withdrawWindow
-
-	txn, err := transaction.MakePaymentTxn(address.String(), receiver.String(), fee, amount, firstValid, lastValid, nil, "", "", genesisHash)
+	params := types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisHash:     genesisHash,
+		FirstRoundValid: types.Round(firstValid),
+		LastRoundValid:  types.Round(lastValid),
+		FlatFee:         false,
+	}
+	txn, err := future.MakePaymentTxn(address.String(), receiver.String(), amount, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
