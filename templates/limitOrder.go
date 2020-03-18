@@ -3,7 +3,7 @@ package templates
 import (
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -27,11 +27,11 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount, microAlgoAmount uint6
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
 	contractAddress := crypto.AddressFromProgram(contract)
-	algosForAssets, err := transaction.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), microAlgoAmount, nil, "", params)
+	algosForAssets, err := future.MakePaymentTxn(contractAddress.String(), buyerAddress.String(), microAlgoAmount, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
-	assetsForAlgos, err := transaction.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, assetAmount, nil, params, lo.owner, lo.assetID)
+	assetsForAlgos, err := future.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, assetAmount, nil, params, lo.owner, lo.assetID)
 	if err != nil {
 		return nil, err
 	}

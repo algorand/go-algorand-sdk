@@ -8,8 +8,8 @@ import (
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -59,11 +59,11 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 	}
 
 	from := crypto.AddressFromProgram(contract)
-	tx1, err := transaction.MakePaymentTxn(from.String(), receiverOne.String(), amountForReceiverOne, nil, "", params)
+	tx1, err := future.MakePaymentTxn(from.String(), receiverOne.String(), amountForReceiverOne, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from.String(), receiverTwo.String(), amountForReceiverTwo, nil, "", params)
+	tx2, err := future.MakePaymentTxn(from.String(), receiverTwo.String(), amountForReceiverTwo, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
