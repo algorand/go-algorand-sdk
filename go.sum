@@ -4,6 +4,8 @@ github.com/algorand/go-codec v1.1.7 h1:6nvCh2nfgnfkaoVHKQyk2wxyl2GQBAlI7IkbqbB/e
 github.com/algorand/go-codec v1.1.7/go.mod h1:pVLQYhIVCsx9D3iy4W4Qqi0SKhx6IVhMwOvj/agFL4g=
 github.com/algorand/go-codec/codec v1.1.7 h1:EFOyWf5duxbh2ru+AW1YDgmZ+MRVgqklELSqTArgp3M=
 github.com/algorand/go-codec/codec v1.1.7/go.mod h1:xahKG+YDWbJCG+5M1Qkh1X+Qec4IlDVfWMeRTWYABz4=
+github.com/cucumber/godog v0.8.1 h1:lVb+X41I4YDreE+ibZ50bdXmySxgRviYFgKY6Aw4XE8=
+github.com/cucumber/godog v0.8.1/go.mod h1:vSh3r/lM+psC1BPXvdkSEuNjmXfpVqrMGYAElF6hxnA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
