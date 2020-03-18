@@ -12,5 +12,5 @@ mv temp/features test/features
 docker build -t sdk-testing -f test/docker/Dockerfile "$(pwd)"
 
 docker run -it \
-     -v "$(pwd)":/opt/go-algorand-sdk \
+     -v "$(pwd)":/opt/go/src/github.com/algorand/go-algorand-sdk \
      sdk-testing:latest 

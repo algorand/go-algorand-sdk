@@ -30,6 +30,6 @@ ENV PATH $GOROOT/bin:$PATH
 # Install algorand-sdk-testing script dependencies
 RUN pip3 install gitpython
 
-RUN mkdir -p $HOME/go-algorand-sdk
-WORKDIR $HOME/go-algorand-sdk
+RUN mkdir -p $HOME/go/src/github.com/algorand/go-algorand-sdk
+WORKDIR $HOME/go/src/github.com/algorand/go-algorand-sdk
 CMD ["/bin/bash", "-c", "GO111MODULE=off && temp/docker/setup.py --algod-config temp/config_future && temp/docker/test.py --algod-config temp/config_future --network-dir /opt/testnetwork"]
