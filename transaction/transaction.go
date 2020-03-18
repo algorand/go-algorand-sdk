@@ -14,6 +14,7 @@ const MinTxnFee = 1000
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is fee per byte as received from algod SuggestedFee API call
+// Deprecated: next major version will use a Params object, see package future
 func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (types.Transaction, error) {
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
@@ -80,6 +81,7 @@ func MakePaymentTxn(from, to string, fee, amount, firstRound, lastRound uint64, 
 // MakePaymentTxnWithFlatFee constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is a flat fee
+// Deprecated: next major version will use a Params object, see package future
 func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRound uint64, note []byte, closeRemainderTo, genesisID string, genesisHash []byte) (types.Transaction, error) {
 	tx, err := MakePaymentTxn(from, to, fee, amount, firstRound, lastRound, note, closeRemainderTo, genesisID, genesisHash)
 	if err != nil {
@@ -108,6 +110,7 @@ func MakePaymentTxnWithFlatFee(from, to string, fee, amount, firstRound, lastRou
 // - voteFirst is the first round this participation key is valid
 // - voteLast is the last round this participation key is valid
 // - voteKeyDilution is the dilution for the 2-level participation key
+// Deprecated: next major version will use a Params object, see package future
 func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
 	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
 	// Decode account address
@@ -179,6 +182,7 @@ func MakeKeyRegTxn(account string, feePerByte, firstRound, lastRound uint64, not
 // - voteFirst is the first round this participation key is valid
 // - voteLast is the last round this participation key is valid
 // - voteKeyDilution is the dilution for the 2-level participation key
+// Deprecated: next major version will use a Params object, see package future
 func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID string, genesisHash string,
 	voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64) (types.Transaction, error) {
 	tx, err := MakeKeyRegTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution)
@@ -205,6 +209,7 @@ func MakeKeyRegTxnWithFlatFee(account string, fee, firstRound, lastRound uint64,
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	total uint64, decimals uint32, defaultFrozen bool, manager, reserve, freeze, clawback string,
 	unitName, assetName, url, metadataHash string) (types.Transaction, error) {
@@ -320,6 +325,7 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // - index is the asset index id
 // - for newManager, newReserve, newFreeze, newClawback see asset.go
 // - strictEmptyAddressChecking: if true, disallow empty admin accounts from being set (preventing accidental disable of admin features)
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string, strictEmptyAddressChecking bool) (types.Transaction, error) {
 	var tx types.Transaction
@@ -397,6 +403,7 @@ func MakeAssetConfigTxn(account string, feePerByte, firstRound, lastRound uint64
 
 // transferAssetBuilder is a helper that builds asset transfer transactions:
 // either a normal asset transfer, or an asset revocation
+// Deprecated: next major version will use a Params object, see package future
 func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget string, amount, feePerByte,
 	firstRound, lastRound uint64, note []byte, genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	var tx types.Transaction
@@ -475,6 +482,7 @@ func transferAssetBuilder(account, recipient, closeAssetsTo, revocationTarget st
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	revocationTarget := "" // no asset revocation, this is normal asset transfer
@@ -491,6 +499,7 @@ func MakeAssetTransferTxn(account, recipient, closeAssetsTo string, amount, feeP
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	return MakeAssetTransferTxn(account, account, "", 0,
@@ -508,6 +517,7 @@ func MakeAssetAcceptanceTxn(account string, feePerByte, firstRound, lastRound ui
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByte, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	closeAssetsTo := "" // no close-out, this is an asset revocation
@@ -524,6 +534,7 @@ func MakeAssetRevocationTxn(account, target, recipient string, amount, feePerByt
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	index uint64) (types.Transaction, error) {
 	// an asset destroy transaction is just a configuration transaction with AssetParams zeroed
@@ -545,6 +556,7 @@ func MakeAssetDestroyTxn(account string, feePerByte, firstRound, lastRound uint6
 // - assetIndex is the index for tracking the asset
 // - target is the account to be frozen or unfrozen
 // - newFreezeSetting is the new state of the target account
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
 	var tx types.Transaction
@@ -602,6 +614,7 @@ func MakeAssetFreezeTxn(account string, fee, firstRound, lastRound uint64, note 
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // Asset creation parameters:
 // - see asset.go
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	total uint64, decimals uint32, defaultFrozen bool, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash string) (types.Transaction, error) {
 	tx, err := MakeAssetCreateTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash, total, decimals, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
@@ -622,6 +635,7 @@ func MakeAssetCreateTxnWithFlatFee(account string, fee, firstRound, lastRound ui
 // keys for an asset. An empty string means a zero key (which
 // cannot be changed after becoming zero); to keep a key
 // unchanged, you must specify that key.
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetConfigTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	index uint64, newManager, newReserve, newFreeze, newClawback string, strictEmptyAddressChecking bool) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
@@ -674,6 +688,7 @@ func MakeAssetTransferTxnWithFlatFee(account, recipient, closeAssetsTo string, a
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetTransferTxnWithFlatFee(account, account, "", 0,
@@ -692,6 +707,7 @@ func MakeAssetAcceptanceTxnWithFlatFee(account string, fee, firstRound, lastRoun
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount, fee, firstRound, lastRound uint64, note []byte,
 	genesisID, genesisHash, creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetRevocationTxn(account, target, recipient, amount, fee, firstRound, lastRound,
@@ -718,6 +734,7 @@ func MakeAssetRevocationTxnWithFlatFee(account, target, recipient string, amount
 // - genesis id corresponds to the id of the network
 // - genesis hash corresponds to the base64-encoded hash of the genesis of the network
 // - index is the asset index
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	creator string, index uint64) (types.Transaction, error) {
 	tx, err := MakeAssetConfigTxnWithFlatFee(account, fee, firstRound, lastRound, note, genesisID, genesisHash,
@@ -726,6 +743,7 @@ func MakeAssetDestroyTxnWithFlatFee(account string, fee, firstRound, lastRound u
 }
 
 // MakeAssetFreezeTxnWithFlatFee is as MakeAssetFreezeTxn, but taking a flat fee rather than a fee per byte.
+// Deprecated: next major version will use a Params object, see package future
 func MakeAssetFreezeTxnWithFlatFee(account string, fee, firstRound, lastRound uint64, note []byte, genesisID, genesisHash string,
 	creator string, assetIndex uint64, target string, newFreezeSetting bool) (types.Transaction, error) {
 	tx, err := MakeAssetFreezeTxn(account, fee, firstRound, lastRound, note, genesisID, genesisHash,

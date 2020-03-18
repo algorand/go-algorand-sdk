@@ -148,6 +148,36 @@ type TxGroup struct {
 	TxGroupHashes []Digest `codec:"txlist"`
 }
 
+// SuggestedParams wraps the transaction parameters common to all transactions,
+// typically received from the SuggestedParams endpoint of algod.
+// This struct itself is not sent over the wire to or from algod: see models.TransactionParams.
+type SuggestedParams struct {
+	// Fee is the suggested transaction fee
+	// Fee is in units of micro-Algos per byte.
+	// Fee may fall to zero but transactions must still have a fee of
+	// at least MinTxnFee for the current network protocol.
+	Fee MicroAlgos
+
+	// Genesis ID
+	GenesisID string
+
+	// Genesis hash
+	GenesisHash []byte
+
+	// FirstRoundValid is the first protocol round on which the txn is valid
+	FirstRoundValid Round
+
+	// LastRoundValid is the final protocol round on which the txn may be committed
+	LastRoundValid Round
+
+	// ConsensusVersion indicates the consensus protocol version
+	// as of LastRound.
+	ConsensusVersion string
+
+	// FlatFee indicates whether the passed fee is per-byte or per-transaction
+	FlatFee bool
+}
+
 // AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction
 // and updates fee accordingly
 // - lease: the [32]byte lease to add to the header
