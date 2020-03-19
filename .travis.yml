@@ -10,5 +10,6 @@ install:
   - chmod +x ~/sdkupdate.sh
 
 script:
-  - make build
-  - ~/sdkupdate.sh --go
+  - set -e
+  - go test `go list ./... | grep -v test`
+  - test/docker/run_docker.sh
