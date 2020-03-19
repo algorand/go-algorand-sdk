@@ -11,5 +11,5 @@ install:
 
 script:
   - set -e
-  - go test ./...
+  - go test `go list ./... | grep -v test`
   - test/docker/run_docker.sh
