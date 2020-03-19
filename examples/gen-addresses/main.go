@@ -7,7 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -106,13 +106,13 @@ func main() {
 	privateKey := resp4.PrivateKey
 
 	// Get the suggested transaction parameters
-	txParams, err := algodClient.SuggestedParams()
+	txParams, err := algodClient.BuildSuggestedParams()
 	if err != nil {
 		fmt.Printf("error getting suggested tx params: %s\n", err)
 		return
 	}
 
-	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 100, nil, "", txParams)
+	tx, err := future.MakePaymentTxn(addresses[0], addresses[1], 100, nil, "", txParams)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return

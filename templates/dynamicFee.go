@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -106,7 +107,7 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 		FlatFee:         false,
 	}
 
-	feePayTxn, err := transaction.MakePaymentTxn(address.String(), txn.Sender.String(), uint64(txn.Fee), nil, "", params)
+	feePayTxn, err := future.MakePaymentTxn(address.String(), txn.Sender.String(), uint64(txn.Fee), nil, "", params)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +170,7 @@ func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash 
 		FlatFee:         false,
 	}
 
-	txn, err = transaction.MakePaymentTxn(address.String(), receiver.String(), amount, nil, closeRemainderTo.String(), params)
+	txn, err = future.MakePaymentTxn(address.String(), receiver.String(), amount, nil, closeRemainderTo.String(), params)
 	if err != nil {
 		return
 	}
