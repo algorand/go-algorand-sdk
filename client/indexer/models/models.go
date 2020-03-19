@@ -155,17 +155,8 @@ type Block struct {
 	// \[gen\] ID to which this block belongs.
 	GenesisId string `json:"genesis-id"`
 
-	// Current block hash
-	Hash []byte `json:"hash"`
-
-	// Period on which the block was confirmed.
-	Period uint64 `json:"period"`
-
 	// \[prev\] Previous block hash.
 	PreviousBlockHash []byte `json:"previous-block-hash"`
-
-	// Address that proposed this block.
-	Proposer string `json:"proposer"`
 
 	// Fields relating to rewards,
 	Rewards *BlockRewards `json:"rewards,omitempty"`
@@ -255,51 +246,7 @@ type BlockUpgradeVote struct {
 type MiniAssetHolding struct {
 	Address  string `json:"address"`
 	Amount   uint64 `json:"amount"`
-	IsFrozen bool   `json:"isFrozen"`
-}
-
-// NodeStatus defines model for NodeStatus.
-type NodeStatus struct {
-
-	// CatchupTime in nanoseconds
-	CatchupTime uint64 `json:"catchup-time"`
-
-	// HasSyncedSinceStartup indicates whether a round has completed since startup
-	HasSyncedSinceStartup bool `json:"has-synced-since-startup"`
-
-	// LastRound indicates the last round seen
-	LastRound uint64 `json:"last-round"`
-
-	// LastVersion indicates the last consensus version supported
-	LastVersion *string `json:"last-version,omitempty"`
-
-	// NextVersion of consensus protocol to use
-	NextVersion *string `json:"next-version,omitempty"`
-
-	// NextVersionRound is the round at which the next consensus version will apply
-	NextVersionRound *uint64 `json:"next-version-round,omitempty"`
-
-	// NextVersionSupported indicates whether the next consensus version is supported by this node
-	NextVersionSupported *bool `json:"next-version-supported,omitempty"`
-
-	// StoppedAtUnsupportedRound indicates that the node does not support the new rounds and has stopped making progress
-	StoppedAtUnsupportedRound bool `json:"stopped-at-unsupported-round"`
-
-	// TimeSinceLastRound in nanoseconds
-	TimeSinceLastRound uint64 `json:"time-since-last-round"`
-}
-
-// Supply defines model for Supply.
-type Supply struct {
-
-	// OnlineMoney
-	OnlineMoney uint64 `json:"onlineMoney"`
-
-	// Round
-	Round uint64 `json:"round"`
-
-	// TotalMoney
-	TotalMoney uint64 `json:"totalMoney"`
+	IsFrozen bool   `json:"is-frozen"`
 }
 
 // Transaction defines model for Transaction.
@@ -478,33 +425,6 @@ type TransactionKeyreg struct {
 	VoteParticipationKey *[]byte `json:"vote-participation-key,omitempty"`
 }
 
-// TransactionParams defines model for TransactionParams.
-type TransactionParams struct {
-
-	// ConsensusVersion indicates the consensus protocol version
-	// as of LastRound.
-	ConsensusVersion string `json:"consensusVersion"`
-
-	// Fee is the suggested transaction fee
-	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
-	Fee uint64 `json:"fee"`
-
-	// GenesisID is an ID listed in the genesis block.
-	GenesisID string `json:"genesisID"`
-
-	// GenesisHash is the hash of the genesis block.
-	Genesishash []byte `json:"genesishash"`
-
-	// LastRound indicates the last round seen
-	LastRound uint64 `json:"lastRound"`
-
-	// The minimum transaction fee (not per byte) required for the
-	// txn to validate for the current network protocol.
-	MinFee *uint64 `json:"minFee,omitempty"`
-}
-
 // TransactionPayment defines model for TransactionPayment.
 type TransactionPayment struct {
 
@@ -582,40 +502,23 @@ type TransactionSignatureMultisigSubsignature struct {
 	Signature *[]byte `json:"signature,omitempty"`
 }
 
-// Version defines model for Version.
-type Version struct {
-
-	// the current algod build version information.
-	Build       VersionBuild `json:"build"`
-	GenesisHash []byte       `json:"genesis-hash"`
-	GenesisId   string       `json:"genesis-id"`
-	Versions    []string     `json:"versions"`
-}
-
-// VersionBuild defines model for VersionBuild.
-type VersionBuild struct {
-	Branch      string `json:"branch"`
-	BuildNumber uint64 `json:"build-number"`
-	Channel     string `json:"channel"`
-	CommitHash  []byte `json:"commit-hash"`
-	Major       uint64 `json:"major"`
-	Minor       uint64 `json:"minor"`
-}
-
 // AccountId defines model for account-id.
 type AccountId string
 
-// AddressGreaterThan defines model for address-greater-than.
-type AddressGreaterThan string
+// Address defines model for address.
+type Address string
+
+// AddressRole defines model for address-role.
+type AddressRole string
+
+// AfterAddress defines model for after-address.
+type AfterAddress string
+
+// AfterAsset defines model for after-asset.
+type AfterAsset uint64
 
 // AfterTime defines model for after-time.
 type AfterTime time.Time
-
-// AlgosGreaterThan defines model for algos-greater-than.
-type AlgosGreaterThan uint64
-
-// AlgosLessThan defines model for algos-less-than.
-type AlgosLessThan uint64
 
 // AssetId defines model for asset-id.
 type AssetId uint64
@@ -629,6 +532,9 @@ type CurrencyGreaterThan uint64
 // CurrencyLessThan defines model for currency-less-than.
 type CurrencyLessThan uint64
 
+// ExcludeCloseTo defines model for exclude-close-to.
+type ExcludeCloseTo bool
+
 // Limit defines model for limit.
 type Limit uint64
 
@@ -638,8 +544,8 @@ type MaxRound uint64
 // MinRound defines model for min-round.
 type MinRound uint64
 
-// Offset defines model for offset.
-type Offset uint64
+// NotePrefix defines model for note-prefix.
+type NotePrefix []byte
 
 // Round defines model for round.
 type Round uint64
@@ -650,69 +556,63 @@ type RoundNumber uint64
 // SigType defines model for sig-type.
 type SigType string
 
+// TxId defines model for tx-id.
+type TxId []byte
+
 // TxType defines model for tx-type.
 type TxType string
 
 // AccountResponse defines model for AccountResponse.
-type AccountResponse Account
+type AccountResponse struct {
+
+	// Account information at a given round.
+	//
+	// Definition:
+	// data/basics/userBalance.go : AccountData
+	Account Account `json:"account"`
+
+	// Round at which the results were computed.
+	CurrentRound uint64 `json:"current-round"`
+}
 
 // AccountsResponse defines model for AccountsResponse.
 type AccountsResponse struct {
 	Accounts []Account `json:"accounts"`
 
-	// Round at which the results are valid. This should be the most recent round, so that you can tell how old a cached result is. This field doesn't take into account any max round filter, you'll need to remember that.
-	Round uint64 `json:"round"`
-}
-
-// LookupAccountByIDResponse defines model for LookupAccountByIDResponse.
-type LookupAccountByIDResponse struct {
-	Accounts Account `json:"account"`
-
-	// Round at which the results are valid. This should be the most recent round, so that you can tell how old a cached result is. This field doesn't take into account any max round filter, you'll need to remember that.
-	Round uint64 `json:"round"`
+	// Round at which the results were computed.
+	CurrentRound uint64 `json:"current-round"`
 }
 
 // AssetBalancesResponse defines model for AssetBalancesResponse.
 type AssetBalancesResponse struct {
 
 	// A simplified version of AssetHolding
-	Balances []MiniAssetHolding `json:"balances"`
+	Balances MiniAssetHolding `json:"balances"`
 
-	// Round at which the results are valid.
-	Round uint64 `json:"round"`
+	// Round at which the results were computed.
+	CurrentRound uint64 `json:"current-round"`
 }
 
 // AssetResponse defines model for AssetResponse.
-type AssetResponse Asset
+type AssetResponse struct {
+
+	// Specifies both the unique identifier and the parameters for an asset
+	Asset Asset `json:"asset"`
+
+	// Round at which the results were computed.
+	CurrentRound uint64 `json:"current-round"`
+}
 
 // AssetsResponse defines model for AssetsResponse.
 type AssetsResponse struct {
 	Assets []Asset `json:"assets"`
 
-	// Round at which the results are valid. This should be the most recent round, so that you can tell how old a cached result is. This field doesn't take into account any max round filter, you'll need to remember that.
-	Round uint64 `json:"round"`
-}
-
-// LookupAssetByIDResponse defines model for LookupAssetByIDResponse.
-type LookupAssetByIDResponse struct {
-	Asset Asset `json:"asset"`
-
-	// Round at which the results are valid. This should be the most recent round, so that you can tell how old a cached result is. This field doesn't take into account any max round filter, you'll need to remember that.
-	Round uint64 `json:"round"`
+	// Round at which the results were computed.
+	CurrentRound uint64 `json:"current-round"`
 }
 
 // BlockResponse defines model for BlockResponse.
 type BlockResponse Block
-
-// BlockTimesResponse defines model for BlockTimesResponse.
-type BlockTimesResponse struct {
-	Rounds *[]struct {
-		Round *uint64 `json:"round,omitempty"`
-
-		// Time when block was confirmed.
-		Timestamp *uint64 `json:"timestamp,omitempty"`
-	} `json:"rounds,omitempty"`
-}
 
 // Error defines model for Error.
 type Error struct {
@@ -722,91 +622,55 @@ type Error struct {
 // TransactionsResponse defines model for TransactionsResponse.
 type TransactionsResponse struct {
 
-	// Round at which the results are valid. This should be the most recent round, so that you can tell how old a cached result is. This field doesn't take into account any max round filter, you'll need to remember that.
-	Round        uint64        `json:"round,omitempty"`
-	Transactions []Transaction `json:"transactions,omitempty"`
-}
-
-// LookupAccountByIDParams defines parameters for LookupAccountByID.
-type LookupAccountByIDParams struct {
-
-	// Include results for the specified round.
-	Round *uint64 `url:"round,omitempty"`
-}
-
-// LookupAccountTransactionsParams defines parameters for LookupAccountTransactions.
-type LookupAccountTransactionsParams struct {
-
-	// Include results at or after the specified min-round.
-	MinRound uint64 `url:"min-round,omitempty"`
-
-	// Include results at or before the specified max-round.
-	MaxRound uint64 `url:"max-round,omitempty"`
-
-	// Include results before the given time. Must be an RFC 3339 formatted string.
-	BeforeTime time.Time `url:"before-time,omitempty"`
-
-	// Include results after the given time. Must be an RFC 3339 formatted string.
-	AfterTime time.Time `url:"after-time,omitempty"`
-	Asset     uint64    `url:"asset,omitempty"`
-
-	// Used in conjunction with limit to page through results.
-	Offset uint64 `url:"offset,omitempty"`
-
-	// Maximum number of results to return.
-	Limit uint64 `url:"limit,omitempty"`
-
-	// Results should have an amount greater than this value.
-	AlgosGreaterThan uint64 `url:"algos-greater-than,omitempty"`
-
-	// Results should have an amount less than this value.
-	AlgosLessThan uint64 `url:"algos-less-than,omitempty"`
+	// Round at which the results were computed.
+	CurrentRound uint64        `json:"current-round"`
+	Transactions []Transaction `json:"transactions"`
 }
 
 // SearchAccountsParams defines parameters for SearchAccounts.
 type SearchAccountsParams struct {
 
 	// Include accounts holding the specified asset
-	AssetId     string `url:"asset-id,omitempty"`
-	AssetParams string `url:"assetParams,omitempty"`
+	AssetId string `url:"asset-id,omitempty"`
 
 	// Maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
 
-	// Results should have an amount greater than this value.
-	AlgosGreaterThan uint64 `url:"algos-greater-than,omitempty"`
+	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
 
-	// Results should have an amount less than this value.
-	AlgosLessThan uint64 `url:"algos-less-than,omitempty"`
-
-	// Only include results with an address greater than this.
-	AddressGreaterThan string `url:"address-greater-than,omitempty"`
-}
-
-// LookupAssetBalancesParams defines parameters for LookupAssetBalances.
-type LookupAssetBalancesParams struct {
-
-	// Maximum number of results to return.
-	Limit uint64 `url:"limit,omitempty"`
+	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 
 	// Used in conjunction with limit to page through results.
-	Offset uint64 `url:"offset,omitempty"`
+	AfterAddress string `url:"after-address,omitempty"`
+}
+
+// LookupAccountByIDParams defines parameters for LookupAccountByID.
+type LookupAccountByIDParams struct {
 
 	// Include results for the specified round.
 	Round uint64 `url:"round,omitempty"`
-
-	// Results should have an amount greater than this value.
-	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
-
-	// Results should have an amount less than this value.
-	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 }
 
-// LookupAssetTransactionsParams defines parameters for LookupAssetTransactions.
-type LookupAssetTransactionsParams struct {
+// LookupAccountTransactionsParams defines parameters for LookupAccountTransactions.
+type LookupAccountTransactionsParams struct {
 
-	// Maximum number of results to return.
-	Limit uint64 `url:"limit,omitempty"`
+	// Specifies a prefix which must be contained in the note field.
+	NotePrefix []byte `url:"note-prefix,omitempty"`
+	TxType     string `url:"tx-type,omitempty"`
+
+	// SigType filters just results using the specified type of signature:
+	//  sig - Standard
+	//  msig - MultiSig
+	//  lsig - LogicSig
+	SigType string `url:"sig-type,omitempty"`
+
+	// Lookup the specific transaction by ID.
+	TxId []byte `url:"tx-id,omitempty"`
+
+	// Include results for the specified round.
+	Round uint64 `url:"round,omitempty"`
 
 	// Include results at or after the specified min-round.
 	MinRound uint64 `url:"min-round,omitempty"`
@@ -814,27 +678,33 @@ type LookupAssetTransactionsParams struct {
 	// Include results at or before the specified max-round.
 	MaxRound uint64 `url:"max-round,omitempty"`
 
-	// Include results after the given time. Must be an RFC 3339 formatted string.
-	AfterTime time.Time `url:"after-time,omitempty"`
+	// Asset ID
+	AssetId uint64 `url:"asset-id,omitempty"`
+
+	// Maximum number of results to return.
+	Limit uint64 `url:"limit,omitempty"`
 
 	// Include results before the given time. Must be an RFC 3339 formatted string.
 	BeforeTime time.Time `url:"before-time,omitempty"`
 
-	// Used in conjunction with limit to page through results.
-	Offset uint64 `url:"offset,omitempty"`
+	// Include results after the given time. Must be an RFC 3339 formatted string.
+	AfterTime time.Time `url:"after-time,omitempty"`
 
-	// Results should have an amount greater than this value.
+	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
 
-	// Results should have an amount less than this value.
+	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+
+	// Combine with the address parameter to define what type of address to search for.
+	AddressRole string `url:"address-role,omitempty"`
+
+	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
+	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 }
 
 // SearchForAssetsParams defines parameters for SearchForAssets.
 type SearchForAssetsParams struct {
-
-	// For paging results, use this field to get assets greater than the last value of the previous results.
-	AssetGreaterThan uint64 `url:"asset-greater-than,omitempty"`
 
 	// Maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
@@ -850,41 +720,54 @@ type SearchForAssetsParams struct {
 
 	// Asset ID
 	AssetId uint64 `url:"asset-id,omitempty"`
+
+	// Used in conjunction with limit to page through results.
+	AfterAsset uint64 `url:"after-asset,omitempty"`
 }
 
-// SearchForTransactionsParams defines parameters for SearchForTransactions.
-type SearchForTransactionsParams struct {
+// LookupAssetBalancesParams defines parameters for LookupAssetBalances.
+type LookupAssetBalancesParams struct {
 
-	// Specifies a prefix which must be contained in the note field.
-	Noteprefix []byte `url:"noteprefix,omitempty"`
-	TxType     string `url:"tx-type,omitempty"`
+	// Maximum number of results to return.
+	Limit uint64 `url:"limit,omitempty"`
 
-	// Type of signature used to sign the transaction, must be one of:
-	// * standard
-	// * multisig
-	// * logicsig
-	Sigtype string `url:"sigtype,omitempty"`
-
-	// Lookup the specific transaction by ID.
-	Txid []byte `url:"txid,omitempty"`
+	// Used in conjunction with limit to page through results.
+	AfterAddress string `url:"after-address,omitempty"`
 
 	// Include results for the specified round.
 	Round uint64 `url:"round,omitempty"`
 
-	// Used in conjunction with limit to page through results.
-	Offset uint64 `url:"offset,omitempty"`
+	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
+
+	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+}
+
+// LookupAssetTransactionsParams defines parameters for LookupAssetTransactions.
+type LookupAssetTransactionsParams struct {
+
+	// Specifies a prefix which must be contained in the note field.
+	NotePrefix []byte `url:"note-prefix,omitempty"`
+	TxType     string `url:"tx-type,omitempty"`
+
+	// SigType filters just results using the specified type of signature:
+	//  sig - Standard
+	//  msig - MultiSig
+	//  lsig - LogicSig
+	SigType string `url:"sig-type,omitempty"`
+
+	// Lookup the specific transaction by ID.
+	TxId []byte `url:"tx-id,omitempty"`
+
+	// Include results for the specified round.
+	Round uint64 `url:"round,omitempty"`
 
 	// Include results at or after the specified min-round.
 	MinRound uint64 `url:"min-round,omitempty"`
 
 	// Include results at or before the specified max-round.
 	MaxRound uint64 `url:"max-round,omitempty"`
-
-	// Asset ID
-	AssetId uint64 `url:"asset-id,omitempty"`
-
-	// Encoding format returned by this endpoint. Default is url.
-	Format string `url:"format,omitempty"`
 
 	// Maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
@@ -895,15 +778,71 @@ type SearchForTransactionsParams struct {
 	// Include results after the given time. Must be an RFC 3339 formatted string.
 	AfterTime time.Time `url:"after-time,omitempty"`
 
-	// Results should have an amount greater than this value.
-	AlgosGreaterThan uint64 `url:"algos-greater-than,omitempty"`
+	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
 
-	// Results should have an amount less than this value.
-	AlgosLessThan uint64 `url:"algos-less-than,omitempty"`
+	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+
+	// Only include transactions with this address in one of the transaction fields.
+	Address string `url:"address,omitempty"`
+
+	// Combine with the address parameter to define what type of address to search for.
+	AddressRole string `url:"address-role,omitempty"`
+
+	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
+	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
+}
+
+// SearchForTransactionsParams defines parameters for SearchForTransactions.
+type SearchForTransactionsParams struct {
+
+	// Specifies a prefix which must be contained in the note field.
+	NotePrefix []byte `url:"note-prefix,omitempty"`
+	TxType     string `url:"tx-type,omitempty"`
 
 	// SigType filters just results using the specified type of signature:
-	// * sig - Standard
-	// * msig - MultiSig
-	// * lsig - LogicSig
+	//  sig - Standard
+	//  msig - MultiSig
+	//  lsig - LogicSig
 	SigType string `url:"sig-type,omitempty"`
+
+	// Lookup the specific transaction by ID.
+	TxId []byte `url:"tx-id,omitempty"`
+
+	// Include results for the specified round.
+	Round uint64 `url:"round,omitempty"`
+
+	// Include results at or after the specified min-round.
+	MinRound uint64 `url:"min-round,omitempty"`
+
+	// Include results at or before the specified max-round.
+	MaxRound uint64 `url:"max-round,omitempty"`
+
+	// Asset ID
+	AssetId uint64 `url:"asset-id,omitempty"`
+
+	// Maximum number of results to return.
+	Limit uint64 `url:"limit,omitempty"`
+
+	// Include results before the given time. Must be an RFC 3339 formatted string.
+	BeforeTime time.Time `url:"before-time,omitempty"`
+
+	// Include results after the given time. Must be an RFC 3339 formatted string.
+	AfterTime time.Time `url:"after-time,omitempty"`
+
+	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
+
+	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
+	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+
+	// Only include transactions with this address in one of the transaction fields.
+	Address string `url:"address,omitempty"`
+
+	// Combine with the address parameter to define what type of address to search for.
+	AddressRole string `url:"address-role,omitempty"`
+
+	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
+	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 }
