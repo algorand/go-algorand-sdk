@@ -11,8 +11,5 @@ install:
 
 script:
   - set -e
-  - go test ./crypto
-  - go test ./future
-  - go test ./logic
-  - go test ./mnemonic
+  - go test ./...
   - test/docker/run_docker.sh
