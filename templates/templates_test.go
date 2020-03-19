@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/future"
 
 	"github.com/stretchr/testify/require"
 )
@@ -64,7 +64,7 @@ func TestHTLC(t *testing.T) {
 		GenesisID:       "",
 		GenesisHash:     genesisBytes,
 	}
-	txn, err := transaction.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver, params)
+	txn, err := future.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver, params)
 	require.NoError(t, err)
 	preImageAsBase64 := "cHJlaW1hZ2U="
 	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)
