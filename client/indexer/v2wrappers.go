@@ -43,15 +43,21 @@ func (client Client) LookupBlock(ctx context.Context, round uint64, headers ...*
 }
 
 func (client Client) LookupAccountByID(ctx context.Context, account string, params models.LookupAccountByIDParams, headers ...*Header) (validRound uint64, result models.Account, err error) {
-	var response models.LookupAccountByIDResponse
+	var response struct {
+		CurrentRound uint64         `json:"current-round"`
+		Account      models.Account `json:"account"`
+	}
 	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s", account), params, headers)
 	validRound = response.CurrentRound
-	result = response.Accounts
+	result = response.Account
 	return
 }
 
 func (client Client) LookupAssetByID(ctx context.Context, assetIndex uint64, headers ...*Header) (validRound uint64, result models.Asset, err error) {
-	var response models.LookupAssetByIDResponse
+	var response struct {
+		CurrentRound uint64       `json:"current-round"`
+		Asset        models.Asset `json:"asset"`
+	}
 	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d", assetIndex), nil, headers)
 	validRound = response.CurrentRound
 	result = response.Asset

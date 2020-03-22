@@ -587,7 +587,7 @@ type AccountsResponse struct {
 type AssetBalancesResponse struct {
 
 	// A simplified version of AssetHolding
-	Balances MiniAssetHolding `json:"balances"`
+	Balances []MiniAssetHolding `json:"balances"`
 
 	// Round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
