@@ -2,6 +2,7 @@ package algod
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -182,14 +183,14 @@ func (client Client) submitForm(response interface{}, path string, request inter
 }
 
 // get performs a GET request to the specific path against the server
-func (client Client) get(response interface{}, path string, request interface{}, headers []*Header) error {
+func (client Client) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(response, path, request, "GET", false /* encodeJSON */, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client Client) post(response interface{}, path string, request interface{}, headers []*Header) error {
+func (client Client) post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(response, path, request, "POST", true /* encodeJSON */, headers)
 }
 
