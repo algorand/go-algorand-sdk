@@ -127,6 +127,8 @@ func TestMain(m *testing.M) {
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		FeatureContext(s)
+		IndexerContext(s)
+		AlgodClientV2Context(s)
 	}, opt)
 
 	if st := m.Run(); st > status {
