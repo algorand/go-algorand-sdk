@@ -679,8 +679,8 @@ type GetBlockParams struct {
 	Format string `url:"format,omitempty"`
 }
 
-// GetV2RegisterParticipationKeysAccountIdParams defines parameters for GetV2RegisterParticipationKeysAccountId.
-type GetV2RegisterParticipationKeysAccountIdParams struct {
+// RegisterParticipationKeysAccountIdParams defines parameters for GetV2RegisterParticipationKeysAccountId.
+type RegisterParticipationKeysAccountIdParams struct {
 
 	// The fee to use when submitting key registration transactions. Defaults to the suggested fee.
 	Fee uint64 `url:"fee,omitempty"`
@@ -695,8 +695,8 @@ type GetV2RegisterParticipationKeysAccountIdParams struct {
 	NoWait bool `url:"no-wait,omitempty"`
 }
 
-// GetV2ShutdownParams defines parameters for GetV2Shutdown.
-type GetV2ShutdownParams struct {
+// ShutdownParams defines parameters for GetV2Shutdown.
+type ShutdownParams struct {
 	Timeout uint64 `url:"timeout,omitempty"`
 }
 

@@ -8,13 +8,13 @@ import (
 )
 
 // TODO ejr handling of token
-
-func (client Client) Shutdown(ctx context.Context, timeout models.GetV2ShutdownParams, headers ...*Header) error {
+// TODO ejr received peer feedback to have Block return types.Block not models.Block?
+func (client Client) Shutdown(ctx context.Context, timeout models.ShutdownParams, headers ...*Header) error {
 	// TODO EJR how to handle private security token
 	return client.post(ctx, nil, "/shutdown", timeout, headers)
 }
 
-func (client Client) RegisterParticipationKeys(ctx context.Context, account string, params models.GetV2RegisterParticipationKeysAccountIdParams, headers ...*Header) error {
+func (client Client) RegisterParticipationKeys(ctx context.Context, account string, params models.RegisterParticipationKeysAccountIdParams, headers ...*Header) error {
 	// TODO EJR how to handle private security token
 	return client.post(ctx, nil, fmt.Sprintf("/register-participation-keys/%s", account), nil, headers)
 }
@@ -100,5 +100,12 @@ func (client Client) SuggestedParams(ctx context.Context, headers ...*Header) (p
 		LastRoundValid:   types.Round(response.LastRound + 1000),
 		ConsensusVersion: response.ConsensusVersion,
 	}
+	return
+}
+
+// Versions retrieves the VersionResponse from the running node
+// the VersionResponse includes data like version number and genesis ID
+func (client Client) Versions(ctx context.Context, headers ...*Header) (response models.Version, err error) {
+	err = client.get(ctx, &response, "/versions", nil, headers)
 	return
 }
