@@ -109,3 +109,9 @@ func (client Client) Versions(ctx context.Context, headers ...*Header) (response
 	err = client.get(ctx, &response, "/versions", nil, headers)
 	return
 }
+
+// HealthCheck does a health check on the the potentially running node,
+// returning an error if the API is down
+func (client Client) HealthCheck(ctx context.Context, headers ...*Header) error {
+	return client.get(ctx, nil, "/health", nil, headers)
+}
