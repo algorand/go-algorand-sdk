@@ -13,32 +13,27 @@ import (
 )
 
 func IndexerContext(s *godog.Suite) {
-	s.Step(`^we make any LookupAssetBalances call, return mock response "([^"]*)"$`, weMakeAnyLookupAssetBalancesCallReturnMockResponse)
+	s.Step(`^we make any LookupAssetBalances call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupAssetBalancesCallReturnMockResponse)
 	s.Step(`^the parsed LookupAssetBalances response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have address "([^"]*)" amount (\d+) and frozen state (\d+)$`, theParsedLookupAssetBalancesResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveAddressAmountAndFrozenState)
-	s.Step(`^we make any LookupAssetTransactions call, return mock response "([^"]*)"$`, weMakeAnyLookupAssetTransactionsCallReturnMockResponse)
+	s.Step(`^we make any LookupAssetTransactions call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupAssetTransactionsCallReturnMockResponse)
 	s.Step(`^the parsed LookupAssetTransactions response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedLookupAssetTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender)
-	s.Step(`^we make any LookupAccountTransactions call, return mock response "([^"]*)"$`, weMakeAnyLookupAccountTransactionsCallReturnMockResponse)
+	s.Step(`^we make any LookupAccountTransactions call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupAccountTransactionsCallReturnMockResponse)
 	s.Step(`^the parsed LookupAccountTransactions response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedLookupAccountTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender)
-	s.Step(`^we make any LookupBlock call, return mock response "([^"]*)"$`, weMakeAnyLookupBlockCallReturnMockResponse)
+	s.Step(`^we make any LookupBlock call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupBlockCallReturnMockResponse)
 	s.Step(`^the parsed LookupBlock response should have round "([^"]*)"$`, theParsedLookupBlockResponseShouldHaveRound)
-	s.Step(`^we make any LookupAccountByID call, return mock response "([^"]*)"$`, weMakeAnyLookupAccountByIDCallReturnMockResponse)
+	s.Step(`^we make any LookupAccountByID call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupAccountByIDCallReturnMockResponse)
 	s.Step(`^the parsed LookupAccountByID response should have address "([^"]*)"$`, theParsedLookupAccountByIDResponseShouldHaveAddress)
-	s.Step(`^we make any LookupAssetByID call, return mock response "([^"]*)"$`, weMakeAnyLookupAssetByIDCallReturnMockResponse)
+	s.Step(`^we make any LookupAssetByID call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnyLookupAssetByIDCallReturnMockResponse)
 	s.Step(`^the parsed LookupAssetByID response should have index (\d+)$`, theParsedLookupAssetByIDResponseShouldHaveIndex)
-	s.Step(`^we make any SearchAccounts call, return mock response "([^"]*)"$`, weMakeAnySearchAccountsCallReturnMockResponse)
+	s.Step(`^we make any SearchAccounts call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnySearchAccountsCallReturnMockResponse)
 	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have address "([^"]*)"$`, theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAddress)
-	s.Step(`^we make any SearchForTransactions call, return mock response "([^"]*)"$`, weMakeAnySearchForTransactionsCallReturnMockResponse)
+	s.Step(`^we make any SearchForTransactions call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnySearchForTransactionsCallReturnMockResponse)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have sender "([^"]*)"$`, theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveSender)
-	s.Step(`^we make any SearchForAssets call, return mock response "([^"]*)"$`, weMakeAnySearchForAssetsCallReturnMockResponse)
+	s.Step(`^we make any SearchForAssets call, return mock response "([^"]*)" and expect error string to contain "([^"]*)$`, weMakeAnySearchForAssetsCallReturnMockResponse)
 	s.Step(`^the parsed SearchForAssets response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have asset index (\d+)$`, theParsedSearchForAssetsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAssetIndex)
 
 	s.BeforeScenario(func(interface{}) {
 	})
-}
-
-func loadMockJson(filename string) ([]byte, error) {
-	// TODO EJR where should the mockjsons be stored? or should the feature file just hold the full path somehow
-	return nil, nil
 }
 
 func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.IndexerClient, error) {
@@ -58,7 +53,7 @@ func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.Index
 var validRound uint64
 var assetHolders []models.MiniAssetHolding
 
-func weMakeAnyLookupAssetBalancesCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupAssetBalancesCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -67,7 +62,7 @@ func weMakeAnyLookupAssetBalancesCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	validRound, assetHolders, err = indexerClient.LookupAssetBalances(context.Background(), 0, models.LookupAssetBalancesParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupAssetBalancesResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveAddressAmountAndFrozenState(roundNum, length, idx int, address string, amount, frozenState int) error {
@@ -98,7 +93,7 @@ func theParsedLookupAssetBalancesResponseShouldBeValidOnRoundAndContainAnArrayOf
 
 var transactions []models.Transaction
 
-func weMakeAnyLookupAssetTransactionsCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupAssetTransactionsCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -107,7 +102,7 @@ func weMakeAnyLookupAssetTransactionsCallReturnMockResponse(jsonfile string) err
 		return err
 	}
 	validRound, transactions, err = indexerClient.LookupAssetTransactions(context.Background(), 0, models.LookupAssetTransactionsParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupAssetTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender(roundNum, length, idx int, sender string) error {
@@ -124,7 +119,7 @@ func theParsedLookupAssetTransactionsResponseShouldBeValidOnRoundAndContainAnArr
 	return nil
 }
 
-func weMakeAnyLookupAccountTransactionsCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupAccountTransactionsCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -133,7 +128,7 @@ func weMakeAnyLookupAccountTransactionsCallReturnMockResponse(jsonfile string) e
 		return err
 	}
 	validRound, transactions, err = indexerClient.LookupAccountTransactions(context.Background(), "", models.LookupAccountTransactionsParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupAccountTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender(roundNum, length, idx int, sender string) error {
@@ -152,7 +147,7 @@ func theParsedLookupAccountTransactionsResponseShouldBeValidOnRoundAndContainAnA
 
 var foundBlock models.Block
 
-func weMakeAnyLookupBlockCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupBlockCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -161,7 +156,7 @@ func weMakeAnyLookupBlockCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	foundBlock, err = indexerClient.LookupBlock(context.Background(), 0, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupBlockResponseShouldHaveRound(round int) error {
@@ -173,7 +168,7 @@ func theParsedLookupBlockResponseShouldHaveRound(round int) error {
 
 var foundAccount models.Account
 
-func weMakeAnyLookupAccountByIDCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupAccountByIDCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -182,7 +177,7 @@ func weMakeAnyLookupAccountByIDCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	validRound, foundAccount, err = indexerClient.LookupAccountByID(context.Background(), "", models.LookupAccountByIDParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupAccountByIDResponseShouldHaveAddress(address string) error {
@@ -194,7 +189,7 @@ func theParsedLookupAccountByIDResponseShouldHaveAddress(address string) error {
 
 var foundAsset models.Asset
 
-func weMakeAnyLookupAssetByIDCallReturnMockResponse(jsonfile string) error {
+func weMakeAnyLookupAssetByIDCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -203,7 +198,7 @@ func weMakeAnyLookupAssetByIDCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	validRound, foundAsset, err = indexerClient.LookupAssetByID(context.Background(), 0, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedLookupAssetByIDResponseShouldHaveIndex(idx int) error {
@@ -215,7 +210,7 @@ func theParsedLookupAssetByIDResponseShouldHaveIndex(idx int) error {
 
 var foundAccounts []models.Account
 
-func weMakeAnySearchAccountsCallReturnMockResponse(jsonfile string) error {
+func weMakeAnySearchAccountsCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -224,7 +219,7 @@ func weMakeAnySearchAccountsCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	validRound, foundAccounts, err = indexerClient.SearchAccounts(context.Background(), models.SearchAccountsParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAddress(roundNum, length, idx int, address string) error {
@@ -241,7 +236,7 @@ func theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLen
 	return nil
 }
 
-func weMakeAnySearchForTransactionsCallReturnMockResponse(jsonfile string) error {
+func weMakeAnySearchForTransactionsCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -250,7 +245,7 @@ func weMakeAnySearchForTransactionsCallReturnMockResponse(jsonfile string) error
 		return err
 	}
 	validRound, transactions, err = indexerClient.SearchForTransactions(context.Background(), models.SearchForTransactionsParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveSender(roundNum, length, idx int, sender string) error {
@@ -269,7 +264,7 @@ func theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShould
 
 var foundAssets []models.Asset
 
-func weMakeAnySearchForAssetsCallReturnMockResponse(jsonfile string) error {
+func weMakeAnySearchForAssetsCallReturnMockResponse(jsonfile string, errorString string) error {
 	mockIndexer, indexerClient, err := buildMockIndexerAndClient(jsonfile)
 	if mockIndexer != nil {
 		defer mockIndexer.Close()
@@ -278,7 +273,7 @@ func weMakeAnySearchForAssetsCallReturnMockResponse(jsonfile string) error {
 		return err
 	}
 	validRound, foundAssets, err = indexerClient.SearchForAssets(context.Background(), models.SearchForAssetsParams{}, nil)
-	return err
+	return confirmErrorContainsString(err, errorString)
 }
 
 func theParsedSearchForAssetsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAssetIndex(roundNum, length, idx, assetIndex int) error {
