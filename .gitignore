@@ -16,3 +16,7 @@ coverage.html
 
 # Mac
 .DS_Store
+
+# Testing files
+*.feature
+temp

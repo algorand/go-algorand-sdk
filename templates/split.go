@@ -3,8 +3,13 @@ package templates
 import (
 	"encoding/base64"
 	"fmt"
+	"math"
+
+	"golang.org/x/crypto/ed25519"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/future"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -17,26 +22,48 @@ type Split struct {
 	receiverTwo types.Address
 }
 
-//GetSendFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
+//GetSplitFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // the returned byte array is suitable for passing to SendRawTransaction
-// amount: uint64 number of assets to be transferred total
-// precise: handles rounding error. When False, the amount will be divided as closely as possible but one account will get
-// 			slightly more. When true, returns an error.
-func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, firstRound, lastRound, fee uint64, genesisHash []byte) ([]byte, error) {
-	ratio := contract.ratn / contract.ratd
-	amountForReceiverOne := amount * ratio
-	amountForReceiverTwo := amount * (1 - ratio)
-	remainder := amount - amountForReceiverOne - amountForReceiverTwo
-	if precise && remainder != 0 {
-		return nil, fmt.Errorf("could not precisely divide funds between the two accounts")
-	}
-
-	from := contract.address
-	tx1, err := transaction.MakePaymentTxn(from, contract.receiverOne.String(), fee, amountForReceiverOne, firstRound, lastRound, nil, "", "", genesisHash)
+// contract: the bytecode of the contract to be used
+// amount: uint64 total number of algos to be transferred (payment1_amount + payment2_amount)
+// params: is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+func GetSplitFundsTransaction(contract []byte, amount uint64, params types.SuggestedParams) ([]byte, error) {
+	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
 		return nil, err
 	}
-	tx2, err := transaction.MakePaymentTxn(from, contract.receiverTwo.String(), fee, amountForReceiverTwo, firstRound, lastRound, nil, "", "", genesisHash)
+	ratn := ints[6]
+	ratd := ints[5]
+	// Convert the byteArrays[0] to receiver
+	var receiverOne types.Address //byteArrays[0]
+	n := copy(receiverOne[:], byteArrays[1])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from receiver bytes is the wrong size")
+		return nil, err
+	}
+	// Convert the byteArrays[2] to receiverTwo
+	var receiverTwo types.Address
+	n = copy(receiverTwo[:], byteArrays[2])
+	if n != ed25519.PublicKeySize {
+		err = fmt.Errorf("address generated from closeRemainderTo bytes is the wrong size")
+		return nil, err
+	}
+
+	ratio := float64(ratd) / float64(ratn)
+	amountForReceiverOneFloat := float64(amount) / (1 + ratio)
+	amountForReceiverOne := uint64(math.Round(amountForReceiverOneFloat))
+	amountForReceiverTwo := amount - amountForReceiverOne
+	if ratd*amountForReceiverOne != ratn*amountForReceiverTwo {
+		err = fmt.Errorf("could not split funds in a way that satisfied the contract ratio (%d * %d != %d * %d)", ratd, amountForReceiverOne, ratn, amountForReceiverTwo)
+		return nil, err
+	}
+
+	from := crypto.AddressFromProgram(contract)
+	tx1, err := future.MakePaymentTxn(from.String(), receiverOne.String(), amountForReceiverOne, nil, "", params)
+	if err != nil {
+		return nil, err
+	}
+	tx2, err := future.MakePaymentTxn(from.String(), receiverTwo.String(), amountForReceiverTwo, nil, "", params)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +74,7 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 	tx1.Group = gid
 	tx2.Group = gid
 
-	logicSig, err := crypto.MakeLogicSig(contract.program, nil, nil, crypto.MultisigAccount{})
+	logicSig, err := crypto.MakeLogicSig(contract, nil, nil, crypto.MultisigAccount{})
 	if err != nil {
 		return nil, err
 	}
@@ -80,14 +107,19 @@ func (contract Split) GetSendFundsTransaction(amount uint64, precise bool, first
 //
 // After expiryRound passes, all funds can be refunded to owner.
 //
+// Split ratio:
+// firstRecipient_amount * ratd == secondRecipient_amount * ratn
+// or phrased another way
+// firstRecipient_amount == secondRecipient_amount * (ratn/ratd)
+//
 // Parameters:
 //  - owner: the address to refund funds to on timeout
 //  - receiverOne: the first recipient in the split account
 //  - receiverTwo: the second recipient in the split account
-//  - ratn: fraction of money to be paid to the first recipient (numerator)
-//  - ratd: fraction of money to be paid to the first recipient (denominator)
+//  - ratn: fraction determines resource split ratio (numerator)
+//  - ratd: fraction determines resource split ratio (denominator)
 //  - expiryRound: the round at which the account expires
-//  - minPay: minimum amount to be paid out of the account
+//  - minPay: minimum amount to be paid out of the account to receiverOne
 //  - maxFee: half of the maximum fee used by each split forwarding group transaction
 func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, minPay, maxFee uint64) (Split, error) {
 	const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
@@ -95,8 +127,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-
-	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratn*/, 8 /*ratd*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
+	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratd*/, 8 /*ratn*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
 	ownerAddr, err := types.DecodeAddress(owner)
 	if err != nil {
 		return Split{}, err
@@ -109,7 +140,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-	injectionVector := []interface{}{maxFee, expiryRound, ratn, ratd, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
+	injectionVector := []interface{}{maxFee, expiryRound, ratd, ratn, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err

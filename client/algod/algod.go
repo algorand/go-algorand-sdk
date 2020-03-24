@@ -101,8 +101,7 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
-	var err error
+func (client Client) submitFormRaw(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 
 	// Handle version prefix
@@ -119,13 +118,13 @@ func (client Client) submitForm(response interface{}, path string, request inter
 		if rawRequestPaths[path] {
 			reqBytes, ok := request.([]byte)
 			if !ok {
-				return fmt.Errorf("couldn't decode raw request as bytes")
+				return nil, fmt.Errorf("couldn't decode raw request as bytes")
 			}
 			body = bytes.NewBuffer(reqBytes)
 		} else {
 			v, err := query.Values(request)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			queryURL.RawQuery = mergeRawQueries(queryURL.RawQuery, v.Encode())
@@ -138,7 +137,7 @@ func (client Client) submitForm(response interface{}, path string, request inter
 
 	req, err = http.NewRequest(requestMethod, queryURL.String(), body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// If we add another endpoint that does not require auth, we should add a
@@ -156,18 +155,27 @@ func (client Client) submitForm(response interface{}, path string, request inter
 	}
 
 	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
+	resp, err = httpClient.Do(req)
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = extractError(resp)
+	if err != nil {
+		resp.Body.Close()
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
+	resp, err := client.submitFormRaw(path, request, requestMethod, encodeJSON, headers)
 	if err != nil {
 		return err
 	}
 
 	defer resp.Body.Close()
-
-	err = extractError(resp)
-	if err != nil {
-		return err
-	}
 
 	dec := json.NewDecoder(resp.Body)
 	return dec.Decode(&response)

@@ -2,7 +2,10 @@ package algod
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/types"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -139,6 +142,21 @@ func (client Client) SuggestedParams(headers ...*Header) (response models.Transa
 	return
 }
 
+// BuildSuggestedParams gets the suggested transaction parameters and
+// builds a types.SuggestedParams to pass to transaction builders (see package future)
+func (client Client) BuildSuggestedParams(headers ...*Header) (response types.SuggestedParams, err error) {
+	var httpResponse models.TransactionParams
+	err = client.get(&httpResponse, "/transactions/params", nil, headers)
+	response.FlatFee = false
+	response.Fee = types.MicroAlgos(httpResponse.Fee)
+	response.GenesisID = httpResponse.GenesisID
+	response.GenesisHash = httpResponse.GenesisHash
+	response.FirstRoundValid = types.Round(httpResponse.LastRound)
+	response.LastRoundValid = types.Round(httpResponse.LastRound + 1000)
+	response.ConsensusVersion = httpResponse.ConsensusVersion
+	return
+}
+
 // SendRawTransaction gets the bytes of a SignedTxn and broadcasts it to the network
 func (client Client) SendRawTransaction(stx []byte, headers ...*Header) (response models.TransactionID, err error) {
 	err = client.post(&response, "/transactions", stx, headers)
@@ -149,6 +167,35 @@ func (client Client) SendRawTransaction(stx []byte, headers ...*Header) (respons
 func (client Client) Block(round uint64, headers ...*Header) (response models.Block, err error) {
 	err = client.get(&response, fmt.Sprintf("/block/%d", round), nil, headers)
 	return
+}
+
+func responseReadAll(resp *http.Response, maxContentLength int64) (body []byte, err error) {
+	if resp.ContentLength > 0 {
+		// more efficient path if we know the ContentLength
+		if maxContentLength > 0 && resp.ContentLength > maxContentLength {
+			return nil, errors.New("Content too long")
+		}
+		body = make([]byte, resp.ContentLength)
+		_, err = io.ReadFull(resp.Body, body)
+		return
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+// BlockRaw gets the raw block msgpack bytes for the given round
+func (client Client) BlockRaw(round uint64, headers ...*Header) (blockbytes []byte, err error) {
+	var resp *http.Response
+	request := struct {
+		Raw string `url:"raw"`
+	}{Raw: "1"}
+	resp, err = client.submitFormRaw(fmt.Sprintf("/block/%d", round), request, "GET", false, headers)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	// Current blocks are about 1MB. 10MB should be a safe backstop.
+	return responseReadAll(resp, 10000000)
 }
 
 func (client Client) doGetWithQuery(ctx context.Context, path string, queryArgs map[string]string) (result string, err error) {

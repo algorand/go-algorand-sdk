@@ -56,3 +56,22 @@ type LogicSig struct {
 	// Args are not signed, but checked by Logic
 	Args [][]byte `codec:"arg"`
 }
+
+// Blank returns true iff the lsig is empty. We need this instead of just
+// comparing with == LogicSig{}, because it contains slices.
+func (lsig LogicSig) Blank() bool {
+	if lsig.Args != nil {
+		return false
+	}
+	if len(lsig.Logic) != 0 {
+		return false
+	}
+	if !lsig.Msig.Blank() {
+		return false
+	}
+	if lsig.Sig != (Signature{}) {
+		return false
+	}
+	return true
+}
+
