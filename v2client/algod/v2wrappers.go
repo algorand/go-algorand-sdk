@@ -8,15 +8,13 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2client/common/models"
 )
 
-// TODO ejr handling of token
 // TODO ejr received peer feedback to have Block return types.Block not models.Block?
+
 func (client Client) Shutdown(ctx context.Context, timeout models.ShutdownParams, headers ...*common.Header) error {
-	// TODO EJR how to handle private security token
 	return client.post(ctx, nil, "/shutdown", timeout, headers)
 }
 
 func (client Client) RegisterParticipationKeys(ctx context.Context, account string, params models.RegisterParticipationKeysAccountIdParams, headers ...*common.Header) error {
-	// TODO EJR how to handle private security token
 	return client.post(ctx, nil, fmt.Sprintf("/register-participation-keys/%s", account), nil, headers)
 }
 
