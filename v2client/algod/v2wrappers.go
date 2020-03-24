@@ -65,7 +65,7 @@ func (client Client) Supply(ctx context.Context, headers ...*common.Header) (sup
 }
 
 func (client Client) StatusAfterBlock(ctx context.Context, round uint64, headers ...*common.Header) (status models.NodeStatus, err error) {
-	err = client.get(ctx, &status, fmt.Sprintf("/statuswait-for-block-after/%d", round), nil, headers)
+	err = client.get(ctx, &status, fmt.Sprintf("/status/wait-for-block-after/%d", round), nil, headers)
 	return
 }
 
