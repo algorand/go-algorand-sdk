@@ -70,17 +70,33 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (
 	return
 }
 
+type BadRequest error
+type BadToken error
+type NotFound error
+type InternalError error
+
 // extractError checks if the response signifies an error (for now, StatusCode != 200).
 // If so, it returns the error.
 // Otherwise, it returns nil.
-// TODO EJR new errors can be handled here likely
 func extractError(resp *http.Response) error {
 	if resp.StatusCode == 200 {
 		return nil
 	}
 
 	errorBuf, _ := ioutil.ReadAll(resp.Body) // ignore returned error
-	return fmt.Errorf("HTTP %v: %s", resp.Status, errorBuf)
+	wrappedError := fmt.Errorf("HTTP %v: %s", resp.Status, errorBuf)
+	switch code := resp.StatusCode; code {
+	case 400:
+		return BadRequest(wrappedError)
+	case 401:
+		return BadToken(wrappedError)
+	case 404:
+		return NotFound(wrappedError)
+	case 500:
+		return InternalError(wrappedError)
+	default:
+		return wrappedError
+	}
 }
 
 // mergeRawQueries merges two raw queries, appending an "&" if both are non-empty
