@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/algorand/go-algorand-sdk/client/indexer"
-	"github.com/algorand/go-algorand-sdk/client/indexer/models"
+	"github.com/algorand/go-algorand-sdk/v2client/common/models"
+	"github.com/algorand/go-algorand-sdk/v2client/indexer"
 
 	"github.com/cucumber/godog"
 )
@@ -41,10 +41,10 @@ func loadMockJson(filename string) ([]byte, error) {
 	return nil, nil
 }
 
-func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.Client, error) {
+func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.IndexerClient, error) {
 	jsonBytes, err := loadMockJson(jsonfile)
 	if err != nil {
-		return nil, indexer.Client{}, err
+		return nil, indexer.IndexerClient{}, err
 	}
 	mockIndexer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
