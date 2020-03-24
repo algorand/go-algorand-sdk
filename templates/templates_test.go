@@ -2,6 +2,8 @@ package templates
 
 import (
 	"encoding/base64"
+	"fmt"
+	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 	"testing"
 
@@ -71,6 +73,41 @@ func TestHTLC(t *testing.T) {
 	require.NoError(t, err)
 	goldenStx := "gqRsc2lngqNhcmeRxAhwcmVpbWFnZaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgEHZhE08h/HwCIj1Qq56zYAvD/8NxJCOh5Hux+anb9V8g/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIChyiO42rPQZmq42un3UDl1H3kZii2K4CElLvSrIU+oqpHR5cGWjcGF5"
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
+}
+
+func TestTLC2(t *testing.T) {
+	// Inputs
+	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
+	receiver := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
+	hashFn := "sha256"
+	hashImg := "QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc"
+	expiryRound := uint64(10000)
+	maxFee := uint64(2000)
+	//Instaniate the Template
+	c, err := MakeHTLC(owner, receiver, hashFn, hashImg, expiryRound, maxFee)
+	program := c.GetProgram()
+	addr := c.GetAddress() //crypto.LogicSigAddress(lsig).String()
+	fmt.Printf("Escrow Address: %s\n", addr)
+	// Get the program and parameters and use them to create an lsig
+	// For the contract account to be used in a transaction
+	// In this example 'hero wisdom green split loop element vote belt'
+	// hashed with sha256 will produce our image hash
+	// This is the passcode for the HTLC
+	args := make([][]byte, 1)
+	args[0] = []byte("hero wisdom green split loop element vote belt")
+
+	// Next we create a LogicSig using blank private key
+	// and blank multisig account because we are creating
+	// a escrow contract account
+	//Blank values as we are creating an escrow account
+	//var sk ed25519.PrivateKey
+	var ma crypto.MultisigAccount
+
+	_, err = crypto.MakeLogicSig(program, args, nil, ma)
+	if err != nil {
+		t.Errorf("Make Logic Sig Failed %v", err)
+	}
+
 }
 
 func TestPeriodicPayment(t *testing.T) {
