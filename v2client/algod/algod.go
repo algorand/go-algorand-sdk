@@ -8,14 +8,14 @@ import (
 type ClientV2 common.Client
 
 // get performs a GET request to the specific path against the server
-func (client ClientV2) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+func (client ClientV2) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
 	return common.Client(client).Get(ctx, response, path, request, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client ClientV2) post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+func (client ClientV2) post(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
 	return common.Client(client).Post(ctx, response, path, request, headers)
 }
 
