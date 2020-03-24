@@ -38,10 +38,10 @@ func AlgodClientV2Context(s *godog.Suite) {
 	})
 }
 
-func buildMockAlgodv2AndClient(jsonfile string) (*httptest.Server, algod.ClientV2, error) {
+func buildMockAlgodv2AndClient(jsonfile string) (*httptest.Server, algod.Client, error) {
 	jsonBytes, err := loadMockJson(jsonfile)
 	if err != nil {
-		return nil, algod.ClientV2{}, err
+		return nil, algod.Client{}, err
 	}
 	mockAlgod := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

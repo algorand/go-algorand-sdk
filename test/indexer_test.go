@@ -36,10 +36,10 @@ func IndexerContext(s *godog.Suite) {
 	})
 }
 
-func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.IndexerClient, error) {
+func buildMockIndexerAndClient(jsonfile string) (*httptest.Server, indexer.Client, error) {
 	jsonBytes, err := loadMockJson(jsonfile)
 	if err != nil {
-		return nil, indexer.IndexerClient{}, err
+		return nil, indexer.Client{}, err
 	}
 	mockIndexer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

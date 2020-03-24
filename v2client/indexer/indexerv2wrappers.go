@@ -7,9 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2client/common/models"
 )
 
-// TODO all of these need special error types instead of just dumping the response error - see indexer.go:extractError
-
-func (client IndexerClient) LookupAssetBalances(ctx context.Context, assetIndex uint64, params models.LookupAssetBalancesParams,
+func (client Client) LookupAssetBalances(ctx context.Context, assetIndex uint64, params models.LookupAssetBalancesParams,
 	headers ...*common.Header) (validRound uint64, holders []models.MiniAssetHolding, err error) {
 	var response models.AssetBalancesResponse
 	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d/balances", assetIndex), params, headers)
@@ -18,7 +16,7 @@ func (client IndexerClient) LookupAssetBalances(ctx context.Context, assetIndex 
 	return
 }
 
-func (client IndexerClient) LookupAssetTransactions(ctx context.Context, assetIndex uint64, params models.LookupAssetTransactionsParams,
+func (client Client) LookupAssetTransactions(ctx context.Context, assetIndex uint64, params models.LookupAssetTransactionsParams,
 	headers ...*common.Header) (validRound uint64, transactions []models.Transaction, err error) {
 	var response models.TransactionsResponse
 	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d/transactions", assetIndex), params, headers)
@@ -27,7 +25,7 @@ func (client IndexerClient) LookupAssetTransactions(ctx context.Context, assetIn
 	return
 }
 
-func (client IndexerClient) LookupAccountTransactions(ctx context.Context, account string, params models.LookupAccountTransactionsParams,
+func (client Client) LookupAccountTransactions(ctx context.Context, account string, params models.LookupAccountTransactionsParams,
 	headers ...*common.Header) (validRound uint64, transactions []models.Transaction, err error) {
 	var response models.TransactionsResponse
 	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions", account), params, headers)
@@ -36,14 +34,14 @@ func (client IndexerClient) LookupAccountTransactions(ctx context.Context, accou
 	return
 }
 
-func (client IndexerClient) LookupBlock(ctx context.Context, round uint64, headers ...*common.Header) (block models.Block, err error) {
+func (client Client) LookupBlock(ctx context.Context, round uint64, headers ...*common.Header) (block models.Block, err error) {
 	var response models.BlockResponse
 	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d", round), nil, headers)
 	block = models.Block(response)
 	return
 }
 
-func (client IndexerClient) LookupAccountByID(ctx context.Context, account string, params models.LookupAccountByIDParams, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
+func (client Client) LookupAccountByID(ctx context.Context, account string, params models.LookupAccountByIDParams, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
 	var response struct {
 		CurrentRound uint64         `json:"current-round"`
 		Account      models.Account `json:"account"`
@@ -54,7 +52,7 @@ func (client IndexerClient) LookupAccountByID(ctx context.Context, account strin
 	return
 }
 
-func (client IndexerClient) LookupAssetByID(ctx context.Context, assetIndex uint64, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
+func (client Client) LookupAssetByID(ctx context.Context, assetIndex uint64, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
 	var response struct {
 		CurrentRound uint64       `json:"current-round"`
 		Asset        models.Asset `json:"asset"`
@@ -65,7 +63,7 @@ func (client IndexerClient) LookupAssetByID(ctx context.Context, assetIndex uint
 	return
 }
 
-func (client IndexerClient) SearchAccounts(ctx context.Context, params models.SearchAccountsParams, headers ...*common.Header) (validRound uint64, result []models.Account, err error) {
+func (client Client) SearchAccounts(ctx context.Context, params models.SearchAccountsParams, headers ...*common.Header) (validRound uint64, result []models.Account, err error) {
 	var response models.AccountsResponse
 	err = client.get(ctx, &response, "/accounts", params, headers)
 	validRound = response.CurrentRound
@@ -73,7 +71,7 @@ func (client IndexerClient) SearchAccounts(ctx context.Context, params models.Se
 	return
 }
 
-func (client IndexerClient) SearchForTransactions(ctx context.Context, params models.SearchForTransactionsParams, headers ...*common.Header) (validRound uint64, result []models.Transaction, err error) {
+func (client Client) SearchForTransactions(ctx context.Context, params models.SearchForTransactionsParams, headers ...*common.Header) (validRound uint64, result []models.Transaction, err error) {
 	var response models.TransactionsResponse
 	err = client.get(ctx, &response, "/transactions", params, headers)
 	validRound = response.CurrentRound
@@ -81,7 +79,7 @@ func (client IndexerClient) SearchForTransactions(ctx context.Context, params mo
 	return
 }
 
-func (client IndexerClient) SearchForAssets(ctx context.Context, params models.SearchForAssetsParams, headers ...*common.Header) (validRound uint64, result []models.Asset, err error) {
+func (client Client) SearchForAssets(ctx context.Context, params models.SearchForAssetsParams, headers ...*common.Header) (validRound uint64, result []models.Asset, err error) {
 	var response models.AssetsResponse
 	err = client.get(ctx, &response, "/assets", params, headers)
 	validRound = response.CurrentRound
