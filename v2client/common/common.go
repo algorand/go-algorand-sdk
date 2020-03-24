@@ -71,7 +71,7 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (
 }
 
 type BadRequest error
-type BadToken error
+type InvalidToken error
 type NotFound error
 type InternalError error
 
@@ -89,7 +89,7 @@ func extractError(resp *http.Response) error {
 	case 400:
 		return BadRequest(wrappedError)
 	case 401:
-		return BadToken(wrappedError)
+		return InvalidToken(wrappedError)
 	case 404:
 		return NotFound(wrappedError)
 	case 500:
