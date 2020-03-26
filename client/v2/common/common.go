@@ -103,11 +103,11 @@ func extractError(resp *http.Response) error {
 func mergeRawQueries(q1, q2 string) string {
 	if q1 == "" {
 		return q2
-	} else if q2 == "" {
-		return q1
-	} else {
-		return q1 + "&" + q2
 	}
+	if q2 == "" {
+		return q1
+	}
+	return q1 + "&" + q2
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server

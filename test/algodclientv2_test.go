@@ -8,9 +8,9 @@ import (
 
 	"github.com/cucumber/godog"
 
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
-	"github.com/algorand/go-algorand-sdk/v2client/algod"
-	"github.com/algorand/go-algorand-sdk/v2client/common/models"
 )
 
 func AlgodClientV2Context(s *godog.Suite) {
@@ -39,13 +39,13 @@ func AlgodClientV2Context(s *godog.Suite) {
 }
 
 func buildMockAlgodv2AndClient(jsonfile string) (*httptest.Server, algod.Client, error) {
-	jsonBytes, err := loadMockJson(jsonfile)
+	jsonBytes, err := loadMockJsons("", jsonfile)
 	if err != nil {
 		return nil, algod.Client{}, err
 	}
 	mockAlgod := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonBytes)
+		w.Write(jsonBytes[0])
 	}))
 	noToken := ""
 	algodClient, err := algod.MakeClient(mockAlgod.URL, noToken)

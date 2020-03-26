@@ -3,9 +3,9 @@ package algod
 import (
 	"context"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
-	"github.com/algorand/go-algorand-sdk/v2client/common"
-	"github.com/algorand/go-algorand-sdk/v2client/common/models"
 )
 
 // TODO ejr received peer feedback to have Block return types.Block not models.Block?
@@ -33,13 +33,13 @@ func (client Client) PendingTransactionInformation(ctx context.Context, txid str
 
 func (client Client) SendRawTransaction(ctx context.Context, txBytes []byte, headers ...*common.Header) (txid string, err error) {
 	var response models.TxId
+	headers = append(headers, &common.Header{Key: "Content-Type", Value: "application/x-binary"})
 	err = client.post(ctx, &response, "/transactions", nil, headers)
 	txid = string(response)
 	return
 }
 
 func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (result []types.Transaction, err error) {
-	err = client.get(ctx, &result, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
 	if params.Format == "json" {
 		var response []models.Transaction
 		err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)

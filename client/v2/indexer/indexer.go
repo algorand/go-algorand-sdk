@@ -2,7 +2,7 @@ package indexer
 
 import (
 	"context"
-	"github.com/algorand/go-algorand-sdk/v2client/common"
+	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
 type Client common.Client

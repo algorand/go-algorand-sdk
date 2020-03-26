@@ -3,8 +3,8 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/v2client/common"
-	"github.com/algorand/go-algorand-sdk/v2client/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 func (client Client) LookupAssetBalances(ctx context.Context, assetIndex uint64, params models.LookupAssetBalancesParams,

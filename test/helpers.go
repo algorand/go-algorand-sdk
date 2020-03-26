@@ -2,12 +2,28 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 )
 
-func loadMockJson(filename string) ([]byte, error) {
-	// TODO EJR where should the mockjsons be stored? or should the feature file just hold the full path somehow
-	return nil, nil
+func loadMockJsons(pathToJsons, commaDelimitedFilenames string) ([][]byte, error) {
+	jsonFilenames := strings.Split(commaDelimitedFilenames, ",")
+	var bytesArray [][]byte
+	for _, jsonFilename := range jsonFilenames {
+		fullPath := path.Join(pathToJsons, jsonFilename)
+		jsonfile, err := os.Open(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		fileBytes, err := ioutil.ReadAll(jsonfile)
+		if err != nil {
+			return nil, err
+		}
+		bytesArray = append(bytesArray, fileBytes)
+	}
+	return bytesArray, nil
 }
 
 func confirmErrorContainsString(err error, desired string) error {
