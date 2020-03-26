@@ -16,7 +16,6 @@ import (
 
 const (
 	authHeader           = "X-Algo-API-Token"
-	healthCheckEndpoint  = "/health"
 	apiVersionPathPrefix = "/v2"
 )
 
@@ -75,7 +74,7 @@ type InvalidToken error
 type NotFound error
 type InternalError error
 
-// extractError checks if the response signifies an error (for now, StatusCode != 200).
+// extractError checks if the response signifies an error.
 // If so, it returns the error.
 // Otherwise, it returns nil.
 func extractError(resp *http.Response) error {
@@ -150,12 +149,8 @@ func (client Client) submitFormRaw(ctx context.Context, path string, request int
 		return nil, err
 	}
 
-	// If we add another endpoint that does not require auth, we should add a
-	// requiresAuth argument to submitForm rather than checking here
-	// TODO requiresAuth will need to be used for algodclient v2 shutdown and keyreg
-	if path != healthCheckEndpoint {
-		req.Header.Set(authHeader, client.apiToken)
-	}
+	// Supply the client token.
+	req.Header.Set(authHeader, client.apiToken)
 	// Add the client headers.
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
