@@ -18,16 +18,18 @@ func (client Client) RegisterParticipationKeys(ctx context.Context, account stri
 	return client.post(ctx, nil, fmt.Sprintf("/register-participation-keys/%s", account), nil, headers)
 }
 
-func (client Client) PendingTransactionInformation(ctx context.Context, txid string, params models.GetPendingTransactionsParams, headers ...*common.Header) (result types.Transaction, err error) {
+func (client Client) PendingTransactionInformation(ctx context.Context, txid string, params models.GetPendingTransactionsParams, headers ...*common.Header) (result types.SignedTxn, err error) {
 	if params.Format == "json" {
 		var response models.Transaction
 		err = client.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
 		// TODO built result from response
-	} else if params.Format == "msgpack" {
-		err = client.get(ctx, &result, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
-	} else {
-		err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
+		return
 	}
+	if params.Format == "msgpack" {
+		err = client.get(ctx, &result, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
+		return
+	}
+	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	return
 }
 
@@ -39,16 +41,18 @@ func (client Client) SendRawTransaction(ctx context.Context, txBytes []byte, hea
 	return
 }
 
-func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (result []types.Transaction, err error) {
+func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (result []types.SignedTxn, err error) {
 	if params.Format == "json" {
 		var response []models.Transaction
 		err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
 		// TODO built result from response
-	} else if params.Format == "msgpack" {
-		err = client.get(ctx, &result, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
-	} else {
-		err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
+		return
 	}
+	if params.Format == "msgpack" {
+		err = client.get(ctx, &result, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
+		return
+	}
+	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	return
 }
 
@@ -72,19 +76,18 @@ func (client Client) AccountInformation(ctx context.Context, address string, hea
 	return
 }
 
-func (client Client) Block(ctx context.Context, round uint64, params models.GetBlockParams, headers ...*common.Header) (result models.Block, err error) {
-	err = client.get(ctx, &result, fmt.Sprintf("/block/%d", round), params, headers)
+func (client Client) Block(ctx context.Context, round uint64, params models.GetBlockParams, headers ...*common.Header) (result types.Block, err error) {
+	// TODO params builder will always default to msgpack and user will have to explicitly request json
 	if params.Format == "json" {
-		var response models.RawBlockJson
+		var response models.Block
 		err = client.get(ctx, &response, fmt.Sprintf("/block/%d", round), params, headers)
 		// TODO built result from response
-	} else if params.Format == "msgpack" {
-		var response models.RawBlockMsgpack
-		err = client.get(ctx, &response, fmt.Sprintf("/block/%d", round), params, headers)
-		// TODO built result from response
-	} else {
-		err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	}
+	if params.Format == "msgpack" {
+		var response types.Block
+		err = client.get(ctx, &response, fmt.Sprintf("/block/%d", round), params, headers)
+	}
+	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	return
 }
 

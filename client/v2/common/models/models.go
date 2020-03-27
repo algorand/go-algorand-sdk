@@ -144,8 +144,12 @@ type AssetParams struct {
 	Url string `json:"url,omitempty"`
 }
 
-type RawBlockJson struct{}
-type RawBlockMsgpack struct{}
+type RawBlockJson struct {
+	Block string
+}
+type RawBlockMsgpack struct {
+	Block string `json:"url,omitempty"`
+}
 
 // Block defines model for Block.
 type Block struct {
