@@ -8,8 +8,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-// TODO ejr received peer feedback to have Block return types.Block not models.Block?
-
 func (client Client) Shutdown(ctx context.Context, timeout models.ShutdownParams, headers ...*common.Header) error {
 	return client.post(ctx, nil, "/shutdown", timeout, headers)
 }
@@ -18,18 +16,12 @@ func (client Client) RegisterParticipationKeys(ctx context.Context, account stri
 	return client.post(ctx, nil, fmt.Sprintf("/register-participation-keys/%s", account), nil, headers)
 }
 
-func (client Client) PendingTransactionInformation(ctx context.Context, txid string, params models.GetPendingTransactionsParams, headers ...*common.Header) (result types.SignedTxn, err error) {
-	if params.Format == "json" {
-		var response models.Transaction
-		err = client.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
-		// TODO built result from response
+func (client Client) PendingTransactionInformation(ctx context.Context, txid string, params models.GetPendingTransactionsParams, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
+	err = client.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s?format=msgpack", txid), params, headers)
+	if err != nil {
 		return
 	}
-	if params.Format == "msgpack" {
-		err = client.get(ctx, &result, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
-		return
-	}
-	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
+	err = stxn.FromBase64String(response.PendingTransactionBase64)
 	return
 }
 
@@ -41,18 +33,22 @@ func (client Client) SendRawTransaction(ctx context.Context, txBytes []byte, hea
 	return
 }
 
-func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (result []types.SignedTxn, err error) {
-	if params.Format == "json" {
-		var response []models.Transaction
-		err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
-		// TODO built result from response
-		return
+func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+	type pendingTransactionsResponse = struct {
+		topTransactions   []string `json:"top-transactions"`
+		totalTransactions uint64   `json:"total-transactions"`
+	} // TODO move to models and document if this is right
+	response := pendingTransactionsResponse{}
+	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending?format=msgpack", account), params, headers)
+	total = response.totalTransactions
+	for _, b64SignedTxn := range response.topTransactions {
+		var signedTxn types.SignedTxn
+		err = signedTxn.FromBase64String(b64SignedTxn)
+		if err != nil {
+			return
+		}
+		topTransactions = append(topTransactions, signedTxn)
 	}
-	if params.Format == "msgpack" {
-		err = client.get(ctx, &result, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
-		return
-	}
-	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	return
 }
 
@@ -76,18 +72,35 @@ func (client Client) AccountInformation(ctx context.Context, address string, hea
 	return
 }
 
-func (client Client) Block(ctx context.Context, round uint64, params models.GetBlockParams, headers ...*common.Header) (result types.Block, err error) {
-	// TODO params builder will always default to msgpack and user will have to explicitly request json
-	if params.Format == "json" {
-		var response models.Block
-		err = client.get(ctx, &response, fmt.Sprintf("/block/%d", round), params, headers)
-		// TODO built result from response
+func (client Client) Block(ctx context.Context, round uint64, headers ...*common.Header) (result types.Block, err error) {
+	type getBlockResponse = struct {
+		b64Block string `json:"block"`
+	} // TODO move to models and document if this is right
+	response := getBlockResponse{}
+	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d?format=msgpack", round), nil, headers)
+	if err != nil {
+		return
 	}
-	if params.Format == "msgpack" {
-		var response types.Block
-		err = client.get(ctx, &response, fmt.Sprintf("/block/%d", round), params, headers)
+	err = result.FromBase64String(response.b64Block)
+	return
+}
+
+func (client Client) PendingTransactions(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+	type pendingTransactionsResponse = struct {
+		topTransactions   []string `json:"top-transactions"`
+		totalTransactions uint64   `json:"total-transactions"`
+	} // TODO move to models and document if this is right
+	response := pendingTransactionsResponse{}
+	err = client.get(ctx, &response, "/transactions/pending?format=msgpack", nil, headers)
+	total = response.totalTransactions
+	for _, b64SignedTxn := range response.topTransactions {
+		var signedTxn types.SignedTxn
+		err = signedTxn.FromBase64String(b64SignedTxn)
+		if err != nil {
+			return
+		}
+		topTransactions = append(topTransactions, signedTxn)
 	}
-	err = fmt.Errorf("unrecognized format %s, valid formats are json or msgpack", params.Format)
 	return
 }
 

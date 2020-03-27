@@ -744,14 +744,30 @@ type TransactionsResponse struct {
 	Transactions []Transaction `json:"transactions"`
 }
 
+// PendingTransactionInfoResponse is returned by Get Pending Transaction by TXID
+type PendingTransactionInfoResponse = struct {
+	PendingTransactionBase64 string `json:"txn"`
+	//PoolError indicates that the transaction was kicked out of this node's transaction pool (and specifies why that happened).  An empty string indicates the transaction wasn't kicked out of this node's txpool due to an error.
+	PoolError string `json:"pool-error"`
+	//ConfirmedRound is the round where this transaction was confirmed, if present.
+	ConfirmedRound uint64 `json:"confirmed-round,omitempty"`
+	//AssetIndex is the index of the newly created asset, if this was an asset creation transaction.
+	AssetIndex uint64 `json:"asset-index,omitempty"`
+	//Closing amount for the transaction.
+	ClosingAmount uint64 `json:"closing-amount,omitempty"`
+	//Rewards, in microAlgos, applied to sender.
+	SenderRewards uint64 `json:"sender-rewards,omitempty"`
+	//Rewards, in microAlgos, applied to receiver.
+	ReceiverRewards uint64 `json:"receiver-rewards,omitempty"`
+	//Rewards, in microAlgos, applied to close-to.
+	CloseRewards uint64 `json:"close-rewards,omitempty"`
+}
+
 // GetPendingTransactionsByAddressParams defines parameters for GetPendingTransactionsByAddress.
 type GetPendingTransactionsByAddressParams struct {
 
 	// Truncated number of transactions to display. If max=0, returns all pending txns.
 	Max uint64 `url:"max,omitempty"`
-
-	// Return raw msgpack block bytes or json
-	Format string `url:"format,omitempty"`
 }
 
 // GetBlockParams defines parameters for GetBlock.
@@ -787,9 +803,6 @@ type GetPendingTransactionsParams struct {
 
 	// Truncated number of transactions to display. If max=0, returns all pending txns.
 	Max uint64 `url:"max,omitempty"`
-
-	// Return raw msgpack block bytes or json
-	Format string `url:"format,omitempty"`
 }
 
 // SearchAccountsParams defines parameters for SearchAccounts.
