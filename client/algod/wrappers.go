@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"github.com/algorand/go-algorand-sdk/types"
 	"io"
 	"io/ioutil"
@@ -159,6 +160,17 @@ func (client Client) BuildSuggestedParams(headers ...*Header) (response types.Su
 
 // SendRawTransaction gets the bytes of a SignedTxn and broadcasts it to the network
 func (client Client) SendRawTransaction(stx []byte, headers ...*Header) (response models.TransactionID, err error) {
+	// Set default Content-Type, if not the user didn't specify it.
+	addContentType := true;
+	for _, header := range headers {
+		if strings.ToLower(header.Key) == "content-type" {
+			addContentType = false;
+			break;
+		}
+	}
+	if addContentType {
+		headers = append(headers, &Header{"Content-Type", "application/x-binary"});
+	}
 	err = client.post(&response, "/transactions", stx, headers)
 	return
 }
