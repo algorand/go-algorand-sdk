@@ -360,7 +360,7 @@ type Transaction struct {
 	Group []byte `json:"group,omitempty"`
 
 	// Transaction ID
-	Id []byte `json:"id"`
+	Id string `json:"id"`
 
 	// Fields for a keyreg transaction.
 	//
@@ -382,11 +382,6 @@ type Transaction struct {
 	// Definition:
 	// data/transactions/payment.go : PaymentTxnFields
 	PaymentTransaction TransactionPayment `json:"payment-transaction,omitempty"`
-
-	// Part of algod API only.
-	//
-	// Indicates the transaction was evicted from this node's transaction pool (if non-empty).  A non-empty PoolError does not guarantee that the transaction will never be committed; other nodes may not have evicted the transaction and may attempt to commit it in the future.
-	PoolError string `json:"pool-error,omitempty"`
 
 	// \[rr\] rewards applied to receiver account.
 	ReceiverRewards uint64 `json:"receiver-rewards,omitempty"`
