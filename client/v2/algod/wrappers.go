@@ -3,6 +3,8 @@ package algod
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -27,7 +29,17 @@ func (client Client) PendingTransactionInformation(ctx context.Context, txid str
 
 func (client Client) SendRawTransaction(ctx context.Context, txBytes []byte, headers ...*common.Header) (txid string, err error) {
 	var response models.TxId
-	headers = append(headers, &common.Header{Key: "Content-Type", Value: "application/x-binary"})
+	// Set default Content-Type, if not the user didn't specify it.
+	addContentType := true
+	for _, header := range headers {
+		if strings.ToLower(header.Key) == "content-type" {
+			addContentType = false
+			break
+		}
+	}
+	if addContentType {
+		headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
+	}
 	err = client.post(ctx, &response, "/transactions", nil, headers)
 	txid = string(response)
 	return
@@ -70,7 +82,7 @@ func (client Client) AccountInformation(ctx context.Context, address string, hea
 
 func (client Client) Block(ctx context.Context, round uint64, headers ...*common.Header) (result types.Block, err error) {
 	response := models.GetBlockResponse{}
-	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d", round), *models.NewBlockParams(), headers)
+	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d", round), models.NewBlockParams(), headers)
 	if err != nil {
 		return
 	}
