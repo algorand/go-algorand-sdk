@@ -42,10 +42,7 @@ func (client Client) LookupBlock(ctx context.Context, round uint64, headers ...*
 }
 
 func (client Client) LookupAccountByID(ctx context.Context, account string, params models.LookupAccountByIDParams, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
-	var response struct {
-		CurrentRound uint64         `json:"current-round"`
-		Account      models.Account `json:"account"`
-	}
+	response := models.LookupAccountByIDResponse{}
 	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s", account), params, headers)
 	validRound = response.CurrentRound
 	result = response.Account
@@ -53,10 +50,7 @@ func (client Client) LookupAccountByID(ctx context.Context, account string, para
 }
 
 func (client Client) LookupAssetByID(ctx context.Context, assetIndex uint64, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
-	var response struct {
-		CurrentRound uint64       `json:"current-round"`
-		Asset        models.Asset `json:"asset"`
-	}
+	response := models.LookupAssetByIDResponse{}
 	err = client.get(ctx, &response, fmt.Sprintf("/assets/%d", assetIndex), nil, headers)
 	validRound = response.CurrentRound
 	result = response.Asset

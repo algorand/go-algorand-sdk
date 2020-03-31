@@ -17,7 +17,7 @@ func (client Client) RegisterParticipationKeys(ctx context.Context, account stri
 }
 
 func (client Client) PendingTransactionInformation(ctx context.Context, txid string, params models.GetPendingTransactionsParams, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
-	err = client.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s?format=msgpack", txid), params, headers)
+	err = client.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s", txid), params, headers)
 	if err != nil {
 		return
 	}
@@ -34,14 +34,10 @@ func (client Client) SendRawTransaction(ctx context.Context, txBytes []byte, hea
 }
 
 func (client Client) PendingTransactionsByAddress(ctx context.Context, account string, params models.GetPendingTransactionsByAddressParams, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
-	type pendingTransactionsResponse = struct {
-		topTransactions   []string `json:"top-transactions"`
-		totalTransactions uint64   `json:"total-transactions"`
-	} // TODO move to models and document if this is right
-	response := pendingTransactionsResponse{}
-	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending?format=msgpack", account), params, headers)
-	total = response.totalTransactions
-	for _, b64SignedTxn := range response.topTransactions {
+	response := models.PendingTransactionsResponse{}
+	err = client.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", account), params, headers)
+	total = response.TotalTransactions
+	for _, b64SignedTxn := range response.TopTransactions {
 		var signedTxn types.SignedTxn
 		err = signedTxn.FromBase64String(b64SignedTxn)
 		if err != nil {
@@ -73,27 +69,20 @@ func (client Client) AccountInformation(ctx context.Context, address string, hea
 }
 
 func (client Client) Block(ctx context.Context, round uint64, headers ...*common.Header) (result types.Block, err error) {
-	type getBlockResponse = struct {
-		b64Block string `json:"block"`
-	} // TODO move to models and document if this is right
-	response := getBlockResponse{}
-	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d?format=msgpack", round), nil, headers)
+	response := models.GetBlockResponse{}
+	err = client.get(ctx, &response, fmt.Sprintf("/blocks/%d", round), *models.NewBlockParams(), headers)
 	if err != nil {
 		return
 	}
-	err = result.FromBase64String(response.b64Block)
+	err = result.FromBase64String(response.Blockb64)
 	return
 }
 
 func (client Client) PendingTransactions(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
-	type pendingTransactionsResponse = struct {
-		topTransactions   []string `json:"top-transactions"`
-		totalTransactions uint64   `json:"total-transactions"`
-	} // TODO move to models and document if this is right
-	response := pendingTransactionsResponse{}
-	err = client.get(ctx, &response, "/transactions/pending?format=msgpack", nil, headers)
-	total = response.totalTransactions
-	for _, b64SignedTxn := range response.topTransactions {
+	response := models.PendingTransactionsResponse{}
+	err = client.get(ctx, &response, "/transactions/pending", nil, headers)
+	total = response.TotalTransactions
+	for _, b64SignedTxn := range response.TopTransactions {
 		var signedTxn types.SignedTxn
 		err = signedTxn.FromBase64String(b64SignedTxn)
 		if err != nil {

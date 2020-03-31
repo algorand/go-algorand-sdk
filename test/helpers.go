@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http/httptest"
 	"os"
 	"path"
 	"strings"
@@ -36,4 +37,10 @@ func confirmErrorContainsString(err error, desired string) error {
 		return fmt.Errorf("validated error did not contain expected substring, expected substring: %s,"+
 			"actual error string: %s", desired, err.Error())
 	}
+}
+
+var mockServer httptest.Server
+
+func mockHttpResponsesInLoadedFrom(arg1, arg2 string) error {
+	return godog.ErrPending
 }
