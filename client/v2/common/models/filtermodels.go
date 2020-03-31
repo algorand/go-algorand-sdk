@@ -10,13 +10,22 @@ type GetPendingTransactionsByAddressParams struct {
 	format string `url:"format,omitempty"`
 }
 
-func NewPendingTransactionsByAddressParams() GetPendingTransactionsByAddressParams {
-	// this SDK only uses format msgpack
-	return &GetPendingTransactionsByAddressParams{format: "msgpack"}
+type PendingTransactionsByAddressOption func(GetPendingTransactionsByAddressParams) GetPendingTransactionsByAddressParams
+
+func NewPendingTransactionsByAddressParams(options ...PendingTransactionsByAddressOption) GetPendingTransactionsByAddressParams {
+	// this SDK only uses msgpack format.
+	p := GetPendingTransactionsByAddressParams{format: "msgpack"}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *GetPendingTransactionsByAddressParams) SetMax(max uint64) {
-	p.Max = max
+func MaxTransactionsByAddr(max uint64) PendingTransactionsByAddressOption {
+	return func(p GetPendingTransactionsByAddressParams) GetPendingTransactionsByAddressParams {
+		p.Max = max
+		return p
+	}
 }
 
 // GetBlockParams defines parameters for GetBlock.
@@ -25,8 +34,15 @@ type GetBlockParams struct {
 	format string `url:"format,omitempty"`
 }
 
-func NewBlockParams() *GetBlockParams {
-	return &GetBlockParams{format: "msgpack"}
+type GetBlockOption func(GetBlockParams) GetBlockParams
+
+func NewBlockParams(options ...GetBlockOption) GetBlockParams {
+	// this SDK only uses msgpack format.
+	p := GetBlockParams{format: "msgpack"}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
 // RegisterParticipationKeysAccountIdParams defines parameters for GetV2RegisterParticipationKeysAccountId.
@@ -45,21 +61,42 @@ type RegisterParticipationKeysAccountIdParams struct {
 	NoWait bool `url:"no-wait,omitempty"`
 }
 
-func NewRegisterParticipationKeysParams() *RegisterParticipationKeysAccountIdParams {
-	return &RegisterParticipationKeysAccountIdParams{}
+type RegisterParticipationKeyOption func(RegisterParticipationKeysAccountIdParams) RegisterParticipationKeysAccountIdParams
+
+func NewRegisterParticipationKeysParams(options ...RegisterParticipationKeyOption) RegisterParticipationKeysAccountIdParams {
+	p := RegisterParticipationKeysAccountIdParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *RegisterParticipationKeysAccountIdParams) SetFee(fee uint64) {
-	p.Fee = fee
+func RegisterParticipationFee(fee uint64) RegisterParticipationKeyOption {
+	return func(p RegisterParticipationKeysAccountIdParams) RegisterParticipationKeysAccountIdParams {
+		p.Fee = fee
+		return p
+	}
 }
-func (p *RegisterParticipationKeysAccountIdParams) SetDilution(dil uint64) {
-	p.KeyDilution = dil
+
+func RegisterParticipationDilution(dil uint64) RegisterParticipationKeyOption {
+	return func(p RegisterParticipationKeysAccountIdParams) RegisterParticipationKeysAccountIdParams {
+		p.KeyDilution = dil
+		return p
+	}
 }
-func (p *RegisterParticipationKeysAccountIdParams) SetRoundLastValid(rnd uint64) {
-	p.RoundLastValid = rnd
+
+func RegisterParticipationRoundLastValid(rnd uint64) RegisterParticipationKeyOption {
+	return func(p RegisterParticipationKeysAccountIdParams) RegisterParticipationKeysAccountIdParams {
+		p.RoundLastValid = rnd
+		return p
+	}
 }
-func (p *RegisterParticipationKeysAccountIdParams) SetNoWait(nowait bool) {
-	p.NoWait = nowait
+
+func RegisterParticipationNoWait(nowait bool) RegisterParticipationKeyOption {
+	return func(p RegisterParticipationKeysAccountIdParams) RegisterParticipationKeysAccountIdParams {
+		p.NoWait = nowait
+		return p
+	}
 }
 
 // ShutdownParams defines parameters for GetV2Shutdown.
@@ -67,12 +104,21 @@ type ShutdownParams struct {
 	Timeout uint64 `url:"timeout,omitempty"`
 }
 
-func NewShutdownParams() *ShutdownParams {
-	return &ShutdownParams{}
+type ShutdownOption func(ShutdownParams) ShutdownParams
+
+func NewShutdownParams(options ...ShutdownOption) ShutdownParams {
+	p := ShutdownParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *ShutdownParams) SetTimeout(timeout uint64) {
-	p.Timeout = timeout
+func ShutdownTimeout(timeout uint64) ShutdownOption {
+	return func(p ShutdownParams) ShutdownParams {
+		p.Timeout = timeout
+		return p
+	}
 }
 
 // GetPendingTransactionsParams defines parameters for GetPendingTransactions.
@@ -84,12 +130,22 @@ type GetPendingTransactionsParams struct {
 	format string `url:"format,omitempty"`
 }
 
-func NewPendingTransactionsParams() *GetPendingTransactionsParams {
-	return &GetPendingTransactionsParams{format: "msgpack"}
+type PendingTransactionsOption func(params GetPendingTransactionsParams) GetPendingTransactionsParams
+
+func NewPendingTransactionsParams(options ...PendingTransactionsOption) GetPendingTransactionsParams {
+	// this SDK only uses msgpack format.
+	p := GetPendingTransactionsParams{format: "msgpack"}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *GetPendingTransactionsParams) SetMax(max uint64) {
-	p.Max = max
+func MaxPendingTransactions(max uint64) PendingTransactionsOption {
+	return func(p GetPendingTransactionsParams) GetPendingTransactionsParams {
+		p.Max = max
+		return p
+	}
 }
 
 // SearchAccountsParams defines parameters for SearchAccounts.
@@ -111,28 +167,49 @@ type SearchAccountsParams struct {
 	AfterAddress string `url:"after-address,omitempty"`
 }
 
-func NewSearchAccountsParams() *SearchAccountsParams {
-	return &SearchAccountsParams{}
+type SearchAccountsOption func(params SearchAccountsParams) SearchAccountsParams
+
+func NewSearchAccountsParams(options ...SearchAccountsOption) SearchAccountsParams {
+	p := SearchAccountsParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *SearchAccountsParams) SetAssetID(assetID uint64) {
-	p.AssetId = assetID
+func SearchAccountsAssetID(assetID uint64) SearchAccountsOption {
+	return func(p SearchAccountsParams) SearchAccountsParams {
+		p.AssetId = assetID
+		return p
+	}
 }
 
-func (p *SearchAccountsParams) SetLimit(limit uint64) {
-	p.Limit = limit
+func SearchAccountsLimit(limit uint64) SearchAccountsOption {
+	return func(p SearchAccountsParams) SearchAccountsParams {
+		p.Limit = limit
+		return p
+	}
 }
 
-func (p *SearchAccountsParams) SetCurrencyGreaterThan(greaterThan uint64) {
-	p.CurrencyGreaterThan = greaterThan
+func SearchAccountsCurrencyGreaterThan(greaterThan uint64) SearchAccountsOption {
+	return func(p SearchAccountsParams) SearchAccountsParams {
+		p.CurrencyGreaterThan = greaterThan
+		return p
+	}
 }
 
-func (p *SearchAccountsParams) SetCurrencyLessThan(lessThan uint64) {
-	p.CurrencyLessThan = lessThan
+func SearchAccountsCurrencyLessThan(lessThan uint64) SearchAccountsOption {
+	return func(p SearchAccountsParams) SearchAccountsParams {
+		p.CurrencyLessThan = lessThan
+		return p
+	}
 }
 
-func (p *SearchAccountsParams) SetAfterAddress(after string) {
-	p.AfterAddress = after
+func SearchAccountsAfterAddress(after string) SearchAccountsOption {
+	return func(p SearchAccountsParams) SearchAccountsParams {
+		p.AfterAddress = after
+		return p
+	}
 }
 
 // LookupAccountByIDParams defines parameters for LookupAccountByID.
@@ -142,12 +219,21 @@ type LookupAccountByIDParams struct {
 	Round uint64 `url:"round,omitempty"`
 }
 
-func NewLookupAccountByIDParams() *LookupAccountByIDParams {
-	return &LookupAccountByIDParams{}
+type LookupAccountByIDOption func(LookupAccountByIDParams) LookupAccountByIDParams
+
+func NewLookupAccountByIDParams(options ...LookupAccountByIDOption) LookupAccountByIDParams {
+	p := LookupAccountByIDParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *LookupAccountByIDParams) SetRound(rnd uint64) {
-	p.Round = rnd
+func LookupAccountByIDRound(rnd uint64) LookupAccountByIDOption {
+	return func(p LookupAccountByIDParams) LookupAccountByIDParams {
+		p.Round = rnd
+		return p
+	}
 }
 
 // LookupAccountTransactionsParams defines parameters for LookupAccountTransactions.
@@ -200,68 +286,119 @@ type LookupAccountTransactionsParams struct {
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 }
 
-func NewLookupAccountTransactionsParams() *LookupAccountTransactionsParams {
-	return &LookupAccountTransactionsParams{}
+type LookupAccountTransactionsOption func(LookupAccountTransactionsParams) LookupAccountTransactionsParams
+
+func NewLookupAccountTransactionsParams(options ...LookupAccountTransactionsOption) LookupAccountTransactionsParams {
+	p := LookupAccountTransactionsParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *LookupAccountTransactionsParams) SetNotePrefix(prefix []byte) {
-	p.NotePrefix = prefix
+func LookupAccountTransactionNotePrefix(prefix []byte) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.NotePrefix = prefix
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetTxType(txtype string) {
-	p.TxType = txtype
+func LookupAccountTransactionTxType(txtype string) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.TxType = txtype
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetSigType(sigtype string) {
-	p.SigType = sigtype
+func LookupAccountTransactionSigType(sigtype string) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.SigType = sigtype
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetTXID(txid string) {
-	p.TxId = txid
+func LookupAccountTransactionTXID(txid string) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.TxId = txid
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetRound(rnd uint64) {
-	p.Round = rnd
+func LookupAccountTransactionRound(rnd uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.Round = rnd
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetMinRound(min uint64) {
-	p.MinRound = min
+func LookupAccountTransactionMinRound(min uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.MinRound = min
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetMaxRound(max uint64) {
-	p.MaxRound = max
+func LookupAccountTransactionMaxRound(max uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.MaxRound = max
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetAssetID(id uint64) {
-	p.AssetId = id
+func LookupAccountTransactionAssetID(id uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.AssetId = id
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetLimit(limit uint64) {
-	p.Limit = limit
+func LookupAccountTransactionLimit(limit uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.Limit = limit
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetBeforeTime(before time.Time) {
-	p.BeforeTime = before
+func LookupAccountTransactionBeforeTime(before time.Time) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.BeforeTime = before
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetAfterTime(after time.Time) {
-	p.AfterTime = after
+func LookupAccountTransactionAfterTime(after time.Time) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.AfterTime = after
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetCurrencyGreaterThan(greaterThan uint64) {
-	p.CurrencyGreaterThan = greaterThan
+func LookupAccountTransactionCurrencyGreaterThan(greaterThan uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.CurrencyGreaterThan = greaterThan
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetCurrencyLessThan(lessThan uint64) {
-	p.CurrencyLessThan = lessThan
+func LookupAccountTransactionCurrencyLessThan(lessThan uint64) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.CurrencyLessThan = lessThan
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetAddressRole(role string) {
-	p.AddressRole = role
+func LookupAccountTransactionAddressRole(role string) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.AddressRole = role
+		return p
+	}
 }
 
-func (p *LookupAccountTransactionsParams) SetExcludeCloseTo(exclude bool) {
-	p.ExcludeCloseTo = exclude
+func LookupAccountTransactionExcludeCloseTo(exclude bool) LookupAccountTransactionsOption {
+	return func(p LookupAccountTransactionsParams) LookupAccountTransactionsParams {
+		p.ExcludeCloseTo = exclude
+		return p
+	}
 }
 
 // SearchForAssetsParams defines parameters for SearchForAssets.
@@ -286,32 +423,56 @@ type SearchForAssetsParams struct {
 	AfterAsset uint64 `url:"after-asset,omitempty"`
 }
 
-func NewSearchForAssetsParams() *SearchForAssetsParams {
-	return &SearchForAssetsParams{}
+type SearchForAssetsOption func(SearchForAssetsParams) SearchForAssetsParams
+
+func NewSearchForAssetsParams(options ...SearchForAssetsOption) SearchForAssetsParams {
+	p := SearchForAssetsParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *SearchForAssetsParams) SetLimit(lim uint64) {
-	p.Limit = lim
+func SearchForAssetsLimit(lim uint64) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.Limit = lim
+		return p
+	}
 }
 
-func (p *SearchForAssetsParams) SetCreator(creator string) {
-	p.Creator = creator
+func SearchForAssetsCreator(creator string) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.Creator = creator
+		return p
+	}
 }
 
-func (p *SearchForAssetsParams) SetName(name string) {
-	p.Name = name
+func SearchForAssetsName(name string) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.Name = name
+		return p
+	}
 }
 
-func (p *SearchForAssetsParams) SetUnit(unit string) {
-	p.Unit = unit
+func SearchForAssetsUnit(unit string) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.Unit = unit
+		return p
+	}
 }
 
-func (p *SearchForAssetsParams) SetAssetID(id uint64) {
-	p.AssetId = id
+func SearchForAssetsAssetID(id uint64) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.AssetId = id
+		return p
+	}
 }
 
-func (p *SearchForAssetsParams) SetAfterAsset(after uint64) {
-	p.AfterAsset = after
+func SearchForAssetsAfterAsset(after uint64) SearchForAssetsOption {
+	return func(p SearchForAssetsParams) SearchForAssetsParams {
+		p.AfterAsset = after
+		return p
+	}
 }
 
 // LookupAssetBalancesParams defines parameters for LookupAssetBalances.
@@ -333,28 +494,49 @@ type LookupAssetBalancesParams struct {
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 }
 
-func NewLookupAssetBalancesParams() *LookupAssetBalancesParams {
-	return &LookupAssetBalancesParams{}
+type LookupAssetBalancesOption func(LookupAssetBalancesParams) LookupAssetBalancesParams
+
+func NewLookupAssetBalancesParams(options ...LookupAssetBalancesOption) LookupAssetBalancesParams {
+	p := LookupAssetBalancesParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *LookupAssetBalancesParams) SetLimit(lim uint64) {
-	p.Limit = lim
+func LookupAssetBalancesLimit(lim uint64) LookupAssetBalancesOption {
+	return func(p LookupAssetBalancesParams) LookupAssetBalancesParams {
+		p.Limit = lim
+		return p
+	}
 }
 
-func (p *LookupAssetBalancesParams) SetAfterAddress(after string) {
-	p.AfterAddress = after
+func LookupAssetAfterAddress(after string) LookupAssetBalancesOption {
+	return func(p LookupAssetBalancesParams) LookupAssetBalancesParams {
+		p.AfterAddress = after
+		return p
+	}
 }
 
-func (p *LookupAssetBalancesParams) SetRound(rnd uint64) {
-	p.Round = rnd
+func LookupAssetBalancesRound(rnd uint64) LookupAssetBalancesOption {
+	return func(p LookupAssetBalancesParams) LookupAssetBalancesParams {
+		p.Round = rnd
+		return p
+	}
 }
 
-func (p *LookupAssetBalancesParams) SetCurrencyGreaterThan(greaterThan uint64) {
-	p.CurrencyGreaterThan = greaterThan
+func LookupAssetBalancesCurrencyGreaterThan(greaterThan uint64) LookupAssetBalancesOption {
+	return func(p LookupAssetBalancesParams) LookupAssetBalancesParams {
+		p.CurrencyGreaterThan = greaterThan
+		return p
+	}
 }
 
-func (p *LookupAssetBalancesParams) SetCurrencyLessThan(lessThan uint64) {
-	p.CurrencyLessThan = lessThan
+func LookupAssetBalancesCurrencyLessThan(lessThan uint64) LookupAssetBalancesOption {
+	return func(p LookupAssetBalancesParams) LookupAssetBalancesParams {
+		p.CurrencyLessThan = lessThan
+		return p
+	}
 }
 
 // LookupAssetTransactionsParams defines parameters for LookupAssetTransactions.
@@ -407,68 +589,119 @@ type LookupAssetTransactionsParams struct {
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 }
 
-func NewLookupAssetTransactionsParams() *LookupAssetTransactionsParams {
-	return &LookupAssetTransactionsParams{}
+type LookupAssetTransactionsOption func(LookupAssetTransactionsParams) LookupAssetTransactionsParams
+
+func NewLookupAssetTransactionsParams(options ...LookupAssetTransactionsOption) LookupAssetTransactionsParams {
+	p := LookupAssetTransactionsParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *LookupAssetTransactionsParams) SetNotePrefix(prefix []byte) {
-	p.NotePrefix = prefix
+func LookupAssetTransactionsNotePrefix(prefix []byte) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.NotePrefix = prefix
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetTxType(txtype string) {
-	p.TxType = txtype
+func LookupAssetTransactionsTxType(txtype string) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.TxType = txtype
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetSigType(sigtype string) {
-	p.SigType = sigtype
+func LookupAssetTransactionsigType(sigtype string) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.SigType = sigtype
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetTXID(txid string) {
-	p.TxId = txid
+func LookupAssetTransactionsTXID(txid string) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.TxId = txid
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetRound(rnd uint64) {
-	p.Round = rnd
+func LookupAssetTransactionsRound(rnd uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.Round = rnd
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetMinRound(min uint64) {
-	p.MinRound = min
+func LookupAssetTransactionsMinRound(min uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.MinRound = min
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetMaxRound(max uint64) {
-	p.MaxRound = max
+func LookupAssetTransactionsMaxRound(max uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.MaxRound = max
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetAddress(address string) {
-	p.Address = address
+func LookupAssetTransactionsAddress(address string) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.Address = address
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetLimit(limit uint64) {
-	p.Limit = limit
+func LookupAssetTransactionsLimit(limit uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.Limit = limit
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetBeforeTime(before time.Time) {
-	p.BeforeTime = before
+func LookupAssetTransactionsBeforeTime(before time.Time) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.BeforeTime = before
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetAfterTime(after time.Time) {
-	p.AfterTime = after
+func LookupAssetTransactionsAfterTime(after time.Time) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.AfterTime = after
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetCurrencyGreaterThan(greaterThan uint64) {
-	p.CurrencyGreaterThan = greaterThan
+func LookupAssetTransactionsCurrencyGreaterThan(greaterThan uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.CurrencyGreaterThan = greaterThan
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetCurrencyLessThan(lessThan uint64) {
-	p.CurrencyLessThan = lessThan
+func LookupAssetTransactionsCurrencyLessThan(lessThan uint64) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.CurrencyLessThan = lessThan
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetAddressRole(role string) {
-	p.AddressRole = role
+func LookupAssetTransactionsAddressRole(role string) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.AddressRole = role
+		return p
+	}
 }
 
-func (p *LookupAssetTransactionsParams) SetExcludeCloseTo(exclude bool) {
-	p.ExcludeCloseTo = exclude
+func LookupAssetTransactionsExcludeCloseTo(exclude bool) LookupAssetTransactionsOption {
+	return func(p LookupAssetTransactionsParams) LookupAssetTransactionsParams {
+		p.ExcludeCloseTo = exclude
+		return p
+	}
 }
 
 // SearchForTransactionsParams defines parameters for SearchForTransactions.
@@ -524,70 +757,124 @@ type SearchForTransactionsParams struct {
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 }
 
-func NewSearchForTransactionsParams() *SearchForTransactionsParams {
-	return &SearchForTransactionsParams{}
+type SearchForTransactionsOption func(SearchForTransactionsParams) SearchForTransactionsParams
+
+func NewSearchForTransactionsParams(options ...SearchForTransactionsOption) SearchForTransactionsParams {
+	p := SearchForTransactionsParams{}
+	for _, option := range options {
+		p = option(p)
+	}
+	return p
 }
 
-func (p *SearchForTransactionsParams) SetNotePrefix(prefix []byte) {
-	p.NotePrefix = prefix
+func SearchForTransactionsNotePrefix(prefix []byte) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.NotePrefix = prefix
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetTxType(txtype string) {
-	p.TxType = txtype
+func SearchForTransactionsTxType(txtype string) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.TxType = txtype
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetSigType(sigtype string) {
-	p.SigType = sigtype
+func SearchForTransactionsigType(sigtype string) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.SigType = sigtype
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetTXID(txid string) {
-	p.TxId = txid
+func SearchForTransactionsTXID(txid string) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.TxId = txid
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetRound(rnd uint64) {
-	p.Round = rnd
+func SearchForTransactionsRound(rnd uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.Round = rnd
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetMinRound(min uint64) {
-	p.MinRound = min
+func SearchForTransactionsMinRound(min uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.MinRound = min
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetMaxRound(max uint64) {
-	p.MaxRound = max
+func SearchForTransactionsMaxRound(max uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.MaxRound = max
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetAddress(address string) {
-	p.Address = address
+func SearchForTransactionsAddress(address string) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.Address = address
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetLimit(limit uint64) {
-	p.Limit = limit
+func SearchForTransactionsAssetID(assetID uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.AssetId = assetID
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetBeforeTime(before time.Time) {
-	p.BeforeTime = before
+func SearchForTransactionsLimit(limit uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.Limit = limit
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetAfterTime(after time.Time) {
-	p.AfterTime = after
+func SearchForTransactionsBeforeTime(before time.Time) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.BeforeTime = before
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetCurrencyGreaterThan(greaterThan uint64) {
-	p.CurrencyGreaterThan = greaterThan
+func SearchForTransactionsAfterTime(after time.Time) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.AfterTime = after
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetCurrencyLessThan(lessThan uint64) {
-	p.CurrencyLessThan = lessThan
+func SearchForTransactionsCurrencyGreaterThan(greaterThan uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.CurrencyGreaterThan = greaterThan
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetAddressRole(role string) {
-	p.AddressRole = role
+func SearchForTransactionsCurrencyLessThan(lessThan uint64) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.CurrencyLessThan = lessThan
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetExcludeCloseTo(exclude bool) {
-	p.ExcludeCloseTo = exclude
+func SearchForTransactionsAddressRole(role string) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.AddressRole = role
+		return p
+	}
 }
 
-func (p *SearchForTransactionsParams) SetAssetID(id uint64) {
-	p.AssetId = id
+func SearchForTransactionsExcludeCloseTo(exclude bool) SearchForTransactionsOption {
+	return func(p SearchForTransactionsParams) SearchForTransactionsParams {
+		p.ExcludeCloseTo = exclude
+		return p
+	}
 }
