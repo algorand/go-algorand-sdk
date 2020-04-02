@@ -44,13 +44,13 @@ type Client struct {
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
-func MakeClient(address string, apiToken string) (c Client, err error) {
+func MakeClient(address string, apiToken string) (c *Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
 		return
 	}
 
-	c = Client{
+	c = &Client{
 		serverURL: *url,
 		apiToken:  apiToken,
 	}
@@ -58,7 +58,7 @@ func MakeClient(address string, apiToken string) (c Client, err error) {
 }
 
 // MakeClientWithHeaders is the factory for constructing a Client for a given endpoint with additional user defined headers.
-func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c Client, err error) {
+func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c *Client, err error) {
 	c, err = MakeClient(address, apiToken)
 	if err != nil {
 		return
@@ -110,7 +110,7 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client Client) submitFormRaw(ctx context.Context, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
+func (client *Client) submitFormRaw(ctx context.Context, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 
 	// Handle version prefix
@@ -181,7 +181,7 @@ func (client Client) submitFormRaw(ctx context.Context, path string, request int
 	return resp, nil
 }
 
-func (client Client) submitForm(ctx context.Context, response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
+func (client *Client) submitForm(ctx context.Context, response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
 	resp, err := client.submitFormRaw(ctx, path, request, requestMethod, encodeJSON, headers)
 	if err != nil {
 		return err
@@ -194,13 +194,13 @@ func (client Client) submitForm(ctx context.Context, response interface{}, path 
 }
 
 // get performs a GET request to the specific path against the server
-func (client Client) Get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+func (client *Client) Get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(ctx, response, path, request, "GET", false /* encodeJSON */, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client Client) Post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+func (client *Client) Post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(ctx, response, path, request, "POST", true /* encodeJSON */, headers)
 }
