@@ -12,7 +12,7 @@ type AccountInformationService struct {
 	account string
 }
 
-func (s *AccountInformationService) AccountInformation(ctx context.Context, headers ...*common.Header) (result models.Account, err error) {
+func (s *AccountInformationService) Do(ctx context.Context, headers ...*common.Header) (result models.Account, err error) {
 	err = s.c.get(ctx, &result, fmt.Sprintf("/accounts/%s", s.account), nil, headers)
 	return
 }

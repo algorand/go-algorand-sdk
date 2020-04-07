@@ -20,7 +20,7 @@ func (s *SearchAccountsService) Limit(limit uint64) *SearchAccountsService {
 	s.p.Limit = limit
 	return s
 }
-func (s *SearchAccountsService) GreaterThan(greaterThan uint64) *SearchAccountsService {
+func (s *SearchAccountsService) CurrencyGreaterThan(greaterThan uint64) *SearchAccountsService {
 	s.p.CurrencyGreaterThan = greaterThan
 	return s
 }

@@ -82,6 +82,11 @@ func (s *SearchForTransactionsService) AddressRole(role string) *SearchForTransa
 	return s
 }
 
+func (s *SearchForTransactionsService) Address(address string) *SearchForTransactionsService {
+	s.p.Address = address
+	return s
+}
+
 func (s *SearchForTransactionsService) ExcludeCloseTo(exclude bool) *SearchForTransactionsService {
 	s.p.ExcludeCloseTo = exclude
 	return s

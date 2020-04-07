@@ -7,9 +7,11 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/cucumber/godog"
 )
 
-func loadMockJsons(pathToJsons, commaDelimitedFilenames string) ([][]byte, error) {
+func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error) {
 	jsonFilenames := strings.Split(commaDelimitedFilenames, ",")
 	var bytesArray [][]byte
 	for _, jsonFilename := range jsonFilenames {
@@ -27,20 +29,34 @@ func loadMockJsons(pathToJsons, commaDelimitedFilenames string) ([][]byte, error
 	return bytesArray, nil
 }
 
-func confirmErrorContainsString(err error, desired string) error {
-	if desired == "nil" {
-		return err
-	}
-	if strings.Contains(err.Error(), desired) {
-		return nil
-	} else {
-		return fmt.Errorf("validated error did not contain expected substring, expected substring: %s,"+
-			"actual error string: %s", desired, err.Error())
-	}
-}
-
 var mockServer httptest.Server
 
-func mockHttpResponsesInLoadedFrom(arg1, arg2 string) error {
+func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
+	jsons, err := loadMockJsons(jsonfiles, directory)
+	if err != nil {
+		return err
+	}
+	// TODO mockServer is constructed and will return each json in jsons on subsequent calls
 	return godog.ErrPending
+}
+
+func expectThePathUsedToBe(expectedPath string) error {
+	// TODO request recorder is used and records path used
+	return godog.ErrPending
+}
+
+var globalErrForExamination error
+
+func expectErrorStringToContain(contains string) error {
+	if contains == "nil" {
+		if globalErrForExamination != nil {
+			return fmt.Errorf("expected no error but error was found: %s", globalErrForExamination.Error())
+		}
+		return nil
+	}
+	if strings.Contains(globalErrForExamination.Error(), contains) {
+		return nil
+	}
+	return fmt.Errorf("validated error did not contain expected substring, expected substring: %s,"+
+		"actual error string: %s", contains, globalErrForExamination.Error())
 }

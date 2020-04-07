@@ -74,8 +74,8 @@ func (c *Client) NewSuggestedParamsService() *SuggestedParamsService {
 	return &SuggestedParamsService{c: c}
 }
 
-func (c *Client) NewSupplyService() *VersionsService {
-	return &VersionsService{c: c}
+func (c *Client) NewSupplyService() *SupplyService {
+	return &SupplyService{c: c}
 }
 
 func (c *Client) NewVersionsService() *VersionsService {

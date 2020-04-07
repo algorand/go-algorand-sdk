@@ -153,6 +153,7 @@ type RawBlockMsgpack struct {
 
 // Block defines model for Block.
 type Block struct {
+	Cert string `json:"cert"`
 
 	// \[gh\] hash to which this block belongs.
 	GenesisHash []byte `json:"genesis-hash"`
@@ -454,6 +455,8 @@ type TransactionAssetTransfer struct {
 
 	// \[asnd\] The effective sender during a clawback transactions. If this is not a zero value, the real transaction sender must be the Clawback address from the AssetParams.
 	Sender string `json:"sender,omitempty"`
+
+	CloseAmount uint64 `json:"close-amount,omitempty"`
 }
 
 // TransactionKeyreg defines model for TransactionKeyreg.

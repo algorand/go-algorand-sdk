@@ -10,7 +10,7 @@ type SupplyService struct {
 	c *Client
 }
 
-func (s *SupplyService) Supply(ctx context.Context, headers ...*common.Header) (supply models.Supply, err error) {
+func (s *SupplyService) Do(ctx context.Context, headers ...*common.Header) (supply models.Supply, err error) {
 	err = s.c.get(ctx, &supply, "/ledger/supply", nil, headers)
 	return
 }
