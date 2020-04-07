@@ -1,8 +1,10 @@
 package main
 
 import (
+	"container/ring"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
@@ -29,20 +31,39 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 	return bytesArray, nil
 }
 
-var mockServer httptest.Server
+var mockServer *httptest.Server
+var responseRing *ring.Ring
 
 func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
 	jsons, err := loadMockJsons(jsonfiles, directory)
 	if err != nil {
 		return err
 	}
-	// TODO mockServer is constructed and will return each json in jsons on subsequent calls
-	return godog.ErrPending
+	responseRing = ring.New(len(jsons))
+	for _, json := range jsons {
+		responseRing.Value = json
+	}
+	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json := responseRing.Value.([]byte)
+		_, err = w.Write(json)
+		responseRing = responseRing.Next()
+	}))
+	return err
 }
 
+var receivedPath string
+
+func mockServerRecordingRequestPaths() error {
+	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+	}))
+	return nil
+}
 func expectThePathUsedToBe(expectedPath string) error {
-	// TODO request recorder is used and records path used
-	return godog.ErrPending
+	if receivedPath != expectedPath {
+		return fmt.Errorf("path used to access mock server was %s but expected path %s", receivedPath, expectedPath)
+	}
+	return nil
 }
 
 var globalErrForExamination error
