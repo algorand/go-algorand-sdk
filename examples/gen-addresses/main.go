@@ -2,11 +2,10 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 
+	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -39,7 +38,7 @@ func main() {
 	}
 
 	// Print algod status
-	nodeStatus, err := algodClient.Status(context.Background())
+	nodeStatus, err := algodClient.Status()
 	if err != nil {
 		fmt.Printf("error getting algod status: %s\n", err)
 		return
@@ -107,7 +106,7 @@ func main() {
 	privateKey := resp4.PrivateKey
 
 	// Get the suggested transaction parameters
-	txParams, err := algodClient.SuggestedParams(context.Background())
+	txParams, err := algodClient.BuildSuggestedParams()
 	if err != nil {
 		fmt.Printf("error getting suggested tx params: %s\n", err)
 		return
