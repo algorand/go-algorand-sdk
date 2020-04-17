@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 // Account defines model for account information at a given round.
 type Account struct {
 
@@ -624,7 +620,7 @@ type AfterAddress string
 type AfterAsset uint64
 
 // AfterTime defines model for after-time.
-type AfterTime time.Time
+type AfterTime string
 
 // AlgosGreaterThan defines model for algos-greater-than.
 type AlgosGreaterThan uint64
@@ -636,7 +632,7 @@ type AlgosLessThan uint64
 type AssetId uint64
 
 // BeforeTime defines model for before-time.
-type BeforeTime time.Time
+type BeforeTime string
 
 // CurrencyGreaterThan defines model for currency-greater-than.
 type CurrencyGreaterThan uint64
@@ -688,6 +684,9 @@ type AccountResponse struct {
 
 	// Round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
+
+	// Used for pagination, when making another request provide this token with the next parameter.
+	NextToken string `json:"next-token"`
 }
 
 // AccountsResponse defines model for AccountsResponse.
@@ -696,6 +695,9 @@ type AccountsResponse struct {
 
 	// Round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
+
+	// Used for pagination, when making another request provide this token with the next parameter.
+	NextToken string `json:"next-token"`
 }
 
 // AssetBalancesResponse defines model for AssetBalancesResponse.
@@ -706,6 +708,9 @@ type AssetBalancesResponse struct {
 
 	// Round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
+
+	// Used for pagination, when making another request provide this token with the next parameter.
+	NextToken string `json:"next-token"`
 }
 
 // AssetResponse defines model for AssetResponse.
@@ -724,6 +729,9 @@ type AssetsResponse struct {
 
 	// Round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
+
+	// Used for pagination, when making another request provide this token with the next parameter.
+	NextToken string `json:"next-token"`
 }
 
 // BlockResponse defines model for BlockResponse.
@@ -740,6 +748,9 @@ type TransactionsResponse struct {
 	// Round at which the results were computed.
 	CurrentRound uint64        `json:"current-round"`
 	Transactions []Transaction `json:"transactions"`
+
+	// Used for pagination, when making another request provide this token with the next parameter.
+	NextToken string `json:"next-token"`
 }
 
 // PendingTransactionInfoResponse is returned by Get Pending Transaction by TXID

@@ -7,12 +7,12 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-type AccountInformationService struct {
+type AccountInformation struct {
 	c       *Client
 	account string
 }
 
-func (s *AccountInformationService) Do(ctx context.Context, headers ...*common.Header) (result models.Account, err error) {
+func (s *AccountInformation) Do(ctx context.Context, headers ...*common.Header) (result models.Account, err error) {
 	err = s.c.get(ctx, &result, fmt.Sprintf("/accounts/%s", s.account), nil, headers)
 	return
 }

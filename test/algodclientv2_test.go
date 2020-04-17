@@ -53,7 +53,7 @@ func AlgodClientV2Context(s *godog.Suite) {
 //	if err != nil {
 //		return nil, algod.Client{}, err
 //	}
-//	mockAlgod := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//	mockAlgod := httptest.Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //		w.WriteHeader(http.StatusOK)
 //		w.Write(jsonBytes[0])
 //	}))
@@ -67,7 +67,7 @@ func weMakeAnyShutdownCall() error {
 	if err != nil {
 		return err
 	}
-	globalErrForExamination = algodClient.NewShutdownService().Do(context.Background())
+	globalErrForExamination = algodClient.Shutdown().Do(context.Background())
 	return nil
 }
 
@@ -76,7 +76,7 @@ func weMakeAnyRegisterParticipationKeysCall() error {
 	if err != nil {
 		return err
 	}
-	globalErrForExamination = algodClient.NewRegisterParticipationKeysService("").Do(context.Background())
+	globalErrForExamination = algodClient.RegisterParticipationKeys("").Do(context.Background())
 	return nil
 }
 
@@ -87,7 +87,7 @@ func weMakeAnyPendingTransactionInformationCall() error {
 	if err != nil {
 		return err
 	}
-	_, stxResponse, globalErrForExamination = algodClient.NewPendingTransactionInformationService("").Do(context.Background())
+	_, stxResponse, globalErrForExamination = algodClient.PendingTransactionInformation("").Do(context.Background())
 	return nil
 }
 
@@ -105,7 +105,7 @@ func weMakeAnyPendingTransactionsInformationCall() error {
 	if err != nil {
 		return err
 	}
-	_, stxsResponse, globalErrForExamination = algodClient.NewPendingTransactionsService().Do(context.Background())
+	_, stxsResponse, globalErrForExamination = algodClient.PendingTransactions().Do(context.Background())
 	return nil
 }
 
@@ -123,7 +123,7 @@ func weMakeAnySendRawTransactionCall() error {
 	if err != nil {
 		return err
 	}
-	txidResponse, globalErrForExamination = algodClient.NewSendRawTransactionService(nil).Do(context.Background())
+	txidResponse, globalErrForExamination = algodClient.SendRawTransaction(nil).Do(context.Background())
 	return nil
 }
 
@@ -139,7 +139,7 @@ func weMakeAnyPendingTransactionsByAddressCall() error {
 	if err != nil {
 		return err
 	}
-	_, stxsResponse, globalErrForExamination = algodClient.NewPendingTransactionsByAddressService("").Do(context.Background())
+	_, stxsResponse, globalErrForExamination = algodClient.PendingTransactionsByAddress("").Do(context.Background())
 	return nil
 }
 
@@ -161,7 +161,7 @@ func weMakeAnyNodeStatusCall() error {
 	if err != nil {
 		return err
 	}
-	statusResponse, globalErrForExamination = algodClient.NewStatusService().Do(context.Background())
+	statusResponse, globalErrForExamination = algodClient.Status().Do(context.Background())
 	return nil
 }
 
@@ -179,7 +179,7 @@ func weMakeAnyLedgerSupplyCall() error {
 	if err != nil {
 		return err
 	}
-	supplyResponse, globalErrForExamination = algodClient.NewSupplyService().Do(context.Background())
+	supplyResponse, globalErrForExamination = algodClient.Supply().Do(context.Background())
 	return nil
 }
 
@@ -201,7 +201,7 @@ func weMakeAnyStatusAfterBlockCall() error {
 	if err != nil {
 		return err
 	}
-	statusResponse, globalErrForExamination = algodClient.NewStatusAfterBlockService(0).Do(context.Background())
+	statusResponse, globalErrForExamination = algodClient.StatusAfterBlock(0).Do(context.Background())
 	return nil
 }
 
@@ -219,7 +219,7 @@ func weMakeAnyAccountInformationCall() error {
 	if err != nil {
 		return err
 	}
-	accountResponse, globalErrForExamination = algodClient.NewAccountInformationService("").Do(context.Background())
+	accountResponse, globalErrForExamination = algodClient.AccountInformation("").Do(context.Background())
 	return nil
 }
 
@@ -237,7 +237,7 @@ func weMakeAnyGetBlockCall() error {
 	if err != nil {
 		return err
 	}
-	blockResponse, globalErrForExamination = algodClient.NewBlockService(0).Do(context.Background())
+	blockResponse, globalErrForExamination = algodClient.Block(0).Do(context.Background())
 	return nil
 }
 
@@ -255,7 +255,7 @@ func weMakeAnySuggestedTransactionParametersCall() error {
 	if err != nil {
 		return err
 	}
-	suggestedParamsResponse, globalErrForExamination = algodClient.NewSuggestedParamsService().Do(context.Background())
+	suggestedParamsResponse, globalErrForExamination = algodClient.SuggestedParams().Do(context.Background())
 	return nil
 }
 
@@ -271,7 +271,7 @@ func weMakeAShutdownCallWithTimeout(timeout int) error {
 	if err != nil {
 		return err
 	}
-	globalErrForExamination = algodClient.NewShutdownService().Timeout(uint64(timeout)).Do(context.Background())
+	globalErrForExamination = algodClient.Shutdown().Timeout(uint64(timeout)).Do(context.Background())
 	return nil
 }
 
@@ -288,7 +288,7 @@ func weMakeARegisterParticipationKeysCallAgainstAccountFeeDilutionLastvalidround
 	if err != nil {
 		return err
 	}
-	globalErrForExamination = algodClient.NewRegisterParticipationKeysService(account).Fee(uint64(fee)).KeyDilution(uint64(dilution)).RoundLastValid(uint64(lastValid)).NoWait(nowaitBool).Do(context.Background())
+	globalErrForExamination = algodClient.RegisterParticipationKeys(account).Fee(uint64(fee)).KeyDilution(uint64(dilution)).RoundLastValid(uint64(lastValid)).NoWait(nowaitBool).Do(context.Background())
 	return nil
 }
 
@@ -297,7 +297,7 @@ func weMakeAPendingTransactionInformationAgainstTxidWithMax(txid string, max int
 	if err != nil {
 		return err
 	}
-	_, _, globalErrForExamination = algodClient.NewPendingTransactionInformationService(txid).Max(uint64(max)).Do(context.Background())
+	_, _, globalErrForExamination = algodClient.PendingTransactionInformation(txid).Max(uint64(max)).Do(context.Background())
 	return nil
 }
 
@@ -306,7 +306,7 @@ func weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax(account string,
 	if err != nil {
 		return err
 	}
-	_, _, globalErrForExamination = algodClient.NewPendingTransactionsByAddressService(account).Max(uint64(max)).Do(context.Background())
+	_, _, globalErrForExamination = algodClient.PendingTransactionsByAddress(account).Max(uint64(max)).Do(context.Background())
 	return nil
 }
 
@@ -315,7 +315,7 @@ func weMakeAStatusAfterBlockCallWithRound(round int) error {
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = algodClient.NewStatusAfterBlockService(uint64(round)).Do(context.Background())
+	_, globalErrForExamination = algodClient.StatusAfterBlock(uint64(round)).Do(context.Background())
 	return nil
 }
 
@@ -324,7 +324,7 @@ func weMakeAnAccountInformationCallAgainstAccount(account string) error {
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = algodClient.NewAccountInformationService(account).Do(context.Background())
+	_, globalErrForExamination = algodClient.AccountInformation(account).Do(context.Background())
 	return nil
 }
 
@@ -333,6 +333,6 @@ func weMakeAGetBlockCallAgainstBlockNumber(blocknum int) error {
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = algodClient.NewBlockService(uint64(blocknum)).Do(context.Background())
+	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
 	return nil
 }

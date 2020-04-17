@@ -7,11 +7,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-type SuggestedParamsService struct {
+type SuggestedParams struct {
 	c *Client
 }
 
-func (s *SuggestedParamsService) Do(ctx context.Context, headers ...*common.Header) (params types.SuggestedParams, err error) {
+func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (params types.SuggestedParams, err error) {
 	var response models.TransactionParams
 	err = s.c.get(ctx, &response, "/transactions/params", nil, headers)
 	params = types.SuggestedParams{

@@ -6,11 +6,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-type SupplyService struct {
+type Supply struct {
 	c *Client
 }
 
-func (s *SupplyService) Do(ctx context.Context, headers ...*common.Header) (supply models.Supply, err error) {
+func (s *Supply) Do(ctx context.Context, headers ...*common.Header) (supply models.Supply, err error) {
 	err = s.c.get(ctx, &supply, "/ledger/supply", nil, headers)
 	return
 }

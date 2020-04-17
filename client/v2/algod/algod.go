@@ -26,58 +26,58 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
-func (c *Client) NewAccountInformationService(account string) *AccountInformationService {
-	return &AccountInformationService{c: c, account: account}
+func (c *Client) AccountInformation(account string) *AccountInformation {
+	return &AccountInformation{c: c, account: account}
 }
 
-func (c *Client) NewBlockService(round uint64) *BlockService {
-	return &BlockService{c: c, round: round}
+func (c *Client) Block(round uint64) *Block {
+	return &Block{c: c, round: round}
 }
 
-func (c *Client) NewHealthCheckService() *HealthCheckService {
-	return &HealthCheckService{c: c}
+func (c *Client) HealthCheck() *HealthCheck {
+	return &HealthCheck{c: c}
 }
 
-func (c *Client) NewPendingTransactionInformationService(txid string) *PendingTransactionInformationService {
-	return &PendingTransactionInformationService{c: c, txid: txid}
+func (c *Client) PendingTransactionInformation(txid string) *PendingTransactionInformation {
+	return &PendingTransactionInformation{c: c, txid: txid}
 }
 
-func (c *Client) NewPendingTransactionsByAddressService(address string) *PendingTransactionInformationByAddressService {
-	return &PendingTransactionInformationByAddressService{c: c, address: address}
+func (c *Client) PendingTransactionsByAddress(address string) *PendingTransactionInformationByAddress {
+	return &PendingTransactionInformationByAddress{c: c, address: address}
 }
 
-func (c *Client) NewPendingTransactionsService() *PendingTransactionsService {
-	return &PendingTransactionsService{c: c}
+func (c *Client) PendingTransactions() *PendingTransactions {
+	return &PendingTransactions{c: c}
 }
 
-func (c *Client) NewRegisterParticipationKeysService(account string) *RegisterParticipationKeysService {
-	return &RegisterParticipationKeysService{c: c, account: account}
+func (c *Client) RegisterParticipationKeys(account string) *RegisterParticipationKeys {
+	return &RegisterParticipationKeys{c: c, account: account}
 }
 
-func (c *Client) NewSendRawTransactionService(tx []byte) *SendRawTransactionService {
-	return &SendRawTransactionService{c: c, stx: tx}
+func (c *Client) SendRawTransaction(tx []byte) *SendRawTransaction {
+	return &SendRawTransaction{c: c, stx: tx}
 }
 
-func (c *Client) NewShutdownService() *ShutdownService {
-	return &ShutdownService{c: c}
+func (c *Client) Shutdown() *Shutdown {
+	return &Shutdown{c: c}
 }
 
-func (c *Client) NewStatusAfterBlockService(round uint64) *StatusAfterBlockService {
-	return &StatusAfterBlockService{c: c}
+func (c *Client) StatusAfterBlock(round uint64) *StatusAfterBlock {
+	return &StatusAfterBlock{c: c}
 }
 
-func (c *Client) NewStatusService() *StatusService {
-	return &StatusService{c: c}
+func (c *Client) Status() *Status {
+	return &Status{c: c}
 }
 
-func (c *Client) NewSuggestedParamsService() *SuggestedParamsService {
-	return &SuggestedParamsService{c: c}
+func (c *Client) SuggestedParams() *SuggestedParams {
+	return &SuggestedParams{c: c}
 }
 
-func (c *Client) NewSupplyService() *SupplyService {
-	return &SupplyService{c: c}
+func (c *Client) Supply() *Supply {
+	return &Supply{c: c}
 }
 
-func (c *Client) NewVersionsService() *VersionsService {
-	return &VersionsService{c: c}
+func (c *Client) Versions() *Versions {
+	return &Versions{c: c}
 }

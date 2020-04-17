@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type SendRawTransactionService struct {
+type SendRawTransaction struct {
 	c   *Client
 	stx []byte
 }
 
-func (s *SendRawTransactionService) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
+func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
 	var response models.TxId
 	// Set default Content-Type, if the user didn't specify it.
 	addContentType := true

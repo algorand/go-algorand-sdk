@@ -8,18 +8,18 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-type PendingTransactionInformationByAddressService struct {
+type PendingTransactionInformationByAddress struct {
 	c       *Client
 	address string
 	p       models.GetPendingTransactionsByAddressParams
 }
 
-func (s *PendingTransactionInformationByAddressService) Max(max uint64) *PendingTransactionInformationByAddressService {
+func (s *PendingTransactionInformationByAddress) Max(max uint64) *PendingTransactionInformationByAddress {
 	s.p.Max = max
 	return s
 }
 
-func (s *PendingTransactionInformationByAddressService) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
 	response := models.PendingTransactionsResponse{}
 	err = s.c.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", s.address), s.p, headers)
 	total = response.TotalTransactions

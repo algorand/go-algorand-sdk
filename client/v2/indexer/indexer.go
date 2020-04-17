@@ -19,38 +19,38 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
-func (c *Client) NewLookupAssetBalancesService(index uint64) *LookupAssetBalancesService {
-	return &LookupAssetBalancesService{c: c, index: index}
+func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {
+	return &LookupAssetBalances{c: c, index: index}
 }
 
-func (c *Client) NewLookupAssetTransactionsService(index uint64) *LookupAssetTransactionsService {
-	return &LookupAssetTransactionsService{c: c, index: index}
+func (c *Client) LookupAssetTransactions(index uint64) *LookupAssetTransactions {
+	return &LookupAssetTransactions{c: c, index: index}
 }
 
-func (c *Client) NewLookupAccountTransactionsService(account string) *LookupAccountTransactionsService {
-	return &LookupAccountTransactionsService{c: c, account: account}
+func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransactions {
+	return &LookupAccountTransactions{c: c, account: account}
 }
 
-func (c *Client) NewLookupBlockService(round uint64) *LookupBlockService {
-	return &LookupBlockService{c: c, round: round}
+func (c *Client) LookupBlock(round uint64) *LookupBlock {
+	return &LookupBlock{c: c, round: round}
 }
 
-func (c *Client) NewLookupAccountByIDService(account string) *LookupAccountByIDService {
-	return &LookupAccountByIDService{c: c, account: account}
+func (c *Client) LookupAccountByID(account string) *LookupAccountByID {
+	return &LookupAccountByID{c: c, account: account}
 }
 
-func (c *Client) NewLookupAssetByIDService(index uint64) *LookupAssetByIDService {
-	return &LookupAssetByIDService{c: c, index: index}
+func (c *Client) LookupAssetByID(index uint64) *LookupAssetByID {
+	return &LookupAssetByID{c: c, index: index}
 }
 
-func (c *Client) NewSearchAccountsService() *SearchAccountsService {
-	return &SearchAccountsService{c: c}
+func (c *Client) SearchAccounts() *SearchAccounts {
+	return &SearchAccounts{c: c}
 }
 
-func (c *Client) NewSearchForTransactionsService() *SearchForTransactionsService {
-	return &SearchForTransactionsService{c: c}
+func (c *Client) SearchForTransactions() *SearchForTransactions {
+	return &SearchForTransactions{c: c}
 }
 
-func (c *Client) NewSearchForAssetsService() *SearchForAssetsService {
-	return &SearchForAssetsService{c: c}
+func (c *Client) SearchForAssets() *SearchForAssets {
+	return &SearchForAssets{c: c}
 }

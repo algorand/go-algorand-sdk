@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 // GetPendingTransactionsByAddressParams defines parameters for GetPendingTransactionsByAddress.
 type GetPendingTransactionsByAddressParams struct {
 	// Truncated number of transactions to display. If max=0, returns all pending txns.
@@ -74,6 +72,9 @@ type SearchAccountsParams struct {
 
 	// Used in conjunction with limit to page through results.
 	AfterAddress string `url:"after-address,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }
 
 // LookupAccountByIDParams defines parameters for LookupAccountByID.
@@ -115,10 +116,10 @@ type LookupAccountTransactionsParams struct {
 	Limit uint64 `url:"limit,omitempty"`
 
 	// Include results before the given time. Must be an RFC 3339 formatted string.
-	BeforeTime time.Time `url:"before-time,omitempty"`
+	BeforeTime string `url:"before-time,omitempty"`
 
 	// Include results after the given time. Must be an RFC 3339 formatted string.
-	AfterTime time.Time `url:"after-time,omitempty"`
+	AfterTime string `url:"after-time,omitempty"`
 
 	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
@@ -131,6 +132,9 @@ type LookupAccountTransactionsParams struct {
 
 	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }
 
 // SearchForAssetsParams defines parameters for SearchForAssets.
@@ -153,6 +157,9 @@ type SearchForAssetsParams struct {
 
 	// Used in conjunction with limit to page through results.
 	AfterAsset uint64 `url:"after-asset,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }
 
 // LookupAssetBalancesParams defines parameters for LookupAssetBalances.
@@ -172,6 +179,9 @@ type LookupAssetBalancesParams struct {
 
 	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }
 
 // LookupAssetTransactionsParams defines parameters for LookupAssetTransactions.
@@ -203,10 +213,10 @@ type LookupAssetTransactionsParams struct {
 	Limit uint64 `url:"limit,omitempty"`
 
 	// Include results before the given time. Must be an RFC 3339 formatted string.
-	BeforeTime time.Time `url:"before-time,omitempty"`
+	BeforeTime string `url:"before-time,omitempty"`
 
 	// Include results after the given time. Must be an RFC 3339 formatted string.
-	AfterTime time.Time `url:"after-time,omitempty"`
+	AfterTime string `url:"after-time,omitempty"`
 
 	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
@@ -222,6 +232,9 @@ type LookupAssetTransactionsParams struct {
 
 	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }
 
 // SearchForTransactionsParams defines parameters for SearchForTransactions.
@@ -256,10 +269,10 @@ type SearchForTransactionsParams struct {
 	Limit uint64 `url:"limit,omitempty"`
 
 	// Include results before the given time. Must be an RFC 3339 formatted string.
-	BeforeTime time.Time `url:"before-time,omitempty"`
+	BeforeTime string `url:"before-time,omitempty"`
 
 	// Include results after the given time. Must be an RFC 3339 formatted string.
-	AfterTime time.Time `url:"after-time,omitempty"`
+	AfterTime string `url:"after-time,omitempty"`
 
 	// Results should have an amount greater than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
@@ -275,4 +288,7 @@ type SearchForTransactionsParams struct {
 
 	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
+
+	// Used for pagination.
+	NextToken string `url:"next,omitempty"`
 }

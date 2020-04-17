@@ -7,11 +7,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-type PendingTransactionsService struct {
+type PendingTransactions struct {
 	c *Client
 }
 
-func (s *PendingTransactionsService) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
 	response := models.PendingTransactionsResponse{}
 	err = s.c.get(ctx, &response, "/transactions/pending", nil, headers)
 	total = response.TotalTransactions
