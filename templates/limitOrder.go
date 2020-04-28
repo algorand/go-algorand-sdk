@@ -7,7 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-// Split template representation
+// LimitOrder represents a swap between Algos and an Asset at some ratio or better.
 type LimitOrder struct {
 	ContractTemplate
 	assetID uint64
