@@ -23,10 +23,11 @@ type Transaction struct {
 type SignedTxn struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sig  Signature   `codec:"sig"`
-	Msig MultisigSig `codec:"msig"`
-	Lsig LogicSig    `codec:"lsig"`
-	Txn  Transaction `codec:"txn"`
+	Sig      Signature   `codec:"sig"`
+	Msig     MultisigSig `codec:"msig"`
+	Lsig     LogicSig    `codec:"lsig"`
+	Txn      Transaction `codec:"txn"`
+	AuthAddr Address     `codec:"sgnr"`
 }
 
 // KeyregTxnFields captures the fields used for key registration transactions.
