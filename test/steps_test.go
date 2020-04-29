@@ -691,42 +691,22 @@ func skEqExport() error {
 }
 
 func kmdClient() error {
-	dataDirPath := os.Getenv("NODE_DIR") + "/" + os.Getenv("KMD_DIR") + "/"
-	tokenBytes, err := ioutil.ReadFile(dataDirPath + "kmd.token")
-	if err != nil {
-		return err
-	}
-	kmdToken := strings.TrimSpace(string(tokenBytes))
-	addressBytes, err := ioutil.ReadFile(dataDirPath + "kmd.net")
-	if err != nil {
-		return err
-	}
-	kmdAddress := strings.TrimSpace(string(addressBytes))
-	arr := strings.Split(kmdAddress, ":")
-	kmdAddress = "http://localhost:" + arr[1]
-
+	kmdToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	kmdAddress := "http://localhost:" + "60001"
+	var err error
 	kcl, err = kmd.MakeClient(kmdAddress, kmdToken)
 
 	return err
 }
 
 func algodClient() error {
-	dataDirPath := os.Getenv("NODE_DIR") + "/"
-	tokenBytes, err := ioutil.ReadFile(dataDirPath + "algod.token")
-	if err != nil {
-		return err
-	}
-	algodToken := strings.TrimSpace(string(tokenBytes))
-
-	addressBytes, err := ioutil.ReadFile(dataDirPath + "algod.net")
-	if err != nil {
-		return err
-	}
-	algodAddress := strings.TrimSpace(string(addressBytes))
-	arr := strings.Split(algodAddress, ":")
-	algodAddress = "http://localhost:" + arr[1]
-
+	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	algodAddress := "http://localhost:" + "60000"
+	var err error
 	acl, err = algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		return err
+	}
 	_, err = acl.StatusAfterBlock(1)
 	return err
 }
