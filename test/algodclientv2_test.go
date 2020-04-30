@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -243,8 +245,13 @@ func weMakeAnyGetBlockCall() error {
 }
 
 func theParsedGetBlockResponseShouldHaveRewardsPool(pool string) error {
-	if blockResponse.RewardsPool.String() != pool {
-		return fmt.Errorf("response pool %s mismatched expected pool %s", blockResponse.RewardsPool.String(), pool)
+	blockResponseRewardsPoolBytes := [32]byte(blockResponse.RewardsPool)
+	poolBytes, err := base64.StdEncoding.DecodeString(pool)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(poolBytes, blockResponseRewardsPoolBytes[:]) {
+		return fmt.Errorf("response pool %v mismatched expected pool %v", blockResponseRewardsPoolBytes, poolBytes)
 	}
 	return nil
 }

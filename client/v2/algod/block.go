@@ -14,17 +14,21 @@ type Block struct {
 	p     models.GetBlockParams
 }
 
-type blockResponse struct {
-	block types.Block `codec:"block"`
+type generatedBlockResponse struct {
+	// Block header data.
+	Block types.Block `json:"block"`
+
+	// Optional certificate object. This is only included when the format is set to message pack.
+	Cert *map[string]interface{} `json:"cert,omitempty"`
 }
 
 func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
 	s.p.Format = "msgpack"
-	var response blockResponse
+	var response generatedBlockResponse
 	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
 	if err != nil {
 		return
 	}
-	result = response.block
+	result = response.Block
 	return
 }
