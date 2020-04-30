@@ -34,9 +34,9 @@ func IndexerIntegrationTestContext(s *godog.Suite) {
 	s.Step(`^there are (\d+) transactions in the response, the first is "([^"]*)"\.$`, thereAreTransactionsInTheResponseTheFirstIs)
 	s.Step(`^Every transaction has tx-type "([^"]*)"$`, everyTransactionHasTxtype)
 	s.Step(`^Every transaction has sig-type "([^"]*)"$`, everyTransactionHasSigtype)
-	s.Step(`^Every transaction has round (\d+)$`, everyTransactionHasRound)
-	s.Step(`^Every transaction has round >= (\d+)$`, everyTransactionHasRound)
-	s.Step(`^Every transaction has round <= (\d+)$`, everyTransactionHasRound)
+	s.Step(`^Every transaction has round (\d+)$`, everyTransactionHasRoundEqual)
+	s.Step(`^Every transaction has round >= (\d+)$`, everyTransactionHasRoundGreaterThan)
+	s.Step(`^Every transaction has round <= (\d+)$`, everyTransactionHasRoundLessThan)
 	s.Step(`^Every transaction works with asset-id (\d+)$`, everyTransactionWorksWithAssetid)
 	s.Step(`^Every transaction is older than "([^"]*)"$`, everyTransactionIsOlderThan)
 	s.Step(`^Every transaction is newer than "([^"]*)"$`, everyTransactionIsNewerThan)
@@ -54,7 +54,7 @@ var indexerClients = make(map[int]*indexer.Client)
 
 func indexerClientAtPortWithToken(clientNum int, host string, port int, token string) error {
 	portAsString := strconv.Itoa(port)
-	fullHost := host + ":" + portAsString
+	fullHost := "http://" + host + ":" + portAsString
 	ic, err := indexer.MakeClient(fullHost, token)
 	indexerClients[clientNum] = ic
 	return err
@@ -103,7 +103,7 @@ func theAccountHasAssetsTheFirstIsAssetHasAFrozenStatusOfAndAmount(numAssets, fi
 	}
 	frozen, err := strconv.ParseBool(firstAssetFrozenStatus)
 	if err != nil {
-		return err
+		frozen = false
 	}
 	err = comparisonCheck("first asset frozen status", frozen, assetUnderScrutiny.IsFrozen)
 	if err != nil {
@@ -144,6 +144,9 @@ func theAccountHasAlgosAndAssetsHas(microAlgos, numAssets, assetIndex, assetAmou
 	if err != nil {
 		return err
 	}
+	if numAssets == 0 || assetIndex == 0 {
+		return nil
+	}
 	assetUnderScrutiny, err := findAssetInHoldingsList(indexerAccountResponse.Assets, uint64(assetIndex))
 	if err != nil {
 		return err
@@ -175,9 +178,12 @@ func theAssetFoundHas(assetName, assetUnits, assetCreator string, assetDecimals 
 		return err
 	}
 	err = comparisonCheck("asset decimals", uint64(assetDecimals), indexerAssetResponse.Params.Decimals)
-	frozen, err := strconv.ParseBool(assetDefaultFrozen)
 	if err != nil {
 		return err
+	}
+	frozen, err := strconv.ParseBool(assetDefaultFrozen)
+	if err != nil {
+		frozen = false
 	}
 	err = comparisonCheck("asset default frozen state", frozen, indexerAssetResponse.Params.DefaultFrozen)
 	if err != nil {
@@ -205,6 +211,9 @@ func thereAreWithTheAssetTheFirstIsHasAnd(numAccountsWithAsset int, firstHolder,
 	if err != nil {
 		return err
 	}
+	if numAccountsWithAsset == 0 {
+		return nil
+	}
 	accountUnderScrutiny := indexerAssetBalancesResponse.Balances[0]
 	err = comparisonCheck("first account holder", firstHolder, accountUnderScrutiny.Address)
 	if err != nil {
@@ -212,7 +221,7 @@ func thereAreWithTheAssetTheFirstIsHasAnd(numAccountsWithAsset int, firstHolder,
 	}
 	frozen, err := strconv.ParseBool(firstHolderIsFrozen)
 	if err != nil {
-		return err
+		frozen = false
 	}
 	err = comparisonCheck("first account holder frozen state", frozen, accountUnderScrutiny.IsFrozen)
 	if err != nil {
@@ -242,6 +251,9 @@ func thereAreTheFirstHas(numAccounts, firstAccountPendingRewards, rewardsBase, r
 	err := comparisonCheck("number of found accounts", numAccounts, len(indexerSearchAccountsResponse.Accounts))
 	if err != nil {
 		return err
+	}
+	if numAccounts == 0 {
+		return nil
 	}
 	accountUnderScrutiny := indexerSearchAccountsResponse.Accounts[0]
 	err = comparisonCheck("first account pending rewards", uint64(firstAccountPendingRewards), accountUnderScrutiny.PendingRewards)
@@ -278,7 +290,7 @@ func thereAreTheFirstHas(numAccounts, firstAccountPendingRewards, rewardsBase, r
 
 func theFirstAccountIsOnlineAndHas(address string, keyDilution, firstValid, lastValid int, voteKey, selKey string) error {
 	accountUnderScrutiny := indexerSearchAccountsResponse.Accounts[0]
-	err := comparisonCheck("first account online state", "online", accountUnderScrutiny.Status)
+	err := comparisonCheck("first account online state", "Online", accountUnderScrutiny.Status)
 	if err != nil {
 		return err
 	}
@@ -326,7 +338,7 @@ func iUseToSearchForTransactionsWithAndToken(clientNum, limit int, notePrefix, t
 	}
 	excludeBool, err := strconv.ParseBool(excludeCloseTo)
 	if err != nil {
-		return err
+		excludeBool = false
 	}
 	indexerTransactionsResponse, err = ic.SearchForTransactions().Limit(uint64(limit)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).AssetID(uint64(assetId)).BeforeTime(beforeTime).AfterTime(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).Address(address).AddressRole(addressRole).ExcludeCloseTo(excludeBool).NextToken(token).Do(context.Background())
 	return err
@@ -336,6 +348,9 @@ func thereAreTransactionsInTheResponseTheFirstIs(numTransactions int, firstTrans
 	err := comparisonCheck("number of transactions", numTransactions, len(indexerTransactionsResponse.Transactions))
 	if err != nil {
 		return err
+	}
+	if numTransactions == 0 {
+		return nil
 	}
 	txnUnderScrutiny := indexerTransactionsResponse.Transactions[0]
 	err = comparisonCheck("first txn txid", firstTransactionTxid, txnUnderScrutiny.Id)
@@ -362,11 +377,29 @@ func everyTransactionHasSigtype(sigType string) error {
 	return nil
 }
 
-func everyTransactionHasRound(round int) error {
+func everyTransactionHasRoundEqual(round int) error {
 	for idx, txn := range indexerTransactionsResponse.Transactions {
 		err := comparisonCheck(fmt.Sprintf("confirmed round for returned transaction %d", idx), uint64(round), txn.ConfirmedRound)
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func everyTransactionHasRoundGreaterThan(round int) error {
+	for idx, txn := range indexerTransactionsResponse.Transactions {
+		if txn.ConfirmedRound < uint64(round) {
+			return fmt.Errorf("transaction number %d was confirmed in round %d, but expected a number higher than %d", idx, txn.ConfirmedRound, uint64(round))
+		}
+	}
+	return nil
+}
+
+func everyTransactionHasRoundLessThan(round int) error {
+	for idx, txn := range indexerTransactionsResponse.Transactions {
+		if txn.ConfirmedRound > uint64(round) {
+			return fmt.Errorf("transaction number %d was confirmed in round %d, but expected a number lower than %d", idx, txn.ConfirmedRound, uint64(round))
 		}
 	}
 	return nil
@@ -383,6 +416,9 @@ func everyTransactionWorksWithAssetid(assetId int) error {
 		}
 		if txn.AssetConfigTransaction.AssetId != 0 {
 			actualId = txn.AssetConfigTransaction.AssetId
+		}
+		if txn.CreatedAssetIndex != 0 {
+			actualId = txn.CreatedAssetIndex
 		}
 		err := comparisonCheck(fmt.Sprintf("asset id for returned transaction %d", idx), uint64(assetId), actualId)
 		if err != nil {
@@ -422,11 +458,21 @@ func everyTransactionIsNewerThan(newerThan string) error {
 
 func everyTransactionMovesBetweenAndCurrency(currencyGreater, currencyLesser int) error {
 	for idx, txn := range indexerTransactionsResponse.Transactions {
-		if txn.PaymentTransaction.Amount < uint64(currencyGreater) {
-			return fmt.Errorf("txn number %d moved %d microAlgos, but expected it to move between %d and %d", idx, txn.PaymentTransaction.Amount, currencyGreater, currencyLesser)
+		if txn.Type == "pay" {
+			if txn.PaymentTransaction.Amount < uint64(currencyGreater) {
+				return fmt.Errorf("txn number %d moved %d microAlgos, but expected it to move more than %d", idx, txn.PaymentTransaction.Amount, currencyGreater)
+			}
+			if currencyLesser != 0 && txn.PaymentTransaction.Amount > uint64(currencyLesser) {
+				return fmt.Errorf("txn number %d moved %d microAlgos, but expected it to move less than %d", idx, txn.PaymentTransaction.Amount, currencyLesser)
+			}
 		}
-		if txn.PaymentTransaction.Amount > uint64(currencyLesser) {
-			return fmt.Errorf("txn number %d moved %d microAlgos, but expected it to move between %d and %d", idx, txn.PaymentTransaction.Amount, currencyGreater, currencyLesser)
+		if txn.Type == "axfer" {
+			if txn.AssetTransferTransaction.Amount < uint64(currencyGreater) {
+				return fmt.Errorf("txn number %d moved %d asset units, but expected it to move more than %d", idx, txn.AssetTransferTransaction.Amount, currencyGreater)
+			}
+			if currencyLesser != 0 && txn.AssetTransferTransaction.Amount > uint64(currencyLesser) {
+				return fmt.Errorf("txn number %d moved %d asset units, but expected it to move less than %d", idx, txn.AssetTransferTransaction.Amount, currencyLesser)
+			}
 		}
 	}
 	return nil
@@ -466,6 +512,9 @@ func thereAreAssetsInTheResponseTheFirstIs(numAssetsInResponse, assetIdFirstAsse
 	err := comparisonCheck("number assets in search for assets response", numAssetsInResponse, len(indexerSearchForAssetsResponse))
 	if err != nil {
 		return err
+	}
+	if numAssetsInResponse == 0 {
+		return nil
 	}
 	assetUnderScrutiny := indexerSearchForAssetsResponse[0]
 	err = comparisonCheck("first asset's ID", uint64(assetIdFirstAsset), assetUnderScrutiny.Index)

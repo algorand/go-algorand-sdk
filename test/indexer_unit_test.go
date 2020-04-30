@@ -101,7 +101,10 @@ func weMakeAnyLookupAssetTransactionsCall() error {
 	if err != nil {
 		return err
 	}
-	assetTransactionsResponse, globalErrForExamination = indexerClient.LookupAssetTransactions(0).Do(context.Background())
+	var response models.TransactionsResponse
+	response, globalErrForExamination = indexerClient.LookupAssetTransactions(0).Do(context.Background())
+	assetTransactionsResponse = response.Transactions
+	responseValidRound = response.CurrentRound
 	return nil
 }
 
@@ -130,6 +133,7 @@ func weMakeAnyLookupAccountTransactionsCall() error {
 	var response models.TransactionsResponse
 	response, globalErrForExamination = indexerClient.LookupAccountTransactions("").Do(context.Background())
 	lookupAccountTransactionsResponse = response.Transactions
+	responseValidRound = response.CurrentRound
 	return nil
 }
 

@@ -243,7 +243,7 @@ type SearchForTransactionsParams struct {
 	SigType string `url:"sig-type,omitempty"`
 
 	// Lookup the specific transaction by ID.
-	TxId string `url:"tx-id,omitempty"`
+	TxId string `url:"txid,omitempty"`
 
 	// Include results for the specified round.
 	Round uint64 `url:"round,omitempty"`
