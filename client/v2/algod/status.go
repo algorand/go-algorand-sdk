@@ -11,6 +11,6 @@ type Status struct {
 }
 
 func (s *Status) Do(ctx context.Context, headers ...*common.Header) (status models.NodeStatus, err error) {
-	err = s.c.get(ctx, &status, "/status", nil, headers)
+	err = s.c.get(ctx, &status, "/v2/status", nil, headers)
 	return
 }

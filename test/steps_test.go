@@ -695,7 +695,6 @@ func kmdClient() error {
 	kmdAddress := "http://localhost:" + "60001"
 	var err error
 	kcl, err = kmd.MakeClient(kmdAddress, kmdToken)
-
 	return err
 }
 

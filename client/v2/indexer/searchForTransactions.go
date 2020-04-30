@@ -2,9 +2,9 @@ package indexer
 
 import (
 	"context"
+	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"time"
 )
 
 type SearchForTransactions struct {
@@ -18,7 +18,7 @@ func (s *SearchForTransactions) Next(nextToken string) *SearchForTransactions {
 }
 
 func (s *SearchForTransactions) NotePrefix(prefix []byte) *SearchForTransactions {
-	s.p.NotePrefix = prefix
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(prefix)
 	return s
 }
 
@@ -62,12 +62,12 @@ func (s *SearchForTransactions) Limit(limit uint64) *SearchForTransactions {
 	return s
 }
 
-func (s *SearchForTransactions) BeforeTime(before time.Time) *SearchForTransactions {
+func (s *SearchForTransactions) BeforeTime(before string) *SearchForTransactions {
 	s.p.BeforeTime = before
 	return s
 }
 
-func (s *SearchForTransactions) AfterTime(after time.Time) *SearchForTransactions {
+func (s *SearchForTransactions) AfterTime(after string) *SearchForTransactions {
 	s.p.AfterTime = after
 	return s
 }

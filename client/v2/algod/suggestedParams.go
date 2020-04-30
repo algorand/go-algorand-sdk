@@ -13,7 +13,7 @@ type SuggestedParams struct {
 
 func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (params types.SuggestedParams, err error) {
 	var response models.TransactionParams
-	err = s.c.get(ctx, &response, "/transactions/params", nil, headers)
+	err = s.c.get(ctx, &response, "/v2/transactions/params", nil, headers)
 	params = types.SuggestedParams{
 		Fee:              types.MicroAlgos(response.Fee),
 		GenesisID:        response.GenesisID,

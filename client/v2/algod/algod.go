@@ -7,9 +7,14 @@ import (
 
 type Client common.Client
 
-// get performs a GET request to the specific path against the server
+// get performs a GET request to the specific path against the server, assumes JSON response
 func (c *Client) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
 	return (*common.Client)(c).Get(ctx, response, path, request, headers)
+}
+
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+func (c *Client) getMsgpack(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).GetRawMsgpack(ctx, response, path, request, headers)
 }
 
 // post sends a POST request to the given path with the given request object.

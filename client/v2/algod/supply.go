@@ -11,6 +11,6 @@ type Supply struct {
 }
 
 func (s *Supply) Do(ctx context.Context, headers ...*common.Header) (supply models.Supply, err error) {
-	err = s.c.get(ctx, &supply, "/ledger/supply", nil, headers)
+	err = s.c.get(ctx, &supply, "/v2/ledger/supply", nil, headers)
 	return
 }

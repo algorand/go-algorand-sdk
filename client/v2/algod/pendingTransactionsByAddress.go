@@ -20,16 +20,10 @@ func (s *PendingTransactionInformationByAddress) Max(max uint64) *PendingTransac
 }
 
 func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+	s.p.Format = "msgpack"
 	response := models.PendingTransactionsResponse{}
-	err = s.c.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions/pending", s.address), s.p, headers)
+	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", s.address), s.p, headers)
 	total = response.TotalTransactions
-	for _, b64SignedTxn := range response.TopTransactions {
-		var signedTxn types.SignedTxn
-		err = signedTxn.FromBase64String(b64SignedTxn)
-		if err != nil {
-			return
-		}
-		topTransactions = append(topTransactions, signedTxn)
-	}
+	topTransactions = response.TopTransactions
 	return
 }

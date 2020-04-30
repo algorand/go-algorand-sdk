@@ -34,5 +34,5 @@ func (s *RegisterParticipationKeys) NoWait(nowait bool) *RegisterParticipationKe
 }
 
 func (s *RegisterParticipationKeys) Do(ctx context.Context, headers ...*common.Header) error {
-	return s.c.post(ctx, nil, fmt.Sprintf("/register-participation-keys/%s", s.account), s.p, headers)
+	return s.c.post(ctx, nil, fmt.Sprintf("/v2/register-participation-keys/%s", s.account), s.p, headers)
 }

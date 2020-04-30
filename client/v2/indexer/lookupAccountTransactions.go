@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -19,7 +20,7 @@ func (s *LookupAccountTransactions) NextToken(nextToken string) *LookupAccountTr
 }
 
 func (s *LookupAccountTransactions) NotePrefix(prefix []byte) *LookupAccountTransactions {
-	s.p.NotePrefix = prefix
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(prefix)
 	return s
 }
 

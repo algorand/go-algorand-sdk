@@ -1,5 +1,7 @@
 package models
 
+import "github.com/algorand/go-algorand-sdk/types"
+
 // Account defines model for account information at a given round.
 type Account struct {
 
@@ -298,7 +300,7 @@ type Supply struct {
 	OnlineMoney uint64 `json:"online-money"`
 
 	// Round
-	Round uint64 `json:"round"`
+	Round uint64 `json:"current_round"`
 
 	// TotalMoney
 	TotalMoney uint64 `json:"total-money"`
@@ -482,7 +484,7 @@ type TransactionParams struct {
 
 	// ConsensusVersion indicates the consensus protocol version
 	// as of LastRound.
-	ConsensusVersion string `json:"consensusVersion"`
+	ConsensusVersion string `json:"consensus-version"`
 
 	// Fee is the suggested transaction fee
 	// Fee is in units of micro-Algos per byte.
@@ -491,17 +493,17 @@ type TransactionParams struct {
 	Fee uint64 `json:"fee"`
 
 	// GenesisID is an ID listed in the genesis block.
-	GenesisID string `json:"genesisID"`
+	GenesisID string `json:"genesis-id"`
 
 	// GenesisHash is the hash of the genesis block.
-	Genesishash []byte `json:"genesishash"`
+	Genesishash []byte `json:"genesis-hash"`
 
 	// LastRound indicates the last round seen
-	LastRound uint64 `json:"lastRound"`
+	LastRound uint64 `json:"last-round"`
 
 	// The minimum transaction fee (not per byte) required for the
 	// txn to validate for the current network protocol.
-	MinFee uint64 `json:"minFee,omitempty"`
+	MinFee uint64 `json:"min-fee,omitempty"`
 }
 
 // TransactionPayment defines model for TransactionPayment.
@@ -755,27 +757,27 @@ type TransactionsResponse struct {
 
 // PendingTransactionInfoResponse is returned by Get Pending Transaction by TXID
 type PendingTransactionInfoResponse = struct {
-	PendingTransactionBase64 string `json:"txn"`
+	Transaction types.SignedTxn `codec:"txn"`
 	//PoolError indicates that the transaction was kicked out of this node's transaction pool (and specifies why that happened).  An empty string indicates the transaction wasn't kicked out of this node's txpool due to an error.
-	PoolError string `json:"pool-error"`
+	PoolError string `codec:"pool-error"`
 	//ConfirmedRound is the round where this transaction was confirmed, if present.
-	ConfirmedRound uint64 `json:"confirmed-round,omitempty"`
+	ConfirmedRound uint64 `codec:"confirmed-round,omitempty"`
 	//AssetIndex is the index of the newly created asset, if this was an asset creation transaction.
-	AssetIndex uint64 `json:"asset-index,omitempty"`
+	AssetIndex uint64 `codec:"asset-index,omitempty"`
 	//Closing amount for the transaction.
-	ClosingAmount uint64 `json:"closing-amount,omitempty"`
+	ClosingAmount uint64 `codec:"closing-amount,omitempty"`
 	//Rewards, in microAlgos, applied to sender.
-	SenderRewards uint64 `json:"sender-rewards,omitempty"`
+	SenderRewards uint64 `codec:"sender-rewards,omitempty"`
 	//Rewards, in microAlgos, applied to receiver.
-	ReceiverRewards uint64 `json:"receiver-rewards,omitempty"`
+	ReceiverRewards uint64 `codec:"receiver-rewards,omitempty"`
 	//Rewards, in microAlgos, applied to close-to.
-	CloseRewards uint64 `json:"close-rewards,omitempty"`
+	CloseRewards uint64 `codec:"close-rewards,omitempty"`
 }
 
 // PendingTransactionsResponse is returned by PendingTransactions and by Txid
 type PendingTransactionsResponse = struct {
-	TopTransactions   []string `json:"top-transactions"`
-	TotalTransactions uint64   `json:"total-transactions"`
+	TopTransactions   []types.SignedTxn `codec:"top-transactions"`
+	TotalTransactions uint64            `codec:"total-transactions"`
 }
 
 // GetBlock response is returned by Block

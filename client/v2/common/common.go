@@ -5,25 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/google/go-querystring/query"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
-
-	"github.com/google/go-querystring/query"
 )
 
 const (
-	authHeader           = "X-Algo-API-Token"
-	apiVersionPathPrefix = "/v2"
+	authHeader = "X-Algo-API-Token"
 )
-
-// unversionedPaths ais a set of paths that should not be prefixed by the API version
-var unversionedPaths = map[string]bool{
-	"/versions": true,
-	"/health":   true,
-}
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
 var rawRequestPaths = map[string]bool{
@@ -112,19 +104,12 @@ func mergeRawQueries(q1, q2 string) string {
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
 func (client *Client) submitFormRaw(ctx context.Context, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
-
-	// Handle version prefix
-	if !unversionedPaths[path] {
-		queryURL.Path += strings.Join([]string{apiVersionPathPrefix, path}, "")
-	} else {
-		queryURL.Path += path
-	}
+	queryURL.Path += path
 
 	var req *http.Request
 	var body io.Reader
-
 	if request != nil {
-		if rawRequestPaths[path] {
+		if requestMethod == "POST" && rawRequestPaths[path] {
 			reqBytes, ok := request.([]byte)
 			if !ok {
 				return nil, fmt.Errorf("couldn't decode raw request as bytes")
@@ -172,7 +157,6 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, request in
 		}
 		return nil, err
 	}
-
 	err = extractError(resp)
 	if err != nil {
 		resp.Body.Close()
@@ -188,7 +172,6 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	}
 
 	defer resp.Body.Close()
-
 	dec := json.NewDecoder(resp.Body)
 	return dec.Decode(&response)
 }
@@ -196,6 +179,17 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 // get performs a GET request to the specific path against the server
 func (client *Client) Get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(ctx, response, path, request, "GET", false /* encodeJSON */, headers)
+}
+
+func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
+	resp, err := client.submitFormRaw(ctx, path, request, "GET", false /* encodeJSON */, headers)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	dec := msgpack.NewDecoder(resp.Body)
+	return dec.Decode(&response)
 }
 
 // post sends a POST request to the given path with the given request object.

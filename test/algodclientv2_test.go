@@ -42,25 +42,15 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
 	s.Step(`^we make an Account Information call against account "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccount)
 	s.Step(`^we make a Get Block call against block number (\d+)$`, weMakeAGetBlockCallAgainstBlockNumber)
+	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedPendingTransactionsInformationResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender)
+	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with format "([^"]*)"$`, weMakeAPendingTransactionInformationAgainstTxidWithFormat)
+	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
+	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
+	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
 }
-
-//
-//func buildMockAlgodv2AndClient(jsonfile string) (*httptest.Server, algod.Client, error) {
-//	jsonBytes, err := loadMockJsons("", jsonfile)
-//	if err != nil {
-//		return nil, algod.Client{}, err
-//	}
-//	mockAlgod := httptest.Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		w.WriteHeader(http.StatusOK)
-//		w.Write(jsonBytes[0])
-//	}))
-//	noToken := ""
-//	algodClient, err := algod.MakeClient(mockAlgod.URL, noToken)
-//	return mockAlgod, algodClient, err
-//}
 
 func weMakeAnyShutdownCall() error {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
@@ -81,13 +71,14 @@ func weMakeAnyRegisterParticipationKeysCall() error {
 }
 
 var stxResponse types.SignedTxn
+var pendingTransactionInformationResponse models.PendingTransactionInfoResponse
 
 func weMakeAnyPendingTransactionInformationCall() error {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
 	}
-	_, stxResponse, globalErrForExamination = algodClient.PendingTransactionInformation("").Do(context.Background())
+	pendingTransactionInformationResponse, stxResponse, globalErrForExamination = algodClient.PendingTransactionInformation("").Do(context.Background())
 	return nil
 }
 
@@ -112,6 +103,16 @@ func weMakeAnyPendingTransactionsInformationCall() error {
 func theParsedPendingTransactionsInformationResponseShouldHaveSender(sender string) error {
 	if stxsResponse[0].Txn.Sender.String() != sender {
 		return fmt.Errorf("expected txn to have sender %s but actual sender was %s", sender, stxsResponse[0].Txn.Sender.String())
+	}
+	return nil
+}
+
+func theParsedPendingTransactionsInformationResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender(length, idx int, sender string) error {
+	if len(stxsResponse) != length {
+		return fmt.Errorf("expected response length %d but received length %d", length, len(stxsResponse))
+	}
+	if stxsResponse[idx].Txn.Sender.String() != sender {
+		return fmt.Errorf("expected txn %d to have sender %s but real sender was %s", idx, sender, stxsResponse[idx].Txn.Sender.String())
 	}
 	return nil
 }
@@ -335,4 +336,37 @@ func weMakeAGetBlockCallAgainstBlockNumber(blocknum int) error {
 	}
 	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
 	return nil
+}
+
+func weMakeAPendingTransactionInformationAgainstTxidWithFormat(txid, format string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	return weMakeAPendingTransactionInformationAgainstTxidWithMax(txid, 0)
+}
+
+func weMakeAPendingTransactionInformationWithMaxAndFormat(max int, format string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, _, globalErrForExamination = algodClient.PendingTransactions().Max(uint64(max)).Do(context.Background())
+	return nil
+}
+
+func weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat(account string, max int, format string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	return weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax(account, max)
+}
+
+func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	return weMakeAGetBlockCallAgainstBlockNumber(blocknum)
 }

@@ -17,5 +17,5 @@ func (s *Shutdown) Timeout(timeout uint64) *Shutdown {
 }
 
 func (s *Shutdown) Do(ctx context.Context, headers ...*common.Header) error {
-	return s.c.post(ctx, nil, "/shutdown", s.p, headers)
+	return s.c.post(ctx, nil, "/v2/shutdown", s.p, headers)
 }

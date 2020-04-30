@@ -13,6 +13,6 @@ type AccountInformation struct {
 }
 
 func (s *AccountInformation) Do(ctx context.Context, headers ...*common.Header) (result models.Account, err error) {
-	err = s.c.get(ctx, &result, fmt.Sprintf("/accounts/%s", s.account), nil, headers)
+	err = s.c.get(ctx, &result, fmt.Sprintf("/v2/accounts/%s", s.account), nil, headers)
 	return
 }

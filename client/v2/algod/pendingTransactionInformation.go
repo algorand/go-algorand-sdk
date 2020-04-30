@@ -23,10 +23,7 @@ func (s *PendingTransactionInformation) Max(max uint64) *PendingTransactionInfor
 
 func (s *PendingTransactionInformation) Do(ctx context.Context, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
 	s.p.Format = "msgpack"
-	err = s.c.get(ctx, &response, fmt.Sprintf("/transactions/pending/%s", s.txid), s.p, headers)
-	if err != nil {
-		return
-	}
-	err = stxn.FromBase64String(response.PendingTransactionBase64)
+	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/transactions/pending/%s", s.txid), s.p, headers)
+	stxn = response.Transaction
 	return
 }

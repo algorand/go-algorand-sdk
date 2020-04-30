@@ -11,14 +11,20 @@ import (
 type Block struct {
 	c     *Client
 	round uint64
+	p     models.GetBlockParams
+}
+
+type blockResponse struct {
+	block types.Block `codec:"block"`
 }
 
 func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
-	response := models.GetBlockResponse{}
-	err = s.c.get(ctx, &response, fmt.Sprintf("/blocks/%d", s.round), models.NewBlockParams(), headers)
+	s.p.Format = "msgpack"
+	var response blockResponse
+	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
 	if err != nil {
 		return
 	}
-	err = result.FromBase64String(response.Blockb64)
+	result = response.block
 	return
 }

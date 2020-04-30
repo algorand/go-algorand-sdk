@@ -11,18 +11,7 @@ type GetPendingTransactionsByAddressParams struct {
 // GetBlockParams defines parameters for GetBlock.
 type GetBlockParams struct {
 	// Return raw msgpack block bytes or json
-	format string `url:"format,omitempty"`
-}
-
-type GetBlockOption func(GetBlockParams) GetBlockParams
-
-func NewBlockParams(options ...GetBlockOption) GetBlockParams {
-	// this SDK only uses msgpack format.
-	p := GetBlockParams{format: "msgpack"}
-	for _, option := range options {
-		p = option(p)
-	}
-	return p
+	Format string `url:"format,omitempty"`
 }
 
 // RegisterParticipationKeysAccountIdParams defines parameters for GetV2RegisterParticipationKeysAccountId.
@@ -48,11 +37,11 @@ type ShutdownParams struct {
 
 // PendingTransactionInformationParams defines parameters for GetPendingTransactions.
 type PendingTransactionInformationParams struct {
-	// Truncated number of transactions to display. If max=0, returns all pending txns.
-	Max uint64 `url:"max,omitempty"`
-
 	// Return raw msgpack block bytes or json
 	Format string `url:"format,omitempty"`
+
+	// Truncated number of transactions to display. If max=0, returns all pending txns.
+	Max uint64 `url:"max,omitempty"`
 }
 
 // SearchAccountsParams defines parameters for SearchAccounts.
@@ -75,6 +64,9 @@ type SearchAccountsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Round for results.
+	Round uint64 `url:"round,omitempty"`
 }
 
 // LookupAccountByIDParams defines parameters for LookupAccountByID.
@@ -88,7 +80,7 @@ type LookupAccountByIDParams struct {
 type LookupAccountTransactionsParams struct {
 
 	// Specifies a prefix which must be contained in the note field.
-	NotePrefix []byte `url:"note-prefix,omitempty"`
+	NotePrefix string `url:"note-prefix,omitempty"`
 	TxType     string `url:"tx-type,omitempty"`
 
 	// SigType filters just results using the specified type of signature:
@@ -188,7 +180,7 @@ type LookupAssetBalancesParams struct {
 type LookupAssetTransactionsParams struct {
 
 	// Specifies a prefix which must be contained in the note field.
-	NotePrefix []byte `url:"note-prefix,omitempty"`
+	NotePrefix string `url:"note-prefix,omitempty"`
 	TxType     string `url:"tx-type,omitempty"`
 
 	// SigType filters just results using the specified type of signature:
@@ -241,7 +233,7 @@ type LookupAssetTransactionsParams struct {
 type SearchForTransactionsParams struct {
 
 	// Specifies a prefix which must be contained in the note field.
-	NotePrefix []byte `url:"note-prefix,omitempty"`
+	NotePrefix string `url:"note-prefix,omitempty"`
 	TxType     string `url:"tx-type,omitempty"`
 
 	// SigType filters just results using the specified type of signature:

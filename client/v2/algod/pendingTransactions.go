@@ -9,19 +9,19 @@ import (
 
 type PendingTransactions struct {
 	c *Client
+	p models.PendingTransactionInformationParams
+}
+
+func (s *PendingTransactions) Max(max uint64) *PendingTransactions {
+	s.p.Max = max
+	return s
 }
 
 func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+	s.p.Format = "msgpack"
 	response := models.PendingTransactionsResponse{}
-	err = s.c.get(ctx, &response, "/transactions/pending", nil, headers)
+	err = s.c.getMsgpack(ctx, &response, "/v2/transactions/pending", s.p, headers)
 	total = response.TotalTransactions
-	for _, b64SignedTxn := range response.TopTransactions {
-		var signedTxn types.SignedTxn
-		err = signedTxn.FromBase64String(b64SignedTxn)
-		if err != nil {
-			return
-		}
-		topTransactions = append(topTransactions, signedTxn)
-	}
+	topTransactions = response.TopTransactions
 	return
 }

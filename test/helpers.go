@@ -2,22 +2,22 @@ package main
 
 import (
 	"container/ring"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path"
 	"strings"
-
-	"github.com/cucumber/godog"
 )
 
 func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error) {
 	jsonFilenames := strings.Split(commaDelimitedFilenames, ",")
 	var bytesArray [][]byte
 	for _, jsonFilename := range jsonFilenames {
-		fullPath := path.Join(pathToJsons, jsonFilename)
+		fullPath := path.Join("./features/unit/", pathToJsons, jsonFilename)
 		jsonfile, err := os.Open(fullPath)
 		if err != nil {
 			return nil, err
@@ -26,7 +26,16 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 		if err != nil {
 			return nil, err
 		}
-		bytesArray = append(bytesArray, fileBytes)
+		if strings.HasSuffix(fullPath, "base64") {
+			fileBytesAsBase64String := string(fileBytes)
+			decodedBytes, err := base64.StdEncoding.DecodeString(fileBytesAsBase64String)
+			if err != nil {
+				return nil, err
+			}
+			bytesArray = append(bytesArray, decodedBytes)
+		} else {
+			bytesArray = append(bytesArray, fileBytes)
+		}
 	}
 	return bytesArray, nil
 }
@@ -42,6 +51,7 @@ func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
 	responseRing = ring.New(len(jsons))
 	for _, json := range jsons {
 		responseRing.Value = json
+		responseRing = responseRing.Next()
 	}
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json := responseRing.Value.([]byte)
@@ -55,7 +65,7 @@ var receivedPath string
 
 func mockServerRecordingRequestPaths() error {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedPath = r.URL.Path
+		receivedPath, _ = url.PathUnescape(r.URL.String())
 	}))
 	return nil
 }

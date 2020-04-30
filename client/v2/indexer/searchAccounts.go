@@ -40,6 +40,11 @@ func (s *SearchAccounts) AfterAddress(after string) *SearchAccounts {
 	return s
 }
 
+func (s *SearchAccounts) Round(round uint64) *SearchAccounts {
+	s.p.Round = round
+	return s
+}
+
 func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result []models.Account, err error) {
 	var response models.AccountsResponse
 	err = s.c.get(ctx, &response, "/accounts", s.p, headers)

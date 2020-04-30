@@ -140,12 +140,9 @@ func (client Client) submitFormRaw(path string, request interface{}, requestMeth
 		return nil, err
 	}
 
-	// If we add another endpoint that does not require auth, we should add a
-	// requiresAuth argument to submitForm rather than checking here
-	if path != healthCheckEndpoint {
-		req.Header.Set(authHeader, client.apiToken)
-	}
-	// Add the client headers.
+	// Normally this would not always be set, but due to https://github.com/algorand/go-algorand/issues/1009 it is always needed
+	req.Header.Set(authHeader, client.apiToken)
+
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
 	}

@@ -3,7 +3,6 @@ package algod
 import (
 	"context"
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"strings"
 )
 
@@ -12,8 +11,12 @@ type SendRawTransaction struct {
 	stx []byte
 }
 
+type txidresponse struct {
+	TxID string `json:"txId"`
+}
+
 func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
-	var response models.TxId
+	var response txidresponse
 	// Set default Content-Type, if the user didn't specify it.
 	addContentType := true
 	for _, header := range headers {
@@ -26,6 +29,6 @@ func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) 
 		headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
 	}
 	err = s.c.post(ctx, &response, "/transactions", s.stx, headers)
-	txid = string(response)
+	txid = response.TxID
 	return
 }

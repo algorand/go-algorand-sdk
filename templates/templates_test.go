@@ -1,7 +1,9 @@
 package templates
 
 import (
+	"context"
 	"encoding/base64"
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"testing"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -150,4 +152,32 @@ func TestLimitOrder(t *testing.T) {
 	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
 	goldenAddress := "LXQWT2XLIVNFS54VTLR63UY5K6AMIEWI7YTVE6LB4RWZDBZKH22ZO3S36I"
 	require.Equal(t, goldenAddress, c.GetAddress())
+}
+
+func TestV2ClientPlayground(t *testing.T) {
+	//curl -s -X GET -H "X-Algo-API-Token: ef920e2e7e002953f4b29a8af720efe8e4ecc75ff102b165e0472834b25832c1" "http://hackathon.algodev.network:9100/v1/account/FCG5AE4EK7UDBKONUZGQRYNC2HWRASPID3T73HBHJKVM2J72I35XUU62MA/transactions?fromDate=2020-03-08T15:00:00Z&toDate=2020-03-10T19:00:00Z&max=5"
+	algodToken := "b8588a5405fda0cac83505cbbbd367406f4442f5ea995579a3af8755aee764aa"
+	algodURL := "http://localhost:8080"
+	client, err := algod.MakeClient(algodURL, algodToken)
+	require.NoError(t, err)
+	// *nathan fielder voice*
+	// The plan? Make each call in algod.go.
+	// This will print each URL to pass to CURL.
+	// This will provide json files for feature files.
+	sampleAccount := "ALGORANDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIN5DNAU"
+	sampleRound := uint64(6220429)
+	sampleTxid := "A3EGRE6LXMTIRR365T6T4QVKKAKP2C25XE5VBZNMGC2YBSRSZFUA"
+	noContext := context.Background()
+	client.AccountInformation(sampleAccount).Do(noContext)
+	client.Block(sampleRound).Do(noContext)
+	/* need a good target for this one, will probably have to target an ersatz network */ client.PendingTransactionInformation(sampleTxid).Do(noContext)
+	/* need a good target for this one, will probably have to target an ersatz network */ client.PendingTransactionsByAddress(sampleAccount).Do(noContext)
+	/* need a good target for this one, will probably have to target an ersatz network */ client.PendingTransactions().Do(noContext)
+	// reg partkeys unneeded
+	/* need a good target for this one, will probably have to target an ersatz network */
+	client.SendRawTransaction(nil).Do(noContext)
+	// shutdown unneeded
+	client.StatusAfterBlock(sampleRound).Do(noContext)
+	client.SuggestedParams().Do(noContext)
+	client.Supply().Do(noContext)
 }
