@@ -94,10 +94,7 @@ func (s *LookupAccountTransactions) ExcludeCloseTo(exclude bool) *LookupAccountT
 	return s
 }
 
-func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, transactions []models.Transaction, err error) {
-	var response models.TransactionsResponse
+func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions", s.account), s.p, headers)
-	validRound = response.CurrentRound
-	transactions = response.Transactions
 	return
 }

@@ -11,7 +11,7 @@ type SearchForAssets struct {
 	p models.SearchForAssetsParams
 }
 
-func (s *SearchForAssets) Next(nextToken string) *SearchForAssets {
+func (s *SearchForAssets) NextToken(nextToken string) *SearchForAssets {
 	s.p.NextToken = nextToken
 	return s
 }

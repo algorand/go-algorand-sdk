@@ -11,6 +11,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error) {
@@ -90,4 +92,34 @@ func expectErrorStringToContain(contains string) error {
 	}
 	return fmt.Errorf("validated error did not contain expected substring, expected substring: %s,"+
 		"actual error string: %s", contains, globalErrForExamination.Error())
+}
+
+func comparisonCheck(varname string, expected, actual interface{}) error {
+	if expected != actual {
+		return fmt.Errorf("expected %s value %v did not match actual value %v", varname, expected, actual)
+	}
+	return nil
+}
+
+func findAssetInHoldingsList(list []models.AssetHolding, desiredId uint64) (models.AssetHolding, error) {
+	for _, holding := range list {
+		if holding.AssetId == desiredId {
+			return holding, nil
+		}
+	}
+	return models.AssetHolding{}, fmt.Errorf("could not find asset ID %d in passed list of asset holdings", desiredId)
+}
+
+func getSigtypeFromTransaction(transaction models.Transaction) string {
+	if len(transaction.Signature.Sig) != 0 {
+		return "sig"
+	}
+	if len(transaction.Signature.Multisig.Subsignature) != 0 {
+		return "msig"
+	}
+	if len(transaction.Signature.Logicsig.MultisigSignature.Subsignature) != 0 ||
+		len(transaction.Signature.Logicsig.Logic) != 0 {
+		return "lsig"
+	}
+	return "unknown sigtype"
 }

@@ -12,7 +12,7 @@ type SearchForTransactions struct {
 	p models.SearchForTransactionsParams
 }
 
-func (s *SearchForTransactions) Next(nextToken string) *SearchForTransactions {
+func (s *SearchForTransactions) NextToken(nextToken string) *SearchForTransactions {
 	s.p.NextToken = nextToken
 	return s
 }
@@ -97,10 +97,7 @@ func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransacti
 	return s
 }
 
-func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result []models.Transaction, err error) {
-	var response models.TransactionsResponse
+func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, "/transactions", s.p, headers)
-	validRound = response.CurrentRound
-	result = response.Transactions
 	return
 }

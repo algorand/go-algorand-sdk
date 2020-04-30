@@ -44,10 +44,7 @@ func (s *LookupAssetBalances) CurrencyLessThan(lessThan uint64) *LookupAssetBala
 	return s
 }
 
-func (s *LookupAssetBalances) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, holders []models.MiniAssetHolding, err error) {
-	var response models.AssetBalancesResponse
+func (s *LookupAssetBalances) Do(ctx context.Context, headers ...*common.Header) (response models.AssetBalancesResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/assets/%d/balances", s.index), s.p, headers)
-	validRound = response.CurrentRound
-	holders = response.Balances
 	return
 }

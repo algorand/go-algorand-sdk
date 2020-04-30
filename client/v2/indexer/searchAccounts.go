@@ -11,7 +11,7 @@ type SearchAccounts struct {
 	p models.SearchAccountsParams
 }
 
-func (s *SearchAccounts) Next(nextToken string) *SearchAccounts {
+func (s *SearchAccounts) NextToken(nextToken string) *SearchAccounts {
 	s.p.NextToken = nextToken
 	return s
 }
@@ -45,10 +45,7 @@ func (s *SearchAccounts) Round(round uint64) *SearchAccounts {
 	return s
 }
 
-func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result []models.Account, err error) {
-	var response models.AccountsResponse
+func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (response models.AccountsResponse, err error) {
 	err = s.c.get(ctx, &response, "/accounts", s.p, headers)
-	validRound = response.CurrentRound
-	result = response.Accounts
 	return
 }
