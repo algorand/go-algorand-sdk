@@ -49,7 +49,7 @@ type Account struct {
 	// * sig
 	// * msig
 	// * lsig
-	Type string `json:"type,omitempty"`
+	Type string `json:"sig-type,omitempty"`
 }
 
 // AccountParticipation describes the parameters used by this account in consensus protocol.
@@ -405,7 +405,7 @@ type Transaction struct {
 	// * \[acfg\] asset-config-transaction
 	// * \[axfer\] asset-transfer-transaction
 	// * \[afrz\] asset-freeze-transaction
-	Type string `json:"type"`
+	Type string `json:"tx-type"`
 }
 
 // TransactionAssetConfig defines model for TransactionAssetConfig.
