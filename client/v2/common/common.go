@@ -13,10 +13,6 @@ import (
 	"net/url"
 )
 
-const (
-	authHeader = "X-Algo-API-Token"
-)
-
 // rawRequestPaths is a set of paths where the body should not be urlencoded
 var rawRequestPaths = map[string]bool{
 	"/transactions": true,
@@ -31,12 +27,13 @@ type Header struct {
 // Client manages the REST interface for a calling user.
 type Client struct {
 	serverURL url.URL
+	apiHeader string
 	apiToken  string
 	headers   []*Header
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
-func MakeClient(address string, apiToken string) (c *Client, err error) {
+func MakeClient(address string, apiHeader, apiToken string) (c *Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
 		return
@@ -44,14 +41,15 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 
 	c = &Client{
 		serverURL: *url,
+		apiHeader: apiHeader,
 		apiToken:  apiToken,
 	}
 	return
 }
 
 // MakeClientWithHeaders is the factory for constructing a Client for a given endpoint with additional user defined headers.
-func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c *Client, err error) {
-	c, err = MakeClient(address, apiToken)
+func MakeClientWithHeaders(address string, apiHeader, apiToken string, headers []*Header) (c *Client, err error) {
+	c, err = MakeClient(address, apiHeader, apiToken)
 	if err != nil {
 		return
 	}
@@ -135,7 +133,7 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, request in
 	}
 
 	// Supply the client token.
-	req.Header.Set(authHeader, client.apiToken)
+	req.Header.Set(client.apiHeader, client.apiToken)
 	// Add the client headers.
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)

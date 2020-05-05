@@ -5,6 +5,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
+const algodAuthHeader = "X-Algo-API-Token"
+
 type Client common.Client
 
 // get performs a GET request to the specific path against the server, assumes JSON response
@@ -26,7 +28,7 @@ func (c *Client) post(ctx context.Context, response interface{}, path string, re
 
 // MakeClient is the factory for constructing a ClientV2 for a given endpoint.
 func MakeClient(address string, apiToken string) (c *Client, err error) {
-	commonClient, err := common.MakeClient(address, apiToken)
+	commonClient, err := common.MakeClient(address, algodAuthHeader, apiToken)
 	c = (*Client)(commonClient)
 	return
 }

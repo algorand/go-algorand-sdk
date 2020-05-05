@@ -5,6 +5,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
+const indexerAuthHeader = "X-Indexer-API-Token"
+
 type Client common.Client
 
 // get performs a GET request to the specific path against the server
@@ -14,7 +16,7 @@ func (c *Client) get(ctx context.Context, response interface{}, path string, req
 
 // MakeClient is the factory for constructing an IndexerClient for a given endpoint.
 func MakeClient(address string, apiToken string) (c *Client, err error) {
-	commonClient, err := common.MakeClient(address, apiToken)
+	commonClient, err := common.MakeClient(address, indexerAuthHeader, apiToken)
 	c = (*Client)(commonClient)
 	return
 }
