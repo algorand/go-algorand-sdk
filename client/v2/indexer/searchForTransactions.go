@@ -3,6 +3,8 @@ package indexer
 import (
 	"context"
 	"encoding/base64"
+	"time"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
@@ -62,14 +64,24 @@ func (s *SearchForTransactions) Limit(limit uint64) *SearchForTransactions {
 	return s
 }
 
-func (s *SearchForTransactions) BeforeTime(before string) *SearchForTransactions {
+func (s *SearchForTransactions) BeforeTimeString(before string) *SearchForTransactions {
 	s.p.BeforeTime = before
 	return s
 }
 
-func (s *SearchForTransactions) AfterTime(after string) *SearchForTransactions {
+func (s *SearchForTransactions) AfterTimeString(after string) *SearchForTransactions {
 	s.p.AfterTime = after
 	return s
+}
+
+func (s *SearchForTransactions) BeforeTime(before time.Time) *SearchForTransactions {
+	beforeString := before.Format(time.RFC3339)
+	return s.BeforeTimeString(beforeString)
+}
+
+func (s *SearchForTransactions) AfterTime(after time.Time) *SearchForTransactions {
+	afterString := after.Format(time.RFC3339)
+	return s.AfterTimeString(afterString)
 }
 
 func (s *SearchForTransactions) CurrencyGreaterThan(greaterThan uint64) *SearchForTransactions {

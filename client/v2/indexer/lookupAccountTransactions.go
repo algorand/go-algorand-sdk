@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
@@ -64,14 +66,24 @@ func (s *LookupAccountTransactions) Limit(limit uint64) *LookupAccountTransactio
 	return s
 }
 
-func (s *LookupAccountTransactions) BeforeTime(before string) *LookupAccountTransactions {
+func (s *LookupAccountTransactions) BeforeTimeString(before string) *LookupAccountTransactions {
 	s.p.BeforeTime = before
 	return s
 }
 
-func (s *LookupAccountTransactions) AfterTime(after string) *LookupAccountTransactions {
+func (s *LookupAccountTransactions) AfterTimeString(after string) *LookupAccountTransactions {
 	s.p.AfterTime = after
 	return s
+}
+
+func (s *LookupAccountTransactions) BeforeTime(before time.Time) *LookupAccountTransactions {
+	beforeString := before.Format(time.RFC3339)
+	return s.BeforeTimeString(beforeString)
+}
+
+func (s *LookupAccountTransactions) AfterTime(after time.Time) *LookupAccountTransactions {
+	afterString := after.Format(time.RFC3339)
+	return s.AfterTimeString(afterString)
 }
 
 func (s *LookupAccountTransactions) CurrencyGreaterThan(greaterThan uint64) *LookupAccountTransactions {

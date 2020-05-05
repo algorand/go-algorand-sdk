@@ -24,11 +24,6 @@ func (s *LookupAssetBalances) Limit(lim uint64) *LookupAssetBalances {
 	return s
 }
 
-func (s *LookupAssetBalances) AfterAddress(after string) *LookupAssetBalances {
-	s.p.AfterAddress = after
-	return s
-}
-
 func (s *LookupAssetBalances) Round(rnd uint64) *LookupAssetBalances {
 	s.p.Round = rnd
 	return s
