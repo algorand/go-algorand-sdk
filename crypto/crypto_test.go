@@ -220,7 +220,7 @@ func TestMakeLogicSigBasic(t *testing.T) {
 
 	// check invalid program fails
 	copy(programMod[:], program)
-	programMod[0] = 2
+	programMod[0] = 128
 	lsig, err = MakeLogicSig(programMod, args, sk, pk)
 	require.Error(t, err)
 }
