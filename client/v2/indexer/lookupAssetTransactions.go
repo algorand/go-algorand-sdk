@@ -8,6 +8,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 type LookupAssetTransactions struct {
@@ -56,9 +57,13 @@ func (s *LookupAssetTransactions) MaxRound(max uint64) *LookupAssetTransactions 
 	return s
 }
 
-func (s *LookupAssetTransactions) Address(address string) *LookupAssetTransactions {
+func (s *LookupAssetTransactions) AddressString(address string) *LookupAssetTransactions {
 	s.p.Address = address
 	return s
+}
+
+func (s *LookupAssetTransactions) Address(address types.Address) *LookupAssetTransactions {
+	return s.AddressString(address.String())
 }
 
 func (s *LookupAssetTransactions) Limit(limit uint64) *LookupAssetTransactions {

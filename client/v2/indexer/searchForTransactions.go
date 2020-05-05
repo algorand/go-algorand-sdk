@@ -7,6 +7,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 type SearchForTransactions struct {
@@ -99,9 +100,13 @@ func (s *SearchForTransactions) AddressRole(role string) *SearchForTransactions 
 	return s
 }
 
-func (s *SearchForTransactions) Address(address string) *SearchForTransactions {
+func (s *SearchForTransactions) AddressString(address string) *SearchForTransactions {
 	s.p.Address = address
 	return s
+}
+
+func (s *SearchForTransactions) Address(address types.Address) *SearchForTransactions {
+	return s.AddressString(address.String())
 }
 
 func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransactions {

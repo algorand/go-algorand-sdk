@@ -327,7 +327,7 @@ func weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigT
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = indexerClient.LookupAssetTransactions(uint64(assetIndex)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).Address(address).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
+	_, globalErrForExamination = indexerClient.LookupAssetTransactions(uint64(assetIndex)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
 	return nil
 }
 
@@ -405,7 +405,7 @@ func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRound
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = indexerClient.SearchForTransactions().Address(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
+	_, globalErrForExamination = indexerClient.SearchForTransactions().AddressString(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
 	return nil
 }
 

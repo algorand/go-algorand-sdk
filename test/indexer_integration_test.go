@@ -340,7 +340,7 @@ func iUseToSearchForTransactionsWithAndToken(clientNum, limit int, notePrefix, t
 	if err != nil {
 		excludeBool = false
 	}
-	indexerTransactionsResponse, err = ic.SearchForTransactions().Limit(uint64(limit)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).AssetID(uint64(assetId)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).Address(address).AddressRole(addressRole).ExcludeCloseTo(excludeBool).NextToken(token).Do(context.Background())
+	indexerTransactionsResponse, err = ic.SearchForTransactions().Limit(uint64(limit)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).AssetID(uint64(assetId)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeBool).NextToken(token).Do(context.Background())
 	return err
 }
 
