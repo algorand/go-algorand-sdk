@@ -13,9 +13,7 @@ import (
 
 func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^mock http responses in "([^"]*)" loaded from "([^"]*)"$`, mockHttpResponsesInLoadedFrom)
-	s.Step(`^we make any Shutdown call$`, weMakeAnyShutdownCall)
 	s.Step(`^expect error string to contain "([^"]*)"$`, expectErrorStringToContain)
-	s.Step(`^we make any Register Participation Keys call$`, weMakeAnyRegisterParticipationKeysCall)
 	s.Step(`^we make any Pending Transaction Information call$`, weMakeAnyPendingTransactionInformationCall)
 	s.Step(`^the parsed Pending Transaction Information response should have sender "([^"]*)"$`, theParsedPendingTransactionInformationResponseShouldHaveSender)
 	s.Step(`^we make any Pending Transactions Information call$`, weMakeAnyPendingTransactionsInformationCall)
@@ -36,9 +34,7 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)"$`, theParsedGetBlockResponseShouldHaveRewardsPool)
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedSuggestedTransactionParametersResponseShouldHaveFirstRoundValidOf)
-	s.Step(`^we make a Shutdown call with timeout (\d+)$`, weMakeAShutdownCallWithTimeout)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
-	s.Step(`^we make a Register Participation Keys call against account "([^"]*)" fee (\d+) dilution (\d+) lastvalidround (\d+) and nowait "([^"]*)"$`, weMakeARegisterParticipationKeysCallAgainstAccountFeeDilutionLastvalidroundAndNowait)
 	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with max (\d+)$`, weMakeAPendingTransactionInformationAgainstTxidWithMax)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+)$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax)
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
@@ -52,24 +48,6 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
-}
-
-func weMakeAnyShutdownCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	globalErrForExamination = algodClient.Shutdown().Do(context.Background())
-	return nil
-}
-
-func weMakeAnyRegisterParticipationKeysCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	globalErrForExamination = algodClient.RegisterParticipationKeys("").Do(context.Background())
-	return nil
 }
 
 var stxResponse types.SignedTxn
@@ -271,32 +249,6 @@ func theParsedSuggestedTransactionParametersResponseShouldHaveFirstRoundValidOf(
 	if suggestedParamsResponse.FirstRoundValid != types.Round(firstValid) {
 		return fmt.Errorf("response first round valid %d mismatched expected first round valid %d", suggestedParamsResponse.FirstRoundValid, types.Round(firstValid))
 	}
-	return nil
-}
-
-func weMakeAShutdownCallWithTimeout(timeout int) error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	globalErrForExamination = algodClient.Shutdown().Timeout(uint64(timeout)).Do(context.Background())
-	return nil
-}
-
-func weMakeARegisterParticipationKeysCallAgainstAccountFeeDilutionLastvalidroundAndNowait(account string, fee, dilution, lastValid int, nowait string) error {
-	var nowaitBool bool
-	if nowait == "false" {
-		nowaitBool = false
-	} else if nowait == "true" {
-		nowaitBool = true
-	} else {
-		return fmt.Errorf("unrecognized expected nowait value %s, allowed values are \"true\" \"false\"", nowait)
-	}
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	globalErrForExamination = algodClient.RegisterParticipationKeys(account).Fee(uint64(fee)).KeyDilution(uint64(dilution)).RoundLastValid(uint64(lastValid)).NoWait(nowaitBool).Do(context.Background())
 	return nil
 }
 
