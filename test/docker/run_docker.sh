@@ -2,15 +2,19 @@
 
 set -e
 
-rm -rf temp
+# reset test harness
+rm -rf test-harness
 rm -rf test/features
-git clone --single-branch --branch templates https://github.com/algorand/algorand-sdk-testing.git temp
+git clone --single-branch --branch develop https://github.com/algorand/algorand-sdk-testing.git test-harness
+#copy feature files into project
+mv test-harness/features test/features
 
-cp test/docker/sdk.py temp/docker
-mv temp/features test/features
+#build test environment
+docker build -t go-sdk-testing -f test/docker/Dockerfile "$(pwd)"
 
-docker build -t sdk-testing -f test/docker/Dockerfile "$(pwd)"
+# Start test harness environment
+./test-harness/scripts/up.sh
 
 docker run -it \
-     -v "$(pwd)":/opt/go/src/github.com/algorand/go-algorand-sdk \
-     sdk-testing:latest 
+     --network host \
+     go-sdk-testing:latest
