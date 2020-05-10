@@ -156,6 +156,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I sign the multisig transaction with the private key", signMsigTxn)
 	s.Step("I sign the transaction with the private key", signTxn)
 	s.Step(`^I add a rekeyTo field with address "([^"]*)"$`, iAddARekeyToFieldWithAddress)
+	s.Step(`^I add a rekeyTo field with the private key algorand address$`, iAddARekeyToFieldWithThePrivateKeyAlgorandAddress)
 	s.Step(`^I set the from address to "([^"]*)"$`, iSetTheFromAddressTo)
 	s.Step(`the signed transaction should equal the golden "([^"]*)"`, equalGolden)
 	s.Step(`the multisig transaction should equal the golden "([^"]*)"`, equalMsigGolden)
@@ -334,6 +335,20 @@ func tryHandle() error {
 	_, err := kcl.RenewWalletHandle(handle)
 	if err == nil {
 		return fmt.Errorf("should be an error; handle was released")
+	}
+	return nil
+}
+
+func iAddARekeyToFieldWithThePrivateKeyAlgorandAddress() error {
+	pk, err := crypto.GenerateAddressFromSK(account.PrivateKey)
+	if err != nil {
+		return err
+	}
+
+	err = txn.Rekey(pk.String())
+
+	if err != nil {
+		return err
 	}
 	return nil
 }
