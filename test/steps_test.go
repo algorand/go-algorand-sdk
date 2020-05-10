@@ -155,6 +155,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I create the multisig payment transaction", createMsigTxn)
 	s.Step("I sign the multisig transaction with the private key", signMsigTxn)
 	s.Step("I sign the transaction with the private key", signTxn)
+	s.Step(`^I add a rekeyTo field with address "([^"]*)"$`, iAddARekeyToFieldWithAddress)
+	s.Step(`^I set the from address to "([^"]*)"$`, iSetTheFromAddressTo)
 	s.Step(`the signed transaction should equal the golden "([^"]*)"`, equalGolden)
 	s.Step(`the multisig transaction should equal the golden "([^"]*)"`, equalMsigGolden)
 	s.Step(`the multisig address should equal the golden "([^"]*)"`, equalMsigAddrGolden)
@@ -430,6 +432,15 @@ func msigAddresses(addresses string) error {
 	return err
 }
 
+func iSetTheFromAddressTo(address string) error {
+	addr, err := types.DecodeAddress(address)
+	if err != nil {
+		return err
+	}
+	txn.Sender = addr
+	return nil
+}
+
 func createMsigTxn() error {
 	var err error
 	paramsToUse := types.SuggestedParams{
@@ -459,6 +470,14 @@ func signMsigTxn() error {
 func signTxn() error {
 	var err error
 	txid, stx, err = crypto.SignTransaction(account.PrivateKey, txn)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func iAddARekeyToFieldWithAddress(address string) error {
+	err := txn.Rekey(address)
 	if err != nil {
 		return err
 	}

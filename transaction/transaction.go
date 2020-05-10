@@ -5,11 +5,15 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // MinTxnFee is v5 consensus params, in microAlgos
 const MinTxnFee = 1000
+
+// NumOfAdditionalBytesAfterSigning is the number of bytes added to a txn after signing it
+const NumOfAdditionalBytesAfterSigning = 75
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
@@ -786,12 +790,7 @@ func AssignGroupID(txns []types.Transaction, account string) (result []types.Tra
 
 // EstimateSize returns the estimated length of the encoded transaction
 func EstimateSize(txn types.Transaction) (uint64, error) {
-	key := crypto.GenerateAccount()
-	_, stx, err := crypto.SignTransaction(key.PrivateKey, txn)
-	if err != nil {
-		return 0, err
-	}
-	return uint64(len(stx)), nil
+	return uint64(len(msgpack.Encode(txn))) + NumOfAdditionalBytesAfterSigning, nil
 }
 
 // byte32FromBase64 decodes the input base64 string and outputs a
