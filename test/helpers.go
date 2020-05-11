@@ -81,7 +81,7 @@ func expectThePathUsedToBe(expectedPath string) error {
 var globalErrForExamination error
 
 func expectErrorStringToContain(contains string) error {
-	if contains == "nil" {
+	if contains == "" {
 		if globalErrForExamination != nil {
 			return fmt.Errorf("expected no error but error was found: %s", globalErrForExamination.Error())
 		}

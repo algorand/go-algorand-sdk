@@ -32,6 +32,7 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Lookup Asset Balances call against asset index (\d+) with limit <limit> afterAddress "([^"]*)" round (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+)$`, weMakeALookupAssetBalancesCallAgainstAssetIndexWithLimitLimitAfterAddressRoundCurrencyGreaterThanCurrencyLessThan)
 	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime (\d+) afterTime (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseTo)
 	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime (\d+) afterTime (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseTo)
+	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+)$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndex)
 	s.Step(`^we make a Lookup Block call against round (\d+)$`, weMakeALookupBlockCallAgainstRound)
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with round (\d+)$`, weMakeALookupAccountByIDCallAgainstAccountWithRound)
 	s.Step(`^we make a Lookup Asset by ID call against asset index (\d+)$`, weMakeALookupAssetByIDCallAgainstAssetIndex)
@@ -80,14 +81,7 @@ func theParsedLookupAssetBalancesResponseShouldBeValidOnRoundAndContainAnArrayOf
 	if scrutinizedElement.Amount != uint64(amount) {
 		return fmt.Errorf("response amount %d did not match expected amount %d", scrutinizedElement.Amount, amount)
 	}
-	var isFrozenBool bool
-	if frozenState == "false" {
-		isFrozenBool = false
-	} else if frozenState == "true" {
-		isFrozenBool = true
-	} else {
-		return fmt.Errorf("unrecognized expected isFrozen value %s, allowed values are \"true\" \"false\"", frozenState)
-	}
+	isFrozenBool := frozenState == "true"
 	if scrutinizedElement.IsFrozen != isFrozenBool {
 		return fmt.Errorf("response frozen state %v did not match expected frozen state %v", scrutinizedElement.IsFrozen, isFrozenBool)
 	}
@@ -315,14 +309,7 @@ func weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigT
 	if err != nil {
 		return err
 	}
-	var excludeCloseToBool bool
-	if excludeCloseTo == "false" {
-		excludeCloseToBool = false
-	} else if excludeCloseTo == "true" {
-		excludeCloseToBool = true
-	} else {
-		return fmt.Errorf("unrecognized expected excludeCloseToBool value %s, allowed values are \"true\" \"false\"", excludeCloseTo)
-	}
+	excludeCloseToBool := excludeCloseTo == "true"
 	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
 	if err != nil {
 		return err
@@ -336,20 +323,17 @@ func weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTy
 	if err != nil {
 		return err
 	}
-	var excludeCloseToBool bool
-	if excludeCloseTo == "false" {
-		excludeCloseToBool = false
-	} else if excludeCloseTo == "true" {
-		excludeCloseToBool = true
-	} else {
-		return fmt.Errorf("unrecognized expected excludeCloseToBool value %s, allowed values are \"true\" \"false\"", excludeCloseTo)
-	}
+	excludeCloseToBool := excludeCloseTo == "true"
 	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
 	if err != nil {
 		return err
 	}
 	_, globalErrForExamination = indexerClient.LookupAccountTransactions(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
 	return nil
+}
+
+func weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndex(account, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser, assetIndex int) error {
+	return weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseTo(account, notePrefix, txType, sigType, txid, round, minRound, maxRound, limit, beforeTime, afterTime, currencyGreater, currencyLesser, assetIndex, "", "")
 }
 
 func weMakeALookupBlockCallAgainstRound(round int) error {
@@ -393,14 +377,7 @@ func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRound
 	if err != nil {
 		return err
 	}
-	var excludeCloseToBool bool
-	if excludeCloseTo == "false" {
-		excludeCloseToBool = false
-	} else if excludeCloseTo == "true" {
-		excludeCloseToBool = true
-	} else {
-		return fmt.Errorf("unrecognized expected excludeCloseToBool value %s, allowed values are \"true\" \"false\"", excludeCloseTo)
-	}
+	excludeCloseToBool := excludeCloseTo == "true"
 	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
 	if err != nil {
 		return err
