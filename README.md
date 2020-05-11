@@ -997,3 +997,19 @@ params := types.SuggestedParams {
 // if and only if sender == clawback manager for this asset
 txn, err = MakeAssetRevocationTxn(revocationManager, revocationTarget, amount, recipient, note, params, assetIndex);
 ```
+
+## Rekying
+To rekey an account to a new address, simply call the `Rekey` function on any transaction.
+```golang
+...
+tx, err := future.MakePaymentTxn(
+		account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4",
+		amount, nil, "", params
+	)
+// From now, every transaction needs to be sign the SK of the following address
+tx.Rekey("47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU")
+...
+```
+
+When submitting a transaction from an account that was rekeying, simply use relevant SK. `SignTransaction` will detect 
+that the SK corresponding address is different than the sender's and will set the `AuthAddr` accordingly. 
