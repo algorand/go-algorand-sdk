@@ -115,9 +115,10 @@ type ListKeysRequest struct {
 // SignTransactionRequest is the request for `POST /v1/transaction/sign`
 type SignTransactionRequest struct {
 	APIV1RequestEnvelope
-	WalletHandleToken string `json:"wallet_handle_token"`
-	Transaction       []byte `json:"transaction"`
-	WalletPassword    string `json:"wallet_password"`
+	WalletHandleToken string            `json:"wallet_handle_token"`
+	Transaction       []byte            `json:"transaction"`
+	WalletPassword    string            `json:"wallet_password"`
+	PublicKey         ed25519.PublicKey `json:"public_key"`
 }
 
 // ListMultisigRequest is the request for `POST /v1/multisig/list`
