@@ -119,12 +119,6 @@ type LookupAccountTransactionsParams struct {
 	// Results should have an amount less than this value. MicroAlgos are the default currency unless an asset-id is provided, in which case the asset will be used.
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 
-	// Combine with the address parameter to define what type of address to search for.
-	AddressRole string `url:"address-role,omitempty"`
-
-	// Combine with address and address-role parameters to define what type of address to search for. The close to fields are normally treated as a receiver, if you would like to exclude them set this parameter to true.
-	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
-
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
 }

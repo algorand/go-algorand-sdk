@@ -96,16 +96,6 @@ func (s *LookupAccountTransactions) CurrencyLessThan(lessThan uint64) *LookupAcc
 	return s
 }
 
-func (s *LookupAccountTransactions) AddressRole(role string) *LookupAccountTransactions {
-	s.p.AddressRole = role
-	return s
-}
-
-func (s *LookupAccountTransactions) ExcludeCloseTo(exclude bool) *LookupAccountTransactions {
-	s.p.ExcludeCloseTo = exclude
-	return s
-}
-
 func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions", s.account), s.p, headers)
 	return
