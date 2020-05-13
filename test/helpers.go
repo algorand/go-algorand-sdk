@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -67,7 +66,7 @@ var receivedPath string
 
 func mockServerRecordingRequestPaths() error {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedPath, _ = url.PathUnescape(r.URL.String())
+		receivedPath = r.URL.String()
 	}))
 	return nil
 }
@@ -81,7 +80,7 @@ func expectThePathUsedToBe(expectedPath string) error {
 var globalErrForExamination error
 
 func expectErrorStringToContain(contains string) error {
-	if contains == "nil" {
+	if contains == "" {
 		if globalErrForExamination != nil {
 			return fmt.Errorf("expected no error but error was found: %s", globalErrForExamination.Error())
 		}
