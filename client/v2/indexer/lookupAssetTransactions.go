@@ -112,6 +112,6 @@ func (s *LookupAssetTransactions) ExcludeCloseTo(exclude bool) *LookupAssetTrans
 }
 
 func (s *LookupAssetTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("%s/assets/%d/transactions", versionPrefix, s.index), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d/transactions", s.index), s.p, headers)
 	return
 }

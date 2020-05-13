@@ -7,7 +7,6 @@ import (
 )
 
 const indexerAuthHeader = "X-Indexer-API-Token"
-const versionPrefix = "/v2"
 
 type Client common.Client
 

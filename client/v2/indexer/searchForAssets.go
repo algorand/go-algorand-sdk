@@ -2,7 +2,6 @@ package indexer
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -45,7 +44,7 @@ func (s *SearchForAssets) AssetID(id uint64) *SearchForAssets {
 
 func (s *SearchForAssets) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result []models.Asset, err error) {
 	var response models.AssetsResponse
-	err = s.c.get(ctx, &response, fmt.Sprintf("%s/assets", versionPrefix), s.p, headers)
+	err = s.c.get(ctx, &response, "/v2/assets", s.p, headers)
 	validRound = response.CurrentRound
 	result = response.Assets
 	return

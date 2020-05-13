@@ -41,6 +41,6 @@ func (s *LookupAssetBalances) CurrencyLessThan(lessThan uint64) *LookupAssetBala
 }
 
 func (s *LookupAssetBalances) Do(ctx context.Context, headers ...*common.Header) (response models.AssetBalancesResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("%s/assets/%d/balances", versionPrefix, s.index), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d/balances", s.index), s.p, headers)
 	return
 }

@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
@@ -116,6 +115,6 @@ func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransacti
 }
 
 func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("%s/transactions", versionPrefix), s.p, headers)
+	err = s.c.get(ctx, &response, "/v2/transactions", s.p, headers)
 	return
 }

@@ -15,7 +15,7 @@ type LookupBlock struct {
 
 func (s *LookupBlock) Do(ctx context.Context, headers ...*common.Header) (block models.Block, err error) {
 	var response models.BlockResponse
-	err = s.c.get(ctx, &response, fmt.Sprintf("%s/blocks/%d", versionPrefix, s.round), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), nil, headers)
 	block = models.Block(response)
 	return
 }
