@@ -2,10 +2,12 @@ package indexer
 
 import (
 	"context"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
 const indexerAuthHeader = "X-Indexer-API-Token"
+const versionPrefix = "/v1"
 
 type Client common.Client
 
