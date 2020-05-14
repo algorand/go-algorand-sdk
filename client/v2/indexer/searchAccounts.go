@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
@@ -46,6 +47,6 @@ func (s *SearchAccounts) Round(round uint64) *SearchAccounts {
 }
 
 func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (response models.AccountsResponse, err error) {
-	err = s.c.get(ctx, &response, "/accounts", s.p, headers)
+	err = s.c.get(ctx, &response, "/v2/accounts", s.p, headers)
 	return
 }

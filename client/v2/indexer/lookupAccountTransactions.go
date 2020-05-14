@@ -97,6 +97,6 @@ func (s *LookupAccountTransactions) CurrencyLessThan(lessThan uint64) *LookupAcc
 }
 
 func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/accounts/%s/transactions", s.account), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions", s.account), s.p, headers)
 	return
 }
