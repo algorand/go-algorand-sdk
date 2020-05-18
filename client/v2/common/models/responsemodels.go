@@ -739,9 +739,19 @@ type AssetsResponse struct {
 // BlockResponse defines model for BlockResponse.
 type BlockResponse Block
 
-// Error defines model for Error.
-type Error struct {
-	Error string `json:"error"`
+// HealthCheckResponse defines model for HealthCheckResponse.
+type HealthCheckResponse HealthCheck
+
+// ErrorResponse defines model for ErrorResponse.
+type ErrorResponse struct {
+	Data    *map[string]interface{} `json:"data,omitempty"`
+	Message string                  `json:"message"`
+}
+
+// HealthCheck defines model for HealthCheck.
+type HealthCheck struct {
+	Data    *map[string]interface{} `json:"data,omitempty"`
+	Message string                  `json:"message"`
 }
 
 // TransactionsResponse defines model for TransactionsResponse.
