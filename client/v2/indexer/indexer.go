@@ -22,6 +22,10 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
+func (c *Client) HealthCheck() *HealthCheck {
+	return &HealthCheck{c: c}
+}
+
 func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {
 	return &LookupAssetBalances{c: c, index: index}
 }
