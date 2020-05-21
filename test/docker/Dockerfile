@@ -6,4 +6,4 @@ COPY . $HOME/go-algorand-sdk
 WORKDIR $HOME/go-algorand-sdk
 
 # Run integration tests
-CMD ["/bin/bash", "-c", "make integration"]
+CMD ["/bin/bash", "-c", "make unit && make integration"]
