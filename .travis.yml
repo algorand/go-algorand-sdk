@@ -10,6 +10,4 @@ install:
   - go get -u golang.org/x/lint/golint
 
 script:
-  - set -e
-  - go test `go list ./... | grep -v test`
   - make docker-test
