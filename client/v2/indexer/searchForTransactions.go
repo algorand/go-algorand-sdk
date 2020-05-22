@@ -114,6 +114,11 @@ func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransacti
 	return s
 }
 
+func (s *SearchForTransactions) RekeyTo(rekeyTo bool) *SearchForTransactions {
+	s.p.RekeyTo = rekeyTo
+	return s
+}
+
 func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/transactions", s.p, headers)
 	return

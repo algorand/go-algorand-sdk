@@ -46,6 +46,11 @@ func (s *SearchAccounts) Round(round uint64) *SearchAccounts {
 	return s
 }
 
+func (s *SearchAccounts) AuthAddress(authAddr string) *SearchAccounts {
+	s.p.AuthAddr = authAddr
+	return s
+}
+
 func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (response models.AccountsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/accounts", s.p, headers)
 	return
