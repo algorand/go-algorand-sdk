@@ -115,6 +115,6 @@ func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransacti
 }
 
 func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, "/transactions", s.p, headers)
+	err = s.c.get(ctx, &response, "/v2/transactions", s.p, headers)
 	return
 }

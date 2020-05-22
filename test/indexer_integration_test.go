@@ -15,6 +15,8 @@ import (
 
 func IndexerIntegrationTestContext(s *godog.Suite) {
 	s.Step(`^indexer client (\d+) at "([^"]*)" port (\d+) with token "([^"]*)"$`, indexerClientAtPortWithToken)
+	s.Step(`^I use (\d+) to check the services health$`, iUseToCheckTheServicesHealth)
+	s.Step(`^I receive status code (\d+)$`, iReceiveStatusCode)
 	s.Step(`^I use (\d+) to lookup block (\d+)$`, iUseToLookupBlock)
 	s.Step(`^The block was confirmed at (\d+), contains (\d+) transactions, has the previous block hash "([^"]*)"$`, theBlockWasConfirmedAtContainsTransactionsHasThePreviousBlockHash)
 	s.Step(`^I use (\d+) to lookup account "([^"]*)" at round (\d+)$`, iUseToLookupAccountAtRound)
@@ -58,6 +60,22 @@ func indexerClientAtPortWithToken(clientNum int, host string, port int, token st
 	ic, err := indexer.MakeClient(fullHost, token)
 	indexerClients[clientNum] = ic
 	return err
+}
+
+var indexerHealthCheckResponse models.HealthCheckResponse
+var indexerHealthCheckError error
+
+func iUseToCheckTheServicesHealth(clientNum int) error {
+	ic := indexerClients[clientNum]
+	indexerHealthCheckResponse, indexerHealthCheckError = ic.HealthCheck().Do(context.Background())
+	return nil
+}
+
+func iReceiveStatusCode(code int) error {
+	if code == 200 && indexerHealthCheckError == nil {
+		return nil
+	}
+	return fmt.Errorf("Did not receive expected error code: %v", indexerHealthCheckError)
 }
 
 var indexerBlockResponse models.Block

@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
@@ -19,6 +20,10 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	commonClient, err := common.MakeClient(address, indexerAuthHeader, apiToken)
 	c = (*Client)(commonClient)
 	return
+}
+
+func (c *Client) HealthCheck() *HealthCheck {
+	return &HealthCheck{c: c}
 }
 
 func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {

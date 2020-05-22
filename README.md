@@ -25,6 +25,10 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 `mnemonic` contains support for turning 32-byte keys into checksummed, human-readable mnemonics (and going from mnemonics back to keys).
 
+# SDK Development
+
+Run tests with `make docker-test`
+
 # Quick Start
 To download the SDK, open a terminal and use the `go get` command.
 
@@ -1006,7 +1010,7 @@ tx, err := future.MakePaymentTxn(
 		account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4",
 		amount, nil, "", params
 	)
-// From now, every transaction needs to be sign the SK of the following address
+// From now, every transaction needs to be signed by the SK of the following address
 tx.Rekey("47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU")
 ...
 ```
