@@ -3,12 +3,10 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/cucumber/godog"
-	"reflect"
 )
 
 func IndexerUnitTestContext(s *godog.Suite) {
@@ -52,8 +50,6 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have authorizing address "([^"]*)"$`, theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAuthorizingAddress)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have rekey-to "([^"]*)"$`, theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveRekeyto)
 	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" RekeyTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo)
-	s.Step(`^the re-serialized object equals the response in "([^"]*)" loaded from "([^"]*)"$`, theReserializedObjectEqualsTheResponseInLoadedFrom)
-
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -220,7 +216,6 @@ func theParsedLookupAssetByIDResponseShouldHaveIndex(index int) error {
 }
 
 var searchAccountsResponse []models.Account
-var responseForJsonComparison interface{}
 
 func weMakeAnySearchAccountsCall() error {
 	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
@@ -231,8 +226,7 @@ func weMakeAnySearchAccountsCall() error {
 	result, globalErrForExamination = indexerClient.SearchAccounts().Do(context.Background())
 	responseValidRound = result.CurrentRound
 	searchAccountsResponse = result.Accounts
-	responseForJsonComparison = result
-	return err
+	return nil
 }
 
 func theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAddress(round, length, idx int, address string) error {
@@ -276,8 +270,7 @@ func weMakeAnySearchForTransactionsCall() error {
 	result, globalErrForExamination = indexerClient.SearchForTransactions().Do(context.Background())
 	responseValidRound = result.CurrentRound
 	searchTransactionsResponse = result.Transactions
-	responseForJsonComparison = result
-	return err
+	return nil
 }
 
 func theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveSender(round, length, idx int, sender string) error {
@@ -499,38 +492,4 @@ func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessTha
 
 func weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndex(limit int, creator, name, unit string, index int) error {
 	return weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndexAndAfterAsset(limit, creator, name, unit, index, 0)
-}
-
-func theReserializedObjectEqualsTheResponseInLoadedFrom(responseFile, directory string) error {
-	jsons, err := loadMockJsons(responseFile, directory)
-	if err != nil {
-		return err
-	}
-	///////////////////
-	// strategy one: attempt to encode json to struct
-	comparisonResponse := reflect.New(reflect.TypeOf(responseForJsonComparison))
-	err = json.Unmarshal(jsons[0], &comparisonResponse)
-	if err != nil {
-		return err
-	}
-	if comparisonResponse != responseForJsonComparison {
-		fmt.Println("comparisonResponse")
-		fmt.Println(comparisonResponse) // comparisonResponse is just an empty struct with no values of any kind in it.
-		fmt.Println("responseForJsonComparison")
-		fmt.Println(responseForJsonComparison)
-		return fmt.Errorf("response mismatch between deserialized json and expected deserialized json")
-	}
-	/////////////////////////
-	// strategy two: attempt to decode struct to json
-	//comparisonString := strings.Replace(string(jsons[0]), " ", "", -1)
-	//comparisonString = strings.Replace(comparisonString, "\n", "", -1)
-	//comparisonString = strings.Replace(comparisonString, "\r", "", -1)
-	//if comparisonString != string(jsonifiedResponse) {
-	//	fmt.Println("comparisonString")
-	//	fmt.Println(comparisonString)  // comparisonString won't have omitempty values omitted.
-	//	fmt.Println("jsonifiedResponse:")
-	//	fmt.Println(string(jsonifiedResponse))
-	//	return fmt.Errorf("response mismatch between reserialized json and expected json")
-	//}
-	return nil
 }
