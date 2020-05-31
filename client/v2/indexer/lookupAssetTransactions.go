@@ -111,6 +111,11 @@ func (s *LookupAssetTransactions) ExcludeCloseTo(exclude bool) *LookupAssetTrans
 	return s
 }
 
+func (s *LookupAssetTransactions) RekeyTo(rekeyTo bool) *LookupAssetTransactions {
+	s.p.RekeyTo = rekeyTo
+	return s
+}
+
 func (s *LookupAssetTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d/transactions", s.index), s.p, headers)
 	return
