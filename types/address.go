@@ -26,6 +26,7 @@ func (a Address) String() string {
 	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(checksumAddress)
 }
 
+// ZeroAddress is Address with all zero bytes. For handy == != comparisons.
 var ZeroAddress Address = [hashLenBytes]byte{}
 
 // IsZero returs true if the Address is all zero bytes.

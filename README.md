@@ -25,6 +25,10 @@ In `client/`, the `algod` and `kmd` packages provide HTTP clients for their corr
 
 `mnemonic` contains support for turning 32-byte keys into checksummed, human-readable mnemonics (and going from mnemonics back to keys).
 
+# SDK Development
+
+Run tests with `make docker-test`
+
 # Quick Start
 To download the SDK, open a terminal and use the `go get` command.
 
