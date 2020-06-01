@@ -1,3 +1,6 @@
+# 1.4.0
+# Added
+-  Clients for Indexer V2 and algod API V2
 # 1.3.0
 # Added
 -  additional Algorand Smart Contracts (ASC)
