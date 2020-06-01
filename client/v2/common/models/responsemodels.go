@@ -50,6 +50,11 @@ type Account struct {
 	// * msig
 	// * lsig
 	Type string `json:"sig-type,omitempty"`
+
+	// \[spend\] the address against which signing should be checked.
+	// If empty, the address of the current account is used.
+	// This field can be updated in any transaction by setting the RekeyTo field.
+	AuthAddr string `json:"auth-addr,omitempty"`
 }
 
 // AccountParticipation describes the parameters used by this account in consensus protocol.
@@ -406,6 +411,11 @@ type Transaction struct {
 	// * \[axfer\] asset-transfer-transaction
 	// * \[afrz\] asset-freeze-transaction
 	Type string `json:"tx-type"`
+
+	// \[rekey\] when included in a valid transaction,
+	// the accounts auth addr will be updated with this value
+	// and future signatures must be signed with the key represented by this address.
+	RekeyTo string `json:"rekey-to,omitempty"`
 }
 
 // TransactionAssetConfig defines model for TransactionAssetConfig.

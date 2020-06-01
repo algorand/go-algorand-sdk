@@ -67,6 +67,9 @@ type SearchAccountsParams struct {
 
 	// Round for results.
 	Round uint64 `url:"round,omitempty"`
+
+	// Include accounts associated with this spending key.
+	AuthAddr string `url:"auth-addr,omitempty"`
 }
 
 // LookupAccountByIDParams defines parameters for LookupAccountByID.
@@ -121,6 +124,9 @@ type LookupAccountTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }
 
 // SearchForAssetsParams defines parameters for SearchForAssets.
@@ -221,6 +227,9 @@ type LookupAssetTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }
 
 // SearchForTransactionsParams defines parameters for SearchForTransactions.
@@ -277,4 +286,7 @@ type SearchForTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }

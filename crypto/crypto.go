@@ -37,8 +37,23 @@ func RandomBytes(s []byte) {
 	}
 }
 
+// GenerateAddressFromSK take a secret key and returns the corresponding Address
+func GenerateAddressFromSK(sk []byte) (types.Address, error) {
+	edsk := ed25519.PrivateKey(sk)
+
+	var a types.Address
+	pk := edsk.Public()
+	n := copy(a[:], []byte(pk.(ed25519.PublicKey)))
+	if n != ed25519.PublicKeySize {
+		return [32]byte{}, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
+	}
+	return a, nil
+}
+
 // SignTransaction accepts a private key and a transaction, and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
+// If the SK's corresponding address is different than the txn sender's, the SK's
+// corresponding address will be assigned as AuthAddr
 func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	s, txid, err := rawSignTransaction(sk, tx)
 	if err != nil {
@@ -48,6 +63,15 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 	stx := types.SignedTxn{
 		Sig: s,
 		Txn: tx,
+	}
+
+	a, err := GenerateAddressFromSK(sk)
+	if err != nil {
+		return
+	}
+
+	if stx.Txn.Sender != a {
+		stx.AuthAddr = a
 	}
 
 	// Encode the SignedTxn

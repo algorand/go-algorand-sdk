@@ -177,8 +177,24 @@ func (kcl Client) ListKeys(walletHandle string) (resp ListKeysResponse, err erro
 	return
 }
 
-// SignTransaction accepts a wallet handle, wallet password, and transaction,
-// and returns and SignTransactionResponse containing an encoded, signed
+// SignTransactionWithSpecificPublicKey accepts a wallet handle, a wallet password, a transaction,
+// and a public key to sign with its corresponding sk, and returns and SignTransactionResponse containing
+// an encoded, signed transaction. The transaction is signed using the key corresponding to the
+// Sender field.
+func (kcl Client) SignTransactionWithSpecificPublicKey(walletHandle, walletPassword string, tx types.Transaction, pk ed25519.PublicKey) (resp SignTransactionResponse, err error) {
+	txBytes := msgpack.Encode(tx)
+	req := SignTransactionRequest{
+		WalletHandleToken: walletHandle,
+		WalletPassword:    walletPassword,
+		Transaction:       txBytes,
+		PublicKey:         pk,
+	}
+	err = kcl.DoV1Request(req, &resp)
+	return
+}
+
+// SignTransaction accepts a wallet handle, a wallet password, a transaction,
+// and returns SignTransactionResponse containing an encoded, signed
 // transaction. The transaction is signed using the key corresponding to the
 // Sender field.
 func (kcl Client) SignTransaction(walletHandle, walletPassword string, tx types.Transaction) (resp SignTransactionResponse, err error) {

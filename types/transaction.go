@@ -206,3 +206,15 @@ func (tx *Transaction) AddLeaseWithFlatFee(lease [32]byte, flatFee uint64) {
 	tx.Header.Lease = lease
 	tx.Header.Fee = MicroAlgos(flatFee)
 }
+
+// Rekey sets the rekeyTo field to the passed address. Any future transacrtion will need to be signed by the
+// rekeyTo address' corresponding private key.
+func (tx *Transaction) Rekey(rekeyToAddress string) error {
+	addr, err := DecodeAddress(rekeyToAddress)
+	if err != nil {
+		return err
+	}
+
+	tx.RekeyTo = addr
+	return nil
+}
