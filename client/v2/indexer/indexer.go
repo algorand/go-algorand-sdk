@@ -22,42 +22,99 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
-func (c *Client) HealthCheck() *HealthCheck {
-	return &HealthCheck{c: c}
+/**
+ * /v2/accounts/{account-id}
+ * Lookup account information.
+ */
+func (c *Client) LookupAccountByID(accountId string) *LookupAccountByID {
+	return &LookupAccountByID{c: c, accountId: accountId}
 }
 
-func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {
-	return &LookupAssetBalances{c: c, index: index}
+/**
+ * /v2/accounts/{account-id}/transactions
+ * Lookup account transactions.
+ */
+func (c *Client) LookupAccountTransactions(accountId string) *LookupAccountTransactions {
+	return &LookupAccountTransactions{c: c, accountId: accountId}
 }
 
-func (c *Client) LookupAssetTransactions(index uint64) *LookupAssetTransactions {
-	return &LookupAssetTransactions{c: c, index: index}
+/**
+ * /v2/applications/{application-id}
+ * Lookup application.
+ */
+func (c *Client) LookupApplication(applicationId uint64) *LookupApplication {
+	return &LookupApplication{c: c, applicationId: applicationId}
 }
 
-func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransactions {
-	return &LookupAccountTransactions{c: c, account: account}
+/**
+ * /v2/assets/{asset-id}/balances
+ * Lookup the list of accounts who hold this asset
+ */
+func (c *Client) LookupAssetBalances(assetId uint64) *LookupAssetBalances {
+	return &LookupAssetBalances{c: c, assetId: assetId}
 }
 
-func (c *Client) LookupBlock(round uint64) *LookupBlock {
-	return &LookupBlock{c: c, round: round}
+/**
+ * /v2/assets/{asset-id}
+ * Lookup asset information.
+ */
+func (c *Client) LookupAssetByID(assetId uint64) *LookupAssetByID {
+	return &LookupAssetByID{c: c, assetId: assetId}
 }
 
-func (c *Client) LookupAccountByID(account string) *LookupAccountByID {
-	return &LookupAccountByID{c: c, account: account}
+/**
+ * /v2/assets/{asset-id}/transactions
+ * Lookup transactions for an asset.
+ */
+func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransactions {
+	return &LookupAssetTransactions{c: c, assetId: assetId}
 }
 
-func (c *Client) LookupAssetByID(index uint64) *LookupAssetByID {
-	return &LookupAssetByID{c: c, index: index}
+/**
+ * /v2/blocks/{round-number}
+ * Lookup block.
+ */
+func (c *Client) LookupBlock(roundNumber uint64) *LookupBlock {
+	return &LookupBlock{c: c, roundNumber: roundNumber}
 }
 
-func (c *Client) SearchAccounts() *SearchAccounts {
-	return &SearchAccounts{c: c}
+/**
+ * /health
+ *
+ */
+func (c *Client) HealthCheck() *MakeHealthCheck {
+	return &MakeHealthCheck{c: c}
 }
 
+/**
+ * /v2/accounts
+ * Search for accounts.
+ */
+func (c *Client) SearchAccounts() *SearchForAccounts {
+	return &SearchForAccounts{c: c}
+}
+
+/**
+ * /v2/applications
+ * Search for applications
+ */
+func (c *Client) SearchForApplications() *SearchForApplications {
+	return &SearchForApplications{c: c}
+}
+
+/**
+ * /v2/assets
+ * Search for assets.
+ */
+func (c *Client) SearchForAssets() *SearchForAssets {
+	return &SearchForAssets{c: c}
+}
+
+/**
+ * /v2/transactions
+ * Search for transactions.
+ */
 func (c *Client) SearchForTransactions() *SearchForTransactions {
 	return &SearchForTransactions{c: c}
 }
 
-func (c *Client) SearchForAssets() *SearchForAssets {
-	return &SearchForAssets{c: c}
-}

@@ -10,93 +10,20 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+/**
+ * /v2/transactions
+ * Search for transactions.
+ */
 type SearchForTransactions struct {
 	c *Client
 	p models.SearchForTransactionsParams
 }
 
-func (s *SearchForTransactions) NextToken(nextToken string) *SearchForTransactions {
-	s.p.NextToken = nextToken
-	return s
-}
-
-func (s *SearchForTransactions) NotePrefix(prefix []byte) *SearchForTransactions {
-	s.p.NotePrefix = base64.StdEncoding.EncodeToString(prefix)
-	return s
-}
-
-func (s *SearchForTransactions) TxType(txtype string) *SearchForTransactions {
-	s.p.TxType = txtype
-	return s
-}
-
-func (s *SearchForTransactions) SigType(sigtype string) *SearchForTransactions {
-	s.p.SigType = sigtype
-	return s
-}
-
-func (s *SearchForTransactions) TXID(txid string) *SearchForTransactions {
-	s.p.TxId = txid
-	return s
-}
-
-func (s *SearchForTransactions) Round(rnd uint64) *SearchForTransactions {
-	s.p.Round = rnd
-	return s
-}
-
-func (s *SearchForTransactions) MinRound(min uint64) *SearchForTransactions {
-	s.p.MinRound = min
-	return s
-}
-
-func (s *SearchForTransactions) MaxRound(max uint64) *SearchForTransactions {
-	s.p.MaxRound = max
-	return s
-}
-
-func (s *SearchForTransactions) AssetID(index uint64) *SearchForTransactions {
-	s.p.AssetId = index
-	return s
-}
-
-func (s *SearchForTransactions) Limit(limit uint64) *SearchForTransactions {
-	s.p.Limit = limit
-	return s
-}
-
-func (s *SearchForTransactions) BeforeTimeString(before string) *SearchForTransactions {
-	s.p.BeforeTime = before
-	return s
-}
-
-func (s *SearchForTransactions) AfterTimeString(after string) *SearchForTransactions {
-	s.p.AfterTime = after
-	return s
-}
-
-func (s *SearchForTransactions) BeforeTime(before time.Time) *SearchForTransactions {
-	beforeString := before.Format(time.RFC3339)
-	return s.BeforeTimeString(beforeString)
-}
-
-func (s *SearchForTransactions) AfterTime(after time.Time) *SearchForTransactions {
-	afterString := after.Format(time.RFC3339)
-	return s.AfterTimeString(afterString)
-}
-
-func (s *SearchForTransactions) CurrencyGreaterThan(greaterThan uint64) *SearchForTransactions {
-	s.p.CurrencyGreaterThan = greaterThan
-	return s
-}
-
-func (s *SearchForTransactions) CurrencyLessThan(lessThan uint64) *SearchForTransactions {
-	s.p.CurrencyLessThan = lessThan
-	return s
-}
-
-func (s *SearchForTransactions) AddressRole(role string) *SearchForTransactions {
-	s.p.AddressRole = role
+/**
+ * Only include transactions with this address in one of the transaction fields.
+ */
+func (s *SearchForTransactions) Address(address types.Address) *SearchForTransactions {
+	s.p.Address = address.String()
 	return s
 }
 
@@ -105,21 +32,168 @@ func (s *SearchForTransactions) AddressString(address string) *SearchForTransact
 	return s
 }
 
-func (s *SearchForTransactions) Address(address types.Address) *SearchForTransactions {
-	return s.AddressString(address.String())
-}
-
-func (s *SearchForTransactions) ExcludeCloseTo(exclude bool) *SearchForTransactions {
-	s.p.ExcludeCloseTo = exclude
+/**
+ * Combine with the address parameter to define what type of address to search for.
+ */
+func (s *SearchForTransactions) AddressRole(addressRole string) *SearchForTransactions {
+	s.p.AddressRole = addressRole
 	return s
 }
 
+/**
+ * Include results after the given time. Must be an RFC 3339 formatted string.
+ */
+func (s *SearchForTransactions) AfterTime(afterTime time.Time) *SearchForTransactions {
+	s.p.AfterTime = afterTime.Format(time.RFC3339)
+	return s
+}
+
+func (s *SearchForTransactions) AfterTimeString(after string) *SearchForTransactions {
+	s.p.AfterTime = after
+	return s
+}
+
+/**
+ * Application ID
+ */
+func (s *SearchForTransactions) ApplicationId(applicationId uint64) *SearchForTransactions {
+	s.p.ApplicationId = applicationId
+	return s
+}
+
+/**
+ * Asset ID
+ */
+func (s *SearchForTransactions) AssetID(assetId uint64) *SearchForTransactions {
+	s.p.AssetId = assetId
+	return s
+}
+
+/**
+ * Include results before the given time. Must be an RFC 3339 formatted string.
+ */
+func (s *SearchForTransactions) BeforeTime(beforeTime time.Time) *SearchForTransactions {
+	s.p.BeforeTime = beforeTime.Format(time.RFC3339)
+	return s
+}
+
+func (s *SearchForTransactions) BeforeTimeString(before string) *SearchForTransactions {
+	s.p.BeforeTime = before
+	return s
+}
+
+/**
+ * Results should have an amount greater than this value. MicroAlgos are the
+ * default currency unless an asset-id is provided, in which case the asset will be
+ * used.
+ */
+func (s *SearchForTransactions) CurrencyGreaterThan(currencyGreaterThan uint64) *SearchForTransactions {
+	s.p.CurrencyGreaterThan = currencyGreaterThan
+	return s
+}
+
+/**
+ * Results should have an amount less than this value. MicroAlgos are the default
+ * currency unless an asset-id is provided, in which case the asset will be used.
+ */
+func (s *SearchForTransactions) CurrencyLessThan(currencyLessThan uint64) *SearchForTransactions {
+	s.p.CurrencyLessThan = currencyLessThan
+	return s
+}
+
+/**
+ * Combine with address and address-role parameters to define what type of address
+ * to search for. The close to fields are normally treated as a receiver, if you
+ * would like to exclude them set this parameter to true.
+ */
+func (s *SearchForTransactions) ExcludeCloseTo(excludeCloseTo bool) *SearchForTransactions {
+	s.p.ExcludeCloseTo = excludeCloseTo
+	return s
+}
+
+/**
+ * Maximum number of results to return.
+ */
+func (s *SearchForTransactions) Limit(limit uint64) *SearchForTransactions {
+	s.p.Limit = limit
+	return s
+}
+
+/**
+ * Include results at or before the specified max-round.
+ */
+func (s *SearchForTransactions) MaxRound(maxRound uint64) *SearchForTransactions {
+	s.p.MaxRound = maxRound
+	return s
+}
+
+/**
+ * Include results at or after the specified min-round.
+ */
+func (s *SearchForTransactions) MinRound(minRound uint64) *SearchForTransactions {
+	s.p.MinRound = minRound
+	return s
+}
+
+/**
+ * The next page of results. Use the next token provided by the previous results.
+ */
+func (s *SearchForTransactions) NextToken(next string) *SearchForTransactions {
+	s.p.Next = next
+	return s
+}
+
+/**
+ * Specifies a prefix which must be contained in the note field.
+ */
+func (s *SearchForTransactions) NotePrefix(notePrefix []byte) *SearchForTransactions {
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(notePrefix)
+	return s
+}
+
+/**
+ * Include results which include the rekey-to field.
+ */
 func (s *SearchForTransactions) RekeyTo(rekeyTo bool) *SearchForTransactions {
 	s.p.RekeyTo = rekeyTo
 	return s
 }
 
-func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, "/v2/transactions", s.p, headers)
+/**
+ * Include results for the specified round.
+ */
+func (s *SearchForTransactions) Round(round uint64) *SearchForTransactions {
+	s.p.Round = round
+	return s
+}
+
+/**
+ * SigType filters just results using the specified type of signature:
+ *   sig - Standard
+ *   msig - MultiSig
+ *   lsig - LogicSig
+ */
+func (s *SearchForTransactions) SigType(sigType string) *SearchForTransactions {
+	s.p.SigType = sigType
+	return s
+}
+
+func (s *SearchForTransactions) TxType(txType string) *SearchForTransactions {
+	s.p.TxType = txType
+	return s
+}
+
+/**
+ * Lookup the specific transaction by ID.
+ */
+func (s *SearchForTransactions) TXID(txid string) *SearchForTransactions {
+	s.p.Txid = txid
+	return s
+}
+
+func (s *SearchForTransactions) Do(ctx context.Context,
+	headers ...*common.Header) (response models.TransactionsResponse, err error) {
+	err = s.c.get(ctx, &response,
+		"/v2/transactions", s.p, headers)
 	return
 }

@@ -834,3 +834,152 @@ type LookupAssetByIDResponse struct {
 	CurrentRound uint64 `json:"current-round"`
 	Asset        Asset  `json:"asset"`
 }
+
+type ApplicationResponse struct {
+	/**
+	 * Application index and its parameters
+	 */
+	Application Application `json:"application,omitempty"`
+
+	/**
+	 * Round at which the results were computed.
+	 */
+	CurrentRound uint64 `json:"current-round,omitempty"`
+}
+
+type ApplicationsResponse struct {
+	Applications []Application `json:"applications,omitempty"`
+
+	/**
+	 * Round at which the results were computed.
+	 */
+	CurrentRound uint64 `json:"current-round,omitempty"`
+
+	/**
+	 * Used for pagination, when making another request provide this token with the
+	 * next parameter.
+	 */
+	NextToken string `json:"next-token,omitempty"`
+}
+
+
+/**
+ * Application index and its parameters
+ */
+type Application struct {
+	/**
+	 * (appidx) application index.
+	 */
+	AppIndex uint64 `json:"app-index,omitempty"`
+
+	/**
+	 * (appparams) application parameters.
+	 */
+	AppParams ApplicationParams `json:"app-params,omitempty"`
+}
+
+/**
+ * Stores the global information associated with an application.
+ */
+type ApplicationParams struct {
+	/**
+	 * (approv) approval program.
+	 */
+	ApprovalProgram string `json:"approval-program,omitempty"`
+
+	/**
+	 * (clearp) approval program.
+	 */
+	ClearStateProgram string `json:"clear-state-program,omitempty"`
+
+	/**
+	 * [\gs) global schema
+	 */
+	GlobalState []TealKeyValue `json:"global-state,omitempty"`
+
+	/**
+	 * [\lsch) global schema
+	 */
+	GlobalStateSchema ApplicationStateSchema `json:"global-state-schema,omitempty"`
+
+	/**
+	 * [\lsch) local schema
+	 */
+	LocalStateSchema ApplicationStateSchema `json:"local-state-schema,omitempty"`
+}
+
+
+/**
+ * Specifies maximums on the number of each type that may be stored.
+ */
+type ApplicationStateSchema struct {
+	/**
+	 * (nbs) num of byte slices.
+	 */
+	NumByteSlice uint64 `json:"num-byte-slice,omitempty"`
+
+	/**
+	 * (nui) num of uints.
+	 */
+	NumUint uint64 `json:"num-uint,omitempty"`
+}
+
+/**
+ * Pair of application index and application local state
+ */
+type ApplicationLocalStates struct {
+	AppIndex uint64 `json:"app-index,omitempty"`
+
+	/**
+	 * Stores local state associated with an application.
+	 */
+	State ApplicationLocalState `json:"state,omitempty"`
+}
+
+/**
+ * Stores local state associated with an application.
+ */
+type ApplicationLocalState struct {
+	/**
+	 * (tkv) storage.
+	 */
+	KeyValue []TealKeyValue `json:"key-value,omitempty"`
+
+	/**
+	 * (hsch) schema.
+	 */
+	Schema ApplicationStateSchema `json:"schema,omitempty"`
+}
+
+
+/**
+ * Represents a key-value pair in an application store.
+ */
+type TealKeyValue struct {
+	Key string `json:"key,omitempty"`
+
+	/**
+	 * Represents a TEAL value.
+	 */
+	Value TealValue `json:"value,omitempty"`
+}
+
+/**
+ * Represents a TEAL value.
+ */
+type TealValue struct {
+	/**
+	 * (tb) bytes value.
+	 */
+	Bytes string `json:"bytes,omitempty"`
+
+	/**
+	 * (tt) value type.
+	 */
+	Type uint64 `json:"type,omitempty"`
+
+	/**
+	 * (ui) uint value.
+	 */
+	Uint uint64 `json:"uint,omitempty"`
+}
