@@ -127,6 +127,9 @@ func TestMain(m *testing.M) {
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		FeatureContext(s)
+		AlgodClientV2Context(s)
+		IndexerUnitTestContext(s)
+		IndexerIntegrationTestContext(s)
 	}, opt)
 
 	if st := m.Run(); st > status {
@@ -152,6 +155,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I create the multisig payment transaction", createMsigTxn)
 	s.Step("I sign the multisig transaction with the private key", signMsigTxn)
 	s.Step("I sign the transaction with the private key", signTxn)
+	s.Step(`^I add a rekeyTo field with address "([^"]*)"$`, iAddARekeyToFieldWithAddress)
+	s.Step(`^I add a rekeyTo field with the private key algorand address$`, iAddARekeyToFieldWithThePrivateKeyAlgorandAddress)
+	s.Step(`^I set the from address to "([^"]*)"$`, iSetTheFromAddressTo)
 	s.Step(`the signed transaction should equal the golden "([^"]*)"`, equalGolden)
 	s.Step(`the multisig transaction should equal the golden "([^"]*)"`, equalMsigGolden)
 	s.Step(`the multisig address should equal the golden "([^"]*)"`, equalMsigAddrGolden)
@@ -333,6 +339,20 @@ func tryHandle() error {
 	return nil
 }
 
+func iAddARekeyToFieldWithThePrivateKeyAlgorandAddress() error {
+	pk, err := crypto.GenerateAddressFromSK(account.PrivateKey)
+	if err != nil {
+		return err
+	}
+
+	err = txn.Rekey(pk.String())
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func txnParams(ifee, ifv, ilv int, igh, ito, iclose string, iamt int, igen, inote string) error {
 	var err error
 	if inote != "none" {
@@ -427,6 +447,15 @@ func msigAddresses(addresses string) error {
 	return err
 }
 
+func iSetTheFromAddressTo(address string) error {
+	addr, err := types.DecodeAddress(address)
+	if err != nil {
+		return err
+	}
+	txn.Sender = addr
+	return nil
+}
+
 func createMsigTxn() error {
 	var err error
 	paramsToUse := types.SuggestedParams{
@@ -456,6 +485,14 @@ func signMsigTxn() error {
 func signTxn() error {
 	var err error
 	txid, stx, err = crypto.SignTransaction(account.PrivateKey, txn)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func iAddARekeyToFieldWithAddress(address string) error {
+	err := txn.Rekey(address)
 	if err != nil {
 		return err
 	}
@@ -689,42 +726,21 @@ func skEqExport() error {
 }
 
 func kmdClient() error {
-	dataDirPath := os.Getenv("NODE_DIR") + "/" + os.Getenv("KMD_DIR") + "/"
-	tokenBytes, err := ioutil.ReadFile(dataDirPath + "kmd.token")
-	if err != nil {
-		return err
-	}
-	kmdToken := strings.TrimSpace(string(tokenBytes))
-	addressBytes, err := ioutil.ReadFile(dataDirPath + "kmd.net")
-	if err != nil {
-		return err
-	}
-	kmdAddress := strings.TrimSpace(string(addressBytes))
-	arr := strings.Split(kmdAddress, ":")
-	kmdAddress = "http://localhost:" + arr[1]
-
+	kmdToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	kmdAddress := "http://localhost:" + "60001"
+	var err error
 	kcl, err = kmd.MakeClient(kmdAddress, kmdToken)
-
 	return err
 }
 
 func algodClient() error {
-	dataDirPath := os.Getenv("NODE_DIR") + "/"
-	tokenBytes, err := ioutil.ReadFile(dataDirPath + "algod.token")
-	if err != nil {
-		return err
-	}
-	algodToken := strings.TrimSpace(string(tokenBytes))
-
-	addressBytes, err := ioutil.ReadFile(dataDirPath + "algod.net")
-	if err != nil {
-		return err
-	}
-	algodAddress := strings.TrimSpace(string(addressBytes))
-	arr := strings.Split(algodAddress, ":")
-	algodAddress = "http://localhost:" + arr[1]
-
+	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	algodAddress := "http://localhost:" + "60000"
+	var err error
 	acl, err = algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		return err
+	}
 	_, err = acl.StatusAfterBlock(1)
 	return err
 }

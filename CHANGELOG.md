@@ -1,3 +1,15 @@
+# 1.4.0
+# Added
+-  Clients for Indexer V2 and algod API V2
+# 1.3.0
+# Added
+-  additional Algorand Smart Contracts (ASC)
+    -  support for Dynamic Fee contract
+    -  support for Limit Order contract
+    -  support for Periodic Payment contract
+- support for SuggestedParams
+- support for RawBlock request
+- Missing transaction types 
 # 1.2.1
 # Added
 - Added asset decimals field.

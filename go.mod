@@ -10,5 +10,6 @@ require (
 	github.com/google/go-querystring v1.0.0
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/tools v0.0.0-20200426102838-f3a5411a4c3b // indirect
 )
