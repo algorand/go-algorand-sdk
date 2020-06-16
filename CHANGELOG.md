@@ -1,3 +1,6 @@
+# 1.4.1
+# Bugfix
+-  Fix go get, test package names needed to be renamed.
 # 1.4.0
 # Added
 -  Clients for Indexer V2 and algod API V2
