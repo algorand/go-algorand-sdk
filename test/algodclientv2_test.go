@@ -1,10 +1,11 @@
-package main
+package test
 
 import (
 	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
