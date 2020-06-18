@@ -806,3 +806,122 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	copy(out[:], slice)
 	return
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var emptySchema = types.StateSchema{}
+
+
+
+// MakeUnsignedAppCreateTx makes a transaction for creating an application
+func MakeUnsignedAppCreateTx(onComplete types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(0, appArgs, accounts, foreignApps, onComplete, approvalProg, clearProg, globalSchema, localSchema)
+}
+
+// MakeUnsignedAppUpdateTx makes a transaction for updating an application's programs
+func MakeUnsignedAppUpdateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, approvalProg []byte, clearProg []byte) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.UpdateApplicationOC, approvalProg, clearProg, emptySchema, emptySchema)
+}
+
+// MakeUnsignedAppDeleteTx makes a transaction for deleting an application
+func MakeUnsignedAppDeleteTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.DeleteApplicationOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeUnsignedAppOptInTx makes a transaction for opting in to (allocating
+// some account-specific state for) an application
+func MakeUnsignedAppOptInTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.OptInOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeUnsignedAppCloseOutTx makes a transaction for closing out of
+// (deallocating all account-specific state for) an application
+func MakeUnsignedAppCloseOutTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.CloseOutOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeUnsignedAppClearStateTx makes a transaction for clearing out all
+// account-specific state for an application. It may not be rejected by the
+// application's logic.
+func MakeUnsignedAppClearStateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.ClearStateOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeUnsignedAppNoOpTx makes a transaction for interacting with an existing
+// application, potentially updating any account-specific local state and
+// global state associated with it.
+func MakeUnsignedAppNoOpTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeUnsignedApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.NoOpOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeUnsignedApplicationCallTx is a helper for the above ApplicationCall
+// transaction constructors. A fully custom ApplicationCall transaction may
+// be constructed using this method.
+func MakeUnsignedApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, onCompletion types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema) (tx types.Transaction, err error) {
+	tx.Type = types.ApplicationCallTx
+	tx.ApplicationID = types.AppIndex(appIdx)
+	tx.OnCompletion = onCompletion
+
+	tx.ApplicationArgs = appArgs
+	//	tx.Accounts, err = parseTxnAccounts(accounts)
+	//	if err != nil {
+	//		return tx, err
+	//	}
+
+	tx.ForeignApps = parseTxnForeignApps(foreignApps)
+	tx.ApprovalProgram = approvalProg
+	tx.ClearStateProgram = clearProg
+	tx.LocalStateSchema = localSchema
+	tx.GlobalStateSchema = globalSchema
+
+	return tx, nil
+}
+
+
+func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
+	for _, acct := range accounts {
+		addr, err := types.DecodeAddress(acct)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, addr)
+	}
+	return
+}
+
+func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
+	for _, aidx := range foreignApps {
+		parsed = append(parsed, types.AppIndex(aidx))
+	}
+	return
+}
+
+
