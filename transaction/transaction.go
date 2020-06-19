@@ -891,10 +891,10 @@ func MakeUnsignedApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []s
 	tx.OnCompletion = onCompletion
 
 	tx.ApplicationArgs = appArgs
-	//	tx.Accounts, err = parseTxnAccounts(accounts)
-	//	if err != nil {
-	//		return tx, err
-	//	}
+	tx.Accounts, err = parseTxnAccounts(accounts)
+	if err != nil {
+		return tx, err
+	}
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)
 	tx.ApprovalProgram = approvalProg
