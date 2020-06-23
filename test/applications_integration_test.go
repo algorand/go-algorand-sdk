@@ -2,28 +2,108 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"io/ioutil"
-	
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/cucumber/godog"
-	
+
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-var client algod.Client
-var tx types.Transaction 
+var client *algod.Client
+var tx types.Transaction
+var transientAccount crypto.Account
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
+	var err error
 	portAsString := strconv.Itoa(port)
 	fullHost := "http://" + host + ":" + portAsString
-	client, err := algod.MakeClient(fullHost, token)
+	client, err = algod.MakeClient(fullHost, token)
+	gh = []byte("MLWBXKMRJ5W3USARAFOHPQJAF4DN6KY3ZJVPIXKODKNN5ZXSZ2DQ")
+
 	return err
 }
 
 func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
-	return godog.ErrPending
+	var err error
+
+	transientAccount = crypto.GenerateAccount()
+
+	status, err := acl.Status()
+	if err != nil {
+		return err
+	}
+	llr := status.LastRound
+
+	lv, err := acl.Versions()
+	gen = lv.GenesisID
+	gh = lv.GenesisHash
+	if err != nil {
+		return err
+	}
+
+	paramsToUse := types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       gen,
+		GenesisHash:     gh,
+		FirstRoundValid: types.Round(llr),
+		LastRoundValid:  types.Round(llr + 10),
+		FlatFee:         false,
+	}
+	ltxn, err := future.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, paramsToUse)
+	if err != nil {
+		return err
+	}
+	lsk, err := kcl.ExportKey(handle, walletPswd, accounts[1])
+	if err != nil {
+		return err
+	}
+	ltxid, lstx, err := crypto.SignTransaction(lsk.PrivateKey, ltxn)
+	if err != nil {
+		return err
+	}
+	_, err = acl.SendRawTransaction(lstx)
+	if err != nil {
+		return err
+	}
+	err = waitForTransaction(ltxid)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func waitForTransaction(transactionId string) error {
+	status, err := acl.Status()
+	if err != nil {
+		return err
+	}
+	stopRound := status.LastRound + 10
+
+	for {
+		lstatus, err := acl.PendingTransactionInformation(transactionId)
+		if err != nil {
+			return err
+		}
+		if lstatus.ConfirmedRound > 0 {
+			break // end the waiting
+		}
+		status, err := acl.Status()
+		if err != nil {
+			return err
+		}
+		if status.LastRound > stopRound { // last round sent tx is valid
+			return fmt.Errorf("Transaction not accepted.")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return nil
 }
 
 func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationSuggestedParamsOperationApprovalprogramClearprogramGlobalbytesGlobalintsLocalbytesLocalintsAppargsForeignappsAppaccounts(
@@ -31,16 +111,44 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, appAccounts string) error {
 
-	approvalP, err := ioutil.ReadFile(approvalProgram)
-	clearP, err := ioutil.ReadFile(clearProgram)
-	
-	switch (operation) {
+	approvalP, err := ioutil.ReadFile("resources/" + approvalProgram)
+	if err != nil {
+		return err
+	}
+	clearP, err := ioutil.ReadFile("resources/" + clearProgram)
+	if err != nil {
+		return err
+	}
+
+	switch operation {
 	case "create":
-		tx, err := transaction.MakeUnsignedAppCreateTx(0, approvalP, clearP,
-			types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}, 
+		args, err := parseAppArgs(appArgs)
+		if err != nil {
+			return err
+		}
+		fApp, err := splitUint64(foreignApps)
+		if err != nil {
+			return err
+		}
+		var accs []string
+		if appAccounts != "" {
+			accs = strings.Split(appAccounts, ",")
+		}
+		tx, err = transaction.MakeUnsignedAppCreateTx(0, approvalP, clearP,
+			types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)},
 			types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)},
-			appArgs, appAccounts, foreignApps)
+			args, accs, fApp)
+		if err != nil {
+			return err
+		}
+
 	case "update":
+
+		tx, err = transaction.MakeUnsignedAppUpdateTx(0, nil, nil, nil,
+			approvalP, clearP)
+		if err != nil {
+			return err
+		}
 
 	case "call":
 
@@ -52,22 +160,90 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 
 	case "delete":
 
-		
 	}
-	
+
+	status, err := acl.Status()
+	if err != nil {
+		return err
+	}
+	llr := status.LastRound
+	var ghbytes [32]byte
+	copy(ghbytes[:], gh)
+
+	transaction.SetHeader(
+		&tx,                                     //tx types.Transaction,
+		transientAccount.Address,                //sender types.Address,
+		0,                                       //fee types.MicroAlgos,
+		types.Round(llr), types.Round(llr+1000), //fv, lv types.Round,
+		nil,                   //note []byte,
+		gen,                   //gen string,
+		types.Digest(ghbytes), //gh types.Digest,
+		types.Digest{},        //group types.Digest,
+		[32]byte{},            //lease [32]byte,
+		types.Address{})       //rekeyTo types.Address
 	return nil
 }
 
 func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) error {
-	return godog.ErrPending
+	var e error
+	var lstx []byte
+
+	txid, lstx, e = crypto.SignTransaction(transientAccount.PrivateKey, tx)
+	if e != nil {
+		return e
+	}
+	_, e = acl.SendRawTransaction(lstx)
+	if e != nil {
+		return e
+	}
+	return e
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	return godog.ErrPending
+	err := waitForTransaction(txid)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func iRememberTheNewApplicationID() error {
 	return godog.ErrPending
+}
+
+func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
+	if appArgsString == "" {
+		return make([][]byte, 0), nil
+	}
+	argsArray := strings.Split(appArgsString, ",")
+	resp := make([][]byte, len(argsArray))
+
+	for idx, arg := range argsArray {
+		typeArg := strings.Split(arg, ":")
+		switch typeArg[0] {
+		case "str":
+			resp[idx] = []byte(typeArg[1])
+		default:
+			return nil, fmt.Errorf("Applications doesn't currently support argument of type %s", typeArg[0])
+		}
+	}
+	return resp, err
+}
+
+func splitUint64(uint64s string) ([]uint64, error) {
+	if uint64s == "" {
+		return make([]uint64, 0), nil
+	}
+	uintarr := strings.Split(uint64s, ",")
+	resp := make([]uint64, len(uintarr))
+	var err error
+	for idx, val := range uintarr {
+		resp[idx], err = strconv.ParseUint(val, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return resp, nil
 }
 
 func ApplicationsContext(s *godog.Suite) {
@@ -77,8 +253,4 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
-}
-
-func main () {
-	fmt.Println("bla")
 }

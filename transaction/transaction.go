@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -807,39 +808,7 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	return
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 var emptySchema = types.StateSchema{}
-
-
 
 // MakeUnsignedAppCreateTx makes a transaction for creating an application
 func MakeUnsignedAppCreateTx(onComplete types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
@@ -905,7 +874,6 @@ func MakeUnsignedApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []s
 	return tx, nil
 }
 
-
 func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
 	for _, acct := range accounts {
 		addr, err := types.DecodeAddress(acct)
@@ -924,4 +892,32 @@ func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
 	return
 }
 
+func SetHeader(
+	tx *types.Transaction,
+	sender types.Address,
+	fee types.MicroAlgos,
+	fv, lv types.Round,
+	note []byte,
+	gen string,
+	gh types.Digest,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) {
 
+	if fee < MinTxnFee {
+		fee = MinTxnFee
+	}
+
+	tx.Header = types.Header{
+		Sender:      sender,
+		Fee:         fee,
+		FirstValid:  fv,
+		LastValid:   lv,
+		Note:        note,
+		GenesisID:   gen,
+		GenesisHash: gh,
+		Group:       group,
+		Lease:       lease,
+		RekeyTo:     rekeyTo,
+	}
+}
