@@ -166,14 +166,14 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 		tx, err = transaction.MakeUnsignedAppOptInTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
-		}	
+		}
 
 	case "clear":
 		tx, err = transaction.MakeUnsignedAppClearStateTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
 		}
-	
+
 	case "closeout":
 		tx, err = transaction.MakeUnsignedAppCloseOutTx(applicationId, args, accs, fApp)
 		if err != nil {
@@ -244,7 +244,7 @@ func iRememberTheNewApplicationID() error {
 	}
 	if txres := response["txresults"]; txres != nil {
 		createdapp := txres.(map[string]interface{})["createdapp"]
-		applicationId = uint64(createdapp.(float64))		
+		applicationId = uint64(createdapp.(float64))
 	}
 	return nil
 }

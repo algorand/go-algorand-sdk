@@ -113,9 +113,9 @@ func (client Client) RawRequest(path string, request interface{}, requestMethod 
 		return nil, err
 	}
 
-	if err = json.Unmarshal(body, &v); err != nil {       
-		return nil, err		
-	}     
+	if err = json.Unmarshal(body, &v); err != nil {
+		return nil, err
+	}
 	return v, err
 }
 

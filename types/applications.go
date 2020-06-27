@@ -3,10 +3,7 @@ package types
 // This file has the applications specific structures
 
 type ApplicationFields struct {
-
 	ApplicationCallTxnFields
-	
-
 }
 
 // AppIndex is the unique integer index of an application that can be used to
@@ -72,18 +69,25 @@ const (
 type ApplicationCallTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	ApplicationID   AppIndex   `codec:"apid"`
-	OnCompletion    OnCompletion      `codec:"apan"`
-	ApplicationArgs [][]byte          `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
-	Accounts        []Address  `codec:"apat,allocbound=encodedMaxAccounts"`
-	ForeignApps     []AppIndex `codec:"apfa,allocbound=encodedMaxForeignApps"`
+	ApplicationID   AppIndex     `codec:"apid"`
+	OnCompletion    OnCompletion `codec:"apan"`
+	ApplicationArgs [][]byte     `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
+	Accounts        []Address    `codec:"apat,allocbound=encodedMaxAccounts"`
+	ForeignApps     []AppIndex   `codec:"apfa,allocbound=encodedMaxForeignApps"`
 
 	LocalStateSchema  StateSchema `codec:"apls"`
 	GlobalStateSchema StateSchema `codec:"apgs"`
-	ApprovalProgram   []byte             `codec:"apap"`
-	ClearStateProgram []byte             `codec:"apsu"`
+	ApprovalProgram   []byte      `codec:"apap"`
+	ClearStateProgram []byte      `codec:"apsu"`
 
 	// If you add any fields here, remember you MUST modify the Empty
 	// method below!
 }
 
+// StateSchema sets maximums on the number of each type that may be stored
+type StateSchema struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	NumUint      uint64 `codec:"nui"`
+	NumByteSlice uint64 `codec:"nbs"`
+}
