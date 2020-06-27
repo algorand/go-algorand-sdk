@@ -19,6 +19,7 @@ import (
 var client *algod.Client
 var tx types.Transaction
 var transientAccount crypto.Account
+var applicationId uint64
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -111,55 +112,79 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, appAccounts string) error {
 
-	approvalP, err := ioutil.ReadFile("resources/" + approvalProgram)
+	var clearP []byte
+	var approvalP []byte
+	var err error
+
+	if approvalProgram != "" {
+		approvalP, err = ioutil.ReadFile("resources/" + approvalProgram)
+		if err != nil {
+			return err
+		}
+	}
+
+	if clearProgram != "" {
+		clearP, err = ioutil.ReadFile("resources/" + clearProgram)
+		if err != nil {
+			return err
+		}
+	}
+	args, err := parseAppArgs(appArgs)
 	if err != nil {
 		return err
 	}
-	clearP, err := ioutil.ReadFile("resources/" + clearProgram)
+	var accs []string
+	if appAccounts != "" {
+		accs = strings.Split(appAccounts, ",")
+	}
+	fApp, err := splitUint64(foreignApps)
 	if err != nil {
 		return err
 	}
 
+	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
+	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		args, err := parseAppArgs(appArgs)
-		if err != nil {
-			return err
-		}
-		fApp, err := splitUint64(foreignApps)
-		if err != nil {
-			return err
-		}
-		var accs []string
-		if appAccounts != "" {
-			accs = strings.Split(appAccounts, ",")
-		}
-		tx, err = transaction.MakeUnsignedAppCreateTx(0, approvalP, clearP,
-			types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)},
-			types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)},
-			args, accs, fApp)
+		tx, err = transaction.MakeUnsignedAppCreateTx(types.NoOpOC, approvalP, clearP,
+			gSchema, lSchema, args, accs, fApp)
 		if err != nil {
 			return err
 		}
 
 	case "update":
-
-		tx, err = transaction.MakeUnsignedAppUpdateTx(0, nil, nil, nil,
+		tx, err = transaction.MakeUnsignedAppUpdateTx(applicationId, args, accs, fApp,
 			approvalP, clearP)
 		if err != nil {
 			return err
 		}
 
 	case "call":
-
+		tx, err = transaction.MakeUnsignedApplicationCallTx(applicationId, args, accs,
+			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema)
 	case "optin":
+		tx, err = transaction.MakeUnsignedAppOptInTx(applicationId, args, accs, fApp)
+		if err != nil {
+			return err
+		}	
 
 	case "clear":
-
+		tx, err = transaction.MakeUnsignedAppClearStateTx(applicationId, args, accs, fApp)
+		if err != nil {
+			return err
+		}
+	
 	case "closeout":
+		tx, err = transaction.MakeUnsignedAppCloseOutTx(applicationId, args, accs, fApp)
+		if err != nil {
+			return err
+		}
 
 	case "delete":
-
+		tx, err = transaction.MakeUnsignedAppDeleteTx(applicationId, args, accs, fApp)
+		if err != nil {
+			return err
+		}
 	}
 
 	status, err := acl.Status()
@@ -181,12 +206,14 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 		types.Digest{},        //group types.Digest,
 		[32]byte{},            //lease [32]byte,
 		types.Address{})       //rekeyTo types.Address
+
 	return nil
 }
 
 func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) error {
 	var e error
 	var lstx []byte
+	//	fmt.Printf("%v\n", string(json.Encode(tx)))
 
 	txid, lstx, e = crypto.SignTransaction(transientAccount.PrivateKey, tx)
 	if e != nil {
@@ -194,7 +221,9 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) e
 	}
 	_, e = acl.SendRawTransaction(lstx)
 	if e != nil {
-		return e
+		if strings.Contains(e.Error(), err) {
+			return nil
+		}
 	}
 	return e
 }
@@ -208,7 +237,16 @@ func iWaitForTheTransactionToBeConfirmed() error {
 }
 
 func iRememberTheNewApplicationID() error {
-	return godog.ErrPending
+
+	response, err := acl.RawRequest(fmt.Sprintf("/transactions/pending/%s", txid), nil, "GET", false /* encodeJSON */, nil)
+	if err != nil {
+		return err
+	}
+	if txres := response["txresults"]; txres != nil {
+		createdapp := txres.(map[string]interface{})["createdapp"]
+		applicationId = uint64(createdapp.(float64))		
+	}
+	return nil
 }
 
 func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {

@@ -100,6 +100,25 @@ func mergeRawQueries(q1, q2 string) string {
 	}
 }
 
+// RawRequest submits the requests, and returns a map of the response fields
+func (client Client) RawRequest(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (
+	v map[string]interface{}, err error) {
+	response, err := client.submitFormRaw(path, request, requestMethod, encodeJSON, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = json.Unmarshal(body, &v); err != nil {       
+		return nil, err		
+	}     
+	return v, err
+}
+
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
 func (client Client) submitFormRaw(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
