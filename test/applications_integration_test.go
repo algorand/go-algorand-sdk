@@ -117,14 +117,14 @@ func iBuildAnApplicationTransactionWithTheTransientAccountTheCurrentApplicationS
 	var err error
 
 	if approvalProgram != "" {
-		approvalP, err = ioutil.ReadFile(approvalProgram)
+		approvalP, err = ioutil.ReadFile("test/features/" + approvalProgram)
 		if err != nil {
 			return err
 		}
 	}
 
 	if clearProgram != "" {
-		clearP, err = ioutil.ReadFile("resources/" + clearProgram)
+		clearP, err = ioutil.ReadFile("test/features/" + clearProgram)
 		if err != nil {
 			return err
 		}
