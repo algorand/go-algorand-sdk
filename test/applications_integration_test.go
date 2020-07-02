@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -187,25 +188,22 @@ func iBuildAnApplicationTransaction(
 		}
 	}
 
-	status, err := acl.Status()
-	if err != nil {
-		return err
-	}
-	llr := status.LastRound
 	var ghbytes [32]byte
 	copy(ghbytes[:], gh)
 
-	transaction.SetHeader(
-		&tx,                                     //tx types.Transaction,
-		transientAccount.Address,                //sender types.Address,
-		0,                                       //fee types.MicroAlgos,
-		types.Round(llr), types.Round(llr+1000), //fv, lv types.Round,
-		nil,                   //note []byte,
-		gen,                   //gen string,
-		types.Digest(ghbytes), //gh types.Digest,
-		types.Digest{},        //group types.Digest,
-		[32]byte{},            //lease [32]byte,
-		types.Address{})       //rekeyTo types.Address
+	var suggestedParams types.SuggestedParams
+	suggestedParams, err = client.SuggestedParams().Do(context.Background())
+	if err != nil {
+		return err
+	}
+	transaction.SetApplicationTransactionFields(
+		&tx, //tx types.Transaction,
+		suggestedParams,
+		transientAccount.Address, //sender types.Address,
+		nil,                      //note []byte,
+		types.Digest{},           //group types.Digest,
+		[32]byte{},               //lease [32]byte,
+		types.Address{})          //rekeyTo types.Address
 
 	return nil
 }

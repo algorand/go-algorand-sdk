@@ -126,30 +126,19 @@ func iBuildAnApplicationTransactionUnit(
 		}
 	}
 
+	suggestedParams, err := getSuggestedParams(uint64(fee), uint64(firstValid), uint64(lastValid), "", genesisHash, true)
 	if err != nil {
 		return err
 	}
 
-	var ghbytes [32]byte
-	base64.StdEncoding.DecodeString(genesisHash)
-	gh, err := base64.StdEncoding.DecodeString(genesisHash)
-	if err != nil {
-		return err
-	}
-	copy(ghbytes[:], gh)
-
-	transaction.SetHeader(
-		&tx,                                             //tx types.Transaction,
-		addr1,                                           //sender types.Address,
-		types.MicroAlgos(fee),                           //fee types.MicroAlgos,
-		types.Round(firstValid), types.Round(lastValid), //fv, lv types.Round,
-		nil,                   //note []byte,
-		"",                    //gen string,
-		types.Digest(ghbytes), //gh types.Digest,
-		types.Digest{},        //group types.Digest,
-		[32]byte{},            //lease [32]byte,
-		types.Address{})       //rekeyTo types.Address
-
+	transaction.SetApplicationTransactionFields(
+		&tx, //tx types.Transaction,
+		suggestedParams,
+		addr1,           //sender types.Address,
+		nil,             //note []byte,
+		types.Digest{},  //group types.Digest,
+		[32]byte{},      //lease [32]byte,
+		types.Address{}) //rekeyTo types.Address
 	return nil
 
 }
@@ -169,6 +158,24 @@ func theBaseEncodedSignedTransactionShouldEqual(base int, golden string) error {
 		return fmt.Errorf("Application signed transaction does not match the golden.")
 	}
 	return nil
+}
+
+func getSuggestedParams(
+	fee, fv, lv uint64,
+	gen, ghb64 string,
+	flat bool) (types.SuggestedParams, error) {
+	gh, err := base64.StdEncoding.DecodeString(ghb64)
+	if err != nil {
+		return types.SuggestedParams{}, err
+	}
+	return types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       gen,
+		GenesisHash:     gh,
+		FirstRoundValid: types.Round(fv),
+		LastRoundValid:  types.Round(lv),
+		FlatFee:         flat,
+	}, err
 }
 
 func ApplicationsUnitContext(s *godog.Suite) {

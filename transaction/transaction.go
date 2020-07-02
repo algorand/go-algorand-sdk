@@ -892,32 +892,42 @@ func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
 	return
 }
 
-func SetHeader(
-	tx *types.Transaction,
+func SetApplicationTransactionFields(
+	applicationTransaction *types.Transaction,
+	sp types.SuggestedParams,
 	sender types.Address,
-	fee types.MicroAlgos,
-	fv, lv types.Round,
 	note []byte,
-	gen string,
-	gh types.Digest,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address) {
+	rekeyTo types.Address) error {
 
-	if fee < MinTxnFee {
-		fee = MinTxnFee
-	}
+	var gh types.Digest
+	copy(gh[:], sp.GenesisHash)
 
-	tx.Header = types.Header{
+	applicationTransaction.Header = types.Header{
 		Sender:      sender,
-		Fee:         fee,
-		FirstValid:  fv,
-		LastValid:   lv,
+		Fee:         sp.Fee,
+		FirstValid:  sp.FirstRoundValid,
+		LastValid:   sp.LastRoundValid,
 		Note:        note,
-		GenesisID:   gen,
+		GenesisID:   sp.GenesisID,
 		GenesisHash: gh,
 		Group:       group,
 		Lease:       lease,
 		RekeyTo:     rekeyTo,
 	}
+
+	if !sp.FlatFee {
+		// Update fee
+		eSize, err := EstimateSize(*applicationTransaction)
+		if err != nil {
+			return err
+		}
+		applicationTransaction.Fee = types.MicroAlgos(eSize * uint64(sp.Fee))
+	}
+
+	if applicationTransaction.Fee < MinTxnFee {
+		applicationTransaction.Fee = MinTxnFee
+	}
+	return nil
 }
