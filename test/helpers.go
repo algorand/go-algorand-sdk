@@ -122,3 +122,7 @@ func getSigtypeFromTransaction(transaction models.Transaction) string {
 	}
 	return "unknown sigtype"
 }
+
+func loadResource(filepath string) ([]byte, error) {
+	return ioutil.ReadFile(path.Join("features", "resources", filepath))
+}

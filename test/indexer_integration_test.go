@@ -302,7 +302,7 @@ func thereAreTheFirstHas(numAccounts, firstAccountPendingRewards, rewardsBase, r
 	if err != nil {
 		return err
 	}
-	err = comparisonCheck("first account type", accountType, accountUnderScrutiny.Type)
+	err = comparisonCheck("first account type", accountType, accountUnderScrutiny.SigType)
 	return err
 }
 

@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/base32"
 	"encoding/base64"
@@ -23,6 +24,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
+	algodV2 "github.com/algorand/go-algorand-sdk/client/v2/algod"
+	commonV2 "github.com/algorand/go-algorand-sdk/client/v2/common"
+	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
@@ -53,6 +57,7 @@ var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
 var kcl kmd.Client
 var acl algod.Client
+var aclv2 *algodV2.Client
 var walletName string
 var walletPswd string
 var walletID string
@@ -114,6 +119,16 @@ var contractTestFixture struct {
 	limitOrderD        uint64
 	limitOrderMin      uint64
 	dynamicFee         templates.DynamicFee
+}
+
+var tealCompleResult struct {
+	status   int
+	response modelsV2.CompileResponse
+}
+
+var tealDryrunResult struct {
+	status   int
+	response modelsV2.DryrunResponse
 }
 
 var opt = godog.Options{
@@ -272,6 +287,11 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the signature should be equal to "([^"]*)"$`, theSignatureShouldBeEqualTo)
 	s.Step(`^base64 encoded program "([^"]*)"$`, baseEncodedProgram)
 	s.Step(`^base64 encoded private key "([^"]*)"$`, baseEncodedPrivateKey)
+	s.Step("an algod v2 client", algodClientV2)
+	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
+	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
+	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
+	s.Step(`^I get execution result "([^"]*)"$`, tealCheckDryrun)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -752,6 +772,18 @@ func algodClient() error {
 		return err
 	}
 	_, err = acl.StatusAfterBlock(1)
+	return err
+}
+
+func algodClientV2() error {
+	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	algodAddress := "http://localhost:" + "60000"
+	var err error
+	aclv2, err = algodV2.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		return err
+	}
+	_, err = aclv2.StatusAfterBlock(1).Do(context.Background())
 	return err
 }
 
@@ -1907,5 +1939,100 @@ func baseEncodedPrivateKey(skEnc string) error {
 		return err
 	}
 	account.PrivateKey = ed25519.NewKeyFromSeed(seed)
+	return nil
+}
+
+func tealCompile(filename string) (err error) {
+	if len(filename) == 0 {
+		return fmt.Errorf("empty teal program file name")
+	}
+	tealProgram, err := loadResource(filename)
+	if err != nil {
+		return err
+	}
+	result, err := aclv2.TealCompile(tealProgram).Do(context.Background())
+	if err == nil {
+		tealCompleResult.status = 200
+		tealCompleResult.response = result
+		return
+	}
+	if _, ok := err.(commonV2.BadRequest); ok {
+		tealCompleResult.status = 400
+		tealCompleResult.response.Hash = ""
+		tealCompleResult.response.Result = ""
+		return nil
+	}
+
+	return
+}
+
+func tealCheckCompile(status int, result string, hash string) error {
+	if status != tealCompleResult.status {
+		return fmt.Errorf("status: %d != %d", status, tealCompleResult.status)
+	}
+	if result != tealCompleResult.response.Result {
+		return fmt.Errorf("result: %s != %s", result, tealCompleResult.response.Result)
+	}
+
+	if hash != tealCompleResult.response.Hash {
+		return fmt.Errorf("hash: %s != %s", hash, tealCompleResult.response.Hash)
+	}
+	return nil
+}
+
+func tealDryrun(kind string, filename string) (err error) {
+	if len(filename) == 0 {
+		return fmt.Errorf("empty teal program file name")
+	}
+	tealProgram, err := loadResource(filename)
+	if err != nil {
+		return err
+	}
+
+	txns := []types.SignedTxn{{}}
+	sources := []modelsV2.DryrunSource{}
+	switch kind {
+	case "compiled":
+		txns[0].Lsig.Logic = tealProgram
+	case "source":
+		sources = append(sources, modelsV2.DryrunSource{
+			FieldName: "lsig",
+			Source:    string(tealProgram),
+			TxnIndex:  0,
+		})
+	default:
+		return fmt.Errorf("kind %s not in (source, compiled)", kind)
+	}
+
+	ddr := modelsV2.DryrunRequest{
+		Txns:    txns,
+		Sources: sources,
+	}
+	data := msgpack.Encode(&ddr)
+
+	result, err := aclv2.TealDryrun(data).Do(context.Background())
+	if err != nil {
+		return
+	}
+
+	tealDryrunResult.response = result
+	return
+}
+
+func tealCheckDryrun(result string) error {
+	txnResult := tealDryrunResult.response.Txns[0]
+	var msgs []string
+	if txnResult.AppCallMessages != nil && len(txnResult.AppCallMessages) > 0 {
+		msgs = txnResult.AppCallMessages
+	} else if txnResult.LogicSigMessages != nil && len(txnResult.LogicSigMessages) > 0 {
+		msgs = txnResult.LogicSigMessages
+	}
+	if len(msgs) == 0 {
+		return fmt.Errorf("received no messages")
+	}
+
+	if msgs[len(msgs)-1] != result {
+		return fmt.Errorf("dryrun status %s != %s", result, msgs[len(msgs)-1])
+	}
 	return nil
 }
