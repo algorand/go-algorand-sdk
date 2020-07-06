@@ -46,6 +46,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
 	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
+	s.Step(`^we make any Dryrun call$`, weMakeAnyDryrunCall)
+	s.Step(`^the parsed Dryrun Response should have global delta "([^"]*)" with (\d+)$`, parsedDryrunResponseShouldHave)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -329,4 +331,32 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 		return fmt.Errorf("this sdk does not support format %s", format)
 	}
 	return weMakeAGetBlockCallAgainstBlockNumber(blocknum)
+}
+
+var dryrunResponse models.DryrunResponse
+
+func weMakeAnyDryrunCall() (err error) {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return
+	}
+	dryrunResponse, err = algodClient.TealDryrun(nil).Do(context.Background())
+	return
+}
+
+func parsedDryrunResponseShouldHave(key string, action int) error {
+	if len(dryrunResponse.Txns) != 1 {
+		return fmt.Errorf("expected 1 txn in result but got %d", len(dryrunResponse.Txns))
+	}
+	gd := dryrunResponse.Txns[0].GlobalDelta
+	if len(gd) != 1 {
+		return fmt.Errorf("expected 1 global delta in result but got %d", len(gd))
+	}
+	if gd[0].Key != key {
+		return fmt.Errorf("key %s != %s", key, gd[0].Key)
+	}
+	if int(gd[0].Value.Action) != action {
+		return fmt.Errorf("action %d != %d", action, int(gd[0].Value.Action))
+	}
+	return nil
 }

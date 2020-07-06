@@ -2,59 +2,79 @@ package models
 
 import "github.com/algorand/go-algorand-sdk/types"
 
-// Account defines model for account information at a given round.
+// Account information at a given round.
+// Definition:
+// data/basics/userBalance.go : AccountData
 type Account struct {
+	// Address the account public key
+	Address string `json:"address,omitempty"`
 
-	// the account public key
-	Address string `json:"address"`
+	// Amount (algo) total number of MicroAlgos in the account
+	Amount uint64 `json:"amount,omitempty"`
 
-	// \[algo\] total number of MicroAlgos in the account
-	Amount uint64 `json:"amount"`
+	// AmountWithoutPendingRewards specifies the amount of MicroAlgos in the account,
+	// without the pending rewards.
+	AmountWithoutPendingRewards uint64 `json:"amount-without-pending-rewards,omitempty"`
 
-	// specifies the amount of MicroAlgos in the account, without the pending rewards.
-	AmountWithoutPendingRewards uint64 `json:"amount-without-pending-rewards"`
+	// AppsLocalState (appl) applications local data stored in this account.
+	// Note the raw object uses `map[int] -> AppLocalState` for this type.
+	AppsLocalState []ApplicationLocalStates `json:"apps-local-state,omitempty"`
 
-	// \[asset\] assets held by this account.
-	//
+	// AppsTotalSchema (tsch) stores the sum of all of the local schemas and global
+	// schemas in this account.
+	// Note: the raw account uses `StateSchema` for this type.
+	AppsTotalSchema ApplicationStateSchema `json:"apps-total-schema,omitempty"`
+
+	// Assets (asset) assets held by this account.
 	// Note the raw object uses `map[int] -> AssetHolding` for this type.
 	Assets []AssetHolding `json:"assets,omitempty"`
 
-	// \[apar\] parameters of assets created by this account.
-	//
+	// AuthAddr (spend) the address against which signing should be checked. If empty,
+	// the address of the current account is used. This field can be updated in any
+	// transaction by setting the RekeyTo field.
+	AuthAddr string `json:"auth-addr,omitempty"`
+
+	// CreatedApps (appp) parameters of applications created by this account including
+	// app global data.
+	// Note: the raw account uses `map[int] -> AppParams` for this type.
+	CreatedApps []Application `json:"created-apps,omitempty"`
+
+	// CreatedAssets (apar) parameters of assets created by this account.
 	// Note: the raw account uses `map[int] -> Asset` for this type.
 	CreatedAssets []Asset `json:"created-assets,omitempty"`
 
-	// AccountParticipation describes the parameters used by this account in consensus protocol.
+	// Participation accountParticipation describes the parameters used by this account
+	// in consensus protocol.
 	Participation AccountParticipation `json:"participation,omitempty"`
 
-	// amount of MicroAlgos of pending rewards in this account.
-	PendingRewards uint64 `json:"pending-rewards"`
+	// PendingRewards amount of MicroAlgos of pending rewards in this account.
+	PendingRewards uint64 `json:"pending-rewards,omitempty"`
 
-	// \[ebase\] used as part of the rewards computation. Only applicable to accounts which are participating.
+	// RewardBase (ebase) used as part of the rewards computation. Only applicable to
+	// accounts which are participating.
 	RewardBase uint64 `json:"reward-base,omitempty"`
 
-	// \[ern\] total rewards of MicroAlgos the account has received, including pending rewards.
-	Rewards uint64 `json:"rewards"`
+	// Rewards (ern) total rewards of MicroAlgos the account has received, including
+	// pending rewards.
+	Rewards uint64 `json:"rewards,omitempty"`
 
-	// The round for which this information is relevant.
-	Round uint64 `json:"round"`
+	// Round the round for which this information is relevant.
+	Round uint64 `json:"round,omitempty"`
 
-	// \[onl\] delegation status of the account's MicroAlgos
-	// * Offline - indicates that the associated account is delegated.
-	// *  Online  - indicates that the associated account used as part of the delegation pool.
-	// *   NotParticipating - indicates that the associated account is neither a delegator nor a delegate.
-	Status string `json:"status"`
-
-	// Indicates what type of signature is used by this account, must be one of:
+	// SigType indicates what type of signature is used by this account, must be one
+	// of:
 	// * sig
 	// * msig
 	// * lsig
-	Type string `json:"sig-type,omitempty"`
+	SigType string `json:"sig-type,omitempty"`
 
-	// \[spend\] the address against which signing should be checked.
-	// If empty, the address of the current account is used.
-	// This field can be updated in any transaction by setting the RekeyTo field.
-	AuthAddr string `json:"auth-addr,omitempty"`
+	// Status (onl) delegation status of the account's MicroAlgos
+	// * Offline - indicates that the associated account is delegated.
+	// * Online - indicates that the associated account used as part of the delegation
+	// pool.
+	// * NotParticipating - indicates that the associated account is neither a
+	// delegator nor a delegate.
+	Status string `json:"status,omitempty"`
 }
 
 // AccountParticipation describes the parameters used by this account in consensus protocol.
@@ -813,4 +833,206 @@ type LookupAccountByIDResponse struct {
 type LookupAssetByIDResponse struct {
 	CurrentRound uint64 `json:"current-round"`
 	Asset        Asset  `json:"asset"`
+}
+
+// DryrunRequest request data type for dryrun endpoint. Given the Transactions and
+// simulated ledger state upload, run TEAL scripts and return debugging
+// information.
+type DryrunRequest struct {
+	Accounts []Account `json:"accounts,omitempty"`
+
+	Apps []Application `json:"apps,omitempty"`
+
+	// LatestTimestamp is available to some TEAL scripts. Defaults to the latest
+	// confirmed timestamp this algod is attached to.
+	LatestTimestamp uint64 `json:"latest-timestamp,omitempty"`
+
+	// ProtocolVersion specifies a specific version string to operate under, otherwise
+	// whatever the current protocol of the network this algod is running in.
+	ProtocolVersion string `json:"protocol-version,omitempty"`
+
+	// Round is available to some TEAL scripts. Defaults to the current round on the
+	// network this algod is attached to.
+	Round uint64 `json:"round,omitempty"`
+
+	Sources []DryrunSource `json:"sources,omitempty"`
+
+	Txns []types.SignedTxn `json:"txns,omitempty"`
+}
+
+// DryrunSource is TEAL source text that gets uploaded, compiled, and inserted into
+// transactions or application state.
+type DryrunSource struct {
+	AppIndex uint64 `json:"app-index,omitempty"`
+
+	// FieldName is what kind of sources this is. If lsig then it goes into the
+	// transactions[this.TxnIndex].LogicSig. If approv or clearp it goes into the
+	// Approval Program or Clear State Program of application[this.AppIndex].
+	FieldName string `json:"field-name,omitempty"`
+
+	Source string `json:"source,omitempty"`
+
+	TxnIndex uint64 `json:"txn-index,omitempty"`
+}
+
+// ApplicationStateSchema specifies maximums on the number of each type that may be
+// stored.
+type ApplicationStateSchema struct {
+	// NumByteSlice (nbs) num of byte slices.
+	NumByteSlice uint64 `json:"num-byte-slice,omitempty"`
+
+	// NumUint (nui) num of uints.
+	NumUint uint64 `json:"num-uint,omitempty"`
+}
+
+// ApplicationLocalStates pair of application index and application local state
+type ApplicationLocalStates struct {
+	Id uint64 `json:"id,omitempty"`
+
+	// State stores local state associated with an application.
+	State ApplicationLocalState `json:"state,omitempty"`
+}
+
+// ApplicationLocalState stores local state associated with an application.
+type ApplicationLocalState struct {
+	// KeyValue (tkv) storage.
+	KeyValue []TealKeyValue `json:"key-value,omitempty"`
+
+	// Schema (hsch) schema.
+	Schema ApplicationStateSchema `json:"schema,omitempty"`
+}
+
+// TealKeyValue represents a key-value pair in an application store.
+type TealKeyValue struct {
+	Key string `json:"key,omitempty"`
+
+	// Value represents a TEAL value.
+	Value TealValue `json:"value,omitempty"`
+}
+
+// TealValue represents a TEAL value.
+type TealValue struct {
+	// Bytes (tb) bytes value.
+	Bytes string `json:"bytes,omitempty"`
+
+	// Type (tt) value type.
+	Type uint64 `json:"type,omitempty"`
+
+	// Uint (ui) uint value.
+	Uint uint64 `json:"uint,omitempty"`
+}
+
+// AccountStateDelta application state delta.
+type AccountStateDelta struct {
+	Address string `json:"address,omitempty"`
+
+	// Delta application state delta.
+	Delta []EvalDeltaKeyValue `json:"delta,omitempty"`
+}
+
+// EvalDeltaKeyValue key-value pairs for StateDelta.
+type EvalDeltaKeyValue struct {
+	Key string `json:"key,omitempty"`
+
+	// Value represents a TEAL value delta.
+	Value EvalDelta `json:"value,omitempty"`
+}
+
+// EvalDelta represents a TEAL value delta.
+type EvalDelta struct {
+	// Action (at) delta action.
+	Action uint64 `json:"action,omitempty"`
+
+	// Bytes (bs) bytes value.
+	Bytes string `json:"bytes,omitempty"`
+
+	// Uint (ui) uint value.
+	Uint uint64 `json:"uint,omitempty"`
+}
+
+// Application index and its parameters
+type Application struct {
+	// Id (appidx) application index.
+	Id uint64 `json:"id,omitempty"`
+
+	// Params (appparams) application parameters.
+	Params ApplicationParams `json:"params,omitempty"`
+}
+
+// ApplicationParams stores the global information associated with an application.
+type ApplicationParams struct {
+	// ApprovalProgram (approv) approval program.
+	ApprovalProgram string `json:"approval-program,omitempty"`
+
+	// ClearStateProgram (clearp) approval program.
+	ClearStateProgram string `json:"clear-state-program,omitempty"`
+
+	// Creator the address that created this application. This is the address where the
+	// parameters and global state for this application can be found.
+	Creator string `json:"creator,omitempty"`
+
+	// GlobalState [\gs) global schema
+	GlobalState []TealKeyValue `json:"global-state,omitempty"`
+
+	// GlobalStateSchema [\lsch) global schema
+	GlobalStateSchema ApplicationStateSchema `json:"global-state-schema,omitempty"`
+
+	// LocalStateSchema [\lsch) local schema
+	LocalStateSchema ApplicationStateSchema `json:"local-state-schema,omitempty"`
+}
+
+// DryrunState stores the TEAL eval step data
+type DryrunState struct {
+	// Error evaluation error if any
+	Error string `json:"error,omitempty"`
+
+	// Line number
+	Line uint64 `json:"line,omitempty"`
+
+	// Pc program counter
+	Pc uint64 `json:"pc,omitempty"`
+
+	Scratch []TealValue `json:"scratch,omitempty"`
+
+	Stack []TealValue `json:"stack,omitempty"`
+}
+
+// DryrunTxnResult contains any LogicSig or ApplicationCall program debug
+// information and state updates from a dryrun.
+type DryrunTxnResult struct {
+	AppCallMessages []string `json:"app-call-messages,omitempty"`
+
+	AppCallTrace []DryrunState `json:"app-call-trace,omitempty"`
+
+	// Disassembly disassembled program line by line.
+	Disassembly []string `json:"disassembly,omitempty"`
+
+	// GlobalDelta application state delta.
+	GlobalDelta []EvalDeltaKeyValue `json:"global-delta,omitempty"`
+
+	LocalDeltas []AccountStateDelta `json:"local-deltas,omitempty"`
+
+	LogicSigMessages []string `json:"logic-sig-messages,omitempty"`
+
+	LogicSigTrace []DryrunState `json:"logic-sig-trace,omitempty"`
+}
+
+// CompileResponse is response from /v2/compile
+type CompileResponse struct {
+	// Hash base32 SHA512_256 of program bytes (Address style)
+	Hash string `json:"hash,omitempty"`
+
+	// Result base64 encoded program bytes
+	Result string `json:"result,omitempty"`
+}
+
+// DryrunResponse is response from /v2/dryrun
+type DryrunResponse struct {
+	Error string `json:"error,omitempty"`
+
+	// ProtocolVersion protocol version is the protocol version Dryrun was operated
+	// under.
+	ProtocolVersion string `json:"protocol-version,omitempty"`
+
+	Txns []DryrunTxnResult `json:"txns,omitempty"`
 }
