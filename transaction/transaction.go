@@ -874,24 +874,7 @@ func MakeApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []string, f
 	return tx, nil
 }
 
-func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
-	for _, acct := range accounts {
-		addr, err := types.DecodeAddress(acct)
-		if err != nil {
-			return nil, err
-		}
-		parsed = append(parsed, addr)
-	}
-	return
-}
-
-func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
-	for _, aidx := range foreignApps {
-		parsed = append(parsed, types.AppIndex(aidx))
-	}
-	return
-}
-
+// SetApplicationTransactionFields sets the required and optional transaction fields. 
 func SetApplicationTransactionFields(
 	applicationTransaction *types.Transaction,
 	sp types.SuggestedParams,
@@ -930,4 +913,22 @@ func SetApplicationTransactionFields(
 		applicationTransaction.Fee = MinTxnFee
 	}
 	return nil
+}
+
+func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
+	for _, acct := range accounts {
+		addr, err := types.DecodeAddress(acct)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, addr)
+	}
+	return
+}
+
+func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
+	for _, aidx := range foreignApps {
+		parsed = append(parsed, types.AppIndex(aidx))
+	}
+	return
 }

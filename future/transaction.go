@@ -3,12 +3,17 @@ package future
 import (
 	"encoding/base64"
 	"fmt"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // MinTxnFee is v5 consensus params, in microAlgos
 const MinTxnFee = transaction.MinTxnFee
+
+// NumOfAdditionalBytesAfterSigning is the number of bytes added to a txn after signing it
+const NumOfAdditionalBytesAfterSigning = 75
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
@@ -527,4 +532,136 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	}
 	copy(out[:], slice)
 	return
+}
+
+
+var emptySchema = types.StateSchema{}
+
+// MakeApplicationCreateTx makes a transaction for creating an application
+func MakeApplicationCreateTx(onComplete types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(0, appArgs, accounts, foreignApps, onComplete, approvalProg, clearProg, globalSchema, localSchema)
+}
+
+// MakeApplicationUpdateTx makes a transaction for updating an application's programs
+func MakeApplicationUpdateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, approvalProg []byte, clearProg []byte) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.UpdateApplicationOC, approvalProg, clearProg, emptySchema, emptySchema)
+}
+
+// MakeApplicationDeleteTx makes a transaction for deleting an application
+func MakeApplicationDeleteTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.DeleteApplicationOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeApplicationOptInTx makes a transaction for opting in to (allocating
+// some account-specific state for) an application
+func MakeApplicationOptInTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.OptInOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeApplicationCloseOutTx makes a transaction for closing out of
+// (deallocating all account-specific state for) an application
+func MakeApplicationCloseOutTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.CloseOutOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeApplicationClearStateTx makes a transaction for clearing out all
+// account-specific state for an application. It may not be rejected by the
+// application's logic.
+func MakeApplicationClearStateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.ClearStateOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeApplicationNoOpTx makes a transaction for interacting with an existing
+// application, potentially updating any account-specific local state and
+// global state associated with it.
+func MakeApplicationNoOpTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
+	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.NoOpOC, nil, nil, emptySchema, emptySchema)
+}
+
+// MakeApplicationCallTx is a helper for the above ApplicationCall
+// transaction constructors. A fully custom ApplicationCall transaction may
+// be constructed using this method.
+func MakeApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, onCompletion types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema) (tx types.Transaction, err error) {
+	tx.Type = types.ApplicationCallTx
+	tx.ApplicationID = types.AppIndex(appIdx)
+	tx.OnCompletion = onCompletion
+
+	tx.ApplicationArgs = appArgs
+	tx.Accounts, err = parseTxnAccounts(accounts)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.ForeignApps = parseTxnForeignApps(foreignApps)
+	tx.ApprovalProgram = approvalProg
+	tx.ClearStateProgram = clearProg
+	tx.LocalStateSchema = localSchema
+	tx.GlobalStateSchema = globalSchema
+
+	return tx, nil
+}
+
+// SetApplicationTransactionFields sets the required and optional transaction fields. 
+func SetApplicationTransactionFields(
+	applicationTransaction *types.Transaction,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) error {
+
+	var gh types.Digest
+	copy(gh[:], sp.GenesisHash)
+
+	applicationTransaction.Header = types.Header{
+		Sender:      sender,
+		Fee:         sp.Fee,
+		FirstValid:  sp.FirstRoundValid,
+		LastValid:   sp.LastRoundValid,
+		Note:        note,
+		GenesisID:   sp.GenesisID,
+		GenesisHash: gh,
+		Group:       group,
+		Lease:       lease,
+		RekeyTo:     rekeyTo,
+	}
+
+	if !sp.FlatFee {
+		// Update fee
+		eSize, err := EstimateSize(*applicationTransaction)
+		if err != nil {
+			return err
+		}
+		applicationTransaction.Fee = types.MicroAlgos(eSize * uint64(sp.Fee))
+	}
+
+	if applicationTransaction.Fee < MinTxnFee {
+		applicationTransaction.Fee = MinTxnFee
+	}
+	return nil
+}
+
+
+func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
+	for _, acct := range accounts {
+		addr, err := types.DecodeAddress(acct)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, addr)
+	}
+	return
+}
+
+func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
+	for _, aidx := range foreignApps {
+		parsed = append(parsed, types.AppIndex(aidx))
+	}
+	return
+}
+
+// EstimateSize returns the estimated length of the encoded transaction
+func EstimateSize(txn types.Transaction) (uint64, error) {
+	return uint64(len(msgpack.Encode(txn))) + NumOfAdditionalBytesAfterSigning, nil
 }
