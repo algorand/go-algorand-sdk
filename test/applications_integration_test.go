@@ -147,42 +147,42 @@ func iBuildAnApplicationTransaction(
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		tx, err = transaction.MakeUnsignedAppCreateTx(types.NoOpOC, approvalP, clearP,
+		tx, err = transaction.MakeApplicationCreateTx(types.NoOpOC, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp)
 		if err != nil {
 			return err
 		}
 
 	case "update":
-		tx, err = transaction.MakeUnsignedAppUpdateTx(applicationId, args, accs, fApp,
+		tx, err = transaction.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
 			approvalP, clearP)
 		if err != nil {
 			return err
 		}
 
 	case "call":
-		tx, err = transaction.MakeUnsignedApplicationCallTx(applicationId, args, accs,
+		tx, err = transaction.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema)
 	case "optin":
-		tx, err = transaction.MakeUnsignedAppOptInTx(applicationId, args, accs, fApp)
+		tx, err = transaction.MakeApplicationOptInTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = transaction.MakeUnsignedAppClearStateTx(applicationId, args, accs, fApp)
+		tx, err = transaction.MakeApplicationClearStateTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = transaction.MakeUnsignedAppCloseOutTx(applicationId, args, accs, fApp)
+		tx, err = transaction.MakeApplicationCloseOutTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = transaction.MakeUnsignedAppDeleteTx(applicationId, args, accs, fApp)
+		tx, err = transaction.MakeApplicationDeleteTx(applicationId, args, accs, fApp)
 		if err != nil {
 			return err
 		}
