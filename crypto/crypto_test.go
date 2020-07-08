@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"encoding/base64"
 	"math/rand"
 	"testing"
 
@@ -304,4 +305,32 @@ func TestMakeLogicSigMulti(t *testing.T) {
 	err = msgpack.Decode(encoded, &lsig1)
 	require.NoError(t, err)
 	require.Equal(t, lsig, lsig1)
+}
+
+func TestTealSign(t *testing.T) {
+	data, err := base64.StdEncoding.DecodeString("Ux8jntyBJQarjKGF8A==")
+	require.NoError(t, err)
+
+	seed, err := base64.StdEncoding.DecodeString("5Pf7eGMA52qfMT4R4/vYCt7con/7U3yejkdXkrcb26Q=")
+	require.NoError(t, err)
+	sk := ed25519.NewKeyFromSeed(seed)
+
+	addr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
+	require.NoError(t, err)
+
+	prog, err := base64.StdEncoding.DecodeString("ASABASI=")
+	require.NoError(t, err)
+
+	sig1, err := TealSign(sk, data, addr)
+	require.NoError(t, err)
+
+	sig2, err := TealSignFromProgram(sk, data, prog)
+	require.NoError(t, err)
+
+	require.Equal(t, sig1, sig2)
+
+	pk := sk.Public().(ed25519.PublicKey)
+	msg := bytes.Join([][]byte{programDataPrefix, addr[:], data}, nil)
+	verified := ed25519.Verify(pk, msg, sig1[:])
+	require.True(t, verified)
 }

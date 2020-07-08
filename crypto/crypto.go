@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"fmt"
+
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -27,6 +28,9 @@ var bytesPrefix = []byte("MX")
 
 // programPrefix is prepended to a logic program when computing a hash
 var programPrefix = []byte("Program")
+
+// programDataPrefix is prepended to teal sign data
+var programDataPrefix = []byte("ProgData")
 
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
@@ -584,4 +588,25 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 	lsig.Msig.Subsigs[idx] = msig.Subsigs[idx]
 
 	return nil
+}
+
+// TealSign creates a signature compatible with ed25519verify opcode from contract address
+func TealSign(sk ed25519.PrivateKey, data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
+	msgParts := [][]byte{programDataPrefix, contractAddress[:], data}
+	toBeSigned := bytes.Join(msgParts, nil)
+
+	signature := ed25519.Sign(sk, toBeSigned)
+	// Copy the resulting signature into a Signature, and check that it's
+	// the expected length
+	n := copy(rawSig[:], signature)
+	if n != len(rawSig) {
+		err = errInvalidSignatureReturned
+	}
+	return
+}
+
+// TealSignFromProgram creates a signature compatible with ed25519verify opcode from raw program bytes
+func TealSignFromProgram(sk ed25519.PrivateKey, data []byte, program []byte) (rawSig types.Signature, err error) {
+	addr := AddressFromProgram(program)
+	return TealSign(sk, data, addr)
 }
