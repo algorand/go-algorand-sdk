@@ -116,6 +116,15 @@ func iBuildAnApplicationTransaction(
 	var approvalP []byte
 	var err error
 
+	var ghbytes [32]byte
+	copy(ghbytes[:], gh)
+
+	var suggestedParams types.SuggestedParams
+	suggestedParams, err = client.SuggestedParams().Do(context.Background())
+	if err != nil {
+		return err
+	}
+	
 	if approvalProgram != "" {
 		approvalP, err = ioutil.ReadFile("features/resources/" + approvalProgram)
 		if err != nil {
@@ -147,62 +156,52 @@ func iBuildAnApplicationTransaction(
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(types.NoOpOC, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp)
+			gSchema, lSchema, args, accs, fApp,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "update":
 		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
-			approvalP, clearP)
+			approvalP, clearP,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema)
+			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp)
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp)
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp)
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp)
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 	}
-
-	var ghbytes [32]byte
-	copy(ghbytes[:], gh)
-
-	var suggestedParams types.SuggestedParams
-	suggestedParams, err = client.SuggestedParams().Do(context.Background())
-	if err != nil {
-		return err
-	}
-	future.SetApplicationTransactionFields(
-		&tx, //tx types.Transaction,
-		suggestedParams,
-		transientAccount.Address, //sender types.Address,
-		nil,                      //note []byte,
-		types.Digest{},           //group types.Digest,
-		[32]byte{},               //lease [32]byte,
-		types.Address{})          //rekeyTo types.Address
 
 	return nil
 }

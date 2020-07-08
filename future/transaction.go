@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -534,8 +533,6 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	return
 }
 
-var emptySchema = types.StateSchema{}
-
 // - accounts     lists the accounts (in addition to the sender) that may be accessed
 //                from the application logic.
 //
@@ -572,129 +569,235 @@ var emptySchema = types.StateSchema{}
 //                it into a block.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
-func MakeApplicationCreateTx(onComplete types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(0, appArgs, accounts, foreignApps, onComplete, approvalProg, clearProg, globalSchema, localSchema)
-}
-
-// MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
-func MakeApplicationUpdateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, approvalProg []byte, clearProg []byte) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.UpdateApplicationOC, approvalProg, clearProg, emptySchema, emptySchema)
-}
-
-// MakeApplicationDeleteTx makes a transaction for deleting an application (see above for args desc.)
-func MakeApplicationDeleteTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.DeleteApplicationOC, nil, nil, emptySchema, emptySchema)
-}
-
-// MakeApplicationOptInTx makes a transaction for opting in to (allocating
-// some account-specific state for) an application (see above for args desc.)
-func MakeApplicationOptInTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.OptInOC, nil, nil, emptySchema, emptySchema)
-}
-
-// MakeApplicationCloseOutTx makes a transaction for closing out of
-// (deallocating all account-specific state for) an application (see above for args desc.)
-func MakeApplicationCloseOutTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.CloseOutOC, nil, nil, emptySchema, emptySchema)
-}
-
-// MakeApplicationClearStateTx makes a transaction for clearing out all
-// account-specific state for an application. It may not be rejected by the
-// application's logic. (see above for args desc.)
-func MakeApplicationClearStateTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.ClearStateOC, nil, nil, emptySchema, emptySchema)
-}
-
-// MakeApplicationNoOpTx makes a transaction for interacting with an existing
-// application, potentially updating any account-specific local state and
-// global state associated with it. (see above for args desc.)
-func MakeApplicationNoOpTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx, appArgs, accounts, foreignApps, types.NoOpOC, nil, nil, emptySchema, emptySchema)
-}
-
-// MakeApplicationCallTx is a helper for the above ApplicationCall
-// transaction constructors. A fully custom ApplicationCall transaction may
-// be constructed using this method. (see above for args desc.)
-func MakeApplicationCallTx(appIdx uint64, appArgs [][]byte, accounts []string, foreignApps []uint64, onCompletion types.OnCompletion, approvalProg []byte, clearProg []byte, globalSchema types.StateSchema, localSchema types.StateSchema) (tx types.Transaction, err error) {
-	tx.Type = types.ApplicationCallTx
-	tx.ApplicationID = types.AppIndex(appIdx)
-	tx.OnCompletion = onCompletion
-
-	tx.ApplicationArgs = appArgs
-	tx.Accounts, err = parseTxnAccounts(accounts)
-	if err != nil {
-		return tx, err
-	}
-
-	tx.ForeignApps = parseTxnForeignApps(foreignApps)
-	tx.ApprovalProgram = approvalProg
-	tx.ClearStateProgram = clearProg
-	tx.LocalStateSchema = localSchema
-	tx.GlobalStateSchema = globalSchema
-
-	return tx, nil
-}
-
-// SetApplicationTransactionFields sets the required and optional transaction fields.
-func SetApplicationTransactionFields(
-	applicationTransaction *types.Transaction,
+func MakeApplicationCreateTx(
+	onComplete types.OnCompletion,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address) error {
-
-	var gh types.Digest
-	copy(gh[:], sp.GenesisHash)
-
-	applicationTransaction.Header = types.Header{
-		Sender:      sender,
-		Fee:         sp.Fee,
-		FirstValid:  sp.FirstRoundValid,
-		LastValid:   sp.LastRoundValid,
-		Note:        note,
-		GenesisID:   sp.GenesisID,
-		GenesisHash: gh,
-		Group:       group,
-		Lease:       lease,
-		RekeyTo:     rekeyTo,
-	}
-
-	if !sp.FlatFee {
-		// Update fee
-		eSize, err := EstimateSize(*applicationTransaction)
-		if err != nil {
-			return err
-		}
-		applicationTransaction.Fee = types.MicroAlgos(eSize * uint64(sp.Fee))
-	}
-
-	if applicationTransaction.Fee < MinTxnFee {
-		applicationTransaction.Fee = MinTxnFee
-	}
-	return nil
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationCreateTx(
+		onComplete,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
 }
 
-func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
-	for _, acct := range accounts {
-		addr, err := types.DecodeAddress(acct)
-		if err != nil {
-			return nil, err
-		}
-		parsed = append(parsed, addr)
-	}
-	return
+var emptySchema = types.StateSchema{}
+
+// MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
+func MakeApplicationUpdateTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	approvalProg []byte,
+	clearProg []byte,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationUpdateTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		approvalProg,
+		clearProg,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
 }
 
-func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
-	for _, aidx := range foreignApps {
-		parsed = append(parsed, types.AppIndex(aidx))
-	}
-	return
+// MakeApplicationDeleteTx makes a transaction for deleting an application (see above for args desc.)
+func MakeApplicationDeleteTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationDeleteTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
 }
 
-// EstimateSize returns the estimated length of the encoded transaction
-func EstimateSize(txn types.Transaction) (uint64, error) {
-	return uint64(len(msgpack.Encode(txn))) + NumOfAdditionalBytesAfterSigning, nil
+// MakeApplicationOptInTx makes a transaction for opting in to (allocating
+// some account-specific state for) an application (see above for args desc.)
+func MakeApplicationOptInTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationOptInTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
+}
+
+// MakeApplicationCloseOutTx makes a transaction for closing out of
+// (deallocating all account-specific state for) an application (see above for args desc.)
+func MakeApplicationCloseOutTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationCloseOutTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
+
+}
+
+// MakeApplicationClearStateTx makes a transaction for clearing out all
+// account-specific state for an application. It may not be rejected by the
+// application's logic. (see above for args desc.)
+func MakeApplicationClearStateTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationClearStateTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
+}
+
+// MakeApplicationNoOpTx makes a transaction for interacting with an existing
+// application, potentially updating any account-specific local state and
+// global state associated with it. (see above for args desc.)
+func MakeApplicationNoOpTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationNoOpTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
+
+}
+
+// MakeApplicationCallTx is a helper for the above ApplicationCall
+// transaction constructors. A fully custom ApplicationCall transaction may
+// be constructed using this method. (see above for args desc.)
+func MakeApplicationCallTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	onCompletion types.OnCompletion,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return transaction.MakeApplicationCallTx(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		onCompletion,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
 }

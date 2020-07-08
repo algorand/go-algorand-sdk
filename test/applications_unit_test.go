@@ -83,62 +83,61 @@ func iBuildAnApplicationTransactionUnit(
 
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
-	switch operation {
-	case "create":
-		tx, err = future.MakeApplicationCreateTx(types.NoOpOC, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp)
-		if err != nil {
-			return err
-		}
-
-	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
-			approvalP, clearP)
-		if err != nil {
-			return err
-		}
-
-	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema)
-	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp)
-		if err != nil {
-			return err
-		}
-
-	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp)
-		if err != nil {
-			return err
-		}
-
-	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp)
-		if err != nil {
-			return err
-		}
-
-	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp)
-		if err != nil {
-			return err
-		}
-	}
 
 	suggestedParams, err := getSuggestedParams(uint64(fee), uint64(firstValid), uint64(lastValid), "", genesisHash, true)
 	if err != nil {
 		return err
 	}
 
-	future.SetApplicationTransactionFields(
-		&tx, //tx types.Transaction,
-		suggestedParams,
-		addr1,           //sender types.Address,
-		nil,             //note []byte,
-		types.Digest{},  //group types.Digest,
-		[32]byte{},      //lease [32]byte,
-		types.Address{}) //rekeyTo types.Address
+	switch operation {
+	case "create":
+		tx, err = future.MakeApplicationCreateTx(types.NoOpOC, approvalP, clearP,
+			gSchema, lSchema, args, accs, fApp,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
+	case "update":
+		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
+			approvalP, clearP,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
+	case "call":
+		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
+			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+	case "optin":
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
+	case "clear":
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
+	case "closeout":
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
+	case "delete":
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp,
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 
 }
