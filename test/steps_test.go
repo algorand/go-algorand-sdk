@@ -17,6 +17,8 @@ import (
 
 	"path/filepath"
 
+	"golang.org/x/crypto/ed25519"
+
 	"github.com/algorand/go-algorand-sdk/auction"
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
@@ -81,6 +83,8 @@ var votekd uint64
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
+var data []byte
+var sig types.Signature
 
 var assetTestFixture struct {
 	Creator               string
@@ -262,6 +266,12 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I send the dynamic fee transactions$`, iSendTheDynamicFeeTransaction)
 	s.Step("contract test fixture", createContractTestFixture)
 	s.Step(`^I create a transaction transferring <amount> assets from creator to a second account$`, iCreateATransactionTransferringAmountAssetsFromCreatorToASecondAccount) // provide handler for when godog misreads
+	s.Step(`^base64 encoded data to sign "([^"]*)"$`, baseEncodedDataToSign)
+	s.Step(`^program hash "([^"]*)"$`, programHash)
+	s.Step(`^I perform tealsign$`, iPerformTealsign)
+	s.Step(`^the signature should be equal to "([^"]*)"$`, theSignatureShouldBeEqualTo)
+	s.Step(`^base64 encoded program "([^"]*)"$`, baseEncodedProgram)
+	s.Step(`^base64 encoded private key "([^"]*)"$`, baseEncodedPrivateKey)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -1854,4 +1864,48 @@ func iSendTheDynamicFeeTransaction() error {
 	response, err := acl.SendRawTransaction(groupTxnBytes)
 	txid = response.TxID
 	return err
+}
+
+func baseEncodedDataToSign(dataEnc string) (err error) {
+	data, err = base64.StdEncoding.DecodeString(dataEnc)
+	return
+}
+
+func programHash(addr string) (err error) {
+	account.Address, err = types.DecodeAddress(addr)
+	return
+}
+
+func iPerformTealsign() (err error) {
+	sig, err = crypto.TealSign(account.PrivateKey, data, account.Address)
+	return
+}
+
+func theSignatureShouldBeEqualTo(sigEnc string) error {
+	expected, err := base64.StdEncoding.DecodeString(sigEnc)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(expected, sig[:]) {
+		return fmt.Errorf("%v != %v", expected, sig[:])
+	}
+	return nil
+}
+
+func baseEncodedProgram(programEnc string) error {
+	program, err := base64.StdEncoding.DecodeString(programEnc)
+	if err != nil {
+		return err
+	}
+	account.Address = crypto.AddressFromProgram(program)
+	return nil
+}
+
+func baseEncodedPrivateKey(skEnc string) error {
+	seed, err := base64.StdEncoding.DecodeString(skEnc)
+	if err != nil {
+		return err
+	}
+	account.PrivateKey = ed25519.NewKeyFromSeed(seed)
+	return nil
 }
