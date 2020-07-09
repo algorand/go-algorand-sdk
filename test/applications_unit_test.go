@@ -16,18 +16,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-func weMakeASearchForApplicationsCallWithAnd(arg1, arg2 int) error {
-	return godog.ErrPending
-}
-
-func weExpectThePathUsedToBe(arg1 string) error {
-	return godog.ErrPending
-}
-
-func weMakeALookupApplicationsCallWithAnd(arg1, arg2 int) error {
-	return godog.ErrPending
-}
-
 var sk1 ed25519.PrivateKey
 var addr1 types.Address
 
