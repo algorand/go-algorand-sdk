@@ -11,9 +11,6 @@ import (
 // MinTxnFee is v5 consensus params, in microAlgos
 const MinTxnFee = transaction.MinTxnFee
 
-// NumOfAdditionalBytesAfterSigning is the number of bytes added to a txn after signing it
-const NumOfAdditionalBytesAfterSigning = 75
-
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is fee per byte as received from algod SuggestedFee API call
@@ -584,15 +581,16 @@ func MakeApplicationCreateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationCreateTx(
+	return MakeApplicationCallTx(
+		0,
+		appArgs,
+		accounts,
+		foreignApps,
 		onComplete,
 		approvalProg,
 		clearProg,
 		globalSchema,
 		localSchema,
-		appArgs,
-		accounts,
-		foreignApps,
 		sp,
 		sender,
 		note,
@@ -600,8 +598,6 @@ func MakeApplicationCreateTx(
 		lease,
 		rekeyTo)
 }
-
-var emptySchema = types.StateSchema{}
 
 // MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
 func MakeApplicationUpdateTx(
@@ -617,13 +613,15 @@ func MakeApplicationUpdateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationUpdateTx(
-		appIdx,
+	return MakeApplicationCallTx(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.UpdateApplicationOC,
 		approvalProg,
 		clearProg,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
@@ -644,11 +642,15 @@ func MakeApplicationDeleteTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationDeleteTx(
-		appIdx,
+	return MakeApplicationCallTx(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.DeleteApplicationOC,
+		nil,
+		nil,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
@@ -670,11 +672,15 @@ func MakeApplicationOptInTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationOptInTx(
-		appIdx,
+	return MakeApplicationCallTx(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.OptInOC,
+		nil,
+		nil,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
@@ -696,18 +702,21 @@ func MakeApplicationCloseOutTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationCloseOutTx(
-		appIdx,
+	return MakeApplicationCallTx(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.CloseOutOC,
+		nil,
+		nil,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
 		rekeyTo)
-
 }
 
 // MakeApplicationClearStateTx makes a transaction for clearing out all
@@ -724,11 +733,15 @@ func MakeApplicationClearStateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationClearStateTx(
-		appIdx,
+	return MakeApplicationCallTx(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.ClearStateOC,
+		nil,
+		nil,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
@@ -751,18 +764,22 @@ func MakeApplicationNoOpTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationNoOpTx(
+	return MakeApplicationCallTx(
 		appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
+		types.NoOpOC,
+		nil,
+		nil,
+		emptySchema,
+		emptySchema,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
 		rekeyTo)
-
 }
 
 // MakeApplicationCallTx is a helper for the above ApplicationCall
@@ -784,20 +801,83 @@ func MakeApplicationCallTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return transaction.MakeApplicationCallTx(
-		appIdx,
-		appArgs,
-		accounts,
-		foreignApps,
-		onCompletion,
-		approvalProg,
-		clearProg,
-		globalSchema,
-		localSchema,
-		sp,
-		sender,
-		note,
-		group,
-		lease,
-		rekeyTo)
+	tx.Type = types.ApplicationCallTx
+	tx.ApplicationID = types.AppIndex(appIdx)
+	tx.OnCompletion = onCompletion
+
+	tx.ApplicationArgs = appArgs
+	tx.Accounts, err = parseTxnAccounts(accounts)
+	if err != nil {
+		return tx, err
+	}
+
+	tx.ForeignApps = parseTxnForeignApps(foreignApps)
+	tx.ApprovalProgram = approvalProg
+	tx.ClearStateProgram = clearProg
+	tx.LocalStateSchema = localSchema
+	tx.GlobalStateSchema = globalSchema
+
+	setApplicationTransactionFields(&tx, sp, sender, note, group, lease, rekeyTo)
+
+	return tx, nil
 }
+
+func setApplicationTransactionFields(
+	applicationTransaction *types.Transaction,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) error {
+
+	var gh types.Digest
+	copy(gh[:], sp.GenesisHash)
+
+	applicationTransaction.Header = types.Header{
+		Sender:      sender,
+		Fee:         sp.Fee,
+		FirstValid:  sp.FirstRoundValid,
+		LastValid:   sp.LastRoundValid,
+		Note:        note,
+		GenesisID:   sp.GenesisID,
+		GenesisHash: gh,
+		Group:       group,
+		Lease:       lease,
+		RekeyTo:     rekeyTo,
+	}
+
+	if !sp.FlatFee {
+		// Update fee
+		eSize, err := transaction.EstimateSize(*applicationTransaction)
+		if err != nil {
+			return err
+		}
+		applicationTransaction.Fee = types.MicroAlgos(eSize * uint64(sp.Fee))
+	}
+
+	if applicationTransaction.Fee < MinTxnFee {
+		applicationTransaction.Fee = MinTxnFee
+	}
+	return nil
+}
+
+func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
+	for _, acct := range accounts {
+		addr, err := types.DecodeAddress(acct)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, addr)
+	}
+	return
+}
+
+func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
+	for _, aidx := range foreignApps {
+		parsed = append(parsed, types.AppIndex(aidx))
+	}
+	return
+}
+
+var emptySchema = types.StateSchema{}
