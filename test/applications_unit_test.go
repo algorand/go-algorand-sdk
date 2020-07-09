@@ -79,7 +79,7 @@ func iBuildAnApplicationTransactionUnit(
 
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTx(types.NoOpOC, approvalP, clearP,
+		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {

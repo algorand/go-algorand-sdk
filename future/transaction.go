@@ -566,8 +566,9 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 //                it into a block.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
+// - optIn: true for opting in on complete, false for no-op.
 func MakeApplicationCreateTx(
-	onComplete types.OnCompletion,
+	optIn bool,
 	approvalProg []byte,
 	clearProg []byte,
 	globalSchema types.StateSchema,
@@ -581,12 +582,18 @@ func MakeApplicationCreateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
+
+	oncomp := types.NoOpOC
+	if optIn {
+		oncomp = types.OptInOC
+	}
+
 	return MakeApplicationCallTx(
 		0,
 		appArgs,
 		accounts,
 		foreignApps,
-		onComplete,
+		oncomp,
 		approvalProg,
 		clearProg,
 		globalSchema,
