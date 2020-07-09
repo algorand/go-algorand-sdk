@@ -22,6 +22,8 @@ const (
 	AssetTransferTx TxType = "axfer"
 	// AssetFreezeTx changes the freeze status of an asset
 	AssetFreezeTx TxType = "afrz"
+	// ApplicationCallTx allows creating, deleting, and interacting with an application
+	ApplicationCallTx TxType = "appl"
 )
 
 const masterDerivationKeyLenBytes = 32

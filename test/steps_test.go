@@ -149,6 +149,8 @@ func TestMain(m *testing.M) {
 		AlgodClientV2Context(s)
 		IndexerUnitTestContext(s)
 		IndexerIntegrationTestContext(s)
+		ApplicationsContext(s)
+		ApplicationsUnitContext(s)
 	}, opt)
 
 	if st := m.Run(); st > status {
