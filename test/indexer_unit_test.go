@@ -426,7 +426,7 @@ func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessTha
 	if err != nil {
 		return err
 	}
-	_, globalErrForExamination = indexerClient.SearchAccounts().AssetID(uint64(assetIndex)).Limit(uint64(limit)).CurrencyLessThan(uint64(currencyLesser)).CurrencyGreaterThan(uint64(currencyGreater)).Do(context.Background())
+	_, globalErrForExamination = indexerClient.SearchAccounts().AssetID(uint64(assetIndex)).Limit(uint64(limit)).CurrencyLessThan(uint64(currencyLesser)).CurrencyGreaterThan(uint64(currencyGreater)).AfterAddress(afterAddress).Do(context.Background())
 	return nil
 }
 

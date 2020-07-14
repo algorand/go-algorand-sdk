@@ -10,50 +10,59 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-/**
- * /v2/accounts/{account-id}/transactions
- * Lookup account transactions.
- */
 type LookupAccountTransactions struct {
-	c         *Client
-	p         models.LookupAccountTransactionsParams
-	accountId string
+	c       *Client
+	account string
+	p       models.LookupAccountTransactionsParams
 }
 
-/**
- * Include results after the given time. Must be an RFC 3339 formatted string.
- */
-func (s *LookupAccountTransactions) AfterTime(afterTime time.Time) *LookupAccountTransactions {
-	s.p.AfterTime = afterTime.Format(time.RFC3339)
+func (s *LookupAccountTransactions) NextToken(nextToken string) *LookupAccountTransactions {
+	s.p.NextToken = nextToken
 	return s
 }
 
-func (s *LookupAccountTransactions) AfterTimeString(after string) *LookupAccountTransactions {
-	s.p.AfterTime = after
+func (s *LookupAccountTransactions) NotePrefix(prefix []byte) *LookupAccountTransactions {
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(prefix)
 	return s
 }
 
-/**
- * Application ID
- */
-func (s *LookupAccountTransactions) ApplicationId(applicationId uint64) *LookupAccountTransactions {
-	s.p.ApplicationId = applicationId
+func (s *LookupAccountTransactions) TxType(txtype string) *LookupAccountTransactions {
+	s.p.TxType = txtype
 	return s
 }
 
-/**
- * Asset ID
- */
-func (s *LookupAccountTransactions) AssetID(assetId uint64) *LookupAccountTransactions {
-	s.p.AssetId = assetId
+func (s *LookupAccountTransactions) SigType(sigtype string) *LookupAccountTransactions {
+	s.p.SigType = sigtype
 	return s
 }
 
-/**
- * Include results before the given time. Must be an RFC 3339 formatted string.
- */
-func (s *LookupAccountTransactions) BeforeTime(beforeTime time.Time) *LookupAccountTransactions {
-	s.p.BeforeTime = beforeTime.Format(time.RFC3339)
+func (s *LookupAccountTransactions) TXID(txid string) *LookupAccountTransactions {
+	s.p.TxId = txid
+	return s
+}
+
+func (s *LookupAccountTransactions) Round(rnd uint64) *LookupAccountTransactions {
+	s.p.Round = rnd
+	return s
+}
+
+func (s *LookupAccountTransactions) MinRound(min uint64) *LookupAccountTransactions {
+	s.p.MinRound = min
+	return s
+}
+
+func (s *LookupAccountTransactions) MaxRound(max uint64) *LookupAccountTransactions {
+	s.p.MaxRound = max
+	return s
+}
+
+func (s *LookupAccountTransactions) AssetID(index uint64) *LookupAccountTransactions {
+	s.p.AssetId = index
+	return s
+}
+
+func (s *LookupAccountTransactions) Limit(limit uint64) *LookupAccountTransactions {
+	s.p.Limit = limit
 	return s
 }
 
@@ -62,108 +71,37 @@ func (s *LookupAccountTransactions) BeforeTimeString(before string) *LookupAccou
 	return s
 }
 
-/**
- * Results should have an amount greater than this value. MicroAlgos are the
- * default currency unless an asset-id is provided, in which case the asset will be
- * used.
- */
-func (s *LookupAccountTransactions) CurrencyGreaterThan(currencyGreaterThan uint64) *LookupAccountTransactions {
-	s.p.CurrencyGreaterThan = currencyGreaterThan
+func (s *LookupAccountTransactions) AfterTimeString(after string) *LookupAccountTransactions {
+	s.p.AfterTime = after
 	return s
 }
 
-/**
- * Results should have an amount less than this value. MicroAlgos are the default
- * currency unless an asset-id is provided, in which case the asset will be used.
- */
-func (s *LookupAccountTransactions) CurrencyLessThan(currencyLessThan uint64) *LookupAccountTransactions {
-	s.p.CurrencyLessThan = currencyLessThan
+func (s *LookupAccountTransactions) BeforeTime(before time.Time) *LookupAccountTransactions {
+	beforeString := before.Format(time.RFC3339)
+	return s.BeforeTimeString(beforeString)
+}
+
+func (s *LookupAccountTransactions) AfterTime(after time.Time) *LookupAccountTransactions {
+	afterString := after.Format(time.RFC3339)
+	return s.AfterTimeString(afterString)
+}
+
+func (s *LookupAccountTransactions) CurrencyGreaterThan(greaterThan uint64) *LookupAccountTransactions {
+	s.p.CurrencyGreaterThan = greaterThan
 	return s
 }
 
-/**
- * Maximum number of results to return.
- */
-func (s *LookupAccountTransactions) Limit(limit uint64) *LookupAccountTransactions {
-	s.p.Limit = limit
+func (s *LookupAccountTransactions) CurrencyLessThan(lessThan uint64) *LookupAccountTransactions {
+	s.p.CurrencyLessThan = lessThan
 	return s
 }
 
-/**
- * Include results at or before the specified max-round.
- */
-func (s *LookupAccountTransactions) MaxRound(maxRound uint64) *LookupAccountTransactions {
-	s.p.MaxRound = maxRound
-	return s
-}
-
-/**
- * Include results at or after the specified min-round.
- */
-func (s *LookupAccountTransactions) MinRound(minRound uint64) *LookupAccountTransactions {
-	s.p.MinRound = minRound
-	return s
-}
-
-/**
- * The next page of results. Use the next token provided by the previous results.
- */
-func (s *LookupAccountTransactions) Next(next string) *LookupAccountTransactions {
-	s.p.Next = next
-	return s
-}
-
-/**
- * Specifies a prefix which must be contained in the note field.
- */
-func (s *LookupAccountTransactions) NotePrefix(notePrefix []byte) *LookupAccountTransactions {
-	s.p.NotePrefix = base64.StdEncoding.EncodeToString(notePrefix)
-	return s
-}
-
-/**
- * Include results which include the rekey-to field.
- */
 func (s *LookupAccountTransactions) RekeyTo(rekeyTo bool) *LookupAccountTransactions {
 	s.p.RekeyTo = rekeyTo
 	return s
 }
 
-/**
- * Include results for the specified round.
- */
-func (s *LookupAccountTransactions) Round(round uint64) *LookupAccountTransactions {
-	s.p.Round = round
-	return s
-}
-
-/**
- * SigType filters just results using the specified type of signature:
- *   sig - Standard
- *   msig - MultiSig
- *   lsig - LogicSig
- */
-func (s *LookupAccountTransactions) SigType(sigType string) *LookupAccountTransactions {
-	s.p.SigType = sigType
-	return s
-}
-
-func (s *LookupAccountTransactions) TxType(txType string) *LookupAccountTransactions {
-	s.p.TxType = txType
-	return s
-}
-
-/**
- * Lookup the specific transaction by ID.
- */
-func (s *LookupAccountTransactions) TXID(txid string) *LookupAccountTransactions {
-	s.p.Txid = txid
-	return s
-}
-
-func (s *LookupAccountTransactions) Do(ctx context.Context,
-	headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response,
-		fmt.Sprintf("/v2/accounts/%s/transactions", s.accountId), s.p, headers)
+func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions", s.account), s.p, headers)
 	return
 }
