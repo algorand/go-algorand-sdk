@@ -336,11 +336,11 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 var dryrunResponse models.DryrunResponse
 
 func weMakeAnyDryrunCall() (err error) {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return
-	}
-	dryrunResponse, err = algodClient.TealDryrun(nil).Do(context.Background())
+	//	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	//	if err != nil {
+	//		return
+	//	}
+	//	dryrunResponse, err = algodClient.TealDryrun(nil).Do(context.Background())
 	return
 }
 

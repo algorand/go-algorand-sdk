@@ -1,7 +1,5 @@
 package models
 
-package models
-
 // SearchForApplicationsParams defines parameters for SearchForApplications
 type SearchForApplicationsParams struct {
 	// ApplicationId application ID

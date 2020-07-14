@@ -16,7 +16,7 @@ type SearchForApplications struct {
 
 // ApplicationId application ID
 func (s *SearchForApplications) ApplicationId(applicationId uint64) *SearchForApplications {
-	s.p.ApplicationId = application-id
+	s.p.ApplicationId = applicationId
 	return s
 }
 

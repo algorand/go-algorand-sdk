@@ -12,7 +12,7 @@ import (
 // execution.
 type TealDryrun struct {
 	c       *Client
-	request DryrunRequest
+	request models.DryrunRequest
 }
 
 // Do performs HTTP request
