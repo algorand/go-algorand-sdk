@@ -22,13 +22,13 @@ func (c *Client) GetAssetByID(assetId uint64) *GetAssetByID {
 // Given TEAL source code in plain text, return base64 encoded program bytes and
 // base32 SHA512_256 hash of program bytes (Address style).
 func (c *Client) TealCompile(source []byte) *TealCompile {
-	return &TealCompile{c: c}
+	return &TealCompile{c: c, source: source}
 }
 
 // /v2/teal/dryrun
 // Executes TEAL program(s) in context and returns debugging information about the
 // execution.
 func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
-	return &TealDryrun{c: c}
+	return &TealDryrun{c: c, request: request}
 }
 
