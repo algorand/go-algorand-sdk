@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
+	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 func AlgodClientV2Context(s *godog.Suite) {
@@ -340,7 +341,8 @@ func weMakeAnyDryrunCall() (err error) {
 	if err != nil {
 		return
 	}
-	dryrunResponse, err = algodClient.TealDryrun(nil).Do(context.Background())
+
+	dryrunResponse, err = algodClient.TealDryrun(modelsV2.DryrunRequest{}).Do(context.Background())
 	return
 }
 

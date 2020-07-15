@@ -81,11 +81,3 @@ func (c *Client) Supply() *Supply {
 func (c *Client) Versions() *Versions {
 	return &Versions{c: c}
 }
-
-func (c *Client) TealDryrun(rawobj []byte) *TealDryRun {
-	return &TealDryRun{c: c, rawobj: rawobj}
-}
-
-func (c *Client) TealCompile(src []byte) *TealCompile {
-	return &TealCompile{c: c, source: src}
-}

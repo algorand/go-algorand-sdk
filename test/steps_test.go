@@ -2010,9 +2010,8 @@ func tealDryrun(kind string, filename string) (err error) {
 		Txns:    txns,
 		Sources: sources,
 	}
-	data := msgpack.Encode(&ddr)
 
-	result, err := aclv2.TealDryrun(data).Do(context.Background())
+	result, err := aclv2.TealDryrun(ddr).Do(context.Background())
 	if err != nil {
 		return
 	}
