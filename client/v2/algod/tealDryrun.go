@@ -5,6 +5,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 )
 
 // TealDryrun /v2/teal/dryrun
@@ -19,6 +20,6 @@ type TealDryrun struct {
 func (s *TealDryrun) Do(ctx context.Context,
 	headers ...*common.Header) (response models.DryrunResponse, err error) {
 	err = s.c.post(ctx, &response,
-		"/v2/teal/dryrun", s.request, headers)
+		"/v2/teal/dryrun", msgpack.Encode(&s.request), headers)
 	return
 }

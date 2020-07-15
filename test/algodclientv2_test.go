@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
+	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 func AlgodClientV2Context(s *godog.Suite) {
@@ -336,11 +337,12 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 var dryrunResponse models.DryrunResponse
 
 func weMakeAnyDryrunCall() (err error) {
-	//	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	//	if err != nil {
-	//		return
-	//	}
-	//	dryrunResponse, err = algodClient.TealDryrun(nil).Do(context.Background())
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return
+	}
+
+	dryrunResponse, err = algodClient.TealDryrun(modelsV2.DryrunRequest{}).Do(context.Background())
 	return
 }
 

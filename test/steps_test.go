@@ -2006,18 +2006,17 @@ func tealDryrun(kind string, filename string) (err error) {
 		return fmt.Errorf("kind %s not in (source, compiled)", kind)
 	}
 
-	//	ddr := modelsV2.DryrunRequest{
-	//		Txns:    txns,
-	//		Sources: sources,
-	//	}
-	//	data := msgpack.Encode(&ddr)
+	ddr := modelsV2.DryrunRequest{
+		Txns:    txns,
+		Sources: sources,
+	}
 
-	//	result, err := aclv2.TealDryrun(data).Do(context.Background())
+	result, err := aclv2.TealDryrun(ddr).Do(context.Background())
 	if err != nil {
 		return
 	}
 
-	//	tealDryrunResult.response = result
+	tealDryrunResult.response = result
 	return
 }
 
