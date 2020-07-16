@@ -151,6 +151,7 @@ func TestMain(m *testing.M) {
 		IndexerIntegrationTestContext(s)
 		ApplicationsContext(s)
 		ApplicationsUnitContext(s)
+		ResponsesContext(s)
 	}, opt)
 
 	if st := m.Run(); st > status {

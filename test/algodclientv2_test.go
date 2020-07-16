@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"path"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -361,4 +362,9 @@ func parsedDryrunResponseShouldHave(key string, action int) error {
 		return fmt.Errorf("action %d != %d", action, int(gd[0].Value.Action))
 	}
 	return nil
+}
+
+func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
+	fullPath := path.Join("./features/unit/", directory)
+	return mockHttpResponsesInLoadedFromHelper(jsonfiles, fullPath)
 }

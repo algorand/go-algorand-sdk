@@ -18,7 +18,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 	jsonFilenames := strings.Split(commaDelimitedFilenames, ",")
 	var bytesArray [][]byte
 	for _, jsonFilename := range jsonFilenames {
-		fullPath := path.Join("./features/unit/", pathToJsons, jsonFilename)
+		fullPath := path.Join(pathToJsons, jsonFilename)
 		jsonfile, err := os.Open(fullPath)
 		if err != nil {
 			return nil, err
@@ -44,7 +44,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 var mockServer *httptest.Server
 var responseRing *ring.Ring
 
-func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
+func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string) error {
 	jsons, err := loadMockJsons(jsonfiles, directory)
 	if err != nil {
 		return err
