@@ -12,16 +12,11 @@ type ApplicationStateSchema struct {
 	NumUint uint64 `json:"num-uint,omitempty"`
 }
 
-// ApplicationLocalStates pair of application index and application local state
-type ApplicationLocalStates struct {
-	Id uint64 `json:"id,omitempty"`
-
-	// State stores local state associated with an application.
-	State ApplicationLocalState `json:"state,omitempty"`
-}
-
 // ApplicationLocalState stores local state associated with an application.
 type ApplicationLocalState struct {
+	// Id the application which this local state is for.
+	Id uint64 `json:"id,omitempty"`
+
 	// KeyValue (tkv) storage.
 	KeyValue []TealKeyValue `json:"key-value,omitempty"`
 
@@ -302,3 +297,4 @@ type ApplicationsResponse struct {
 	// with the next parameter.
 	NextToken string `json:"next-token,omitempty"`
 }
+

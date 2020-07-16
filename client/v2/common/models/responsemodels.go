@@ -18,7 +18,7 @@ type Account struct {
 
 	// AppsLocalState (appl) applications local data stored in this account.
 	// Note the raw object uses `map[int] -> AppLocalState` for this type.
-	AppsLocalState []ApplicationLocalStates `json:"apps-local-state,omitempty"`
+	AppsLocalState []ApplicationLocalState `json:"apps-local-state,omitempty"`
 
 	// AppsTotalSchema (tsch) stores the sum of all of the local schemas and global
 	// schemas in this account.
