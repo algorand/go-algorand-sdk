@@ -231,7 +231,7 @@ type TransactionApplication struct {
 
 	// ApplicationArgs (apaa) transaction specific arguments accessed from the
 	// application's approval-program and clear-state-program.
-	ApplicationArgs []byte `json:"application-args,omitempty"`
+	ApplicationArgs [][]byte `json:"application-args,omitempty"`
 
 	// ApplicationId (apid) ID of the application being configured or empty if
 	// creating.

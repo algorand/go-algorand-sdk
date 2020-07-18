@@ -44,7 +44,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 var mockServer *httptest.Server
 var responseRing *ring.Ring
 
-func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string) error {
+func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string, status int) error {
 	jsons, err := loadMockJsons(jsonfiles, directory)
 	if err != nil {
 		return err
@@ -56,6 +56,9 @@ func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string) error {
 	}
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json := responseRing.Value.([]byte)
+		if status > 0 {
+			w.WriteHeader(status)
+		}
 		_, err = w.Write(json)
 		responseRing = responseRing.Next()
 	}))

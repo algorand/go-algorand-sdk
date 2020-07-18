@@ -333,6 +333,10 @@ type Supply struct {
 
 // Transaction defines model for Transaction.
 type Transaction struct {
+	// ApplicationTransaction fields for application transactions.
+	// Definition:
+	// data/transactions/application.go : ApplicationCallTxnFields
+	ApplicationTransaction TransactionApplication `json:"application-transaction,omitempty"`
 
 	// Fields for asset allocation, re-configuration, and destruction.
 	//
@@ -356,6 +360,11 @@ type Transaction struct {
 	// data/transactions/asset.go : AssetTransferTxnFields
 	AssetTransferTransaction TransactionAssetTransfer `json:"asset-transfer-transaction,omitempty"`
 
+	// AuthAddr (sgnr) The address used to sign the transaction. This is used for
+	// rekeyed accounts to indicate that the sender address did not sign the
+	// transaction.
+	AuthAddr string `json:"auth-addr,omitempty"`
+
 	// \[rc\] rewards applied to close-remainder-to account.
 	CloseRewards uint64 `json:"close-rewards,omitempty"`
 
@@ -364,6 +373,10 @@ type Transaction struct {
 
 	// Round when the transaction was confirmed.
 	ConfirmedRound uint64 `json:"confirmed-round,omitempty"`
+
+	// CreatedApplicationIndex specifies an application index (ID) if an application
+	// was created with this transaction.
+	CreatedApplicationIndex uint64 `json:"created-application-index,omitempty"`
 
 	// Specifies an asset index (ID) if an asset was created with this transaction.
 	CreatedAssetIndex uint64 `json:"created-asset-index,omitempty"`
@@ -385,6 +398,9 @@ type Transaction struct {
 
 	// Transaction ID
 	Id string `json:"id"`
+
+	// IntraRoundOffset offset into the round where this transaction was confirmed.
+	IntraRoundOffset uint64 `json:"intra-round-offset,omitempty"`
 
 	// Fields for a keyreg transaction.
 	//
