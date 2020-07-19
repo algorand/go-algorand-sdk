@@ -1,15 +1,16 @@
 package test
 
 import (
+	"bufio"
 	"context"
-	baseJson "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"reflect"
+	"strings"
 
 	"github.com/cucumber/godog"
+	"github.com/nsf/jsondiff"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -82,18 +83,27 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		default:
 			err = fmt.Errorf("unknown endpoint: %s", endpoint)
 		}
-		/*	case "algod":
-			switch endpoint {
-			case "GetStatus
-			case "WaitForBlock
-			case "TealCompile
-			case "RawTransaction
-			case "GetSupply
-			case "TransactionParams
-			case "GetApplicationByID
-			case "GetAssetByID
-			default:
-			}*/
+	case "algod":
+		switch endpoint {
+		case "GetStatus":
+			response, err = algodC.Status().Do(context.Background())
+		case "WaitForBlock":
+			response, err = algodC.StatusAfterBlock(10).Do(context.Background())
+		case "TealCompile":
+			response, err = algodC.TealCompile([]byte{}).Do(context.Background())
+		case "RawTransaction":
+			response, err = algodC.SendRawTransaction([]byte{}).Do(context.Background())
+		case "GetSupply":
+			response, err = algodC.Supply().Do(context.Background())
+		case "TransactionParams":
+			response, err = algodC.SuggestedParams().Do(context.Background())
+		case "GetApplicationByID":
+			response, err = algodC.GetApplicationByID(10).Do(context.Background())
+		case "GetAssetByID":
+			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		default:
+			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+		}
 	}
 	return err
 }
@@ -111,9 +121,6 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("sss_sss_E____%s\n ", responseJson)
-	fmt.Printf("sss_sss_baseline____%s\n ", string(fileBytes))
-
 	ans, err := EqualJson(string(fileBytes), responseJson)
 
 	fmt.Printf("sss_sss_F____ %v\n", ans)
@@ -127,41 +134,41 @@ func ResponsesContext(s *godog.Suite) {
 	s.Step(`^the parsed response should equal the mock response\.$`, theParsedResponseShouldEqualTheMockResponse)
 }
 
-/*
-   | indexer_applications_AccountResponse_0.json             | 200    | indexer |  |
-   | indexer_applications_AccountsResponse_0.json            | 200    | indexer |  |
-   | indexer_applications_ApplicationResponse_0.json         | 200    | indexer |  |
-   | indexer_applications_ApplicationsResponse_0.json        | 200    | indexer |  |
-   | indexer_applications_AssetBalancesResponse_0.json       | 200    | indexer |  |
-   | indexer_applications_AssetResponse_0.json               | 200    | indexer |  |
-   | indexer_applications_AssetsResponse_0.json              | 200    | indexer |  |
-   | indexer_applications_TransactionsResponse_0.json        | 200    | indexer |  |
-   | indexer_applications_TransactionsResponse_0.json        | 200    | indexer |  |
-   | indexer_applications_TransactionsResponse_0.json        | 200    | indexer |  |
-   | indexer_applications_ErrorResponse_0.json               | 500    | indexer |  |
-   | algod_applications_NodeStatusResponse_0.json            | 200    | algod   |  |
-   | algod_applications_NodeStatusResponse_0.json            | 200    | algod   |  |
-   | algod_applications_CompileResponse_0.json               | 200    | algod   |  |
-   | algod_applications_PostTransactionsResponse_0.json      | 200    | algod   |  |
-   | algod_applications_SupplyResponse_0.json                | 200    | algod   |  |
-   | algod_applications_TransactionParametersResponse_0.json | 200    | algod   |  |
-   | algod_applications_ApplicationResponse_0.json           | 200    | algod   |  |
-   | algod_applications_AssetResponse_0.json                 | 200    | algod   |  |
-*/
-
 func EqualJson(j1, j2 string) (ans bool, err error) {
 
-	var o1 interface{}
-	var o2 interface{}
-	err = baseJson.Unmarshal([]byte(j1), &o1)
-	if err != nil {
-		return false, err
+	options := jsondiff.Options{
+		Added:            jsondiff.Tag{Begin: "___ADDED___", End: ""},
+		Removed:          jsondiff.Tag{Begin: "___REMED___", End: ""},
+		Changed:          jsondiff.Tag{Begin: "___DIFFER___", End: ""},
+		ChangedSeparator: " -> ",
 	}
-	err = baseJson.Unmarshal([]byte(j2), &o2)
-	if err != nil {
-		return false, err
+	options.PrintTypes = false
+	d, str := jsondiff.Compare([]byte(j1), []byte(j2), &options)
+	if d == jsondiff.FullMatch {
+		return true, nil
 	}
-
-	//	reflect.
-	return reflect.DeepEqual(o1, o2), nil
+	scanner := bufio.NewScanner(strings.NewReader(str))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "___REMED___") {
+			if strings.Contains(line, "false") {
+				continue
+			}
+			fmt.Printf("%s\n", line)
+			return false, nil
+		}
+		if strings.Contains(line, "___ADDED___") {
+			fmt.Printf("%s\n", line)
+			return false, nil
+		}
+		if strings.Contains(line, "___DIFFER___") {
+			fmt.Printf("%s\n", line)
+			return false, nil
+		}
+	}
+	if d != jsondiff.SupersetMatch {
+		fmt.Printf("%s\n", str)
+		return false, nil
+	}
+	return true, nil
 }
