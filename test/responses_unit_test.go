@@ -16,6 +16,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/encoding/json"
+	"github.com/algorand/go-algorand-sdk/types"	
 )
 
 var algodC *algod.Client
@@ -23,6 +24,10 @@ var indexerC *indexer.Client
 var baselinePath string
 var expectedStatus int
 var response interface{}
+
+// @unit
+// @unit.responses
+
 
 func mockHttpResponsesInLoadedFromWithStatus(
 	jsonfile, loadedFrom /* generated_responses*/ string, status int) error {
@@ -69,11 +74,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 				Asset:        something.(models.Asset),
 			}
 		case "searchForAssets":
-			round, something, err = indexerC.SearchForAssets().Do(context.Background())
-			response = models.AssetsResponse{
-				Assets:       something.([]models.Asset),
-				CurrentRound: round,
-			}
+			response, err = indexerC.SearchForAssets().Do(context.Background())
 		case "lookupAccountTransactions":
 			response, err = indexerC.LookupAccountTransactions("").Do(context.Background())
 		case "lookupAssetTransactions":
@@ -92,11 +93,21 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "TealCompile":
 			response, err = algodC.TealCompile([]byte{}).Do(context.Background())
 		case "RawTransaction":
-			response, err = algodC.SendRawTransaction([]byte{}).Do(context.Background())
+			var returnedTxid string
+			returnedTxid, err = algodC.SendRawTransaction([]byte{}).Do(context.Background())
+			response = txidresponse{TxID: returnedTxid}
 		case "GetSupply":
 			response, err = algodC.Supply().Do(context.Background())
 		case "TransactionParams":
-			response, err = algodC.SuggestedParams().Do(context.Background())
+			var sParams types.SuggestedParams
+			sParams, err = algodC.SuggestedParams().Do(context.Background())
+			response = models.TransactionParams {
+				ConsensusVersion: sParams.ConsensusVersion,
+					Fee: uint64(sParams.Fee),
+					GenesisID: sParams.GenesisID,
+					LastRound: uint64(sParams.FirstRoundValid),
+					MinFee: 81560,
+				}
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
@@ -106,6 +117,10 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		}
 	}
 	return err
+}
+
+type txidresponse struct {
+	TxID string `json:"txId"`
 }
 
 func theParsedResponseShouldEqualTheMockResponse() error {
