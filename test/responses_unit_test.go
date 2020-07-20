@@ -16,7 +16,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/encoding/json"
-	"github.com/algorand/go-algorand-sdk/types"	
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 var algodC *algod.Client
@@ -27,7 +27,6 @@ var response interface{}
 
 // @unit
 // @unit.responses
-
 
 func mockHttpResponsesInLoadedFromWithStatus(
 	jsonfile, loadedFrom /* generated_responses*/ string, status int) error {
@@ -50,6 +49,7 @@ func mockHttpResponsesInLoadedFromWithStatus(
 func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 	var round uint64
 	var something interface{}
+
 	switch client {
 	case "indexer":
 		switch endpoint {
@@ -81,6 +81,18 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetTransactions(10).Do(context.Background())
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
+		case "any":
+			response, err = indexerC.SearchForTransactions().Do(context.Background())
+			if err == nil {
+				err = fmt.Errorf("Expected error here")
+			}
+			exptErr := fmt.Sprintf("HTTP %v", expectedStatus)
+			if strings.Contains(err.Error(), exptErr) {
+				response = nil
+				err = nil
+			} else {
+				err = fmt.Errorf("Expected error here")
+			}
 		default:
 			err = fmt.Errorf("unknown endpoint: %s", endpoint)
 		}
@@ -101,17 +113,34 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "TransactionParams":
 			var sParams types.SuggestedParams
 			sParams, err = algodC.SuggestedParams().Do(context.Background())
-			response = models.TransactionParams {
+			response = models.TransactionParams{
 				ConsensusVersion: sParams.ConsensusVersion,
-					Fee: uint64(sParams.Fee),
-					GenesisID: sParams.GenesisID,
-					LastRound: uint64(sParams.FirstRoundValid),
-					MinFee: 81560,
-				}
+				Fee:              uint64(sParams.Fee),
+				GenesisID:        sParams.GenesisID,
+				Genesishash:      sParams.GenesisHash,
+				LastRound:        uint64(sParams.FirstRoundValid),
+				MinFee:           81560,
+			}
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "any":
+			response, err = indexerC.SearchForTransactions().Do(context.Background())
+			if err == nil {
+				fmt.Errorf("Expected error here")
+			}
+			if err == nil {
+				err = fmt.Errorf("Expected error here")
+			}
+			exptErr := fmt.Sprintf("HTTP %v", expectedStatus)
+			if strings.Contains(err.Error(), exptErr) {
+				response = nil
+				err = nil
+			} else {
+				err = fmt.Errorf("Expected error here")
+			}
+
 		default:
 			err = fmt.Errorf("unknown endpoint: %s", endpoint)
 		}
@@ -126,6 +155,13 @@ type txidresponse struct {
 func theParsedResponseShouldEqualTheMockResponse() error {
 	var err error
 
+	if expectedStatus != 200 && response != nil {
+		return fmt.Errorf("response should be nil for response status: %d", expectedStatus)
+	}
+	if expectedStatus != 200 && response == nil {
+		return nil
+	}
+
 	responseJson := string(json.Encode(response))
 
 	jsonfile, err := os.Open(baselinePath)
@@ -136,10 +172,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 	if err != nil {
 		return err
 	}
-	ans, err := EqualJson(string(fileBytes), responseJson)
-
-	fmt.Printf("sss_sss_F____ %v\n", ans)
-
+	_, err = EqualJson(string(fileBytes), responseJson)
 	return err
 }
 
@@ -169,21 +202,21 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 			if strings.Contains(line, "false") {
 				continue
 			}
-			fmt.Printf("%s\n", line)
-			return false, nil
+			err = fmt.Errorf(line)
+			return false, err
 		}
 		if strings.Contains(line, "___ADDED___") {
-			fmt.Printf("%s\n", line)
-			return false, nil
+			err = fmt.Errorf(line)
+			return false, err
 		}
 		if strings.Contains(line, "___DIFFER___") {
-			fmt.Printf("%s\n", line)
-			return false, nil
+			err = fmt.Errorf(line)
+			return false, err
 		}
 	}
 	if d != jsondiff.SupersetMatch {
-		fmt.Printf("%s\n", str)
-		return false, nil
+		err = fmt.Errorf(str)
+		return false, err
 	}
 	return true, nil
 }
