@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -10,9 +11,11 @@ import (
 	"github.com/cucumber/godog"
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/future"
+	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -165,9 +168,52 @@ func getSuggestedParams(
 	}, err
 }
 
+func weMakeAGetAssetByIDCall(assetID int) error {
+	clt, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	clt.GetAssetByID(uint64(assetID)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetApplicationByIDCall(applicationID int) error {
+	clt, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	clt.GetApplicationByID(uint64(applicationID)).Do(context.Background())
+	return nil
+}
+
+func weMakeASearchForApplicationsCall(applicationID int) error {
+	clt, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	clt.SearchForApplications().ApplicationId(uint64(applicationID)).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupApplicationsCall(applicationID int) error {
+	clt, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	clt.LookupApplicationByID(uint64(applicationID)).Do(context.Background())
+	return nil
+}
+
 func ApplicationsUnitContext(s *godog.Suite) {
+	// @unit.transactiosn
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
 	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
+
+	//@unit.applications
+	s.Step(`^we make a GetAssetByID call for assetID (\d+)$`, weMakeAGetAssetByIDCall)
+	s.Step(`^we make a GetApplicationByID call for applicationID (\d+)$`, weMakeAGetApplicationByIDCall)
+	s.Step(`^we make a SearchForApplications call with applicationID (\d+)$`, weMakeASearchForApplicationsCall)
+	s.Step(`^we make a LookupApplications call with applicationID (\d+)$`, weMakeALookupApplicationsCall)
 }

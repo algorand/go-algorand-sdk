@@ -241,13 +241,13 @@ type TransactionApplication struct {
 	// when on-completion is set to "clear". It can read and write global state for the
 	// application, as well as account-specific local state. Approval programs may
 	// reject the transaction.
-	ApprovalProgram string `json:"approval-program,omitempty"`
+	ApprovalProgram []byte `json:"approval-program,omitempty"`
 
 	// ClearStateProgram (apsu) Logic executed for application transactions with
 	// on-completion set to "clear". It can read and write global state for the
 	// application, as well as account-specific local state. Clear state programs
 	// cannot reject the transaction.
-	ClearStateProgram string `json:"clear-state-program,omitempty"`
+	ClearStateProgram []byte `json:"clear-state-program,omitempty"`
 
 	// ForeignApps (apfa) Lists the applications in addition to the application-id
 	// whose global states may be accessed by this application's approval-program and
