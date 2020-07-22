@@ -202,7 +202,7 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 			if strings.Contains(line, "false") {
 				continue
 			}
-			err = fmt.Errorf(str)
+			err = fmt.Errorf(line)
 			return false, err
 		}
 		if strings.Contains(line, "___ADDED___") {
