@@ -140,8 +140,12 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		responseJson = response.(error).Error()
 		// The error message is not a well formed Json.
 		// Verify the expected status code, and remove the json corrupting message
-		extraTxt := fmt.Sprintf("HTTP %d Internal Server Error:", expectedStatus)
-		responseJson = strings.ReplaceAll(responseJson, extraTxt, "")
+		statusCode := fmt.Sprintf("%d", expectedStatus)
+		if !strings.Contains(responseJson, statusCode) {
+			return fmt.Errorf("Expected error code: %d, got otherwise", expectedStatus)
+		}
+		parts := strings.SplitAfterN(responseJson, ":", 2)
+		responseJson = parts[1]
 	} else {
 		responseJson = string(json.Encode(response))
 	}

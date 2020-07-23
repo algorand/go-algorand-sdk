@@ -365,6 +365,6 @@ func parsedDryrunResponseShouldHave(key string, action int) error {
 }
 
 func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
-	fullPath := path.Join("./features/unit/", directory)
+	fullPath := path.Join("./features/resources/", directory)
 	return mockHttpResponsesInLoadedFromHelper(jsonfiles, fullPath, 0)
 }
