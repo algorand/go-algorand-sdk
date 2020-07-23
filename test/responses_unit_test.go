@@ -82,17 +82,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
 		case "any":
-			response, err = indexerC.SearchForTransactions().Do(context.Background())
-			if err == nil {
-				err = fmt.Errorf("Expected error here")
-			}
-			exptErr := fmt.Sprintf("HTTP %v", expectedStatus)
-			if strings.Contains(err.Error(), exptErr) {
-				response = nil
-				err = nil
-			} else {
-				err = fmt.Errorf("Expected error here")
-			}
+			// This is an error case
+			// pickup the error as the response
+			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
 			err = fmt.Errorf("unknown endpoint: %s", endpoint)
 		}
@@ -126,21 +118,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
 		case "any":
-			response, err = indexerC.SearchForTransactions().Do(context.Background())
-			if err == nil {
-				fmt.Errorf("Expected error here")
-			}
-			if err == nil {
-				err = fmt.Errorf("Expected error here")
-			}
-			exptErr := fmt.Sprintf("HTTP %v", expectedStatus)
-			if strings.Contains(err.Error(), exptErr) {
-				response = nil
-				err = nil
-			} else {
-				err = fmt.Errorf("Expected error here")
-			}
-
+			// This is an error case
+			// pickup the error as the response
+			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
 			err = fmt.Errorf("unknown endpoint: %s", endpoint)
 		}
@@ -154,15 +134,17 @@ type txidresponse struct {
 
 func theParsedResponseShouldEqualTheMockResponse() error {
 	var err error
+	var responseJson string
 
-	if expectedStatus != 200 && response != nil {
-		return fmt.Errorf("response should be nil for response status: %d", expectedStatus)
+	if expectedStatus != 200 {
+		responseJson = response.(error).Error()
+		// The error message is not a well formed Json.
+		// Verify the expected status code, and remove the json corrupting message
+		extraTxt := fmt.Sprintf("HTTP %d Internal Server Error:", expectedStatus)
+		responseJson = strings.ReplaceAll(responseJson, extraTxt, "")
+	} else {
+		responseJson = string(json.Encode(response))
 	}
-	if expectedStatus != 200 && response == nil {
-		return nil
-	}
-
-	responseJson := string(json.Encode(response))
 
 	jsonfile, err := os.Open(baselinePath)
 	if err != nil {
