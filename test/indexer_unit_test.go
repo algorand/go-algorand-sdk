@@ -310,7 +310,11 @@ func weMakeAnySearchForAssetsCall() error {
 	if err != nil {
 		return err
 	}
-	responseValidRound, searchAssetsResponse, globalErrForExamination = indexerClient.SearchForAssets().Do(context.Background())
+	var resp models.AssetsResponse
+	resp, globalErrForExamination = indexerClient.SearchForAssets().Do(context.Background())
+	responseValidRound = resp.CurrentRound
+	searchAssetsResponse = resp.Assets
+
 	return nil
 }
 
@@ -473,7 +477,7 @@ func weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndexAndAfterAsset(limit 
 	if err != nil {
 		return err
 	}
-	_, _, globalErrForExamination = indexerClient.SearchForAssets().AssetID(uint64(assetIndex)).Limit(uint64(limit)).Creator(creator).Name(name).Unit(unit).Do(context.Background())
+	_, globalErrForExamination = indexerClient.SearchForAssets().AssetID(uint64(assetIndex)).Limit(uint64(limit)).Creator(creator).Name(name).Unit(unit).Do(context.Background())
 	return nil
 }
 

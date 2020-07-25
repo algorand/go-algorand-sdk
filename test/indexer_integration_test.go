@@ -521,8 +521,8 @@ var indexerSearchForAssetsResponse []models.Asset
 
 func iUseToSearchForAssetsWithAndToken(clientNum, zero, assetId int, creator, name, unit, token string) error {
 	ic := indexerClients[clientNum]
-	var err error
-	_, indexerSearchForAssetsResponse, err = ic.SearchForAssets().AssetID(uint64(assetId)).Creator(creator).Name(name).Unit(unit).NextToken(token).Do(context.Background())
+	resp, err := ic.SearchForAssets().AssetID(uint64(assetId)).Creator(creator).Name(name).Unit(unit).NextToken(token).Do(context.Background())
+	indexerSearchForAssetsResponse = resp.Assets
 	return err
 }
 
