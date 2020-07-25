@@ -11,12 +11,13 @@ import (
 	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-var client *algod.Client
+var algodV2client *algod.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
@@ -25,7 +26,7 @@ func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token 
 	var err error
 	portAsString := strconv.Itoa(port)
 	fullHost := "http://" + host + ":" + portAsString
-	client, err = algod.MakeClient(fullHost, token)
+	algodV2client, err = algod.MakeClient(fullHost, token)
 	gh = []byte("MLWBXKMRJ5W3USARAFOHPQJAF4DN6KY3ZJVPIXKODKNN5ZXSZ2DQ")
 
 	return err
@@ -120,11 +121,11 @@ func iBuildAnApplicationTransaction(
 	copy(ghbytes[:], gh)
 
 	var suggestedParams types.SuggestedParams
-	suggestedParams, err = client.SuggestedParams().Do(context.Background())
+	suggestedParams, err = algodV2client.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
-	
+
 	if approvalProgram != "" {
 		approvalP, err = ioutil.ReadFile("features/resources/" + approvalProgram)
 		if err != nil {
@@ -280,6 +281,115 @@ func splitUint64(uint64s string) ([]uint64, error) {
 	return resp, nil
 }
 
+func theTransientAccountShouldHave(appCreated string, byteSlices, uints int,
+	applicationState, key, value string) error {
+
+	acct, err := algodV2client.AccountInformation(transientAccount.Address.String()).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	if acct.AppsTotalSchema.NumByteSlice != uint64(byteSlices) {
+		return fmt.Errorf("expected NumByteSlices %d, got %d",
+			byteSlices, acct.AppsTotalSchema.NumByteSlice)
+	}
+	if acct.AppsTotalSchema.NumUint != uint64(uints) {
+		return fmt.Errorf("expected NumUnit %d, got %d",
+			uints, acct.AppsTotalSchema.NumUint)
+	}
+	created, err := strconv.ParseBool(appCreated)
+	if err != nil {
+		return err
+	}
+
+	// If we don't expect the app to exist, verify that it isn't there and exit.
+	if !created {
+		for _, ap := range acct.CreatedApps {
+			if ap.Id == applicationId {
+				return fmt.Errorf("AppId is not expected to be in the account")
+			}
+		}
+		return nil
+	}
+
+	appIdFound := false
+	for _, ap := range acct.CreatedApps {
+		if ap.Id == applicationId {
+			appIdFound = true
+			break
+		}
+	}
+	if !appIdFound {
+		return fmt.Errorf("AppId %d is not found in the account", applicationId)
+	}
+
+	// If there is no key to check, we're done.
+	if key == "" {
+		return nil
+	}
+
+	// Verify the key-value is set
+	found := false
+	var keyValues []models.TealKeyValue
+
+	switch strings.ToLower(applicationState) {
+	case "local":
+		count := 0
+		for _, als := range acct.AppsLocalState {
+			if als.Id == applicationId {
+				keyValues = als.KeyValue
+				count++
+			}
+		}
+		if count != 1 {
+			return fmt.Errorf("Expected only one matching AppsLocalState, found %d",
+				count)
+		}
+	case "global":
+		count := 0
+		for _, als := range acct.CreatedApps {
+			if als.Id == applicationId {
+				keyValues = als.Params.GlobalState
+				count++
+			}
+		}
+		if count != 1 {
+			return fmt.Errorf("Expected only one matching CreatedApps, found %d",
+				count)
+		}
+	default:
+		return fmt.Errorf("Unknown application state: %s", applicationState)
+	}
+
+	if len(keyValues) == 0 {
+		return fmt.Errorf("Expected keyvalues length to be greater than 0")
+	}
+	for _, kv := range keyValues {
+		if kv.Key == key {
+			if kv.Value.Type == 1 {
+				if kv.Value.Bytes != value {
+					return fmt.Errorf("Value mismatch: expected: '%s', got '%s'",
+						value, kv.Value.Bytes)
+				}
+			} else if kv.Value.Type == 0 {
+				val, err := strconv.ParseUint(value, 10, 64)
+				if err != nil {
+					return err
+				}
+				if kv.Value.Uint != val {
+					return fmt.Errorf("Value mismatch: expected: '%s', got '%s'",
+						value, kv.Value.Bytes)
+				}
+			}
+			found = true
+		}
+	}
+	if !found {
+		fmt.Errorf("Could not find key '%s'", key)
+	}
+	return nil
+}
+
+//@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
@@ -287,4 +397,6 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
+	s.Step(`^The transient account should have the created app "([^"]*)" and total schema byte-slices (\d+) and uints (\d+), the application "([^"]*)" state contains key "([^"]*)" with value "([^"]*)"$`,
+		theTransientAccountShouldHave)
 }
