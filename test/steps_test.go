@@ -145,11 +145,11 @@ func TestMain(m *testing.M) {
 	opt.Paths = flag.Args()
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
+		ApplicationsContext(s)
 		FeatureContext(s)
 		AlgodClientV2Context(s)
 		IndexerUnitTestContext(s)
 		IndexerIntegrationTestContext(s)
-		ApplicationsContext(s)
 		ApplicationsUnitContext(s)
 		ResponsesContext(s)
 	}, opt)
