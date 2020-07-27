@@ -13,12 +13,11 @@ build: generate
 
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-#	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications" --test.v .
+	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications" --test.v .
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-#	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@template,@indexer,@rekey,@dryrun,@compile,@applications,@applications.verified" --test.v .
-	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@applications.verified" --test.v .
+	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@template,@indexer,@rekey,@dryrun,@compile,@applications,@applications.verified" --test.v .
 
 docker-test:
 	./test/docker/run_docker.sh
