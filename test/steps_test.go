@@ -290,7 +290,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the signature should be equal to "([^"]*)"$`, theSignatureShouldBeEqualTo)
 	s.Step(`^base64 encoded program "([^"]*)"$`, baseEncodedProgram)
 	s.Step(`^base64 encoded private key "([^"]*)"$`, baseEncodedPrivateKey)
-	s.Step("an algod v2 client", algodClientV2)
+	s.Step("an algod v2 client$", algodClientV2)
 	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
 	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
