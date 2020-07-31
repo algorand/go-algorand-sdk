@@ -67,7 +67,13 @@ func iBuildAnApplicationTransactionUnit(
 	if appAccounts != "" {
 		accs = strings.Split(appAccounts, ",")
 	}
+
 	fApp, err := splitUint64(foreignApps)
+	if err != nil {
+		return err
+	}
+
+	fAssets, err := splitUint64(foreignApps)
 	if err != nil {
 		return err
 	}
@@ -83,14 +89,14 @@ func iBuildAnApplicationTransactionUnit(
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp,
+			gSchema, lSchema, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
 			approvalP, clearP,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
@@ -99,31 +105,31 @@ func iBuildAnApplicationTransactionUnit(
 
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err

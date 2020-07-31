@@ -111,7 +111,7 @@ func waitForTransaction(transactionId string) error {
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, appAccounts string) error {
+	appArgs, foreignApps, foreignAssets, appAccounts string) error {
 
 	var clearP []byte
 	var approvalP []byte
@@ -152,19 +152,24 @@ func iBuildAnApplicationTransaction(
 		return err
 	}
 
+	fAssets, err := splitUint64(foreignApps)
+	if err != nil {
+		return err
+	}
+
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp,
+			gSchema, lSchema, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
 			approvalP, clearP,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
@@ -173,31 +178,31 @@ func iBuildAnApplicationTransaction(
 
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
