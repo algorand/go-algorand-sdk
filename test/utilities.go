@@ -2,7 +2,9 @@ package test
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -73,8 +75,6 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 		}
 		// If the test has properties not found in the baseline, then they are not equal
 		if strings.Contains(line, "___ADDED___") {
-			//			fmt.Printf("XXX j1:\n%s\n", j1)
-			//			fmt.Printf("XXX j2:\n%s\n", j2)
 			err = fmt.Errorf(line)
 			return false, err
 		}
@@ -99,7 +99,7 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 // e.g. ...[  {a: "a3", b: "b3"},   {a: "a1", b: "b1"},    {a: "a2", b: "b2"}]...
 // will be:
 //      ...[{a: "a1", b: "b1"},{a: "a2", b: "b2"},{a: "a3", b: "b3"}]...
-// Note: any characters between [ and {, as well as between elements will be lost: ("...},xxx{..." "xxx" is lost ) 
+// Note: any characters between [ and {, as well as between elements will be lost: ("...},xxx{..." "xxx" is lost )
 // This function will recursively sort arrays inside arrays as well.
 func SortJsonArrays(json string) (sorted string, err error) {
 	idx := 0
@@ -117,7 +117,7 @@ func SortJsonArrays(json string) (sorted string, err error) {
 				return "", err
 			}
 			idx = c
-		}			
+		}
 		idx++
 	}
 	return json, nil
@@ -151,8 +151,7 @@ func matchingCloseIndex(json *string, start, end int, ochar, cchar rune) (closeI
 			return -1, fmt.Errorf("Could not find the matching %c", cchar)
 		}
 	}
-	return -1, fmt.Errorf("Could not find the matching %c", cchar)	
-	//	return -1, fmt.Errorf("Could not find the matching %c", cchar)
+	return -1, fmt.Errorf("Could not find the matching %c", cchar)
 }
 
 // sorts the elements inside the array
@@ -179,11 +178,15 @@ func sortElements(json *string, start, end int, ochar, cchar rune) (closeIndex i
 		}
 		if (*json)[i] == '}' {
 			// expects ] but found }. Note: } should have been handled by matchingCloseIndex
-			return -1, fmt.Errorf("Could not find the matching A %c", cchar)
+			return -1, fmt.Errorf("Could not find the matching %c", cchar)
 		}
 		if (*json)[i] == ']' {
 			// end of the array is detected. Sort the elements in the array
-			sort.Slice(elements, func(i, j int) bool { return strings.TrimSpace(elements[i]) < strings.TrimSpace(elements[j]) })
+			sort.Slice(elements, func(i, j int) bool {
+				valA := removeDefaultValues(elements[i])
+				valB := removeDefaultValues(elements[j])
+				return strings.TrimSpace(valA) < strings.TrimSpace(valB)
+			})
 			// replace the sorted string with the unsorted one
 			// note that, any characters between [ and { are lost, as well as between elements i.e. } and {
 			processedStr := (*json)[0:start] + strings.Join(elements, ",")
@@ -193,4 +196,176 @@ func sortElements(json *string, start, end int, ochar, cchar rune) (closeIndex i
 		}
 	}
 	return -1, fmt.Errorf("Could not find the matching %c", cchar)
+}
+
+func removeDefaultValues(data string) string {
+	data = removeSpaces(data)
+	startingLen := len(data)
+	for x := 0; x < len(data); x++ {
+		// find key start
+		for ; x < len(data) && data[x] != '"'; x++ {
+		}
+		if x == len(data) {
+			break
+		}
+
+		// get the key
+		column, err := getString(&data, x, true)
+		if err != nil {
+			log.Fatal(err)
+			return ""
+		}
+		dv, lastIndex, err := isDefaultValue(&data, column)
+		if err != nil {
+			log.Fatal(err)
+			return ""
+		}
+		if dv {
+			// x where the key starts for the defalut value element
+			// lastIndex is where the value ends of the defalut value
+			// it will be the index of ',' if one exists
+			data = data[0:x] + data[lastIndex+1:]
+			// x should point to the start of the new element
+			// since the for loop will increment x by 1, and now
+			// it is already pointing at the start, decrement by 1
+			x--
+		} else {
+			x = column
+			// advance until:
+			// 1. the value is a quoted value: stop at the start '"'
+			// 2. the value is a unquoted premitive: stop at the ',' ending it
+			// 3. the value is another '{' block. stop at '{'
+			for ; x < len(data) &&
+				data[x] != '"' &&
+				data[x] != ',' &&
+				data[x] != '{'; x++ {
+			}
+			if x == len(data) {
+				break
+			}
+			if data[x] == '"' {
+				// read the quote value
+				x, err = getString(&data, x, false)
+				if err != nil {
+					log.Fatal(err)
+					return ""
+				}
+				// now get to ','
+				for ; x < len(data) && data[x] != ','; x++ {
+				}
+				if x == len(data) {
+					break
+				}
+			}
+		}
+	}
+
+	// all default values are removed
+	// now remove the empty blocks
+	if startingLen > len(data) {
+		// clear the empty blocks
+		return removeDefaultValues(data)
+	}
+	return data
+}
+
+func isWhiteSpace(char rune) bool {
+	switch char {
+	case ' ':
+		return true
+	case '\n':
+		return true
+	case '\t':
+		return true
+	default:
+		return false
+
+	}
+}
+
+func getString(json *string, start int, findKey bool) (keyEnd int, err error) {
+	if (*json)[start] != '"' {
+		return -1, fmt.Errorf("getKey should start with a quote")
+	}
+	var i int
+	for i = start + 1; (*json)[i] != '"'; i++ {
+		if (*json)[i] == '\\' && (*json)[i+1] == '"' {
+			i++
+		}
+	}
+	// now i is the index of the closeing '"'
+	if !findKey {
+		return i, nil
+	}
+	for i = i + 1; (*json)[i] != ':'; i++ {
+		if !isWhiteSpace(rune((*json)[i])) {
+			return -1, fmt.Errorf("Only spaces are expected here")
+		}
+	}
+	return i, nil
+}
+
+func isDefaultValue(json *string, start int) (isDefaultVal bool, defaultValueLasChartIndex int, err error) {
+	if (*json)[start] != ':' {
+		return false, -1, fmt.Errorf("The falue string should start with ':'")
+	}
+	var i int
+	end := len(*json)
+	for i = start + 1; i < end && isWhiteSpace(rune((*json)[i])); i++ {
+	}
+
+	// check for 0
+	if (*json)[i:i+2] == "0 " || (*json)[i:i+2] == "0\n" || (*json)[i:i+2] == "0," {
+		return true, i + 1, nil
+	}
+	if (*json)[i:i+2] == "0}" {
+		return true, i, nil
+	}
+
+	// check for []
+	if (*json)[i:i+2] == "[]" {
+		if (*json)[i+2] == ',' {
+			return true, i + 2, nil
+		}
+		return true, i + 1, nil
+	}
+
+	// check for {}
+	if (*json)[i] == '{' {
+		for i = i + 1; i < end && isWhiteSpace(rune((*json)[i])); i++ {
+		}
+		if (*json)[i] == '}' {
+			retIdx := i
+			for i = i + 1; i < end && isWhiteSpace(rune((*json)[i])); i++ {
+			}
+			if (*json)[i] == ',' {
+				return true, i, nil
+			}
+			return true, retIdx, nil
+		}
+	}
+
+	return false, -1, nil
+}
+
+func removeSpaces(data string) string {
+	var buff bytes.Buffer
+	for i := 0; i < len(data); i++ {
+		if data[i] == '"' {
+			// false: we want it to stop at the closing '"'
+			ei, err := getString(&data, i, false)
+			if err != nil {
+				log.Fatal(err)
+				return ""
+			}
+			buff.Write([]byte(data[i : ei+1]))
+			i = ei
+			continue
+		}
+		if isWhiteSpace(rune(data[i])) {
+			continue
+		}
+		buff.WriteByte(data[i])
+	}
+	return buff.String()
 }
