@@ -253,6 +253,7 @@ type TransactionApplication struct {
 	// whose global states may be accessed by this application's approval-program and
 	// clear-state-program. The access is read-only.
 	ForeignApps []uint64 `json:"foreign-apps,omitempty"`
+	ForeignAssets []uint64 `json:"foreign-assets,omitempty"`
 
 	// GlobalStateSchema represents a (apls) local-state or (apgs) global-state schema.
 	// These schemas determine how much storage may be used in a local-state or
