@@ -37,7 +37,7 @@ func iBuildAnApplicationTransactionUnit(
 	applicationIdInt int,
 	sender, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, appAccounts string,
+	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
 	genesisHash string) error {
 
@@ -73,7 +73,7 @@ func iBuildAnApplicationTransactionUnit(
 		return err
 	}
 
-	fAssets, err := splitUint64(foreignApps)
+	fAssets, err := splitUint64(foreignAssets)
 	if err != nil {
 		return err
 	}

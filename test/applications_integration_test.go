@@ -111,7 +111,7 @@ func waitForTransaction(transactionId string) error {
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, foreignAssets, appAccounts string) error {
+	appArgs, foreignApps, appAccounts string) error {
 
 	var clearP []byte
 	var approvalP []byte
