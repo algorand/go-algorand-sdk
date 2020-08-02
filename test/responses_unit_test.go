@@ -1,7 +1,6 @@
 package test
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -10,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
-	"github.com/nsf/jsondiff"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -166,62 +164,4 @@ func ResponsesContext(s *godog.Suite) {
 	s.Step(`^mock http responses in "([^"]*)" loaded from "([^"]*)" with status (\d+)\.$`, mockHttpResponsesInLoadedFromWithStatus)
 	s.Step(`^we make any "([^"]*)" call to "([^"]*)"\.$`, weMakeAnyCallTo)
 	s.Step(`^the parsed response should equal the mock response\.$`, theParsedResponseShouldEqualTheMockResponse)
-}
-
-// EqualJson compares two json strings.
-// returns true if considered equal, false otherwise.
-// The error returns the difference.
-// For reference: j1 is the baseline, j2 is the test
-func EqualJson(j1, j2 string) (ans bool, err error) {
-
-	// This func uses jsondiff.
-	// options configures it.
-	options := jsondiff.Options{
-		Added:            jsondiff.Tag{Begin: "___ADDED___", End: ""},
-		Removed:          jsondiff.Tag{Begin: "___REMED___", End: ""},
-		Changed:          jsondiff.Tag{Begin: "___DIFFER___", End: ""},
-		ChangedSeparator: " -> ",
-	}
-	options.PrintTypes = false
-	d, str := jsondiff.Compare([]byte(j1), []byte(j2), &options)
-	// If fully match, return true
-	if d == jsondiff.FullMatch {
-		return true, nil
-	}
-
-	// Check the difference, and decide if it is still accepted as "equal"
-	// Scan line by line, and examine the difference
-	scanner := bufio.NewScanner(strings.NewReader(str))
-	for scanner.Scan() {
-		line := scanner.Text()
-		// If baseline has the property (j1), but the test (j2) has it removed
-		if strings.Contains(line, "___REMED___") {
-			// If the value of the property is false, then accept it
-			// The default value is false. Missing property is considered as false
-			if strings.Contains(line, "false") {
-				continue
-			}
-			// Any other ommision will not be considered as equal
-			err = fmt.Errorf(line)
-			return false, err
-		}
-		// If the test has properties not found in the baseline, then they are not equal
-		if strings.Contains(line, "___ADDED___") {
-			err = fmt.Errorf(line)
-			return false, err
-		}
-		// If the properties are different, they they are not equal
-		if strings.Contains(line, "___DIFFER___") {
-			err = fmt.Errorf(line)
-			return false, err
-		}
-	}
-	// Extra layer of check. This is not expected to be true.
-	// If only difference is removed with false value property, then the difference
-	// will be qualified as SupersetMatch. If not, should be be considered equal.
-	if d != jsondiff.SupersetMatch {
-		err = fmt.Errorf(str)
-		return false, err
-	}
-	return true, nil
 }

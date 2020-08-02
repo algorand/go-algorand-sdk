@@ -46,6 +46,8 @@ type PendingTransactionInformationParams struct {
 
 // SearchAccountsParams defines parameters for SearchAccounts.
 type SearchAccountsParams struct {
+	// ApplicationId application ID
+	ApplicationId uint64 `url:"application-id,omitempty"`
 
 	// Include accounts holding the specified asset
 	AssetId uint64 `url:"asset-id,omitempty"`
@@ -234,6 +236,9 @@ type LookupAssetTransactionsParams struct {
 
 // SearchForTransactionsParams defines parameters for SearchForTransactions.
 type SearchForTransactionsParams struct {
+
+	// ApplicationId application ID
+	ApplicationId uint64 `url:"application-id,omitempty"`
 
 	// Specifies a prefix which must be contained in the note field.
 	NotePrefix string `url:"note-prefix,omitempty"`
