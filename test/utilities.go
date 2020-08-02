@@ -70,17 +70,17 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 				continue
 			}
 			// Any other ommision will not be considered as equal
-			err = fmt.Errorf(line)
+			err = fmt.Errorf(str)
 			return false, err
 		}
 		// If the test has properties not found in the baseline, then they are not equal
 		if strings.Contains(line, "___ADDED___") {
-			err = fmt.Errorf(line)
+			err = fmt.Errorf(str)
 			return false, err
 		}
 		// If the properties are different, they they are not equal
 		if strings.Contains(line, "___DIFFER___") {
-			err = fmt.Errorf(line)
+			err = fmt.Errorf(str)
 			return false, err
 		}
 	}
