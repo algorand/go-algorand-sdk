@@ -156,7 +156,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 	if err != nil {
 		return err
 	}
-	_, err = EqualJson(string(fileBytes), responseJson)
+	_, err = EqualJson2(string(fileBytes), responseJson)
 	return err
 }
 

@@ -3,6 +3,8 @@ package test
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -10,6 +12,203 @@ import (
 
 	"github.com/nsf/jsondiff"
 )
+
+// EqualJson2 compares two json strings.
+// returns true if considered equal, false otherwise.
+// The error returns the difference.
+// For reference: j1 is the baseline, j2 is the test
+func EqualJson2(j1, j2 string) (ans bool, err error) {
+	var expected map[string]interface{}
+	json.Unmarshal([]byte(j1), &expected)
+
+
+	var actual map[string]interface{}
+	json.Unmarshal([]byte(j2), &actual)
+
+	err = recursiveCompare("root", expected, actual)
+	return err != nil, err
+}
+
+type ValueType int
+const (
+	OBJECT ValueType = iota
+	ARRAY
+	VALUE
+	NUMBER
+	BOOL
+	STRING
+	NULL
+	MISSING
+)
+
+func getType(val interface{}) ValueType {
+	if val == nil {
+		return MISSING
+	}
+	switch val.(type) {
+	case map[string]interface{}:
+		return OBJECT
+	case []interface{}:
+		return ARRAY
+	case string:
+		return STRING
+	case bool:
+		return BOOL
+	case float64:
+		return NUMBER
+	case nil:
+		return MISSING
+	default:
+		return VALUE
+	}
+}
+
+func recursiveCompare(field string, expected, actual interface{}) error {
+	expectedType := getType(expected)
+	actualType := getType(actual)
+
+	// If both were nil, just return
+	if expectedType == MISSING && actualType == MISSING {
+		return nil
+	}
+
+	var keyType ValueType
+
+	if expectedType == MISSING || actualType == MISSING {
+		if expectedType == MISSING {
+			keyType = actualType
+		}
+		if actualType == MISSING {
+			keyType = expectedType
+		}
+	} else {
+		// If both are present, make sure they are the same
+		if expectedType != actualType {
+			return errors.New("Type mismatch")
+		}
+		keyType = expectedType
+	}
+
+	switch keyType {
+	case ARRAY:
+		var expectedArr []interface{}
+		var actualArr []interface{}
+
+		expectedSize := 0
+		if expectedType != MISSING {
+			expectedArr = expected.([]interface{})
+			expectedSize = len(expectedArr)
+		}
+		actualSize := 0
+		if actualType != MISSING {
+			actualArr = actual.([]interface{})
+			actualSize = len(actualArr)
+		}
+
+		log.Printf("%s[] - arraylen %d == %d\n", field, expectedSize, actualSize)
+		if expectedSize != actualSize {
+			return fmt.Errorf("failed to match array sizes: %s", field)
+		}
+
+		for i := 0; i < expectedSize; i++ {
+			err := recursiveCompare(fmt.Sprintf("%s[%d]", field, i), expectedArr[i], actualArr[i])
+			if err != nil {
+				return err
+			}
+		}
+
+	case OBJECT:
+		log.Printf("%s{...} - object\n", field)
+
+		// Recursively compare each key value
+		// Pass nil's to the compare function to handle zero values on a type by type basis.
+
+		// Go happily creates complex zero value objects, so go ahead and recursively compare nil against defaults
+		//if expectedType == MISSING || actualType == MISSING {
+		//	return fmt.Errorf("one of the objects is null the other isn't empty: %s\nexpected: %v\nactual%v", field,expected, actual)
+		//}
+
+		// If they are both missing what are we even doing here. Return with no error.
+		if expectedType == MISSING && actualType == MISSING {
+			return nil
+		}
+
+		var expectedObject map[string]interface{}
+		var actualObject map[string]interface{}
+
+		keys := make(map[string]bool)
+		if expectedType != MISSING {
+			expectedObject = expected.(map[string]interface{})
+			for k, _ := range expectedObject {
+				keys[k] = true
+			}
+		}
+		if actualType != MISSING {
+			actualObject = actual.(map[string]interface{})
+			for k, _ := range actualObject {
+				keys[k] = true
+			}
+		}
+		for k, _ := range keys {
+			var err error
+			err = recursiveCompare(fmt.Sprintf("%s.%s", field, k), expectedObject[k], actualObject[k])
+			if err != nil {
+				return err
+			}
+		}
+
+	case NUMBER:
+		// Compare numbers, if missing treat as zero
+		expectedNum := float64(0)
+		if expectedType != MISSING {
+			expectedNum = expected.(float64)
+		}
+		actualNum := float64(0)
+		if actualType != MISSING {
+			actualNum = expected.(float64)
+		}
+		log.Printf("%s - number %f == %f\n", field, expectedNum, actualNum)
+		if expectedNum != actualNum {
+			return fmt.Errorf("failed to match field %s, %f != %f", field, expectedNum, actualNum)
+		}
+
+	case BOOL:
+		// Compare bools, if missing treat as false
+		expectedBool := false
+		if expectedType != MISSING {
+			expectedBool = expected.(bool)
+		}
+		actualBool := false
+		if actualType != MISSING {
+			actualBool = expected.(bool)
+		}
+		log.Printf("%s - bool %t == %t\n", field, expectedBool, actualBool)
+		if expectedBool != actualBool {
+			return fmt.Errorf("failed to match field %s, %t != %t", field, expectedBool, actualBool)
+		}
+
+	case STRING:
+		// Compare strings, if missing treat as an empty string.
+		// Note: I think binary ends up in here, it may need some special handling.
+		expectedStr := ""
+		if expectedType != MISSING {
+			expectedStr = expected.(string)
+		}
+		actualStr := ""
+		if actualType != MISSING {
+			actualStr = expected.(string)
+		}
+		log.Printf("%s - string %s == %s\n", field, expectedStr, actualStr)
+		if expectedStr != actualStr {
+			return fmt.Errorf("failed to match field %s, %s != %s", field, expectedStr, actualStr)
+		}
+
+	default:
+		return fmt.Errorf("unhandled type %v at %s", keyType, field)
+	}
+
+	return nil
+}
 
 // EqualJson compares two json strings.
 // returns true if considered equal, false otherwise.
