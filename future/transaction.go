@@ -530,40 +530,43 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	return
 }
 
-// - accounts     lists the accounts (in addition to the sender) that may be accessed
-//                from the application logic.
+// - accounts      lists the accounts (in addition to the sender) that may be accessed
+//                 from the application logic.
 //
-// - appArgs      ApplicationArgs lists some transaction-specific arguments accessible
-//                from application logic.
+// - appArgs       ApplicationArgs lists some transaction-specific arguments accessible
+//                 from application logic.
 //
-// - appIdx       ApplicationID is the application being interacted with, or 0 if
-//                creating a new application.
+// - appIdx        ApplicationID is the application being interacted with, or 0 if
+//                 creating a new application.
 //
-// - approvalProg ApprovalProgram determines whether or not this ApplicationCall
-//                transaction will be approved or not.
+// - approvalProg  ApprovalProgram determines whether or not this ApplicationCall
+//                 transaction will be approved or not.
 //
-// - clearProg    ClearStateProgram executes when a clear state ApplicationCall
-//                transaction is executed. This program may not reject the
-//                transaction, only update state.
+// - clearProg     ClearStateProgram executes when a clear state ApplicationCall
+//                 transaction is executed. This program may not reject the
+//                 transaction, only update state.
 //
-// - foreignApps  lists the applications (in addition to txn.ApplicationID) whose global
-//                states may be accessed by this application. The access is read-only.
-// - globalSchema GlobalStateSchema sets limits on the number of strings and
-//                integers that may be stored in the GlobalState. The larger these
-//                limits are, the larger minimum balance must be maintained inside
-//                the creator's account (in order to 'pay' for the state that can
-//                be used). The GlobalStateSchema is immutable.
+// - foreignApps   lists the applications (in addition to txn.ApplicationID) whose global
+//                 states may be accessed by this application. The access is read-only.
 //
-// - localSchema  LocalStateSchema sets limits on the number of strings and integers
-//                that may be stored in an account's LocalState for this application.
-//                The larger these limits are, the larger minimum balance must be
-//                maintained inside the account of any users who opt into this
-//                application. The LocalStateSchema is immutable.
+// - foreignAssets lists the assets whose global state may be accessed by this application. The access is read-only.
 //
-// - onComplete   This is the faux application type used to distinguish different
-//                application actions. Specifically, OnCompletion specifies what
-//                side effects this transaction will have if it successfully makes
-//                it into a block.
+// - globalSchema  GlobalStateSchema sets limits on the number of strings and
+//                 integers that may be stored in the GlobalState. The larger these
+//                 limits are, the larger minimum balance must be maintained inside
+//                 the creator's account (in order to 'pay' for the state that can
+//                 be used). The GlobalStateSchema is immutable.
+//
+// - localSchema   LocalStateSchema sets limits on the number of strings and integers
+//                 that may be stored in an account's LocalState for this application.
+//                 The larger these limits are, the larger minimum balance must be
+//                 maintained inside the account of any users who opt into this
+//                 application. The LocalStateSchema is immutable.
+//
+// - onComplete    This is the faux application type used to distinguish different
+//                 application actions. Specifically, OnCompletion specifies what
+//                 side effects this transaction will have if it successfully makes
+//                 it into a block.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
@@ -576,6 +579,7 @@ func MakeApplicationCreateTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -593,6 +597,7 @@ func MakeApplicationCreateTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		oncomp,
 		approvalProg,
 		clearProg,
@@ -612,6 +617,7 @@ func MakeApplicationUpdateTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	approvalProg []byte,
 	clearProg []byte,
 	sp types.SuggestedParams,
@@ -624,6 +630,7 @@ func MakeApplicationUpdateTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.UpdateApplicationOC,
 		approvalProg,
 		clearProg,
@@ -643,6 +650,7 @@ func MakeApplicationDeleteTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -653,6 +661,7 @@ func MakeApplicationDeleteTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.DeleteApplicationOC,
 		nil,
 		nil,
@@ -673,6 +682,7 @@ func MakeApplicationOptInTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -683,6 +693,7 @@ func MakeApplicationOptInTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.OptInOC,
 		nil,
 		nil,
@@ -703,6 +714,7 @@ func MakeApplicationCloseOutTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -713,6 +725,7 @@ func MakeApplicationCloseOutTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.CloseOutOC,
 		nil,
 		nil,
@@ -734,6 +747,7 @@ func MakeApplicationClearStateTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -744,6 +758,7 @@ func MakeApplicationClearStateTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.ClearStateOC,
 		nil,
 		nil,
@@ -765,6 +780,7 @@ func MakeApplicationNoOpTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -776,6 +792,7 @@ func MakeApplicationNoOpTx(
 		appArgs,
 		accounts,
 		foreignApps,
+		foreignAssets,
 		types.NoOpOC,
 		nil,
 		nil,
@@ -797,6 +814,7 @@ func MakeApplicationCallTx(
 	appArgs [][]byte,
 	accounts []string,
 	foreignApps []uint64,
+	foreignAssets []uint64,
 	onCompletion types.OnCompletion,
 	approvalProg []byte,
 	clearProg []byte,
@@ -819,6 +837,7 @@ func MakeApplicationCallTx(
 	}
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)
+	tx.ForeignAssets = parseTxnForeignAssets(foreignAssets)
 	tx.ApprovalProgram = approvalProg
 	tx.ClearStateProgram = clearProg
 	tx.LocalStateSchema = localSchema
@@ -883,6 +902,13 @@ func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
 func parseTxnForeignApps(foreignApps []uint64) (parsed []types.AppIndex) {
 	for _, aidx := range foreignApps {
 		parsed = append(parsed, types.AppIndex(aidx))
+	}
+	return
+}
+
+func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
+	for _, aidx := range foreignAssets {
+		parsed = append(parsed, types.AssetIndex(aidx))
 	}
 	return
 }

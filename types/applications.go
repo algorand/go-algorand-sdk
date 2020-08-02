@@ -29,6 +29,12 @@ const (
 	// contain. Its value is verified against consensus parameters in
 	// TestEncodedAppTxnAllocationBounds
 	encodedMaxForeignApps = 32
+
+	// encodedMaxForeignAssets sets the allocation bound for the maximum
+	// number of ForeignAssets that a transaction decoded off of the wire
+	// can contain. Its value is verified against consensus parameters in
+	// TestEncodedAppTxnAllocationBounds
+	encodedMaxForeignAssets = 32
 )
 
 // OnCompletion is an enum representing some layer 1 side effect that an
@@ -74,6 +80,7 @@ type ApplicationCallTxnFields struct {
 	ApplicationArgs [][]byte     `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
 	Accounts        []Address    `codec:"apat,allocbound=encodedMaxAccounts"`
 	ForeignApps     []AppIndex   `codec:"apfa,allocbound=encodedMaxForeignApps"`
+	ForeignAssets   []AssetIndex `codec:"apas,allocbound=encodedMaxForeignAssets"`
 
 	LocalStateSchema  StateSchema `codec:"apls"`
 	GlobalStateSchema StateSchema `codec:"apgs"`
@@ -90,4 +97,40 @@ type StateSchema struct {
 
 	NumUint      uint64 `codec:"nui"`
 	NumByteSlice uint64 `codec:"nbs"`
+}
+
+// Empty indicates whether or not all the fields in the
+// ApplicationCallTxnFields are zeroed out
+func (ac *ApplicationCallTxnFields) Empty() bool {
+	if ac.ApplicationID != 0 {
+		return false
+	}
+	if ac.OnCompletion != 0 {
+		return false
+	}
+	if ac.ApplicationArgs != nil {
+		return false
+	}
+	if ac.Accounts != nil {
+		return false
+	}
+	if ac.ForeignApps != nil {
+		return false
+	}
+	if ac.ForeignAssets != nil {
+		return false
+	}
+	if ac.LocalStateSchema != (StateSchema{}) {
+		return false
+	}
+	if ac.GlobalStateSchema != (StateSchema{}) {
+		return false
+	}
+	if ac.ApprovalProgram != nil {
+		return false
+	}
+	if ac.ClearStateProgram != nil {
+		return false
+	}
+	return true
 }
