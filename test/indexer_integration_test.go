@@ -581,9 +581,7 @@ func iUseToSearchForTransactionsWithAppIdAndToken(
 	indexer, limit int, notePrefix, txType, sigType, txId string, round,
 	minRound, maxRound, assetId int, beforeTime, afterTime string,
 	currencyGt, currencyLt int, address, addressRole, excludeCloseTo string, appId int, token string) error {
-
 	ic := indexerClients[indexer]
-
 	var err error
 	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
 	if err != nil {
@@ -614,7 +612,6 @@ func iUseToSearchForTransactionsWithAppIdAndToken(
 
 	response = indexerTransactionsResponse
 	return err
-
 }
 
 func iUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, currencyGreater, currencyLesser int, arg6 string, appId int, token string) error {
