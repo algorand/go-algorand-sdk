@@ -26,6 +26,11 @@ func EqualJson2(j1, j2 string) (ans bool, err error) {
 	json.Unmarshal([]byte(j2), &actual)
 
 	err = recursiveCompare("root", expected, actual)
+
+	if err != nil {
+		log.Printf("expected:\n%s", j1)
+		log.Printf("actual:\n%s", j2)
+	}
 	return err != nil, err
 }
 
@@ -37,7 +42,6 @@ const (
 	NUMBER
 	BOOL
 	STRING
-	NULL
 	MISSING
 )
 

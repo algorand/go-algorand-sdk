@@ -360,18 +360,7 @@ func iGetTheNextPageUsingToSearchForAnAccountWithAnd(clientNum, assetId, limit, 
 var indexerTransactionsResponse models.TransactionsResponse
 
 func iUseToSearchForTransactionsWithAndToken(clientNum, limit int, notePrefix, txType, sigType, txid string, round, minRound, maxRound, assetId int, beforeTime, afterTime string, currencyGreater, currencyLesser int, address, addressRole, excludeCloseTo, token string) error {
-	ic := indexerClients[clientNum]
-	var err error
-	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
-	if err != nil {
-		return err
-	}
-	excludeBool, err := strconv.ParseBool(excludeCloseTo)
-	if err != nil {
-		excludeBool = false
-	}
-	indexerTransactionsResponse, err = ic.SearchForTransactions().Limit(uint64(limit)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).AssetID(uint64(assetId)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeBool).NextToken(token).Do(context.Background())
-	return err
+	return iUseToSearchForTransactionsWithAppIdAndToken(clientNum, limit, notePrefix, txType, sigType, txid, round, minRound, maxRound, assetId, beforeTime, afterTime, currencyGreater, currencyLesser, address, addressRole, excludeCloseTo, 0, token)
 }
 
 func thereAreTransactionsInTheResponseTheFirstIs(numTransactions int, firstTransactionTxid string) error {
@@ -593,13 +582,39 @@ func iUseToSearchForTransactionsWithAppIdAndToken(
 	minRound, maxRound, assetId int, beforeTime, afterTime string,
 	currencyGt, currencyLt int, address, addressRole, excludeCloseTo string, appId int, token string) error {
 
-	var err error
 	ic := indexerClients[indexer]
-	response, err = ic.SearchForTransactions().
+
+	var err error
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	excludeBool, err := strconv.ParseBool(excludeCloseTo)
+	if err != nil {
+		excludeBool = false
+	}
+
+	indexerTransactionsResponse, err = ic.SearchForTransactions().
 		ApplicationId(uint64(appId)).
 		Limit(uint64(limit)).
-		Do(context.Background())
+		NotePrefix(notePrefixBytes).
+		TxType(txType).SigType(sigType).
+		TXID(txId).Round(uint64(round)).
+		MinRound(uint64(minRound)).
+		MaxRound(uint64(maxRound)).
+		AssetID(uint64(assetId)).
+		BeforeTimeString(beforeTime).
+		AfterTimeString(afterTime).
+		CurrencyGreaterThan(uint64(currencyGt)).
+		CurrencyLessThan(uint64(currencyLt)).
+		AddressString(address).
+		AddressRole(addressRole).
+		ExcludeCloseTo(excludeBool).
+		NextToken(token).Do(context.Background())
+
+	response = indexerTransactionsResponse
 	return err
+
 }
 
 func iUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, currencyGreater, currencyLesser int, arg6 string, appId int, token string) error {
