@@ -152,7 +152,7 @@ func iBuildAnApplicationTransaction(
 		return err
 	}
 
-	fAssets, err := make([]uint64, 0)
+	fAssets := make([]uint64, 0)
 
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
