@@ -592,33 +592,13 @@ func iUseToSearchForTransactionsWithAppIdAndToken(
 	indexer, limit int, notePrefix, txType, sigType, txId string, round,
 	minRound, maxRound, assetId int, beforeTime, afterTime string,
 	currencyGt, currencyLt int, address, addressRole, excludeCloseTo string, appId int, token string) error {
-	ic := indexerClients[indexer]
+
 	var err error
-	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
-	if err != nil {
-		return err
-	}
-	excludeBool, err := strconv.ParseBool(excludeCloseTo)
-	if err != nil {
-		excludeBool = false
-	}
+	ic := indexerClients[indexer]
 	response, err = ic.SearchForTransactions().
 		ApplicationId(uint64(appId)).
 		Limit(uint64(limit)).
-		NotePrefix(notePrefixBytes).
-		TxType(txType).SigType(sigType).
-		TXID(txid).Round(uint64(round)).
-		MinRound(uint64(minRound)).
-		MaxRound(uint64(maxRound)).
-		AssetID(uint64(assetId)).
-		BeforeTimeString(beforeTime).
-		AfterTimeString(afterTime).
-		CurrencyGreaterThan(uint64(currencyGt)).
-		CurrencyLessThan(uint64(currencyLt)).
-		AddressString(address).
-		AddressRole(addressRole).
-		ExcludeCloseTo(excludeBool).
-		NextToken(token).Do(context.Background())
+		Do(context.Background())
 	return err
 }
 
