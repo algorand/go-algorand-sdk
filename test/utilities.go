@@ -109,7 +109,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 			actualSize = len(actualArr)
 		}
 
-		log.Printf("%s[] - arraylen %d == %d\n", field, expectedSize, actualSize)
+		//log.Printf("%s[] - arraylen %d == %d\n", field, expectedSize, actualSize)
 		if expectedSize != actualSize {
 			return fmt.Errorf("failed to match array sizes: %s", field)
 		}
@@ -122,15 +122,12 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 
 	case OBJECT:
-		log.Printf("%s{...} - object\n", field)
+		//log.Printf("%s{...} - object\n", field)
 
 		// Recursively compare each key value
 		// Pass nil's to the compare function to handle zero values on a type by type basis.
 
 		// Go happily creates complex zero value objects, so go ahead and recursively compare nil against defaults
-		//if expectedType == MISSING || actualType == MISSING {
-		//	return fmt.Errorf("one of the objects is null the other isn't empty: %s\nexpected: %v\nactual%v", field,expected, actual)
-		//}
 
 		// If they are both missing what are we even doing here. Return with no error.
 		if expectedType == MISSING && actualType == MISSING {
@@ -171,7 +168,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		if actualType != MISSING {
 			actualNum = expected.(float64)
 		}
-		log.Printf("%s - number %f == %f\n", field, expectedNum, actualNum)
+		//log.Printf("%s - number %f == %f\n", field, expectedNum, actualNum)
 		if expectedNum != actualNum {
 			return fmt.Errorf("failed to match field %s, %f != %f", field, expectedNum, actualNum)
 		}
@@ -186,7 +183,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		if actualType != MISSING {
 			actualBool = expected.(bool)
 		}
-		log.Printf("%s - bool %t == %t\n", field, expectedBool, actualBool)
+		//log.Printf("%s - bool %t == %t\n", field, expectedBool, actualBool)
 		if expectedBool != actualBool {
 			return fmt.Errorf("failed to match field %s, %t != %t", field, expectedBool, actualBool)
 		}
@@ -202,7 +199,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		if actualType != MISSING {
 			actualStr = expected.(string)
 		}
-		log.Printf("%s - string %s == %s\n", field, expectedStr, actualStr)
+		//log.Printf("%s - string %s == %s\n", field, expectedStr, actualStr)
 		if expectedStr != actualStr {
 			return fmt.Errorf("failed to match field %s, %s != %s", field, expectedStr, actualStr)
 		}
