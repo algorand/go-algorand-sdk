@@ -1,7 +1,9 @@
 package test
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -37,28 +39,13 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 
 	transientAccount = crypto.GenerateAccount()
 
-	status, err := acl.Status()
-	if err != nil {
-		return err
-	}
-	llr := status.LastRound
-
-	lv, err := acl.Versions()
-	gen = lv.GenesisID
-	gh = lv.GenesisHash
+	params, err := algodV2client.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
 
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(llr),
-		LastRoundValid:  types.Round(llr + 10),
-		FlatFee:         false,
-	}
-	ltxn, err := future.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, paramsToUse)
+	params.Fee = types.MicroAlgos(fee)
+	ltxn, err := future.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, params)
 	if err != nil {
 		return err
 	}
@@ -70,7 +57,7 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	_, err = acl.SendRawTransaction(lstx)
+	_, err = algodV2client.SendRawTransaction(lstx).Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -82,21 +69,21 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 }
 
 func waitForTransaction(transactionId string) error {
-	status, err := acl.Status()
+	status, err := algodV2client.Status().Do(context.Background())
 	if err != nil {
 		return err
 	}
 	stopRound := status.LastRound + 10
 
 	for {
-		lstatus, err := acl.PendingTransactionInformation(transactionId)
+		lstatus, _, err := algodV2client.PendingTransactionInformation(transactionId).Do(context.Background())
 		if err != nil {
 			return err
 		}
 		if lstatus.ConfirmedRound > 0 {
 			break // end the waiting
 		}
-		status, err := acl.Status()
+		status, err := algodV2client.Status().Do(context.Background())
 		if err != nil {
 			return err
 		}
@@ -168,6 +155,14 @@ func iBuildAnApplicationTransaction(
 			return err
 		}
 
+	case "create_optin":
+		tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
+			gSchema, lSchema, args, accs, fApp, fAssets,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
+
 	case "update":
 		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
 			approvalP, clearP,
@@ -207,6 +202,8 @@ func iBuildAnApplicationTransaction(
 		if err != nil {
 			return err
 		}
+	default:
+		return fmt.Errorf("unsupported tx type: %s", operation)
 	}
 
 	return nil
@@ -215,13 +212,12 @@ func iBuildAnApplicationTransaction(
 func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) error {
 	var e error
 	var lstx []byte
-	//	fmt.Printf("%v\n", string(json.Encode(tx)))
 
 	txid, lstx, e = crypto.SignTransaction(transientAccount.PrivateKey, tx)
 	if e != nil {
 		return e
 	}
-	_, e = acl.SendRawTransaction(lstx)
+	txid, e = algodV2client.SendRawTransaction(lstx).Do(context.Background())
 	if e != nil {
 		if strings.Contains(e.Error(), err) {
 			return nil
@@ -239,16 +235,9 @@ func iWaitForTheTransactionToBeConfirmed() error {
 }
 
 func iRememberTheNewApplicationID() error {
-
-	response, err := acl.RawRequest(fmt.Sprintf("/transactions/pending/%s", txid), nil, "GET", false /* encodeJSON */, nil)
-	if err != nil {
-		return err
-	}
-	if txres := response["txresults"]; txres != nil {
-		createdapp := txres.(map[string]interface{})["createdapp"]
-		applicationId = uint64(createdapp.(float64))
-	}
-	return nil
+	response, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
+	applicationId = response.ApplicationIndex
+	return err
 }
 
 func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
@@ -263,6 +252,16 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 		switch typeArg[0] {
 		case "str":
 			resp[idx] = []byte(typeArg[1])
+		case "int":
+			intval, _ := strconv.ParseUint(typeArg[1], 10, 64)
+
+			buf := new(bytes.Buffer)
+			err := binary.Write(buf, binary.BigEndian, intval)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert %s to bytes", arg)
+			}
+			resp[idx] = buf.Bytes()
+			//copy(resp[idx], buf.Bytes()[:])
 		default:
 			return nil, fmt.Errorf("Applications doesn't currently support argument of type %s", typeArg[0])
 		}
@@ -394,6 +393,121 @@ func theTransientAccountShouldHave(appCreated string, byteSlices, uints int,
 	return nil
 }
 
+func theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields() error {
+	status, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	if status.ConfirmedRound == 0 {
+		if len(status.GlobalStateDelta) != 0 {
+			return fmt.Errorf("unexpected global state delta, there should be none: %v", status.GlobalStateDelta)
+		}
+		if len(status.LocalStateDelta) != 0 {
+			return fmt.Errorf("unexpected local state delta, there should be none: %v", status.LocalStateDelta)
+		}
+	}
+	return nil
+}
+
+func getAccountDelta(addr string, data []models.AccountStateDelta) []models.EvalDeltaKeyValue {
+	for _, v := range data {
+		if v.Address == addr {
+			return v.Delta
+		}
+	}
+	return nil
+}
+func theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldAlsoConfirmThis(stateLocation, key, newValue string, indexer int) error {
+	status, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	c1 := make(chan models.Transaction, 1)
+
+	go func() {
+		for true {
+			indexerResponse, _ := indexerClients[indexer].SearchForTransactions().TXID(txid).Do(context.Background())
+			if len(indexerResponse.Transactions) == 1 {
+				c1 <- indexerResponse.Transactions[0]
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+
+	var indexerTx models.Transaction
+	select {
+	case res := <-c1:
+		indexerTx = res
+	case <-time.After(5 * time.Second):
+		return fmt.Errorf("timeout waiting for indexer trasaction")
+	}
+
+	var algodKeyValues []models.EvalDeltaKeyValue
+	var indexerKeyValues []models.EvalDeltaKeyValue
+
+	switch stateLocation {
+	case "local":
+		addr := indexerTx.Sender
+		algodKeyValues = getAccountDelta(addr, status.LocalStateDelta)
+		indexerKeyValues = getAccountDelta(addr, indexerTx.LocalStateDelta)
+	case "global":
+		algodKeyValues = status.GlobalStateDelta
+		indexerKeyValues = indexerTx.GlobalStateDelta
+	default:
+		return fmt.Errorf("unknown location: " + stateLocation)
+	}
+
+	// algod
+	if len(algodKeyValues) != 1 {
+		return fmt.Errorf("expected 1 key value, found: %d", len(algodKeyValues))
+	}
+	if algodKeyValues[0].Key != key {
+		return fmt.Errorf("wrong key in algod: %s != %s", algodKeyValues[0].Key, key)
+	}
+
+	// indexer
+	if len(indexerKeyValues) != 1 {
+		return fmt.Errorf("expected 1 key value, found: %d", len(indexerKeyValues))
+	}
+	if indexerKeyValues[0].Key != key {
+		return fmt.Errorf("wrong key in indexer: %s != %s", indexerKeyValues[0].Key, key)
+	}
+
+	if indexerKeyValues[0].Value.Action != algodKeyValues[0].Value.Action {
+		return fmt.Errorf("action mismatch between algod and indexer")
+	}
+
+	switch algodKeyValues[0].Value.Action {
+	case uint64(1):
+		// bytes
+		if algodKeyValues[0].Value.Bytes != newValue {
+			return fmt.Errorf("algod value mismatch: %s != %s", algodKeyValues[0].Value.Bytes, newValue)
+		}
+		if indexerKeyValues[0].Value.Bytes != newValue {
+			return fmt.Errorf("indexer value mismatch: %s != %s", indexerKeyValues[0].Value.Bytes, newValue)
+		}
+	case uint64(2):
+		// int
+		newValueInt, err := strconv.ParseUint(newValue, 10, 64)
+		if err != nil {
+			return fmt.Errorf("problem parsing new int value: %s", newValue)
+		}
+
+		if algodKeyValues[0].Value.Uint != newValueInt {
+			return fmt.Errorf("algod value mismatch: %d != %s", algodKeyValues[0].Value.Uint, newValue)
+		}
+		if indexerKeyValues[0].Value.Uint != newValueInt {
+			return fmt.Errorf("indexer value mismatch: %d != %s", indexerKeyValues[0].Value.Uint, newValue)
+		}
+	default:
+		return fmt.Errorf("unexpected action: %d", algodKeyValues[0].Value.Action)
+	}
+
+	return nil
+}
+
+
 //@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
@@ -404,4 +518,6 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
 	s.Step(`^The transient account should have the created app "([^"]*)" and total schema byte-slices (\d+) and uints (\d+), the application "([^"]*)" state contains key "([^"]*)" with value "([^"]*)"$`,
 		theTransientAccountShouldHave)
+	s.Step(`^the unconfirmed pending transaction by ID should have no apply data fields\.$`, theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields)
+	s.Step(`^the confirmed pending transaction by ID should have a "([^"]*)" state change for "([^"]*)" to "([^"]*)", indexer (\d+) should also confirm this\.$`, theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldAlsoConfirmThis)
 }

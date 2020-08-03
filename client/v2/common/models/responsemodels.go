@@ -853,6 +853,8 @@ type PendingTransactionInfoResponse = struct {
 	ConfirmedRound uint64 `codec:"confirmed-round,omitempty"`
 	//AssetIndex is the index of the newly created asset, if this was an asset creation transaction.
 	AssetIndex uint64 `codec:"asset-index,omitempty"`
+	//ApplicationIndex is the index of the newly created application, if this was an application creation transaction.
+	ApplicationIndex uint64 `codec:"application-index,omitempty"`
 	//Closing amount for the transaction.
 	ClosingAmount uint64 `codec:"closing-amount,omitempty"`
 	//Rewards, in microAlgos, applied to sender.
@@ -861,6 +863,12 @@ type PendingTransactionInfoResponse = struct {
 	ReceiverRewards uint64 `codec:"receiver-rewards,omitempty"`
 	//Rewards, in microAlgos, applied to close-to.
 	CloseRewards uint64 `codec:"close-rewards,omitempty"`
+	// LocalStateDelta (ld) Local state key/value changes for the application being
+	// executed by this transaction.
+	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
+	// GlobalStateDelta (gd) Global state key/value changes for the application being
+	// executed by this transaction.
+	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
 }
 
 // PendingTransactionsResponse is returned by PendingTransactions and by Txid
