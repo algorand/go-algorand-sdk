@@ -254,7 +254,6 @@ type TransactionApplication struct {
 	// whose global states may be accessed by this application's approval-program and
 	// clear-state-program. The access is read-only.
 	ForeignApps []uint64 `json:"foreign-apps,omitempty"`
-	ForeignAssets []uint64 `json:"foreign-assets,omitempty"`
 
 	// ForeignAssets (apas) lists the assets whose parameters may be accessed
 	//by this application's ApprovalProgram and ClearStateProgram. The access
