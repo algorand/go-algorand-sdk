@@ -37,7 +37,7 @@ func iBuildAnApplicationTransactionUnit(
 	applicationIdInt int,
 	sender, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, appAccounts string,
+	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
 	genesisHash string) error {
 
@@ -67,7 +67,13 @@ func iBuildAnApplicationTransactionUnit(
 	if appAccounts != "" {
 		accs = strings.Split(appAccounts, ",")
 	}
+
 	fApp, err := splitUint64(foreignApps)
+	if err != nil {
+		return err
+	}
+
+	fAssets, err := splitUint64(foreignAssets)
 	if err != nil {
 		return err
 	}
@@ -83,14 +89,14 @@ func iBuildAnApplicationTransactionUnit(
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp,
+			gSchema, lSchema, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
 			approvalP, clearP,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
@@ -99,31 +105,31 @@ func iBuildAnApplicationTransactionUnit(
 
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp,
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
@@ -207,7 +213,7 @@ func weMakeALookupApplicationsCall(applicationID int) error {
 func ApplicationsUnitContext(s *godog.Suite) {
 	// @unit.transactiosn
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
 

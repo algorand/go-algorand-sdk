@@ -208,6 +208,7 @@ type DryrunResponse struct {
 
 	Txns []DryrunTxnResult `json:"txns,omitempty"`
 }
+
 // StateSchema represents a (apls) local-state or (apgs) global-state schema. These
 // schemas determine how much storage may be used in a local-state or global-state
 // for an application. The more space used, the larger minimum balance must be
@@ -254,6 +255,11 @@ type TransactionApplication struct {
 	// clear-state-program. The access is read-only.
 	ForeignApps []uint64 `json:"foreign-apps,omitempty"`
 
+	// ForeignAssets (apas) lists the assets whose parameters may be accessed
+	//by this application's ApprovalProgram and ClearStateProgram. The access
+	//is read-only.
+	ForeignAssets []uint64 `json:"foreign-assets,omitempty"`
+
 	// GlobalStateSchema represents a (apls) local-state or (apgs) global-state schema.
 	// These schemas determine how much storage may be used in a local-state or
 	// global-state for an application. The more space used, the larger minimum balance
@@ -297,4 +303,3 @@ type ApplicationsResponse struct {
 	// with the next parameter.
 	NextToken string `json:"next-token,omitempty"`
 }
-
