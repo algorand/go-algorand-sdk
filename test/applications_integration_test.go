@@ -261,7 +261,6 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 				return nil, fmt.Errorf("failed to convert %s to bytes", arg)
 			}
 			resp[idx] = buf.Bytes()
-			//copy(resp[idx], buf.Bytes()[:])
 		default:
 			return nil, fmt.Errorf("Applications doesn't currently support argument of type %s", typeArg[0])
 		}
