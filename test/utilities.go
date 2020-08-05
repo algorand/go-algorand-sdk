@@ -49,7 +49,12 @@ func VerifyResponse(expectedFile string, actual string) error {
 		expectedString = string(sdk_json.Encode(generic))
 	}
 
-	return EqualJson(expectedString, actual)
+	// Go ahead and run both equals functions since we have them.
+	err = EqualJson(expectedString, actual)
+	if err == nil {
+		err = EqualJson2(expectedString, actual)
+	}
+	return err
 }
 
 // EqualJson2 compares two json strings.
