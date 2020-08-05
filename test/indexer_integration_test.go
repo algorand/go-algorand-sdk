@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	"strconv"
 	"time"
 
+	"github.com/cucumber/godog"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
-
-	"github.com/cucumber/godog"
+	"github.com/algorand/go-algorand-sdk/encoding/json"
 )
 
 func IndexerIntegrationTestContext(s *godog.Suite) {
@@ -48,6 +52,14 @@ func IndexerIntegrationTestContext(s *godog.Suite) {
 	s.Step(`^I get the next page using (\d+) to search for transactions with (\d+) and (\d+)$`, iGetTheNextPageUsingToSearchForTransactionsWithAnd)
 	s.Step(`^I use (\d+) to search for assets with (\d+), (\d+), "([^"]*)", "([^"]*)", "([^"]*)", and token "([^"]*)"$`, iUseToSearchForAssetsWithAndToken)
 	s.Step(`^there are (\d+) assets in the response, the first is (\d+)\.$`, thereAreAssetsInTheResponseTheFirstIs)
+
+	//@indexer.applications
+	s.Step(`^I use (\d+) to search for applications with (\d+), (\d+), and token "([^"]*)"$`, iUseToSearchForApplicationsWithAndToken)
+	s.Step(`^the parsed response should equal "([^"]*)"\.$`, theParsedResponseShouldEqual)
+	s.Step(`^I use (\d+) to lookup application with (\d+)$`, iUseToLookupApplicationWith)
+	s.Step(`^I use (\d+) to search for transactions with (\d+), "([^"]*)", "([^"]*)", "([^"]*)", "([^"]*)", (\d+), (\d+), (\d+), (\d+), "([^"]*)", "([^"]*)", (\d+), (\d+), "([^"]*)", "([^"]*)", "([^"]*)", (\d+) and token "([^"]*)"$`, iUseToSearchForTransactionsWithAppIdAndToken)
+	s.Step(`^I use (\d+) to search for an account with (\d+), (\d+), (\d+), (\d+), "([^"]*)", (\d+) and token "([^"]*)"$`, iUseToSearchForAnAccountWithAppIdAndToken)
+
 	s.BeforeScenario(func(interface{}) {
 	})
 }
@@ -302,7 +314,7 @@ func thereAreTheFirstHas(numAccounts, firstAccountPendingRewards, rewardsBase, r
 	if err != nil {
 		return err
 	}
-	err = comparisonCheck("first account type", accountType, accountUnderScrutiny.Type)
+	err = comparisonCheck("first account type", accountType, accountUnderScrutiny.SigType)
 	return err
 }
 
@@ -521,8 +533,8 @@ var indexerSearchForAssetsResponse []models.Asset
 
 func iUseToSearchForAssetsWithAndToken(clientNum, zero, assetId int, creator, name, unit, token string) error {
 	ic := indexerClients[clientNum]
-	var err error
-	_, indexerSearchForAssetsResponse, err = ic.SearchForAssets().AssetID(uint64(assetId)).Creator(creator).Name(name).Unit(unit).NextToken(token).Do(context.Background())
+	resp, err := ic.SearchForAssets().AssetID(uint64(assetId)).Creator(creator).Name(name).Unit(unit).NextToken(token).Do(context.Background())
+	indexerSearchForAssetsResponse = resp.Assets
 	return err
 }
 
@@ -536,5 +548,89 @@ func thereAreAssetsInTheResponseTheFirstIs(numAssetsInResponse, assetIdFirstAsse
 	}
 	assetUnderScrutiny := indexerSearchForAssetsResponse[0]
 	err = comparisonCheck("first asset's ID", uint64(assetIdFirstAsset), assetUnderScrutiny.Index)
+	return err
+}
+
+// @indexer.applications
+func iUseToSearchForApplicationsWithAndToken(indexer, limit, appId int, token string) error {
+	ic := indexerClients[indexer]
+	var err error
+	response, err = ic.SearchForApplications().
+		ApplicationId(uint64(appId)).
+		Limit(uint64(limit)).
+		Next(token).Do(context.Background())
+	return err
+}
+
+func theParsedResponseShouldEqual(jsonfileName string) error {
+	var err error
+	var responseJson string
+
+	baselinePath := path.Join("./features/resources/", jsonfileName)
+	responseJson = string(json.Encode(response))
+
+	jsonfile, err := os.Open(baselinePath)
+	if err != nil {
+		return err
+	}
+	fileBytes, err := ioutil.ReadAll(jsonfile)
+	if err != nil {
+		return err
+	}
+	_, err = EqualJson(string(fileBytes), responseJson)
+	return err
+}
+
+func iUseToLookupApplicationWith(indexer, appid int) error {
+	ic := indexerClients[indexer]
+	var err error
+	response, err = ic.LookupApplicationByID(uint64(appid)).Do(context.Background())
+	return err
+}
+
+func iUseToSearchForTransactionsWithAppIdAndToken(
+	indexer, limit int, notePrefix, txType, sigType, txId string, round,
+	minRound, maxRound, assetId int, beforeTime, afterTime string,
+	currencyGt, currencyLt int, address, addressRole, excludeCloseTo string, appId int, token string) error {
+	ic := indexerClients[indexer]
+	var err error
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	excludeBool, err := strconv.ParseBool(excludeCloseTo)
+	if err != nil {
+		excludeBool = false
+	}
+	response, err = ic.SearchForTransactions().
+		ApplicationId(uint64(appId)).
+		Limit(uint64(limit)).
+		NotePrefix(notePrefixBytes).
+		TxType(txType).SigType(sigType).
+		TXID(txId).Round(uint64(round)).
+		MinRound(uint64(minRound)).
+		MaxRound(uint64(maxRound)).
+		AssetID(uint64(assetId)).
+		BeforeTimeString(beforeTime).
+		AfterTimeString(afterTime).
+		CurrencyGreaterThan(uint64(currencyGt)).
+		CurrencyLessThan(uint64(currencyLt)).
+		AddressString(address).
+		AddressRole(addressRole).
+		ExcludeCloseTo(excludeBool).
+		NextToken(token).Do(context.Background())
+	return err
+}
+
+func iUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, currencyGreater, currencyLesser int, arg6 string, appId int, token string) error {
+	ic := indexerClients[indexer]
+	var err error
+	response, err = ic.SearchAccounts().
+		AssetID(uint64(assetIndex)).
+		Limit(uint64(limit)).
+		CurrencyGreaterThan(uint64(currencyGreater)).
+		CurrencyLessThan(uint64(currencyLesser)).
+		ApplicationId(uint64(appId)).
+		NextToken(token).Do(context.Background())
 	return err
 }

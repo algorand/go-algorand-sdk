@@ -18,7 +18,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 	jsonFilenames := strings.Split(commaDelimitedFilenames, ",")
 	var bytesArray [][]byte
 	for _, jsonFilename := range jsonFilenames {
-		fullPath := path.Join("./features/unit/", pathToJsons, jsonFilename)
+		fullPath := path.Join(pathToJsons, jsonFilename)
 		jsonfile, err := os.Open(fullPath)
 		if err != nil {
 			return nil, err
@@ -44,7 +44,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 var mockServer *httptest.Server
 var responseRing *ring.Ring
 
-func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
+func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string, status int) error {
 	jsons, err := loadMockJsons(jsonfiles, directory)
 	if err != nil {
 		return err
@@ -56,6 +56,9 @@ func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
 	}
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json := responseRing.Value.([]byte)
+		if status > 0 {
+			w.WriteHeader(status)
+		}
 		_, err = w.Write(json)
 		responseRing = responseRing.Next()
 	}))
@@ -121,4 +124,8 @@ func getSigtypeFromTransaction(transaction models.Transaction) string {
 		return "lsig"
 	}
 	return "unknown sigtype"
+}
+
+func loadResource(filepath string) ([]byte, error) {
+	return ioutil.ReadFile(path.Join("features", "resources", filepath))
 }

@@ -46,6 +46,8 @@ type PendingTransactionInformationParams struct {
 
 // SearchAccountsParams defines parameters for SearchAccounts.
 type SearchAccountsParams struct {
+	// ApplicationId application ID
+	ApplicationId uint64 `url:"application-id,omitempty"`
 
 	// Include accounts holding the specified asset
 	AssetId uint64 `url:"asset-id,omitempty"`
@@ -67,6 +69,9 @@ type SearchAccountsParams struct {
 
 	// Round for results.
 	Round uint64 `url:"round,omitempty"`
+
+	// Include accounts associated with this spending key.
+	AuthAddr string `url:"auth-addr,omitempty"`
 }
 
 // LookupAccountByIDParams defines parameters for LookupAccountByID.
@@ -121,6 +126,9 @@ type LookupAccountTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }
 
 // SearchForAssetsParams defines parameters for SearchForAssets.
@@ -221,10 +229,16 @@ type LookupAssetTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }
 
 // SearchForTransactionsParams defines parameters for SearchForTransactions.
 type SearchForTransactionsParams struct {
+
+	// ApplicationId application ID
+	ApplicationId uint64 `url:"application-id,omitempty"`
 
 	// Specifies a prefix which must be contained in the note field.
 	NotePrefix string `url:"note-prefix,omitempty"`
@@ -277,4 +291,7 @@ type SearchForTransactionsParams struct {
 
 	// Used for pagination.
 	NextToken string `url:"next,omitempty"`
+
+	// Whether to include rekeying transactions
+	RekeyTo bool `url:"rekey-to,omitempty"`
 }

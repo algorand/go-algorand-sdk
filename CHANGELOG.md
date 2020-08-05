@@ -1,3 +1,6 @@
+# 1.5.0
+# Added
+- Support for Applications 
 # 1.4.2
 # Bugfix
 - Fix incorrect `SendRawTransaction` path in API V2 client.

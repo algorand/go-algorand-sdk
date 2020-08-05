@@ -5,17 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/google/go-querystring/query"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/google/go-querystring/query"
 )
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
 var rawRequestPaths = map[string]bool{
 	"/v2/transactions": true,
+	"/v2/teal/compile": true,
+	"/v2/teal/dryrun":  true,
 }
 
 // Header is a struct for custom headers.
@@ -174,7 +177,7 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	return dec.Decode(&response)
 }
 
-// get performs a GET request to the specific path against the server
+// Get performs a GET request to the specific path against the server
 func (client *Client) Get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(ctx, response, path, request, "GET", false /* encodeJSON */, headers)
 }
@@ -190,7 +193,7 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 	return dec.Decode(&response)
 }
 
-// post sends a POST request to the given path with the given request object.
+// Post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
 func (client *Client) Post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {

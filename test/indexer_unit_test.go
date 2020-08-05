@@ -31,7 +31,8 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make any SearchForAssets call$`, weMakeAnySearchForAssetsCall)
 	s.Step(`^the parsed SearchForAssets response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have asset index (\d+)$`, theParsedSearchForAssetsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAssetIndex)
 	s.Step(`^we make a Lookup Asset Balances call against asset index (\d+) with limit <limit> afterAddress "([^"]*)" round (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+)$`, weMakeALookupAssetBalancesCallAgainstAssetIndexWithLimitLimitAfterAddressRoundCurrencyGreaterThanCurrencyLessThan)
-	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime (\d+) afterTime (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseTo)
+	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseTo)
+	s.Step(`^we make a Search Accounts call with assetID (\d+) limit (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) and round (\d+)$`, weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanAndRound)
 	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+)$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndex)
 	s.Step(`^we make a Lookup Block call against round (\d+)$`, weMakeALookupBlockCallAgainstRound)
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with round (\d+)$`, weMakeALookupAccountByIDCallAgainstAccountWithRound)
@@ -41,10 +42,14 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a SearchForAssets call with limit (\d+) creator "([^"]*)" name "([^"]*)" unit "([^"]*)" index (\d+) and afterAsset (\d+)$`, weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndexAndAfterAsset)
 	s.Step(`^mock server recording request paths`, mockServerRecordingRequestPaths)
 	s.Step(`^we make a Lookup Asset Balances call against asset index (\d+) with limit (\d+) afterAddress "([^"]*)" round (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+)$`, weMakeALookupAssetBalancesCallAgainstAssetIndexWithLimitAfterAddressRoundCurrencyGreaterThanCurrencyLessThan)
-	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseTo)
-	s.Step(`^we make a Search Accounts call with assetID (\d+) limit (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) and round (\d+)$`, weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanAndRound)
 	s.Step(`^we make a Search For Transactions call with account "([^"]*)" NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseTo)
 	s.Step(`^we make a SearchForAssets call with limit (\d+) creator "([^"]*)" name "([^"]*)" unit "([^"]*)" index (\d+)$`, weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndex)
+	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) rekeyTo "([^"]*)"$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexRekeyTo)
+	s.Step(`^we make a Search Accounts call with assetID (\d+) limit (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) round (\d+) and authenticating address "([^"]*)"$`, weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanRoundAndAuthenticatingAddress)
+	s.Step(`^we make a Search For Transactions call with account "([^"]*)" NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" rekeyTo "([^"]*)"$`, weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseToRekeyTo)
+	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have authorizing address "([^"]*)"$`, theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAuthorizingAddress)
+	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have rekey-to "([^"]*)"$`, theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveRekeyto)
+	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" RekeyTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -239,6 +244,21 @@ func theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLen
 	return nil
 }
 
+func theParsedSearchAccountsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveAuthorizingAddress(round, length, idx int, address string) error {
+	if responseValidRound != uint64(round) {
+		return fmt.Errorf("response round %d did not match expected round %d", responseValidRound, uint64(round))
+	}
+	realLen := len(searchAccountsResponse)
+	if realLen != length {
+		return fmt.Errorf("response length %d did not match expected length %d", realLen, length)
+	}
+	scrutinizedElement := searchAccountsResponse[idx]
+	if scrutinizedElement.AuthAddr != address {
+		return fmt.Errorf("response auth-address %s did not match expected auth-address %s", scrutinizedElement.AuthAddr, address)
+	}
+	return nil
+}
+
 var searchTransactionsResponse []models.Transaction
 
 func weMakeAnySearchForTransactionsCall() error {
@@ -268,6 +288,21 @@ func theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShould
 	return nil
 }
 
+func theParsedSearchForTransactionsResponseShouldBeValidOnRoundAndTheArrayShouldBeOfLenAndTheElementAtIndexShouldHaveRekeyto(round, length, idx int, rekeyTo string) error {
+	if responseValidRound != uint64(round) {
+		return fmt.Errorf("response round %d did not match expected round %d", responseValidRound, uint64(round))
+	}
+	realLen := len(searchTransactionsResponse)
+	if realLen != length {
+		return fmt.Errorf("response length %d did not match expected length %d", realLen, length)
+	}
+	scrutinizedElement := searchTransactionsResponse[idx]
+	if scrutinizedElement.RekeyTo != rekeyTo {
+		return fmt.Errorf("response rekey-to %s did not match expected rekey-to %s", scrutinizedElement.RekeyTo, rekeyTo)
+	}
+	return nil
+}
+
 var searchAssetsResponse []models.Asset
 
 func weMakeAnySearchForAssetsCall() error {
@@ -275,7 +310,11 @@ func weMakeAnySearchForAssetsCall() error {
 	if err != nil {
 		return err
 	}
-	responseValidRound, searchAssetsResponse, globalErrForExamination = indexerClient.SearchForAssets().Do(context.Background())
+	var resp models.AssetsResponse
+	resp, globalErrForExamination = indexerClient.SearchForAssets().Do(context.Background())
+	responseValidRound = resp.CurrentRound
+	searchAssetsResponse = resp.Assets
+
 	return nil
 }
 
@@ -317,6 +356,21 @@ func weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigT
 	return nil
 }
 
+func weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo(assetIndex int, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser int, address, addressRole, excludeCloseTo, rekeyTo string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	excludeCloseToBool := excludeCloseTo == "true"
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	rekeyToBool := rekeyTo == "true"
+	_, globalErrForExamination = indexerClient.LookupAssetTransactions(uint64(assetIndex)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).RekeyTo(rekeyToBool).Do(context.Background())
+	return nil
+}
+
 func weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndex(account, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser, assetIndex int) error {
 	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
 	if err != nil {
@@ -327,6 +381,20 @@ func weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTy
 		return err
 	}
 	_, globalErrForExamination = indexerClient.LookupAccountTransactions(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexRekeyTo(account, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser, assetIndex int, rekeyTo string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	rekeyToBool := rekeyTo == "true"
+	_, globalErrForExamination = indexerClient.LookupAccountTransactions(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).RekeyTo(rekeyToBool).Do(context.Background())
 	return nil
 }
 
@@ -366,6 +434,15 @@ func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessTha
 	return nil
 }
 
+func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanRoundAndAuthenticatingAddress(assetIndex, limit, currencyGreater, currencyLesser, round int, authAddress string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, globalErrForExamination = indexerClient.SearchAccounts().AssetID(uint64(assetIndex)).Limit(uint64(limit)).CurrencyLessThan(uint64(currencyLesser)).CurrencyGreaterThan(uint64(currencyGreater)).Round(uint64(round)).AuthAddress(authAddress).Do(context.Background())
+	return nil
+}
+
 func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseTo(account, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser, assetIndex int, addressRole, excludeCloseTo string) error {
 	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
 	if err != nil {
@@ -380,12 +457,27 @@ func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRound
 	return nil
 }
 
+func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseToRekeyTo(account, notePrefix, txType, sigType, txid string, round, minRound, maxRound, limit int, beforeTime, afterTime string, currencyGreater, currencyLesser, assetIndex int, addressRole, excludeCloseTo, rekeyTo string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	excludeCloseToBool := excludeCloseTo == "true"
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	rekeyToBool := rekeyTo == "true"
+	_, globalErrForExamination = indexerClient.SearchForTransactions().AddressString(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).RekeyTo(rekeyToBool).Do(context.Background())
+	return nil
+}
+
 func weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndexAndAfterAsset(limit int, creator, name, unit string, assetIndex, _ int) error {
 	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
 	}
-	_, _, globalErrForExamination = indexerClient.SearchForAssets().AssetID(uint64(assetIndex)).Limit(uint64(limit)).Creator(creator).Name(name).Unit(unit).Do(context.Background())
+	_, globalErrForExamination = indexerClient.SearchForAssets().AssetID(uint64(assetIndex)).Limit(uint64(limit)).Creator(creator).Name(name).Unit(unit).Do(context.Background())
 	return nil
 }
 

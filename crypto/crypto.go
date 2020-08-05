@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"fmt"
+
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -28,6 +29,9 @@ var bytesPrefix = []byte("MX")
 // programPrefix is prepended to a logic program when computing a hash
 var programPrefix = []byte("Program")
 
+// programDataPrefix is prepended to teal sign data
+var programDataPrefix = []byte("ProgData")
+
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
 func RandomBytes(s []byte) {
@@ -37,8 +41,23 @@ func RandomBytes(s []byte) {
 	}
 }
 
+// GenerateAddressFromSK take a secret key and returns the corresponding Address
+func GenerateAddressFromSK(sk []byte) (types.Address, error) {
+	edsk := ed25519.PrivateKey(sk)
+
+	var a types.Address
+	pk := edsk.Public()
+	n := copy(a[:], []byte(pk.(ed25519.PublicKey)))
+	if n != ed25519.PublicKeySize {
+		return [32]byte{}, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
+	}
+	return a, nil
+}
+
 // SignTransaction accepts a private key and a transaction, and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
+// If the SK's corresponding address is different than the txn sender's, the SK's
+// corresponding address will be assigned as AuthAddr
 func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	s, txid, err := rawSignTransaction(sk, tx)
 	if err != nil {
@@ -48,6 +67,15 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 	stx := types.SignedTxn{
 		Sig: s,
 		Txn: tx,
+	}
+
+	a, err := GenerateAddressFromSK(sk)
+	if err != nil {
+		return
+	}
+
+	if stx.Txn.Sender != a {
+		stx.AuthAddr = a
 	}
 
 	// Encode the SignedTxn
@@ -560,4 +588,25 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 	lsig.Msig.Subsigs[idx] = msig.Subsigs[idx]
 
 	return nil
+}
+
+// TealSign creates a signature compatible with ed25519verify opcode from contract address
+func TealSign(sk ed25519.PrivateKey, data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
+	msgParts := [][]byte{programDataPrefix, contractAddress[:], data}
+	toBeSigned := bytes.Join(msgParts, nil)
+
+	signature := ed25519.Sign(sk, toBeSigned)
+	// Copy the resulting signature into a Signature, and check that it's
+	// the expected length
+	n := copy(rawSig[:], signature)
+	if n != len(rawSig) {
+		err = errInvalidSignatureReturned
+	}
+	return
+}
+
+// TealSignFromProgram creates a signature compatible with ed25519verify opcode from raw program bytes
+func TealSignFromProgram(sk ed25519.PrivateKey, data []byte, program []byte) (rawSig types.Signature, err error) {
+	addr := AddressFromProgram(program)
+	return TealSign(sk, data, addr)
 }
