@@ -3,21 +3,60 @@ package test
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/nsf/jsondiff"
+
+	sdk_json "github.com/algorand/go-algorand-sdk/encoding/json"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 )
+
+func VerifyResponse(expectedFile string, actual string) error {
+	jsonfile, err := os.Open(expectedFile)
+	if err != nil {
+		return err
+	}
+	fileBytes, err := ioutil.ReadAll(jsonfile)
+	if err != nil {
+		return err
+	}
+
+	var expectedString string
+	// No processing needed for json
+	if strings.HasSuffix(expectedFile, ".json") {
+		expectedString = string(fileBytes)
+	}
+	// Convert message pack to json for comparison
+	if strings.HasSuffix(expectedFile, ".base64") {
+		data, err := base64.StdEncoding.DecodeString(string(fileBytes))
+		if err != nil {
+			return fmt.Errorf("failed to decode '%s' from base64: %v", expectedFile, err)
+		}
+		generic := make(map[string]interface{})
+		err = msgpack.Decode(data, generic)
+		if err != nil {
+			return fmt.Errorf("failed to decode '%s' from message pack: %v", expectedFile, err)
+		}
+		expectedString = string(sdk_json.Encode(generic))
+	}
+
+	return EqualJson(expectedString, actual)
+}
 
 // EqualJson2 compares two json strings.
 // returns true if considered equal, false otherwise.
 // The error returns the difference.
 // For reference: j1 is the baseline, j2 is the test
-func EqualJson2(j1, j2 string) (ans bool, err error) {
+func EqualJson2(j1, j2 string) (err error) {
 	var expected map[string]interface{}
 	json.Unmarshal([]byte(j1), &expected)
 
@@ -31,7 +70,7 @@ func EqualJson2(j1, j2 string) (ans bool, err error) {
 		log.Printf("expected:\n%s", j1)
 		log.Printf("actual:\n%s", j2)
 	}
-	return err != nil, err
+	return err
 }
 
 type ValueType int
@@ -65,6 +104,28 @@ func getType(val interface{}) ValueType {
 	default:
 		return VALUE
 	}
+}
+
+// binaryOrStringEqual checks combinations of string / base64 decoded strings
+// to see if the inputs are equal.
+// The decoding process doesn't seem to distinguish between string and binary, but the encoding process
+// does. So sometimes the string will be base64 encoded and need to compare against the decoded string
+// value.
+func binaryOrStringEqual(s1, s2 string) bool {
+	if s1 == s2 {
+		return true
+	}
+	if val, err := base64.StdEncoding.DecodeString(s1); err == nil {
+		if string(val) == s2 {
+			return true
+		}
+	}
+	if val, err := base64.StdEncoding.DecodeString(s2); err == nil {
+		if string(val) == s1 {
+			return true
+		}
+	}
+	return false
 }
 
 func recursiveCompare(field string, expected, actual interface{}) error {
@@ -166,7 +227,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 		actualNum := float64(0)
 		if actualType != MISSING {
-			actualNum = expected.(float64)
+			actualNum = actual.(float64)
 		}
 		//log.Printf("%s - number %f == %f\n", field, expectedNum, actualNum)
 		if expectedNum != actualNum {
@@ -181,7 +242,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 		actualBool := false
 		if actualType != MISSING {
-			actualBool = expected.(bool)
+			actualBool = actual.(bool)
 		}
 		//log.Printf("%s - bool %t == %t\n", field, expectedBool, actualBool)
 		if expectedBool != actualBool {
@@ -197,10 +258,11 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 		actualStr := ""
 		if actualType != MISSING {
-			actualStr = expected.(string)
+			actualStr = actual.(string)
 		}
+
 		//log.Printf("%s - string %s == %s\n", field, expectedStr, actualStr)
-		if expectedStr != actualStr {
+		if ! binaryOrStringEqual(expectedStr, actualStr) {
 			return fmt.Errorf("failed to match field %s, %s != %s", field, expectedStr, actualStr)
 		}
 
@@ -215,18 +277,18 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 // returns true if considered equal, false otherwise.
 // The error returns the difference.
 // For reference: j1 is the baseline, j2 is the test
-func EqualJson(j1, j2 string) (ans bool, err error) {
+func EqualJson(j1, j2 string) (err error) {
 
 	// Sorting the elements inside json arrays is important to avoid false
 	// negatives due to element order mismatch.
 	j1, err = SortJsonArrays(j1)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	j2, err = SortJsonArrays(j2)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// This func uses jsondiff.
@@ -241,8 +303,10 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 	d, str := jsondiff.Compare([]byte(j1), []byte(j2), &options)
 	// If fully match, return true
 	if d == jsondiff.FullMatch {
-		return true, nil
+		return nil
 	}
+
+	differRegex := regexp.MustCompile(`"([^"]*)": ___DIFFER___"([^"]*)" -> "([^"]*)"`)
 
 	// Check the difference, and decide if it is still accepted as "equal"
 	// Scan line by line, and examine the difference
@@ -271,27 +335,22 @@ func EqualJson(j1, j2 string) (ans bool, err error) {
 			}
 			// Any other ommision will not be considered as equal
 			err = fmt.Errorf(str)
-			return false, err
+			return err
 		}
 		// If the test has properties not found in the baseline, then they are not equal
 		if strings.Contains(line, "___ADDED___") {
 			err = fmt.Errorf(str)
-			return false, err
+			return err
 		}
 		// If the properties are different, they they are not equal
 		if strings.Contains(line, "___DIFFER___") {
-			err = fmt.Errorf(str)
-			return false, err
+			matches := differRegex.FindStringSubmatch(line)
+			if ! binaryOrStringEqual(matches[2], matches[3]) {
+				return fmt.Errorf(str)
+			}
 		}
 	}
-	// Extra layer of check. This is not expected to be true.
-	// If only difference is removed with false value property, then the difference
-	// will be qualified as SupersetMatch. If not, should be be considered equal.
-	if d != jsondiff.SupersetMatch {
-		err = fmt.Errorf(str)
-		return false, err
-	}
-	return true, nil
+	return nil
 }
 
 // SortJsonArrays sorts the elements inside json arrays.

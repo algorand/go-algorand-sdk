@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strconv"
 	"time"
@@ -552,22 +550,12 @@ func iUseToSearchForApplicationsWithAndToken(indexer, limit, appId int, token st
 }
 
 func theParsedResponseShouldEqual(jsonfileName string) error {
-	var err error
 	var responseJson string
 
 	baselinePath := path.Join("./features/resources/", jsonfileName)
 	responseJson = string(json.Encode(response))
 
-	jsonfile, err := os.Open(baselinePath)
-	if err != nil {
-		return err
-	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
-	if err != nil {
-		return err
-	}
-	_, err = EqualJson2(string(fileBytes), responseJson)
-	return err
+	return VerifyResponse(baselinePath, responseJson)
 }
 
 func iUseToLookupApplicationWith(indexer, appid int) error {

@@ -13,7 +13,7 @@ build: generate
 
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey" --test.v .
+	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack" --test.v .
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
