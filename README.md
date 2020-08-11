@@ -378,6 +378,7 @@ func main() {
 		if wallet.Name == "testwallet" {
 			fmt.Printf("found wallet '%s' with ID: %s\n", wallet.Name, wallet.ID)
 			exampleWalletID = wallet.ID
+			break
 		}
 	}
 	// Get a wallet handle
