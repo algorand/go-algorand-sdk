@@ -16,8 +16,8 @@ func (c *Client) get(ctx context.Context, response interface{}, path string, req
 }
 
 // getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
-func (c *Client) getMsgpack(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
-	return (*common.Client)(c).GetRawMsgpack(ctx, response, path, request, headers)
+func (c *Client) getMsgpack(ctx context.Context, body interface{}, path string, request interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).GetRawMsgpack(ctx, body, path, request, headers)
 }
 
 // post sends a POST request to the given path with the given request object.
@@ -40,6 +40,10 @@ func (c *Client) AccountInformation(account string) *AccountInformation {
 
 func (c *Client) Block(round uint64) *Block {
 	return &Block{c: c, round: round}
+}
+
+func (c *Client) BlockRaw(round uint64) *BlockRaw {
+	return &BlockRaw{c: c, round: round}
 }
 
 func (c *Client) HealthCheck() *HealthCheck {

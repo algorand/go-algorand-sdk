@@ -103,34 +103,34 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client *Client) submitFormRaw(ctx context.Context, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
+func (client *Client) SubmitFormRaw(ctx context.Context, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 	queryURL.Path += path
 
 	var req *http.Request
-	var body io.Reader
-	if request != nil {
+	var bodyReader io.Reader
+	if body != nil {
 		if requestMethod == "POST" && rawRequestPaths[path] {
-			reqBytes, ok := request.([]byte)
+			reqBytes, ok := body.([]byte)
 			if !ok {
-				return nil, fmt.Errorf("couldn't decode raw request as bytes")
+				return nil, fmt.Errorf("couldn't decode raw body as bytes")
 			}
-			body = bytes.NewBuffer(reqBytes)
+			bodyReader = bytes.NewBuffer(reqBytes)
 		} else {
-			v, err := query.Values(request)
+			v, err := query.Values(body)
 			if err != nil {
 				return nil, err
 			}
 
 			queryURL.RawQuery = mergeRawQueries(queryURL.RawQuery, v.Encode())
 			if encodeJSON {
-				jsonValue, _ := json.Marshal(request)
-				body = bytes.NewBuffer(jsonValue)
+				jsonValue, _ := json.Marshal(body)
+				bodyReader = bytes.NewBuffer(jsonValue)
 			}
 		}
 	}
 
-	req, err = http.NewRequest(requestMethod, queryURL.String(), body)
+	req, err = http.NewRequest(requestMethod, queryURL.String(), bodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, request in
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
 	}
-	// Add the request headers.
+	// Add the body headers.
 	for _, header := range headers {
 		req.Header.Add(header.Key, header.Value)
 	}
@@ -166,8 +166,8 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, request in
 	return resp, nil
 }
 
-func (client *Client) submitForm(ctx context.Context, response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
-	resp, err := client.submitFormRaw(ctx, path, request, requestMethod, encodeJSON, headers)
+func (client *Client) submitForm(ctx context.Context, response interface{}, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
+	resp, err := client.SubmitFormRaw(ctx, path, body, requestMethod, encodeJSON, headers)
 	if err != nil {
 		return err
 	}
@@ -178,24 +178,25 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 }
 
 // Get performs a GET request to the specific path against the server
-func (client *Client) Get(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(ctx, response, path, request, "GET", false /* encodeJSON */, headers)
+func (client *Client) Get(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
+	return client.submitForm(ctx, response, path, body, "GET", false /* encodeJSON */, headers)
 }
 
-func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
-	resp, err := client.submitFormRaw(ctx, path, request, "GET", false /* encodeJSON */, headers)
+func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
+	resp, err := client.SubmitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
 	if err != nil {
 		return err
 	}
 
 	defer resp.Body.Close()
+
 	dec := msgpack.NewDecoder(resp.Body)
 	return dec.Decode(&response)
 }
 
-// Post sends a POST request to the given path with the given request object.
-// No query parameters will be sent if request is nil.
+// Post sends a POST request to the given path with the given body object.
+// No query parameters will be sent if body is nil.
 // response must be a pointer to an object as post writes the response there.
-func (client *Client) Post(ctx context.Context, response interface{}, path string, request interface{}, headers []*Header) error {
-	return client.submitForm(ctx, response, path, request, "POST", true /* encodeJSON */, headers)
+func (client *Client) Post(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
+	return client.submitForm(ctx, response, path, body, "POST", true /* encodeJSON */, headers)
 }
