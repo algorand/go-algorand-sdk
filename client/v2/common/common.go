@@ -141,7 +141,7 @@ func (client *Client) SubmitFormRaw(ctx context.Context, path string, body inter
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
 	}
-	// Add the body headers.
+	// Add the request headers.
 	for _, header := range headers {
 		req.Header.Add(header.Key, header.Value)
 	}
