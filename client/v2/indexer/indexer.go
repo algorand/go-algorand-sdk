@@ -11,8 +11,8 @@ const indexerAuthHeader = "X-Indexer-API-Token"
 type Client common.Client
 
 // get performs a GET request to the specific path against the server
-func (c *Client) get(ctx context.Context, response interface{}, path string, request interface{}, headers []*common.Header) error {
-	return (*common.Client)(c).Get(ctx, response, path, request, headers)
+func (c *Client) get(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).Get(ctx, response, path, body, headers)
 }
 
 // MakeClient is the factory for constructing an IndexerClient for a given endpoint.

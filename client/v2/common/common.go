@@ -182,6 +182,17 @@ func (client *Client) Get(ctx context.Context, response interface{}, path string
 	return client.submitForm(ctx, response, path, body, "GET", false /* encodeJSON */, headers)
 }
 
+func (client *Client) GetRaw(ctx context.Context, path string, body interface{}, headers []*Header) (response []byte, err error) {
+	var resp *http.Response
+	resp, err = client.SubmitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
+}
+
 func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
 	resp, err := client.SubmitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
 	if err != nil {
