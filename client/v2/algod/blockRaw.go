@@ -16,7 +16,6 @@ type BlockRaw struct {
 	p     models.GetBlockParams
 }
 
-/*
 func (s *BlockRaw) Do(ctx context.Context, headers ...*common.Header) (result []byte, err error) {
 	s.p.Format = "msgpack"
 	err = s.c.getMsgpack(ctx, &result, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
@@ -25,8 +24,8 @@ func (s *BlockRaw) Do(ctx context.Context, headers ...*common.Header) (result []
 	}
 	return
 }
-*/
 
+/*
 func (s *BlockRaw) Do(ctx context.Context, headers ...*common.Header) (result []byte, err error) {
 	s.p.Format = "msgpack"
 	common := common.Client(*s.c)
@@ -47,3 +46,4 @@ func (s *BlockRaw) Do(ctx context.Context, headers ...*common.Header) (result []
 	response.Body.Close()
 	return
 }
+*/
