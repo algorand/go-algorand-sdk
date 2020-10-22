@@ -102,8 +102,8 @@ func mergeRawQueries(q1, q2 string) string {
 	return q1 + "&" + q2
 }
 
-// submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
-func (client *Client) SubmitFormRaw(ctx context.Context, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
+// submitFormRaw is a helper used for submitting (ex.) GETs and POSTs to the server
+func (client *Client) submitFormRaw(ctx context.Context, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 	queryURL.Path += path
 
@@ -167,7 +167,7 @@ func (client *Client) SubmitFormRaw(ctx context.Context, path string, body inter
 }
 
 func (client *Client) submitForm(ctx context.Context, response interface{}, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
-	resp, err := client.SubmitFormRaw(ctx, path, body, requestMethod, encodeJSON, headers)
+	resp, err := client.submitFormRaw(ctx, path, body, requestMethod, encodeJSON, headers)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (client *Client) Get(ctx context.Context, response interface{}, path string
 // GetRaw performs a GET request to the specific path against the server and returns the raw body bytes.
 func (client *Client) GetRaw(ctx context.Context, path string, body interface{}, headers []*Header) (response []byte, err error) {
 	var resp *http.Response
-	resp, err = client.SubmitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
+	resp, err = client.submitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (client *Client) GetRaw(ctx context.Context, path string, body interface{},
 
 // GetRawMsgpack performs a GET request to the specific path against the server and returns the decoded messagepack response.
 func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
-	resp, err := client.SubmitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
+	resp, err := client.submitFormRaw(ctx, path, body, "GET", false /* encodeJSON */, headers)
 	if err != nil {
 		return err
 	}
