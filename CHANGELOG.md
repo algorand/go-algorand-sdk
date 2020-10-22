@@ -1,3 +1,6 @@
+# 1.5.1
+# Added
+- Add `BlockRaw` method to algod API V2 client.
 # 1.5.0
 # Added
 - Support for Applications 
