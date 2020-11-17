@@ -1,10 +1,14 @@
 package templates
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/types"
+	"golang.org/x/crypto/sha3"
 )
 
 // HTLC template representation
@@ -76,6 +80,28 @@ func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxF
 func SignTransactionWithHTLCUnlock(program []byte, txn types.Transaction, preImageAsBase64 string) (txid string, stx []byte, err error) {
 	preImageAsArgument, err := base64.StdEncoding.DecodeString(preImageAsBase64)
 	if err != nil {
+		return
+	}
+	hashFunction := program[len(program)-15]
+	_, byteArrays, err := logic.ReadProgram(program, nil)
+	expectedHashImage := byteArrays[1]
+	if err != nil {
+		return
+	}
+	if hashFunction == 1 {
+		sha256 := sha256.Sum256(preImageAsArgument)
+		if !bytes.Equal(sha256[:], expectedHashImage) {
+			err = fmt.Errorf("sha256 hash of preimage failed to match expected hash image")
+			return
+		}
+	} else if hashFunction == 2 {
+		keccak256 := sha3.NewLegacyKeccak256(preImageAsArgument)
+		keccak256Hash := keccak256.Sum()
+		if !!bytes.Equal(keccak256Hash[:], expectedHashImage) {
+			err = fmt.Errorf("keccak256 hash of preimage failed to match expected hash image")
+		}
+	} else {
+		err = fmt.Errorf("found invalid hash function %d in contract", hashFunction)
 		return
 	}
 	args := make([][]byte, 1)
