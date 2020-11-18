@@ -40,7 +40,7 @@ func TestSplit(t *testing.T) {
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
-func TestHTLC(t *testing.T) {
+func TestHTLCSha256(t *testing.T) {
 	// Inputs
 	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
 	receiver := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
@@ -70,6 +70,39 @@ func TestHTLC(t *testing.T) {
 	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)
 	require.NoError(t, err)
 	goldenStx := "gqRsc2lngqNhcmeRxAhwcmVpbWFnZaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgEHZhE08h/HwCIj1Qq56zYAvD/8NxJCOh5Hux+anb9V8g/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItASkSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEIChyiO42rPQZmq42un3UDl1H3kZii2K4CElLvSrIU+oqpHR5cGWjcGF5"
+	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
+}
+
+func TestHTLCKeccak256(t *testing.T) {
+	// Inputs
+	owner := "726KBOYUJJNE5J5UHCSGQGWIBZWKCBN4WYD7YVSTEXEVNFPWUIJ7TAEOPM"
+	receiver := "42NJMHTPFVPXVSDGA6JGKUV6TARV5UZTMPFIREMLXHETRKIVW34QFSDFRE"
+	hashFn := "keccak256"
+	hashImg := "D7d4MrvBrOSyNSmUs0kzucuJ+/9DbLkA6OOOocywoAc="
+	expiryRound := uint64(600000)
+	maxFee := uint64(1000)
+	c, err := MakeHTLC(owner, receiver, hashFn, hashImg, expiryRound, maxFee)
+	// Outputs
+	require.NoError(t, err)
+	goldenProgram := "ASAE6AcBAMDPJCYDIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5IA+3eDK7wazksjUplLNJM7nLifv/Q2y5AOjjjqHMsKAHIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMQEiDjEQIxIQMQcyAxIQMQgkEhAxCSgSLQIpEhAxCSoSMQIlDRAREA=="
+	require.Equal(t, goldenProgram, base64.StdEncoding.EncodeToString(c.GetProgram()))
+	goldenAddress := "3MJ6JY3P6AU4R6I2RASYSAOPNI3QMWPZ7HYXJRNRGBIAXCHAY7QZRBH5PQ"
+	require.Equal(t, goldenAddress, c.GetAddress())
+	genesisHash := "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk="
+	genesisBytes, _ := base64.StdEncoding.DecodeString(genesisHash)
+	params := types.SuggestedParams{
+		Fee:             0,
+		FirstRoundValid: 1,
+		LastRoundValid:  100,
+		GenesisID:       "",
+		GenesisHash:     genesisBytes,
+	}
+	txn, err := future.MakePaymentTxn(goldenAddress, receiver, 0, nil, receiver, params)
+	require.NoError(t, err)
+	preImageAsBase64 := "cHJlaW1hZ2U="
+	_, stx, err := SignTransactionWithHTLCUnlock(c.GetProgram(), txn, preImageAsBase64)
+	require.NoError(t, err)
+	goldenStx := "gqRsc2lngqNhcmeRxAhwcmVpbWFnZaFsxJcBIAToBwEAwM8kJgMg5pqWHm8tX3rIZgeSZVK+mCNe0zNjyoiRi7nJOKkVtvkgD7d4MrvBrOSyNSmUs0kzucuJ+/9DbLkA6OOOocywoAcg/ryguxRKWk6ntDikaBrIDmyhBby2B/xWUyXJVpX2ohMxASIOMRAjEhAxBzIDEhAxCCQSEDEJKBItAikSEDEJKhIxAiUNEBEQo3R4boelY2xvc2XEIOaalh5vLV96yGYHkmVSvpgjXtMzY8qIkYu5yTipFbb5o2ZlZc0D6KJmdgGiZ2jEIH+DsWV/8fxTuS3BgUih1l38LUsfo9Z3KErd0gASbZBpomx2ZKNzbmTEINsT5ONv8CnI+RqIJYkBz2o3Bln5+fF0xbEwUAuI4MfhpHR5cGWjcGF5"
 	require.Equal(t, goldenStx, base64.StdEncoding.EncodeToString(stx))
 }
 
