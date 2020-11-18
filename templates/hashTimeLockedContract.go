@@ -97,7 +97,7 @@ func SignTransactionWithHTLCUnlock(program []byte, txn types.Transaction, preIma
 	} else if hashFunction == 2 {
 		keccak256 := sha3.NewLegacyKeccak256()
 		keccak256Hash := keccak256.Sum(preImageAsArgument)
-		if !!bytes.Equal(keccak256Hash[:], expectedHashImage) {
+		if !bytes.Equal(keccak256Hash[:], expectedHashImage) {
 			err = fmt.Errorf("keccak256 hash of preimage failed to match expected hash image")
 		}
 	} else {
