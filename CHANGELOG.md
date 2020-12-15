@@ -1,3 +1,9 @@
+# 1.5.1
+# Added
+- Add `BlockRaw` method to algod API V2 client.
+# 1.5.0
+# Added
+- Support for Applications 
 # 1.4.2
 # Bugfix
 - Fix incorrect `SendRawTransaction` path in API V2 client.

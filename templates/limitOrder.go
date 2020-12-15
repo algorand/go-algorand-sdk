@@ -23,7 +23,7 @@ type LimitOrder struct {
 // the first payment sends money (Algos) from contract to the recipient (we'll call him Buyer), closing the rest of the account to Owner
 // the second payment sends money (the asset) from Buyer to the Owner
 // these transactions will be rejected if they do not meet the restrictions set by the contract
-func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount, microAlgoAmount uint64, contract, secretKey []byte, params types.SuggestedParams) ([]byte, error) {
+func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, microAlgoAmount uint64, contract, secretKey []byte, params types.SuggestedParams) ([]byte, error) {
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
 	contractAddress := crypto.AddressFromProgram(contract)
@@ -31,7 +31,7 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount, microAlgoAmount uint6
 	if err != nil {
 		return nil, err
 	}
-	assetsForAlgos, err := future.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, assetAmount, nil, params, lo.owner, lo.assetID)
+	assetsForAlgos, err := future.MakeAssetTransferTxn(buyerAddress.String(), lo.owner, assetAmount, nil, params, "", lo.assetID)
 	if err != nil {
 		return nil, err
 	}
