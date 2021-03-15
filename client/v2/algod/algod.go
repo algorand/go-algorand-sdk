@@ -91,6 +91,10 @@ func (c *Client) Versions() *Versions {
 	return &Versions{c: c}
 }
 
+func (c *Client) GetGenesis() *GetGenesis {
+	return &GetGenesis{c: c}
+}
+
 func (c *Client) GetProof(round uint64, txid string) *GetProof {
 	return &GetProof{c: c, round: round, txid: txid}
 }
