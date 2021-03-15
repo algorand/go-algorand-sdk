@@ -1,18 +1,17 @@
-package algod;
+package algod
 
 import (
-  "context"
+	"context"
 
-  "github.com/algorand/go-algorand-sdk/client/v2/common"
-  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 type GetGenesis struct {
-  c *Client
+	c *Client
 }
 
- func (s *GetGenesis) Do(ctx context.Context, headers ...*common.Header) (response string, err error) {
-  err = s.c.get(ctx, &response, "/genesis", nil, headers)
-  return
+func (s *GetGenesis) Do(ctx context.Context, headers ...*common.Header) (response string, err error) {
+	err = s.c.get(ctx, &response, "/genesis", nil, headers)
+	return
 }
-

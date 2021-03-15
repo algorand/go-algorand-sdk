@@ -11,4 +11,3 @@ func (c *Client) LookupApplicationByID(applicationId uint64) *LookupApplicationB
 func (c *Client) SearchForApplications() *SearchForApplications {
 	return &SearchForApplications{c: c}
 }
-
