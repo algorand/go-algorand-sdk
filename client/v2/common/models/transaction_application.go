@@ -31,11 +31,11 @@ type TransactionApplication struct {
 	// ForeignApps (apfa) Lists the applications in addition to the application-id
 	// whose global states may be accessed by this application's approval-program and
 	// clear-state-program. The access is read-only.
-	ForeignApps []integer `json:"foreign-apps,omitempty"`
+	ForeignApps []uint64 `json:"foreign-apps,omitempty"`
 
 	// ForeignAssets (apas) lists the assets whose parameters may be accessed by this
 	// application's ApprovalProgram and ClearStateProgram. The access is read-only.
-	ForeignAssets []integer `json:"foreign-assets,omitempty"`
+	ForeignAssets []uint64 `json:"foreign-assets,omitempty"`
 
 	// GlobalStateSchema represents a (apls) local-state or (apgs) global-state schema.
 	// These schemas determine how much storage may be used in a local-state or
