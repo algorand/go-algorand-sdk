@@ -184,6 +184,10 @@ type SuggestedParams struct {
 
 	// FlatFee indicates whether the passed fee is per-byte or per-transaction
 	FlatFee bool
+
+	// The minimum transaction fee (not per byte) required for the
+	// txn to validate for the current network protocol.
+	MinFee uint64
 }
 
 // AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction

@@ -109,7 +109,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 				GenesisID:        sParams.GenesisID,
 				Genesishash:      sParams.GenesisHash,
 				LastRound:        uint64(sParams.FirstRoundValid),
-				MinFee:           81560,
+				MinFee:           sParams.MinFee,
 			}
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())

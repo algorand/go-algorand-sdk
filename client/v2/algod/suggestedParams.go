@@ -21,6 +21,7 @@ func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (pa
 		FirstRoundValid:  types.Round(response.LastRound),
 		LastRoundValid:   types.Round(response.LastRound + 1000),
 		ConsensusVersion: response.ConsensusVersion,
+		MinFee:           response.MinFee,
 	}
 	return
 }
