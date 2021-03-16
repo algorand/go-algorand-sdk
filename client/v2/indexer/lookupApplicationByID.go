@@ -10,10 +10,10 @@ import (
 
 type lookupApplicationByIDParams struct {
 
-	// IncludeAll include all items including closed accounts, deleted applications,
+	// includeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
-	IncludeAll bool `url:"include-all,omitempty"`
+	includeAll bool `url:"include-all,omitempty"`
 }
 
 type LookupApplicationByID struct {
@@ -28,7 +28,7 @@ type LookupApplicationByID struct {
 // destroyed assets, opted-out asset holdings, and closed-out application
 // localstates.
 func (s *LookupApplicationByID) IncludeAll(includeAll bool) *LookupApplicationByID {
-	s.p.IncludeAll = includeAll
+	s.p.includeAll = includeAll
 	return s
 }
 

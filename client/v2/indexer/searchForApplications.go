@@ -9,20 +9,20 @@ import (
 
 type searchForApplicationsParams struct {
 
-	// ApplicationId application ID
-	ApplicationId uint64 `url:"application-id,omitempty"`
+	// applicationId application ID
+	applicationId uint64 `url:"application-id,omitempty"`
 
-	// IncludeAll include all items including closed accounts, deleted applications,
+	// includeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
-	IncludeAll bool `url:"include-all,omitempty"`
+	includeAll bool `url:"include-all,omitempty"`
 
-	// Limit maximum number of results to return.
-	Limit uint64 `url:"limit,omitempty"`
+	// limit maximum number of results to return.
+	limit uint64 `url:"limit,omitempty"`
 
-	// Next the next page of results. Use the next token provided by the previous
+	// next the next page of results. Use the next token provided by the previous
 	// results.
-	Next string `url:"next,omitempty"`
+	next string `url:"next,omitempty"`
 }
 
 type SearchForApplications struct {
@@ -33,7 +33,7 @@ type SearchForApplications struct {
 
 // ApplicationId application ID
 func (s *SearchForApplications) ApplicationId(applicationId uint64) *SearchForApplications {
-	s.p.ApplicationId = applicationId
+	s.p.applicationId = applicationId
 	return s
 }
 
@@ -41,20 +41,20 @@ func (s *SearchForApplications) ApplicationId(applicationId uint64) *SearchForAp
 // destroyed assets, opted-out asset holdings, and closed-out application
 // localstates.
 func (s *SearchForApplications) IncludeAll(includeAll bool) *SearchForApplications {
-	s.p.IncludeAll = includeAll
+	s.p.includeAll = includeAll
 	return s
 }
 
 // Limit maximum number of results to return.
 func (s *SearchForApplications) Limit(limit uint64) *SearchForApplications {
-	s.p.Limit = limit
+	s.p.limit = limit
 	return s
 }
 
 // Next the next page of results. Use the next token provided by the previous
 // results.
 func (s *SearchForApplications) Next(next string) *SearchForApplications {
-	s.p.Next = next
+	s.p.next = next
 	return s
 }
 
