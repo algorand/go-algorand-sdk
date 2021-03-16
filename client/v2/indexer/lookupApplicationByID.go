@@ -8,17 +8,31 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// LookupApplicationByID /v2/applications/{application-id}
-// Lookup application.
-type LookupApplicationByID struct {
-	c             *Client
-	applicationId uint64
+type lookupApplicationByIDParams struct {
+
+	// IncludeAll include all items including closed accounts, deleted applications,
+	// destroyed assets, opted-out asset holdings, and closed-out application
+	// localstates.
+	IncludeAll bool `url:"include-all,omitempty"`
 }
 
-// Do performs HTTP request
-func (s *LookupApplicationByID) Do(ctx context.Context,
-	headers ...*common.Header) (response models.ApplicationResponse, err error) {
-	err = s.c.get(ctx, &response,
-		fmt.Sprintf("/v2/applications/%d", s.applicationId), nil, headers)
+type LookupApplicationByID struct {
+	c *Client
+
+	applicationId uint64
+
+	p lookupApplicationByIDParams
+}
+
+// IncludeAll include all items including closed accounts, deleted applications,
+// destroyed assets, opted-out asset holdings, and closed-out application
+// localstates.
+func (s *LookupApplicationByID) IncludeAll(includeAll bool) *LookupApplicationByID {
+	s.p.IncludeAll = includeAll
+	return s
+}
+
+func (s *LookupApplicationByID) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationResponse, err error) {
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%v", s.applicationId), s.p, headers)
 	return
 }
