@@ -174,55 +174,6 @@ type BlockUpgradeVote struct {
 	UpgradePropose string `json:"upgrade-propose,omitempty"`
 }
 
-// NodeStatus contains the information about a node's 'status.
-type NodeStatus struct {
-	// Catchpoint the current catchpoint that is being caught up to
-	Catchpoint string `json:"catchpoint,omitempty"`
-
-	// CatchpointAcquiredBlocks the number of blocks that have already been obtained by
-	// the node as part of the catchup
-	CatchpointAcquiredBlocks uint64 `json:"catchpoint-acquired-blocks,omitempty"`
-
-	// CatchpointProcessedAccounts the number of account from the current catchpoint
-	// that have been processed so far as part of the catchup
-	CatchpointProcessedAccounts uint64 `json:"catchpoint-processed-accounts,omitempty"`
-
-	// CatchpointTotalAccounts the total number of accounts included in the current
-	// catchpoint
-	CatchpointTotalAccounts uint64 `json:"catchpoint-total-accounts,omitempty"`
-
-	// CatchpointTotalBlocks the total number of blocks that are required to complete
-	// the current catchpoint catchup
-	CatchpointTotalBlocks uint64 `json:"catchpoint-total-blocks,omitempty"`
-
-	// CatchupTime in nanoseconds
-	CatchupTime uint64 `json:"catchup-time"`
-
-	// LastCatchpoint the last catchpoint seen by the node
-	LastCatchpoint string `json:"last-catchpoint,omitempty"`
-
-	// LastRound indicates the last round seen
-	LastRound uint64 `json:"last-round"`
-
-	// LastVersion indicates the last consensus version supported
-	LastVersion string `json:"last-version,omitempty"`
-
-	// NextVersion of consensus protocol to use
-	NextVersion string `json:"next-version,omitempty"`
-
-	// NextVersionRound is the round at which the next consensus version will apply
-	NextVersionRound uint64 `json:"next-version-round,omitempty"`
-
-	// NextVersionSupported indicates whether the next consensus version is supported by this node
-	NextVersionSupported bool `json:"next-version-supported,omitempty"`
-
-	// StoppedAtUnsupportedRound indicates that the node does not support the new rounds and has stopped making progress
-	StoppedAtUnsupportedRound bool `json:"stopped-at-unsupported-round"`
-
-	// TimeSinceLastRound in nanoseconds
-	TimeSinceLastRound uint64 `json:"time-since-last-round"`
-}
-
 // Supply defines model for Supply.
 type Supply struct {
 
