@@ -84,7 +84,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown indexer endpoint: %s", endpoint)
 		}
 	case "algod":
 		switch endpoint {
@@ -115,12 +115,14 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "Proof":
+			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown algod endpoint: %s", endpoint)
 		}
 	}
 	return err

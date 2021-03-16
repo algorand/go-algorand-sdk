@@ -9,9 +9,10 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/types"
-	"github.com/cucumber/godog"
 	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/types"
+
+	"github.com/cucumber/godog"
 )
 
 func AlgodClientV2Context(s *godog.Suite) {
