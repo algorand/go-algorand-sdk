@@ -752,12 +752,6 @@ type PendingTransactionInfoResponse = struct {
 	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
 }
 
-// PendingTransactionsResponse is returned by PendingTransactions and by Txid
-type PendingTransactionsResponse = struct {
-	TopTransactions   []types.SignedTxn `codec:"top-transactions"`
-	TotalTransactions uint64            `codec:"total-transactions"`
-}
-
 // GetBlock response is returned by Block
 type GetBlockResponse = struct {
 	Blockb64 string `json:"block"`
