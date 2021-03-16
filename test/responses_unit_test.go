@@ -115,6 +115,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "DryRun":
+			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
 		case "Proof":
 			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
 		case "any":
