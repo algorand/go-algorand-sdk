@@ -8,12 +8,12 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-type lookupApplicationByIDParams struct {
+type LookupApplicationByIDParams struct {
 
-	// includeAll include all items including closed accounts, deleted applications,
+	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
-	includeAll bool `url:"include-all,omitempty"`
+	IncludeAll bool `url:"include-all,omitempty"`
 }
 
 type LookupApplicationByID struct {
@@ -21,14 +21,14 @@ type LookupApplicationByID struct {
 
 	applicationId uint64
 
-	p lookupApplicationByIDParams
+	p LookupApplicationByIDParams
 }
 
 // IncludeAll include all items including closed accounts, deleted applications,
 // destroyed assets, opted-out asset holdings, and closed-out application
 // localstates.
-func (s *LookupApplicationByID) IncludeAll(includeAll bool) *LookupApplicationByID {
-	s.p.includeAll = includeAll
+func (s *LookupApplicationByID) IncludeAll(IncludeAll bool) *LookupApplicationByID {
+	s.p.IncludeAll = IncludeAll
 	return s
 }
 

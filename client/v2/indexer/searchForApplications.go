@@ -7,54 +7,54 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-type searchForApplicationsParams struct {
+type SearchForApplicationsParams struct {
 
-	// applicationId application ID
-	applicationId uint64 `url:"application-id,omitempty"`
+	// ApplicationId application ID
+	ApplicationId uint64 `url:"application-id,omitempty"`
 
-	// includeAll include all items including closed accounts, deleted applications,
+	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
-	includeAll bool `url:"include-all,omitempty"`
+	IncludeAll bool `url:"include-all,omitempty"`
 
-	// limit maximum number of results to return.
-	limit uint64 `url:"limit,omitempty"`
+	// Limit maximum number of results to return.
+	Limit uint64 `url:"limit,omitempty"`
 
-	// next the next page of results. Use the next token provided by the previous
+	// Next the next page of results. Use the next token provided by the previous
 	// results.
-	next string `url:"next,omitempty"`
+	Next string `url:"next,omitempty"`
 }
 
 type SearchForApplications struct {
 	c *Client
 
-	p searchForApplicationsParams
+	p SearchForApplicationsParams
 }
 
 // ApplicationId application ID
-func (s *SearchForApplications) ApplicationId(applicationId uint64) *SearchForApplications {
-	s.p.applicationId = applicationId
+func (s *SearchForApplications) ApplicationId(ApplicationId uint64) *SearchForApplications {
+	s.p.ApplicationId = ApplicationId
 	return s
 }
 
 // IncludeAll include all items including closed accounts, deleted applications,
 // destroyed assets, opted-out asset holdings, and closed-out application
 // localstates.
-func (s *SearchForApplications) IncludeAll(includeAll bool) *SearchForApplications {
-	s.p.includeAll = includeAll
+func (s *SearchForApplications) IncludeAll(IncludeAll bool) *SearchForApplications {
+	s.p.IncludeAll = IncludeAll
 	return s
 }
 
 // Limit maximum number of results to return.
-func (s *SearchForApplications) Limit(limit uint64) *SearchForApplications {
-	s.p.limit = limit
+func (s *SearchForApplications) Limit(Limit uint64) *SearchForApplications {
+	s.p.Limit = Limit
 	return s
 }
 
 // Next the next page of results. Use the next token provided by the previous
 // results.
-func (s *SearchForApplications) Next(next string) *SearchForApplications {
-	s.p.next = next
+func (s *SearchForApplications) Next(Next string) *SearchForApplications {
+	s.p.Next = Next
 	return s
 }
 
