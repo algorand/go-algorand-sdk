@@ -9,9 +9,6 @@ import (
 )
 
 type getProofParams struct {
-
-	// format configures whether the response object is JSON or MessagePack encoded.
-	format string `url:"format,omitempty"`
 }
 
 type GetProof struct {
@@ -22,12 +19,6 @@ type GetProof struct {
 	txid string
 
 	p getProofParams
-}
-
-// Format configures whether the response object is JSON or MessagePack encoded.
-func (s *GetProof) Format(format string) *GetProof {
-	s.p.format = format
-	return s
 }
 
 func (s *GetProof) Do(ctx context.Context, headers ...*common.Header) (response models.ProofResponse, err error) {
