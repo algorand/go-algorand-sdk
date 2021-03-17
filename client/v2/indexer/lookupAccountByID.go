@@ -8,14 +8,36 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-type LookupAccountByID struct {
-	c       *Client
-	account string
-	p       models.LookupAccountByIDParams
+type LookupAccountByIDParams struct {
+
+	// IncludeAll include all items including closed accounts, deleted applications,
+	// destroyed assets, opted-out asset holdings, and closed-out application
+	// localstates.
+	IncludeAll bool `url:"include-all,omitempty"`
+
+	// Round include results for the specified round.
+	Round uint64 `url:"round,omitempty"`
 }
 
-func (s *LookupAccountByID) Round(round uint64) *LookupAccountByID {
-	s.p.Round = round
+type LookupAccountByID struct {
+	c *Client
+
+	accountId string
+
+	p LookupAccountByIDParams
+}
+
+// IncludeAll include all items including closed accounts, deleted applications,
+// destroyed assets, opted-out asset holdings, and closed-out application
+// localstates.
+func (s *LookupAccountByID) IncludeAll(IncludeAll bool) *LookupAccountByID {
+	s.p.IncludeAll = IncludeAll
+	return s
+}
+
+// Round include results for the specified round.
+func (s *LookupAccountByID) Round(Round uint64) *LookupAccountByID {
+	s.p.Round = Round
 	return s
 }
 
