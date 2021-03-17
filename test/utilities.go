@@ -210,7 +210,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		var err error
 		for i := 0; i < expectedSize; i++ {
 			for j := 0; j < len(actualArr); j++ {
-				err = recursiveCompare(fmt.Sprintf("%s[%d]", field, i), expectedArr[i], actualArr[i])
+				err = recursiveCompare(fmt.Sprintf("%s[%d]", field, i), expectedArr[i], actualArr[j])
 				if err == nil {
 					continue
 				}
