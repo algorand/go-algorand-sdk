@@ -61,3 +61,7 @@ func (c *Client) SearchForTransactions() *SearchForTransactions {
 func (c *Client) SearchForAssets() *SearchForAssets {
 	return &SearchForAssets{c: c}
 }
+
+func (c *Client) LookupTransactionstxid string() *LookupTransactions {
+	return &LookupTransactions{c: c, txid: txid}
+}
