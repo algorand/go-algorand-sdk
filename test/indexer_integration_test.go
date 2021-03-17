@@ -58,12 +58,13 @@ func IndexerIntegrationTestContext(s *godog.Suite) {
 	s.Step(`^the parsed response should equal "([^"]*)"\.$`, theParsedResponseShouldEqual)
 	s.Step(`^I use (\d+) to lookup application with (\d+)$`, deprecatedIUseToLookupApplicationWith)
 	s.Step(`^I use (\d+) to search for transactions with (\d+), "([^"]*)", "([^"]*)", "([^"]*)", "([^"]*)", (\d+), (\d+), (\d+), (\d+), "([^"]*)", "([^"]*)", (\d+), (\d+), "([^"]*)", "([^"]*)", "([^"]*)", (\d+) and token "([^"]*)"$`, iUseToSearchForTransactionsWithAppIdAndToken)
-	s.Step(`^I use (\d+) to search for an account with (\d+), (\d+), (\d+), (\d+), "([^"]*)", (\d+) and token "([^"]*)"$`, iUseToSearchForAnAccountWithAppIdAndToken)
+	s.Step(`^I use (\d+) to search for an account with (\d+), (\d+), (\d+), (\d+), "([^"]*)", (\d+) and token "([^"]*)"$`, deprecatedIUseToSearchForAnAccountWithAppIdAndToken)
 
 	//@indexer.231
 	s.Step(`^I use (\d+) to search for applications with (\d+), (\d+), "([^"]*)" and token "([^"]*)"$`, iUseToSearchForApplicationsWithAndToken)
 	s.Step(`^I use (\d+) to lookup application with (\d+) and "([^"]*)"$`, iUseToLookupApplicationWithAnd)
 	s.Step(`^I use (\d+) to search for an account with (\d+), (\d+), (\d+), (\d+), "([^"]*)", (\d+), "([^"]*)" and token "([^"]*)"$`, iUseToSearchForAnAccountWithAndToken)
+
 
 	s.BeforeScenario(func(interface{}) {
 	})
@@ -237,7 +238,12 @@ var indexerAssetBalancesResponse models.AssetBalancesResponse
 func iUseToLookupAssetBalancesForWithAndToken(clientNum, assetId, currencyGreater, currencyLesser, limit int, token string) error {
 	ic := indexerClients[clientNum]
 	var err error
-	indexerAssetBalancesResponse, err = ic.LookupAssetBalances(uint64(assetId)).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).Limit(uint64(limit)).NextToken(token).Do(context.Background())
+	indexerAssetBalancesResponse, err = ic.LookupAssetBalances(uint64(assetId)).
+		CurrencyGreaterThan(uint64(currencyGreater)).
+		CurrencyLessThan(uint64(currencyLesser)).
+		Limit(uint64(limit)).
+		NextToken(token).
+		Do(context.Background())
 	return err
 }
 
@@ -276,10 +282,10 @@ func iGetTheNextPageUsingToLookupAssetBalancesForWith(clientNum, assetId, curren
 var indexerSearchAccountsResponse models.AccountsResponse
 
 func deprecatedIUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser int, token string) error {
-	return iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser, "false", token)
+	return iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser, "", 0, "false", token)
 }
 
-func iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser int, includeAll, token string) error {
+func iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser int, authAddr string, applicationId int, includeAll, token string) error {
 	ic := indexerClients[clientNum]
 	var err error
 	query := ic.SearchAccounts().
@@ -287,8 +293,10 @@ func iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currency
 		Limit(uint64(limit)).
 		CurrencyGreaterThan(uint64(currencyGreater)).
 		CurrencyLessThan(uint64(currencyLesser)).
+		AuthAddress(authAddr).
+		ApplicationId(uint64(applicationId)).
 		NextToken(token)
-	if ia, err := strconv.ParseBool(includeAll); err != nil && ia {
+	if ia, err := strconv.ParseBool(includeAll); err == nil && ia {
 		query.IncludeAll(ia)
 	}
 	indexerSearchAccountsResponse, err = query.Do(context.Background())
@@ -371,7 +379,14 @@ func theFirstAccountIsOnlineAndHas(address string, keyDilution, firstValid, last
 func iGetTheNextPageUsingToSearchForAnAccountWithAnd(clientNum, assetId, limit, currencyGreater, currencyLesser int) error {
 	ic := indexerClients[clientNum]
 	var err error
-	indexerSearchAccountsResponse, err = ic.SearchAccounts().AssetID(uint64(assetId)).Limit(uint64(limit)).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).NextToken(indexerSearchAccountsResponse.NextToken).Do(context.Background())
+	next := indexerSearchAccountsResponse.NextToken
+	indexerSearchAccountsResponse, err = ic.SearchAccounts().
+		AssetID(uint64(assetId)).
+		Limit(uint64(limit)).
+		CurrencyGreaterThan(uint64(currencyGreater)).
+		CurrencyLessThan(uint64(currencyLesser)).
+		NextToken(next).
+		Do(context.Background())
 	return err
 }
 
@@ -581,7 +596,7 @@ func iUseToSearchForApplicationsWithAndToken(indexer, limit, appId int, includeA
 		ApplicationId(uint64(appId)).
 		Limit(uint64(limit)).
 		Next(token)
-	if ia, err := strconv.ParseBool(includeAll); err != nil && ia {
+	if ia, err := strconv.ParseBool(includeAll); err == nil && ia {
 		query.IncludeAll(ia)
 	}
 	response, err = query.Do(context.Background())
@@ -615,7 +630,7 @@ func iUseToLookupApplicationWithAnd(indexer, appid int, includeAll string) error
 	ic := indexerClients[indexer]
 	var err error
 	query := ic.LookupApplicationByID(uint64(appid))
-	if ia, err := strconv.ParseBool(includeAll); err != nil && ia {
+	if ia, err := strconv.ParseBool(includeAll); err == nil && ia {
 		query.IncludeAll(ia)
 	}
 	response, err = query.Do(context.Background())
@@ -656,7 +671,7 @@ func iUseToSearchForTransactionsWithAppIdAndToken(
 	return err
 }
 
-func iUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, currencyGreater, currencyLesser int, arg6 string, appId int, token string) error {
+func deprecatedIUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, currencyGreater, currencyLesser int, arg6 string, appId int, token string) error {
 	ic := indexerClients[indexer]
 	var err error
 	response, err = ic.SearchAccounts().
@@ -665,6 +680,8 @@ func iUseToSearchForAnAccountWithAppIdAndToken(indexer, assetIndex, limit, curre
 		CurrencyGreaterThan(uint64(currencyGreater)).
 		CurrencyLessThan(uint64(currencyLesser)).
 		ApplicationId(uint64(appId)).
-		NextToken(token).Do(context.Background())
+		NextToken(token).
+		Do(context.Background())
 	return err
 }
+
