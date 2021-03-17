@@ -3,8 +3,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 
@@ -115,6 +113,24 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "PendingTransactionInformation":
+			response, _, err = algodC.PendingTransactionInformation("transaction").Do(context.Background())
+		case "GetPendingTransactions":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactions().Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
+		case "GetPendingTransactionsByAddress":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactionsByAddress("address").Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
 		case "DryRun":
 			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
 		case "Proof":
@@ -135,7 +151,6 @@ type txidresponse struct {
 }
 
 func theParsedResponseShouldEqualTheMockResponse() error {
-	var err error
 	var responseJson string
 
 	if expectedStatus != 200 {
@@ -152,16 +167,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		responseJson = string(json.Encode(response))
 	}
 
-	jsonfile, err := os.Open(baselinePath)
-	if err != nil {
-		return err
-	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
-	if err != nil {
-		return err
-	}
-	_, err = EqualJson(string(fileBytes), responseJson)
-	return err
+	return VerifyResponse(baselinePath, responseJson)
 }
 
 func ResponsesContext(s *godog.Suite) {

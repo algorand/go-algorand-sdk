@@ -70,14 +70,13 @@ type InternalError error
 // extractError checks if the response signifies an error.
 // If so, it returns the error.
 // Otherwise, it returns nil.
-func extractError(resp *http.Response) error {
-	if resp.StatusCode == 200 {
+func extractError(code int, errorBuf []byte) error {
+	if code == 200 {
 		return nil
 	}
 
-	errorBuf, _ := ioutil.ReadAll(resp.Body) // ignore returned error
-	wrappedError := fmt.Errorf("HTTP %v: %s", resp.Status, errorBuf)
-	switch code := resp.StatusCode; code {
+	wrappedError := fmt.Errorf("HTTP %v: %s", code, errorBuf)
+	switch code {
 	case 400:
 		return BadRequest(wrappedError)
 	case 401:
@@ -158,11 +157,6 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, body inter
 		}
 		return nil, err
 	}
-	err = extractError(resp)
-	if err != nil {
-		resp.Body.Close()
-		return nil, err
-	}
 	return resp, nil
 }
 
@@ -173,8 +167,17 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	}
 
 	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-	return dec.Decode(&response)
+	var bodyBytes []byte
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(bodyBytes, response)
+	if err != nil {
+		return err
+	}
+
+	return extractError(resp.StatusCode, bodyBytes)
 }
 
 // Get performs a GET request to the specific path against the server
@@ -189,9 +192,13 @@ func (client *Client) GetRaw(ctx context.Context, path string, body interface{},
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+	var bodyBytes []byte
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bodyBytes, extractError(resp.StatusCode, bodyBytes)
 }
 
 // GetRawMsgpack performs a GET request to the specific path against the server and returns the decoded messagepack response.

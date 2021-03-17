@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cucumber/godog"
@@ -604,22 +603,12 @@ func iUseToSearchForApplicationsWithAndToken(indexer, limit, appId int, includeA
 }
 
 func theParsedResponseShouldEqual(jsonfileName string) error {
-	var err error
 	var responseJson string
 
 	baselinePath := path.Join("./features/resources/", jsonfileName)
 	responseJson = string(json.Encode(response))
 
-	jsonfile, err := os.Open(baselinePath)
-	if err != nil {
-		return err
-	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
-	if err != nil {
-		return err
-	}
-	_, err = EqualJson(string(fileBytes), responseJson)
-	return err
+	return VerifyResponse(baselinePath, responseJson)
 }
 
 func deprecatedIUseToLookupApplicationWith(indexer, appid int) error {
@@ -634,7 +623,11 @@ func iUseToLookupApplicationWithAnd(indexer, appid int, includeAll string) error
 		query.IncludeAll(ia)
 	}
 	response, err = query.Do(context.Background())
-	return err
+	// allow 404...
+	if err != nil && strings.HasPrefix(err.Error(), "HTTP") {
+		err = nil
+	}
+	return nil
 }
 
 func iUseToSearchForTransactionsWithAppIdAndToken(
