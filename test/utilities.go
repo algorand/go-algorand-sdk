@@ -212,8 +212,11 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 			for j := 0; j < len(actualArr); j++ {
 				err = recursiveCompare(fmt.Sprintf("%s[%d]", field, i), expectedArr[i], actualArr[j])
 				if err == nil {
-					continue
+					break
 				}
+			}
+			if err != nil {
+				return err
 			}
 		}
 		return err
