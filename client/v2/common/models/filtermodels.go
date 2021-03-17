@@ -1,13 +1,5 @@
 package models
 
-// GetPendingTransactionsByAddressParams defines parameters for GetPendingTransactionsByAddress.
-type GetPendingTransactionsByAddressParams struct {
-	// Truncated number of transactions to display. If max=0, returns all pending txns.
-	Max uint64 `url:"max,omitempty"`
-	// Return raw msgpack block bytes or json
-	Format string `url:"format,omitempty"`
-}
-
 // GetBlockParams defines parameters for GetBlock.
 type GetBlockParams struct {
 	// Return raw msgpack block bytes or json
@@ -33,15 +25,6 @@ type RegisterParticipationKeysAccountIdParams struct {
 // ShutdownParams defines parameters for GetV2Shutdown.
 type ShutdownParams struct {
 	Timeout uint64 `url:"timeout,omitempty"`
-}
-
-// PendingTransactionInformationParams defines parameters for GetPendingTransactions.
-type PendingTransactionInformationParams struct {
-	// Return raw msgpack block bytes or json
-	Format string `url:"format,omitempty"`
-
-	// Truncated number of transactions to display. If max=0, returns all pending txns.
-	Max uint64 `url:"max,omitempty"`
 }
 
 // SearchAccountsParams defines parameters for SearchAccounts.

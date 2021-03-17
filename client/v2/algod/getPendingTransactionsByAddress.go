@@ -3,19 +3,34 @@ package algod
 import (
 	"context"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/types"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/types"
 )
 
-type PendingTransactionInformationByAddress struct {
-	c       *Client
-	address string
-	p       models.GetPendingTransactionsByAddressParams
+type PendingTransactionInformationByAddressParams struct {
+
+	// Format configures whether the response object is JSON or MessagePack encoded.
+	Format string `url:"format,omitempty"`
+
+	// Max truncated number of transactions to display. If max=0, returns all pending
+	// txns.
+	Max uint64 `url:"max,omitempty"`
 }
 
-func (s *PendingTransactionInformationByAddress) Max(max uint64) *PendingTransactionInformationByAddress {
-	s.p.Max = max
+type PendingTransactionInformationByAddress struct {
+	c *Client
+
+	address string
+
+	p PendingTransactionInformationByAddressParams
+}
+
+// Max truncated number of transactions to display. If max=0, returns all pending
+// txns.
+func (s *PendingTransactionInformationByAddress) Max(Max uint64) *PendingTransactionInformationByAddress {
+	s.p.Max = Max
 	return s
 }
 

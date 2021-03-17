@@ -44,11 +44,7 @@ func VerifyResponse(expectedFile string, actual string) error {
 		expectedString = string(sdk_json.Encode(generic))
 	}
 
-	// Go ahead and run both equals functions since we have them.
-	//_, err = EqualJson(expectedString, actual)
-	//if err == nil {
-		err = EqualJson2(expectedString, actual)
-	//}
+	err = EqualJson2(expectedString, actual)
 	if err != nil {
 		fmt.Printf("EXPECTED:\n%v\n", expectedString)
 		fmt.Printf("ACTUAL:\n%v\n", actual)
@@ -64,7 +60,6 @@ func EqualJson2(j1, j2 string) (err error) {
 	var expected map[string]interface{}
 	json.Unmarshal([]byte(j1), &expected)
 
-
 	var actual map[string]interface{}
 	json.Unmarshal([]byte(j2), &actual)
 
@@ -78,6 +73,7 @@ func EqualJson2(j1, j2 string) (err error) {
 }
 
 type ValueType int
+
 const (
 	OBJECT ValueType = iota
 	ARRAY
@@ -201,7 +197,6 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 			actualSize = len(actualArr)
 		}
 
-		//log.Printf("%s[] - arraylen %d == %d\n", field, expectedSize, actualSize)
 		if expectedSize != actualSize {
 			return fmt.Errorf("failed to match array sizes: %s", field)
 		}
@@ -211,6 +206,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		//sortArray(expectedArr, sortField)
 
 		// n^2 baby! Just make sure every element has a match somewhere in the other list.
+		// getting the sort function to work would be better...
 		var err error
 		for i := 0; i < expectedSize; i++ {
 			for j := 0; j < len(actualArr); j++ {
@@ -302,7 +298,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 
 		//log.Printf("%s - string %s == %s\n", field, expectedStr, actualStr)
-		if ! binaryOrStringEqual(expectedStr, actualStr) {
+		if !binaryOrStringEqual(expectedStr, actualStr) {
 			return fmt.Errorf("failed to match field %s, %s != %s", field, expectedStr, actualStr)
 		}
 

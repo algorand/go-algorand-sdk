@@ -51,6 +51,6 @@ type PendingTransactionResponse struct {
 	// SenderRewards rewards in microalgos applied to the sender account.
 	SenderRewards uint64 `json:"sender-rewards,omitempty"`
 
-	// Txn the raw signed transaction.
-	Txn types.SignedTxn `json:"txn,omitempty"`
+	// Transaction the raw signed transaction.
+	Transaction types.SignedTxn `json:"txn,omitempty"`
 }

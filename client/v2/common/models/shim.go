@@ -5,3 +5,6 @@ package models
 
 // NodeStatus is the algod status report.
 type NodeStatus NodeStatusResponse
+
+// PendingTransactionInfoResponse is the single pending transaction response.
+type PendingTransactionInfoResponse PendingTransactionResponse

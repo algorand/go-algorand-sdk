@@ -263,7 +263,7 @@ func weMakeAPendingTransactionInformationAgainstTxidWithMax(txid string, max int
 	if err != nil {
 		return err
 	}
-	_, _, globalErrForExamination = algodClient.PendingTransactionInformation(txid).Max(uint64(max)).Do(context.Background())
+	_, _, globalErrForExamination = algodClient.PendingTransactionInformation(txid).Do(context.Background())
 	return nil
 }
 

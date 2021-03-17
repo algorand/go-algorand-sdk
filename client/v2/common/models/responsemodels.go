@@ -1,7 +1,5 @@
 package models
 
-import "github.com/algorand/go-algorand-sdk/types"
-
 // AccountParticipation describes the parameters used by this account in consensus protocol.
 type AccountParticipation struct {
 
@@ -674,33 +672,6 @@ type TransactionsResponse struct {
 
 	// Used for pagination, when making another request provide this token with the next parameter.
 	NextToken string `json:"next-token"`
-}
-
-// PendingTransactionInfoResponse is returned by Get Pending Transaction by TXID
-type PendingTransactionInfoResponse = struct {
-	Transaction types.SignedTxn `codec:"txn"`
-	//PoolError indicates that the transaction was kicked out of this node's transaction pool (and specifies why that happened).  An empty string indicates the transaction wasn't kicked out of this node's txpool due to an error.
-	PoolError string `codec:"pool-error"`
-	//ConfirmedRound is the round where this transaction was confirmed, if present.
-	ConfirmedRound uint64 `codec:"confirmed-round,omitempty"`
-	//AssetIndex is the index of the newly created asset, if this was an asset creation transaction.
-	AssetIndex uint64 `codec:"asset-index,omitempty"`
-	//ApplicationIndex is the index of the newly created application, if this was an application creation transaction.
-	ApplicationIndex uint64 `codec:"application-index,omitempty"`
-	//Closing amount for the transaction.
-	ClosingAmount uint64 `codec:"closing-amount,omitempty"`
-	//Rewards, in microAlgos, applied to sender.
-	SenderRewards uint64 `codec:"sender-rewards,omitempty"`
-	//Rewards, in microAlgos, applied to receiver.
-	ReceiverRewards uint64 `codec:"receiver-rewards,omitempty"`
-	//Rewards, in microAlgos, applied to close-to.
-	CloseRewards uint64 `codec:"close-rewards,omitempty"`
-	// LocalStateDelta (ld) Local state key/value changes for the application being
-	// executed by this transaction.
-	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
-	// GlobalStateDelta (gd) Global state key/value changes for the application being
-	// executed by this transaction.
-	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
 }
 
 // GetBlock response is returned by Block
