@@ -35,7 +35,7 @@ func IndexerIntegrationTestContext(s *godog.Suite) {
 	s.Step(`^There are (\d+), the first has (\d+), (\d+), (\d+), (\d+), "([^"]*)", (\d+), "([^"]*)", "([^"]*)"$`, thereAreTheFirstHas)
 	s.Step(`^The first account is online and has "([^"]*)", (\d+), (\d+), (\d+), "([^"]*)", "([^"]*)"$`, theFirstAccountIsOnlineAndHas)
 	s.Step(`^I get the next page using (\d+) to search for an account with (\d+), (\d+), (\d+) and (\d+)$`, iGetTheNextPageUsingToSearchForAnAccountWithAnd)
-	s.Step(`^I use (\d+) to search for transactions with (\d+), "([^"]*)", "([^"]*)", "([^"]*)", "([^"]*)", (\d+), (\d+), (\d+), (\d+), "([^"]*)", "([^"]*)", (\d+), (\d+), "([^"]*)", "([^"]*)", "([^"]*)" and token "([^"]*)"$`, deprecatedIUseToSearchForTransactionsWithAndToken)
+	s.Step(`^I use (\d+) to search for transactions with (\d+), "([^"]*)", "([^"]*)", "([^"]*)", "([^"]*)", (\d+), (\d+), (\d+), (\d+), "([^"]*)", "([^"]*)", (\d+), (\d+), "([^"]*)", "([^"]*)", "([^"]*)" and token "([^"]*)"$`, iUseToSearchForTransactionsWithAndToken)
 	s.Step(`^there are (\d+) transactions in the response, the first is "([^"]*)"\.$`, thereAreTransactionsInTheResponseTheFirstIs)
 	s.Step(`^Every transaction has tx-type "([^"]*)"$`, everyTransactionHasTxtype)
 	s.Step(`^Every transaction has sig-type "([^"]*)"$`, everyTransactionHasSigtype)
@@ -374,8 +374,19 @@ func theFirstAccountIsOnlineAndHas(address string, keyDilution, firstValid, last
 
 var indexerTransactionsResponse models.TransactionsResponse
 
-func deprecatedIUseToSearchForTransactionsWithAndToken(clientNum, limit int, notePrefix, txType, sigType, txid string, round, minRound, maxRound, assetId int, beforeTime, afterTime string, currencyGreater, currencyLesser int, address, addressRole, excludeCloseTo, token string) error {
-	return iUseToSearchForTransactionsWithAppIdAndToken(clientNum, limit, notePrefix, txType, sigType, txid, round, minRound, maxRound, assetId, beforeTime, afterTime, currencyGreater, currencyLesser, address, addressRole, excludeCloseTo, 0, token)
+func iUseToSearchForTransactionsWithAndToken(clientNum, limit int, notePrefix, txType, sigType, txid string, round, minRound, maxRound, assetId int, beforeTime, afterTime string, currencyGreater, currencyLesser int, address, addressRole, excludeCloseTo, token string) error {
+	ic := indexerClients[clientNum]
+	var err error
+	notePrefixBytes, err := base64.StdEncoding.DecodeString(notePrefix)
+	if err != nil {
+		return err
+	}
+	excludeBool, err := strconv.ParseBool(excludeCloseTo)
+	if err != nil {
+		excludeBool = false
+	}
+	indexerTransactionsResponse, err = ic.SearchForTransactions().Limit(uint64(limit)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).AssetID(uint64(assetId)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeBool).NextToken(token).Do(context.Background())
+	return err
 }
 
 func thereAreTransactionsInTheResponseTheFirstIs(numTransactions int, firstTransactionTxid string) error {
