@@ -279,6 +279,7 @@ func iGetTheNextPageUsingToLookupAssetBalancesForWith(clientNum, assetId, curren
 
 var indexerSearchAccountsResponse models.AccountsResponse
 
+// Saves the response in a separate type so that we can capture the next token.
 func iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currencyGreater, currencyLesser int, token string) error {
 	ic := indexerClients[clientNum]
 	var err error
@@ -290,6 +291,12 @@ func iUseToSearchForAnAccountWithAndToken(clientNum, assetIndex, limit, currency
 		NextToken(token)
 	indexerSearchAccountsResponse, err = query.Do(context.Background())
 	return err
+}
+
+// Pass the captured next token into the SearchAccounts function.
+func iGetTheNextPageUsingToSearchForAnAccountWithAnd(clientNum, assetId, limit, currencyGreater, currencyLesser int) error {
+	next := indexerSearchAccountsResponse.NextToken
+	return iUseToSearchForAnAccountWithAndToken(clientNum, assetId, limit, currencyGreater, currencyLesser, next)
 }
 
 func thereAreTheFirstHas(numAccounts, firstAccountPendingRewards, rewardsBase, rewards, withoutRewards int, address string, amount int, accountStatus, accountType string) error {
@@ -362,20 +369,6 @@ func theFirstAccountIsOnlineAndHas(address string, keyDilution, firstValid, last
 		return err
 	}
 	err = comparisonCheck("first account selkey b64", selKey, selKeyString)
-	return err
-}
-
-func iGetTheNextPageUsingToSearchForAnAccountWithAnd(clientNum, assetId, limit, currencyGreater, currencyLesser int) error {
-	ic := indexerClients[clientNum]
-	var err error
-	next := indexerSearchAccountsResponse.NextToken
-	indexerSearchAccountsResponse, err = ic.SearchAccounts().
-		AssetID(uint64(assetId)).
-		Limit(uint64(limit)).
-		CurrencyGreaterThan(uint64(currencyGreater)).
-		CurrencyLessThan(uint64(currencyLesser)).
-		NextToken(next).
-		Do(context.Background())
 	return err
 }
 
