@@ -172,12 +172,16 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(bodyBytes, response)
-	if err != nil {
-		return err
-	}
 
-	return extractError(resp.StatusCode, bodyBytes)
+	responseErr := extractError(resp.StatusCode, bodyBytes)
+
+	// Attempt to unmarshal a response regardless of whether or not there was an error.
+	err = json.Unmarshal(bodyBytes, response)
+	if responseErr != nil {
+		// Even if there was an unmarshalling error, return the HTTP error first if there was one.
+		return responseErr
+	}
+	return err
 }
 
 // Get performs a GET request to the specific path against the server
