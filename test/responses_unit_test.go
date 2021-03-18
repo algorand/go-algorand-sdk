@@ -89,6 +89,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		switch endpoint {
 		case "GetStatus":
 			response, err = algodC.Status().Do(context.Background())
+		case "GetBlock":
+			response, err = algodC.Block(10).Do(context.Background())
 		case "WaitForBlock":
 			response, err = algodC.StatusAfterBlock(10).Do(context.Background())
 		case "TealCompile":
@@ -110,6 +112,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 				LastRound:        uint64(sParams.FirstRoundValid),
 				MinFee:           sParams.MinFee,
 			}
+		case "GetAccountInformation":
+			response, err = algodC.AccountInformation("acct").Do(context.Background())
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
