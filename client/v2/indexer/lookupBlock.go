@@ -13,9 +13,7 @@ type LookupBlock struct {
 	round uint64
 }
 
-func (s *LookupBlock) Do(ctx context.Context, headers ...*common.Header) (block models.Block, err error) {
-	var response models.BlockResponse
+func (s *LookupBlock) Do(ctx context.Context, headers ...*common.Header) (response models.Block, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), nil, headers)
-	block = models.Block(response)
 	return
 }
