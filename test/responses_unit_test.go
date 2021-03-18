@@ -24,8 +24,7 @@ var response interface{}
 // @unit
 // @unit.responses
 
-func mockHttpResponsesInLoadedFromWithStatus(
-	jsonfile, loadedFrom /* generated_responses*/ string, status int) error {
+func mockHttpResponsesInLoadedFromWithStatus(jsonfile, loadedFrom string, status int) error {
 	directory := path.Join("./features/resources/", loadedFrom)
 	baselinePath = path.Join(directory, jsonfile)
 	var err error
@@ -77,6 +76,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetTransactions(10).Do(context.Background())
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
+		case "lookupBlock":
+			response, err = indexerC.LookupBlock(10).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
