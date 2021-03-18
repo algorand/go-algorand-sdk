@@ -506,7 +506,6 @@ func theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldA
 	return nil
 }
 
-
 //@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)

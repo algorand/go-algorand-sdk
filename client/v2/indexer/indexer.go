@@ -43,7 +43,7 @@ func (c *Client) LookupBlock(round uint64) *LookupBlock {
 }
 
 func (c *Client) LookupAccountByID(account string) *LookupAccountByID {
-	return &LookupAccountByID{c: c, account: account}
+	return &LookupAccountByID{c: c, accountId: account}
 }
 
 func (c *Client) LookupAssetByID(index uint64) *LookupAssetByID {
@@ -60,4 +60,8 @@ func (c *Client) SearchForTransactions() *SearchForTransactions {
 
 func (c *Client) SearchForAssets() *SearchForAssets {
 	return &SearchForAssets{c: c}
+}
+
+func (c *Client) LookupTransaction(txid string) *LookupTransaction {
+	return &LookupTransaction{c: c, txid: txid}
 }

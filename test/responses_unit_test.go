@@ -3,8 +3,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 
@@ -84,7 +82,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown indexer endpoint: %s", endpoint)
 		}
 	case "algod":
 		switch endpoint {
@@ -109,18 +107,40 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 				GenesisID:        sParams.GenesisID,
 				Genesishash:      sParams.GenesisHash,
 				LastRound:        uint64(sParams.FirstRoundValid),
-				MinFee:           81560,
+				MinFee:           sParams.MinFee,
 			}
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "PendingTransactionInformation":
+			response, _, err = algodC.PendingTransactionInformation("transaction").Do(context.Background())
+		case "GetPendingTransactions":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactions().Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
+		case "GetPendingTransactionsByAddress":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactionsByAddress("address").Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
+		case "DryRun":
+			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
+		case "Proof":
+			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown algod endpoint: %s", endpoint)
 		}
 	}
 	return err
@@ -131,7 +151,6 @@ type txidresponse struct {
 }
 
 func theParsedResponseShouldEqualTheMockResponse() error {
-	var err error
 	var responseJson string
 
 	if expectedStatus != 200 {
@@ -148,16 +167,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		responseJson = string(json.Encode(response))
 	}
 
-	jsonfile, err := os.Open(baselinePath)
-	if err != nil {
-		return err
-	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
-	if err != nil {
-		return err
-	}
-	_, err = EqualJson(string(fileBytes), responseJson)
-	return err
+	return VerifyResponse(baselinePath, responseJson)
 }
 
 func ResponsesContext(s *godog.Suite) {

@@ -3,23 +3,25 @@ package algod
 import (
 	"context"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+type PendingTransactionInformationParams struct {
+
+	// Format configures whether the response object is JSON or MessagePack encoded.
+	Format string `url:"format,omitempty"`
+}
+
 type PendingTransactionInformation struct {
-	c    *Client
+	c *Client
+
 	txid string
-	p    models.PendingTransactionInformationParams
-}
 
-func (s *PendingTransactionInformation) Max(max uint64) *PendingTransactionInformation {
-	s.p.Max = max
-	return s
+	p PendingTransactionInformationParams
 }
-
-// s.p.Format setter intentionally omitted: this SDK only uses msgpack.
 
 func (s *PendingTransactionInformation) Do(ctx context.Context, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
 	s.p.Format = "msgpack"

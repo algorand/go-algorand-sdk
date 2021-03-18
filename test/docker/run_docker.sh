@@ -13,7 +13,7 @@ mv test-harness/features test/features
 docker build -t go-sdk-testing -f test/docker/Dockerfile "$(pwd)"
 
 # Start test harness environment
-./test-harness/scripts/up.sh
+./test-harness/scripts/up.sh -p
 
 docker run -it \
      --network host \

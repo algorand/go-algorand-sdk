@@ -1,82 +1,5 @@
 package models
 
-import "github.com/algorand/go-algorand-sdk/types"
-
-// Account information at a given round.
-// Definition:
-// data/basics/userBalance.go : AccountData
-type Account struct {
-	// Address the account public key
-	Address string `json:"address,omitempty"`
-
-	// Amount (algo) total number of MicroAlgos in the account
-	Amount uint64 `json:"amount,omitempty"`
-
-	// AmountWithoutPendingRewards specifies the amount of MicroAlgos in the account,
-	// without the pending rewards.
-	AmountWithoutPendingRewards uint64 `json:"amount-without-pending-rewards,omitempty"`
-
-	// AppsLocalState (appl) applications local data stored in this account.
-	// Note the raw object uses `map[int] -> AppLocalState` for this type.
-	AppsLocalState []ApplicationLocalState `json:"apps-local-state,omitempty"`
-
-	// AppsTotalSchema (tsch) stores the sum of all of the local schemas and global
-	// schemas in this account.
-	// Note: the raw account uses `StateSchema` for this type.
-	AppsTotalSchema ApplicationStateSchema `json:"apps-total-schema,omitempty"`
-
-	// Assets (asset) assets held by this account.
-	// Note the raw object uses `map[int] -> AssetHolding` for this type.
-	Assets []AssetHolding `json:"assets,omitempty"`
-
-	// AuthAddr (spend) the address against which signing should be checked. If empty,
-	// the address of the current account is used. This field can be updated in any
-	// transaction by setting the RekeyTo field.
-	AuthAddr string `json:"auth-addr,omitempty"`
-
-	// CreatedApps (appp) parameters of applications created by this account including
-	// app global data.
-	// Note: the raw account uses `map[int] -> AppParams` for this type.
-	CreatedApps []Application `json:"created-apps,omitempty"`
-
-	// CreatedAssets (apar) parameters of assets created by this account.
-	// Note: the raw account uses `map[int] -> Asset` for this type.
-	CreatedAssets []Asset `json:"created-assets,omitempty"`
-
-	// Participation accountParticipation describes the parameters used by this account
-	// in consensus protocol.
-	Participation AccountParticipation `json:"participation,omitempty"`
-
-	// PendingRewards amount of MicroAlgos of pending rewards in this account.
-	PendingRewards uint64 `json:"pending-rewards,omitempty"`
-
-	// RewardBase (ebase) used as part of the rewards computation. Only applicable to
-	// accounts which are participating.
-	RewardBase uint64 `json:"reward-base,omitempty"`
-
-	// Rewards (ern) total rewards of MicroAlgos the account has received, including
-	// pending rewards.
-	Rewards uint64 `json:"rewards,omitempty"`
-
-	// Round the round for which this information is relevant.
-	Round uint64 `json:"round,omitempty"`
-
-	// SigType indicates what type of signature is used by this account, must be one
-	// of:
-	// * sig
-	// * msig
-	// * lsig
-	SigType string `json:"sig-type,omitempty"`
-
-	// Status (onl) delegation status of the account's MicroAlgos
-	// * Offline - indicates that the associated account is delegated.
-	// * Online - indicates that the associated account used as part of the delegation
-	// pool.
-	// * NotParticipating - indicates that the associated account is neither a
-	// delegator nor a delegate.
-	Status string `json:"status,omitempty"`
-}
-
 // AccountParticipation describes the parameters used by this account in consensus protocol.
 type AccountParticipation struct {
 
@@ -94,37 +17,6 @@ type AccountParticipation struct {
 
 	// \[vote\] root participation public key (if any) currently registered for this round.
 	VoteParticipationKey []byte `json:"vote-participation-key,omitempty"`
-}
-
-// Asset specifies both the unique identifier and the parameters for an asset
-type Asset struct {
-
-	// unique asset identifier
-	Index uint64 `json:"index"`
-
-	// AssetParams specifies the parameters for an asset.
-	//
-	// \[apar\] when part of an AssetConfig transaction.
-	//
-	// Definition:
-	// data/transactions/asset.go : AssetParams
-	Params AssetParams `json:"params"`
-}
-
-// AssetHolding describes an asset held by an account.
-type AssetHolding struct {
-
-	// \[a\] number of units held.
-	Amount uint64 `json:"amount"`
-
-	// Asset ID of the holding.
-	AssetId uint64 `json:"asset-id"`
-
-	// Address that created this asset. This is the address where the parameters for this asset can be found, and also the address where unwanted asset units can be sent in the worst case.
-	Creator string `json:"creator"`
-
-	// \[f\] whether or not the holding is frozen.
-	IsFrozen bool `json:"is-frozen,omitempty"`
 }
 
 // AssetParams specifies the parameters for an asset.
@@ -278,62 +170,6 @@ type BlockUpgradeVote struct {
 
 	// \[upgradeprop\] Indicates a proposed upgrade.
 	UpgradePropose string `json:"upgrade-propose,omitempty"`
-}
-
-// MiniAssetHolding defines model for MiniAssetHolding.
-type MiniAssetHolding struct {
-	Address  string `json:"address"`
-	Amount   uint64 `json:"amount"`
-	IsFrozen bool   `json:"is-frozen"`
-}
-
-// NodeStatus contains the information about a node's 'status.
-type NodeStatus struct {
-	// Catchpoint the current catchpoint that is being caught up to
-	Catchpoint string `json:"catchpoint,omitempty"`
-
-	// CatchpointAcquiredBlocks the number of blocks that have already been obtained by
-	// the node as part of the catchup
-	CatchpointAcquiredBlocks uint64 `json:"catchpoint-acquired-blocks,omitempty"`
-
-	// CatchpointProcessedAccounts the number of account from the current catchpoint
-	// that have been processed so far as part of the catchup
-	CatchpointProcessedAccounts uint64 `json:"catchpoint-processed-accounts,omitempty"`
-
-	// CatchpointTotalAccounts the total number of accounts included in the current
-	// catchpoint
-	CatchpointTotalAccounts uint64 `json:"catchpoint-total-accounts,omitempty"`
-
-	// CatchpointTotalBlocks the total number of blocks that are required to complete
-	// the current catchpoint catchup
-	CatchpointTotalBlocks uint64 `json:"catchpoint-total-blocks,omitempty"`
-
-	// CatchupTime in nanoseconds
-	CatchupTime uint64 `json:"catchup-time"`
-
-	// LastCatchpoint the last catchpoint seen by the node
-	LastCatchpoint string `json:"last-catchpoint,omitempty"`
-
-	// LastRound indicates the last round seen
-	LastRound uint64 `json:"last-round"`
-
-	// LastVersion indicates the last consensus version supported
-	LastVersion string `json:"last-version,omitempty"`
-
-	// NextVersion of consensus protocol to use
-	NextVersion string `json:"next-version,omitempty"`
-
-	// NextVersionRound is the round at which the next consensus version will apply
-	NextVersionRound uint64 `json:"next-version-round,omitempty"`
-
-	// NextVersionSupported indicates whether the next consensus version is supported by this node
-	NextVersionSupported bool `json:"next-version-supported,omitempty"`
-
-	// StoppedAtUnsupportedRound indicates that the node does not support the new rounds and has stopped making progress
-	StoppedAtUnsupportedRound bool `json:"stopped-at-unsupported-round"`
-
-	// TimeSinceLastRound in nanoseconds
-	TimeSinceLastRound uint64 `json:"time-since-last-round"`
 }
 
 // Supply defines model for Supply.
@@ -827,12 +663,6 @@ type ErrorResponse struct {
 	Message string                  `json:"message"`
 }
 
-// HealthCheck defines model for HealthCheck.
-type HealthCheck struct {
-	Data    *map[string]interface{} `json:"data,omitempty"`
-	Message string                  `json:"message"`
-}
-
 // TransactionsResponse defines model for TransactionsResponse.
 type TransactionsResponse struct {
 
@@ -842,39 +672,6 @@ type TransactionsResponse struct {
 
 	// Used for pagination, when making another request provide this token with the next parameter.
 	NextToken string `json:"next-token"`
-}
-
-// PendingTransactionInfoResponse is returned by Get Pending Transaction by TXID
-type PendingTransactionInfoResponse = struct {
-	Transaction types.SignedTxn `codec:"txn"`
-	//PoolError indicates that the transaction was kicked out of this node's transaction pool (and specifies why that happened).  An empty string indicates the transaction wasn't kicked out of this node's txpool due to an error.
-	PoolError string `codec:"pool-error"`
-	//ConfirmedRound is the round where this transaction was confirmed, if present.
-	ConfirmedRound uint64 `codec:"confirmed-round,omitempty"`
-	//AssetIndex is the index of the newly created asset, if this was an asset creation transaction.
-	AssetIndex uint64 `codec:"asset-index,omitempty"`
-	//ApplicationIndex is the index of the newly created application, if this was an application creation transaction.
-	ApplicationIndex uint64 `codec:"application-index,omitempty"`
-	//Closing amount for the transaction.
-	ClosingAmount uint64 `codec:"closing-amount,omitempty"`
-	//Rewards, in microAlgos, applied to sender.
-	SenderRewards uint64 `codec:"sender-rewards,omitempty"`
-	//Rewards, in microAlgos, applied to receiver.
-	ReceiverRewards uint64 `codec:"receiver-rewards,omitempty"`
-	//Rewards, in microAlgos, applied to close-to.
-	CloseRewards uint64 `codec:"close-rewards,omitempty"`
-	// LocalStateDelta (ld) Local state key/value changes for the application being
-	// executed by this transaction.
-	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
-	// GlobalStateDelta (gd) Global state key/value changes for the application being
-	// executed by this transaction.
-	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
-}
-
-// PendingTransactionsResponse is returned by PendingTransactions and by Txid
-type PendingTransactionsResponse = struct {
-	TopTransactions   []types.SignedTxn `codec:"top-transactions"`
-	TotalTransactions uint64            `codec:"total-transactions"`
 }
 
 // GetBlock response is returned by Block
