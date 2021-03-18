@@ -17,8 +17,8 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^the parsed LookupAssetTransactions response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedLookupAssetTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender)
 	s.Step(`^we make any LookupAccountTransactions call$`, weMakeAnyLookupAccountTransactionsCall)
 	s.Step(`^the parsed LookupAccountTransactions response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedLookupAccountTransactionsResponseShouldBeValidOnRoundAndContainAnArrayOfLenAndElementNumberShouldHaveSender)
-	s.Step(`^we make any LookupBlock call$`, weMakeAnyLookupBlockCall)
-	s.Step(`^the parsed LookupBlock response should have proposer "([^"]*)"$`, theParsedLookupBlockResponseShouldHaveProposer)
+	//s.Step(`^we make any LookupBlock call$`, weMakeAnyLookupBlockCall)
+	//s.Step(`^the parsed LookupBlock response should have proposer "([^"]*)"$`, theParsedLookupBlockResponseShouldHaveProposer)
 	s.Step(`^the parsed LookupBlock response should have previous block hash "([^"]*)"$`, theParsedLookupBlockResponseShouldHavePreviousBlockHash)
 	s.Step(`^we make any LookupAccountByID call$`, weMakeAnyLookupAccountByIDCall)
 	s.Step(`^the parsed LookupAccountByID response should have address "([^"]*)"$`, theParsedLookupAccountByIDResponseShouldHaveAddress)
@@ -162,6 +162,7 @@ func weMakeAnyLookupBlockCall() error {
 	return nil
 }
 
+/*
 func theParsedLookupBlockResponseShouldHaveProposer(proposer string) error {
 	if lookupBlockResponse.Proposer != proposer {
 		return fmt.Errorf("response proposer %s did not match expected proposer %s", lookupBlockResponse.Proposer, proposer)
@@ -176,6 +177,7 @@ func theParsedLookupBlockResponseShouldHavePreviousBlockHash(blockhash string) e
 	}
 	return nil
 }
+*/
 
 var lookupAccountByIDResponse models.Account
 
