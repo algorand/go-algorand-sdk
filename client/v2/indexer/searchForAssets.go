@@ -26,9 +26,9 @@ type SearchForAssetsParams struct {
 	// Name filter just assets with the given name.
 	Name string `url:"name,omitempty"`
 
-	// Next the next page of results. Use the next token provided by the previous
+	// NextToken the next page of results. Use the next token provided by the previous
 	// results.
-	Next string `url:"next,omitempty"`
+	NextToken string `url:"next,omitempty"`
 
 	// Unit filter just assets with the given unit.
 	Unit string `url:"unit,omitempty"`
@@ -72,10 +72,10 @@ func (s *SearchForAssets) Name(Name string) *SearchForAssets {
 	return s
 }
 
-// Next the next page of results. Use the next token provided by the previous
+// NextToken the next page of results. Use the next token provided by the previous
 // results.
-func (s *SearchForAssets) Next(Next string) *SearchForAssets {
-	s.p.Next = Next
+func (s *SearchForAssets) NextToken(NextToken string) *SearchForAssets {
+	s.p.NextToken = NextToken
 	return s
 }
 
