@@ -35,7 +35,7 @@ func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransaction
 }
 
 func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransactions {
-	return &LookupAccountTransactions{c: c, account: account}
+	return &LookupAccountTransactions{c: c, accountId: account}
 }
 
 func (c *Client) LookupBlock(round uint64) *LookupBlock {
