@@ -27,7 +27,7 @@ func (c *Client) HealthCheck() *HealthCheck {
 }
 
 func (c *Client) LookupAssetBalances(assetId uint64) *LookupAssetBalances {
-	return &LookupAssetBalances{c: c, index: assetId}
+	return &LookupAssetBalances{c: c, assetId: assetId}
 }
 
 func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransactions {
@@ -46,8 +46,8 @@ func (c *Client) LookupAccountByID(account string) *LookupAccountByID {
 	return &LookupAccountByID{c: c, accountId: account}
 }
 
-func (c *Client) LookupAssetByID(index uint64) *LookupAssetByID {
-	return &LookupAssetByID{c: c, index: index}
+func (c *Client) LookupAssetByID(assetId uint64) *LookupAssetByID {
+	return &LookupAssetByID{c: c, assetId: assetId}
 }
 
 func (c *Client) SearchAccounts() *SearchAccounts {
