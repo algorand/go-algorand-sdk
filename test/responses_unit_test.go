@@ -104,11 +104,11 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "TransactionParams":
 			var sParams types.SuggestedParams
 			sParams, err = algodC.SuggestedParams().Do(context.Background())
-			response = models.TransactionParams{
+			response = models.TransactionParametersResponse{
 				ConsensusVersion: sParams.ConsensusVersion,
 				Fee:              uint64(sParams.Fee),
-				GenesisID:        sParams.GenesisID,
-				Genesishash:      sParams.GenesisHash,
+				GenesisId:        sParams.GenesisID,
+				GenesisHash:      sParams.GenesisHash,
 				LastRound:        uint64(sParams.FirstRoundValid),
 				MinFee:           sParams.MinFee,
 			}
