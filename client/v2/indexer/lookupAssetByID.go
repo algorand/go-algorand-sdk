@@ -36,7 +36,7 @@ func (s *LookupAssetByID) IncludeAll(IncludeAll bool) *LookupAssetByID {
 
 // Do performs the HTTP request
 func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
-	response := models.LookupAssetByIDResponse{}
+	response := models.AssetResponse{}
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d", s.assetId), s.p, headers)
 	validRound = response.CurrentRound
 	result = response.Asset

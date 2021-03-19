@@ -45,7 +45,7 @@ func (s *LookupAccountByID) Round(Round uint64) *LookupAccountByID {
 
 // Do performs the HTTP request
 func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
-	response := models.LookupAccountByIDResponse{}
+	response := models.AccountResponse{}
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
 	validRound = response.CurrentRound
 	result = response.Account

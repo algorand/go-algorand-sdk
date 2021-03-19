@@ -50,7 +50,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		switch endpoint {
 		case "lookupAccountByID":
 			round, something, err = indexerC.LookupAccountByID("").Do(context.Background())
-			response = models.LookupAccountByIDResponse{
+			response = models.AccountResponse{
 				CurrentRound: round,
 				Account:      something.(models.Account),
 			}
@@ -64,7 +64,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetBalances(10).Do(context.Background())
 		case "lookupAssetByID":
 			round, something, err = indexerC.LookupAssetByID(10).Do(context.Background())
-			response = models.LookupAssetByIDResponse{
+			response = models.AssetResponse{
 				CurrentRound: round,
 				Asset:        something.(models.Asset),
 			}

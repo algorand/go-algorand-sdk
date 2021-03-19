@@ -9,6 +9,9 @@ type NodeStatus NodeStatusResponse
 // PendingTransactionInfoResponse is the single pending transaction response.
 type PendingTransactionInfoResponse PendingTransactionResponse
 
+// HealthCheckResponse defines model for HealthCheckResponse.
+type HealthCheckResponse HealthCheck
+
 // Supply
 type Supply SupplyResponse
 
