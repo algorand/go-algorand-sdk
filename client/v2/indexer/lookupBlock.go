@@ -9,11 +9,12 @@ import (
 )
 
 type LookupBlock struct {
-	c     *Client
-	round uint64
+	c *Client
+
+	roundNumber uint64
 }
 
 func (s *LookupBlock) Do(ctx context.Context, headers ...*common.Header) (response models.Block, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%v", s.roundNumber), nil, headers)
 	return
 }
