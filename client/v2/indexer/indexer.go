@@ -26,12 +26,12 @@ func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
 
-func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {
-	return &LookupAssetBalances{c: c, index: index}
+func (c *Client) LookupAssetBalances(assetId uint64) *LookupAssetBalances {
+	return &LookupAssetBalances{c: c, index: assetId}
 }
 
-func (c *Client) LookupAssetTransactions(index uint64) *LookupAssetTransactions {
-	return &LookupAssetTransactions{c: c, index: index}
+func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransactions {
+	return &LookupAssetTransactions{c: c, assetId: assetId}
 }
 
 func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransactions {
@@ -39,7 +39,7 @@ func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransac
 }
 
 func (c *Client) LookupBlock(round uint64) *LookupBlock {
-	return &LookupBlock{c: c, round: round}
+	return &LookupBlock{c: c, roundNumber: round}
 }
 
 func (c *Client) LookupAccountByID(account string) *LookupAccountByID {

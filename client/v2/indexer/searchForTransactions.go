@@ -11,9 +11,9 @@ import (
 
 type SearchForTransactionsParams struct {
 
-	// Address only include transactions with this address in one of the transaction
-	// fields.
-	Address string `url:"address,omitempty"`
+	// AddressString only include transactions with this address in one of the
+	// transaction fields.
+	AddressString string `url:"address,omitempty"`
 
 	// AddressRole combine with the address parameter to define what type of address to
 	// search for.
@@ -57,9 +57,9 @@ type SearchForTransactionsParams struct {
 	// MinRound include results at or after the specified min-round.
 	MinRound uint64 `url:"min-round,omitempty"`
 
-	// Next the next page of results. Use the next token provided by the previous
+	// NextToken the next page of results. Use the next token provided by the previous
 	// results.
-	Next string `url:"next,omitempty"`
+	NextToken string `url:"next,omitempty"`
 
 	// NotePrefix specifies a prefix which must be contained in the note field.
 	NotePrefix string `url:"note-prefix,omitempty"`
@@ -89,10 +89,10 @@ type SearchForTransactions struct {
 	p SearchForTransactionsParams
 }
 
-// Address only include transactions with this address in one of the transaction
-// fields.
-func (s *SearchForTransactions) Address(Address string) *SearchForTransactions {
-	s.p.Address = Address
+// AddressString only include transactions with this address in one of the
+// transaction fields.
+func (s *SearchForTransactions) AddressString(AddressString string) *SearchForTransactions {
+	s.p.AddressString = AddressString
 	return s
 }
 
@@ -187,16 +187,17 @@ func (s *SearchForTransactions) MinRound(MinRound uint64) *SearchForTransactions
 	return s
 }
 
-// Next the next page of results. Use the next token provided by the previous
+// NextToken the next page of results. Use the next token provided by the previous
 // results.
-func (s *SearchForTransactions) Next(Next string) *SearchForTransactions {
-	s.p.Next = Next
+func (s *SearchForTransactions) NextToken(NextToken string) *SearchForTransactions {
+	s.p.NextToken = NextToken
 	return s
 }
 
 // NotePrefix specifies a prefix which must be contained in the note field.
-func (s *SearchForTransactions) NotePrefix(NotePrefix string) *SearchForTransactions {
-	s.p.NotePrefix = NotePrefix
+func (s *SearchForTransactions) NotePrefix(NotePrefix []byte) *SearchForTransactions {
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(NotePrefix)
+
 	return s
 }
 

@@ -110,7 +110,24 @@ func weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigT
 		return err
 	}
 	rekeyToBool := rekeyTo == "true"
-	_, globalErrForExamination = indexerClient.LookupAssetTransactions(uint64(assetIndex)).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AddressString(address).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).RekeyTo(rekeyToBool).Do(context.Background())
+	_, globalErrForExamination = indexerClient.LookupAssetTransactions(uint64(assetIndex)).
+		NotePrefix(notePrefixBytes).
+		TxType(txType).
+		SigType(sigType).
+		TXID(txid).
+		Round(uint64(round)).
+		MinRound(uint64(minRound)).
+		MaxRound(uint64(maxRound)).
+		Limit(uint64(limit)).
+		BeforeTimeString(beforeTime).
+		AfterTimeString(afterTime).
+		CurrencyGreaterThan(uint64(currencyGreater)).
+		CurrencyLessThan(uint64(currencyLesser)).
+		AddressString(address).
+		AddressRole(addressRole).
+		ExcludeCloseTo(excludeCloseToBool).
+		RekeyTo(rekeyToBool).
+		Do(context.Background())
 	return nil
 }
 

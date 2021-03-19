@@ -8,115 +8,218 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/types"
 )
 
+type LookupAssetTransactionsParams struct {
+
+	// AddressString only include transactions with this address in one of the
+	// transaction fields.
+	AddressString string `url:"address,omitempty"`
+
+	// AddressRole combine with the address parameter to define what type of address to
+	// search for.
+	AddressRole string `url:"address-role,omitempty"`
+
+	// AfterTime include results after the given time. Must be an RFC 3339 formatted
+	// string.
+	AfterTime string `url:"after-time,omitempty"`
+
+	// BeforeTime include results before the given time. Must be an RFC 3339 formatted
+	// string.
+	BeforeTime string `url:"before-time,omitempty"`
+
+	// CurrencyGreaterThan results should have an amount greater than this value.
+	// MicroAlgos are the default currency unless an asset-id is provided, in which
+	// case the asset will be used.
+	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
+
+	// CurrencyLessThan results should have an amount less than this value. MicroAlgos
+	// are the default currency unless an asset-id is provided, in which case the asset
+	// will be used.
+	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
+
+	// ExcludeCloseTo combine with address and address-role parameters to define what
+	// type of address to search for. The close to fields are normally treated as a
+	// receiver, if you would like to exclude them set this parameter to true.
+	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
+
+	// Limit maximum number of results to return.
+	Limit uint64 `url:"limit,omitempty"`
+
+	// MaxRound include results at or before the specified max-round.
+	MaxRound uint64 `url:"max-round,omitempty"`
+
+	// MinRound include results at or after the specified min-round.
+	MinRound uint64 `url:"min-round,omitempty"`
+
+	// NextToken the next page of results. Use the next token provided by the previous
+	// results.
+	NextToken string `url:"next,omitempty"`
+
+	// NotePrefix specifies a prefix which must be contained in the note field.
+	NotePrefix string `url:"note-prefix,omitempty"`
+
+	// RekeyTo include results which include the rekey-to field.
+	RekeyTo bool `url:"rekey-to,omitempty"`
+
+	// Round include results for the specified round.
+	Round uint64 `url:"round,omitempty"`
+
+	// SigType sigType filters just results using the specified type of signature:
+	// * sig - Standard
+	// * msig - MultiSig
+	// * lsig - LogicSig
+	SigType string `url:"sig-type,omitempty"`
+
+	// TxType
+	TxType string `url:"tx-type,omitempty"`
+
+	// TXID lookup the specific transaction by ID.
+	TXID string `url:"txid,omitempty"`
+}
+
 type LookupAssetTransactions struct {
-	c     *Client
-	index uint64
-	p     models.LookupAssetTransactionsParams
+	c *Client
+
+	assetId uint64
+
+	p LookupAssetTransactionsParams
 }
 
-func (s *LookupAssetTransactions) NextToken(nextToken string) *LookupAssetTransactions {
-	s.p.NextToken = nextToken
+// AddressString only include transactions with this address in one of the
+// transaction fields.
+func (s *LookupAssetTransactions) AddressString(AddressString string) *LookupAssetTransactions {
+	s.p.AddressString = AddressString
 	return s
 }
 
-func (s *LookupAssetTransactions) NotePrefix(prefix []byte) *LookupAssetTransactions {
-	s.p.NotePrefix = base64.StdEncoding.EncodeToString(prefix)
+// AddressRole combine with the address parameter to define what type of address to
+// search for.
+func (s *LookupAssetTransactions) AddressRole(AddressRole string) *LookupAssetTransactions {
+	s.p.AddressRole = AddressRole
 	return s
 }
 
-func (s *LookupAssetTransactions) TxType(txtype string) *LookupAssetTransactions {
-	s.p.TxType = txtype
+// AfterTimeString include results after the given time. Must be an RFC 3339
+// formatted string.
+func (s *LookupAssetTransactions) AfterTimeString(AfterTime string) *LookupAssetTransactions {
+	s.p.AfterTime = AfterTime
 	return s
 }
 
-func (s *LookupAssetTransactions) SigType(sigtype string) *LookupAssetTransactions {
-	s.p.SigType = sigtype
+// AfterTime include results after the given time. Must be an RFC 3339 formatted
+// string.
+func (s *LookupAssetTransactions) AfterTime(AfterTime time.Time) *LookupAssetTransactions {
+	AfterTimeStr := AfterTime.Format(time.RFC3339)
+
+	return s.AfterTimeString(AfterTimeStr)
+}
+
+// BeforeTimeString include results before the given time. Must be an RFC 3339
+// formatted string.
+func (s *LookupAssetTransactions) BeforeTimeString(BeforeTime string) *LookupAssetTransactions {
+	s.p.BeforeTime = BeforeTime
 	return s
 }
 
-func (s *LookupAssetTransactions) TXID(txid string) *LookupAssetTransactions {
-	s.p.TxId = txid
+// BeforeTime include results before the given time. Must be an RFC 3339 formatted
+// string.
+func (s *LookupAssetTransactions) BeforeTime(BeforeTime time.Time) *LookupAssetTransactions {
+	BeforeTimeStr := BeforeTime.Format(time.RFC3339)
+
+	return s.BeforeTimeString(BeforeTimeStr)
+}
+
+// CurrencyGreaterThan results should have an amount greater than this value.
+// MicroAlgos are the default currency unless an asset-id is provided, in which
+// case the asset will be used.
+func (s *LookupAssetTransactions) CurrencyGreaterThan(CurrencyGreaterThan uint64) *LookupAssetTransactions {
+	s.p.CurrencyGreaterThan = CurrencyGreaterThan
 	return s
 }
 
-func (s *LookupAssetTransactions) Round(rnd uint64) *LookupAssetTransactions {
-	s.p.Round = rnd
+// CurrencyLessThan results should have an amount less than this value. MicroAlgos
+// are the default currency unless an asset-id is provided, in which case the asset
+// will be used.
+func (s *LookupAssetTransactions) CurrencyLessThan(CurrencyLessThan uint64) *LookupAssetTransactions {
+	s.p.CurrencyLessThan = CurrencyLessThan
 	return s
 }
 
-func (s *LookupAssetTransactions) MinRound(min uint64) *LookupAssetTransactions {
-	s.p.MinRound = min
+// ExcludeCloseTo combine with address and address-role parameters to define what
+// type of address to search for. The close to fields are normally treated as a
+// receiver, if you would like to exclude them set this parameter to true.
+func (s *LookupAssetTransactions) ExcludeCloseTo(ExcludeCloseTo bool) *LookupAssetTransactions {
+	s.p.ExcludeCloseTo = ExcludeCloseTo
 	return s
 }
 
-func (s *LookupAssetTransactions) MaxRound(max uint64) *LookupAssetTransactions {
-	s.p.MaxRound = max
+// Limit maximum number of results to return.
+func (s *LookupAssetTransactions) Limit(Limit uint64) *LookupAssetTransactions {
+	s.p.Limit = Limit
 	return s
 }
 
-func (s *LookupAssetTransactions) AddressString(address string) *LookupAssetTransactions {
-	s.p.Address = address
+// MaxRound include results at or before the specified max-round.
+func (s *LookupAssetTransactions) MaxRound(MaxRound uint64) *LookupAssetTransactions {
+	s.p.MaxRound = MaxRound
 	return s
 }
 
-func (s *LookupAssetTransactions) Address(address types.Address) *LookupAssetTransactions {
-	return s.AddressString(address.String())
-}
-
-func (s *LookupAssetTransactions) Limit(limit uint64) *LookupAssetTransactions {
-	s.p.Limit = limit
+// MinRound include results at or after the specified min-round.
+func (s *LookupAssetTransactions) MinRound(MinRound uint64) *LookupAssetTransactions {
+	s.p.MinRound = MinRound
 	return s
 }
 
-func (s *LookupAssetTransactions) BeforeTimeString(before string) *LookupAssetTransactions {
-	s.p.BeforeTime = before
+// NextToken the next page of results. Use the next token provided by the previous
+// results.
+func (s *LookupAssetTransactions) NextToken(NextToken string) *LookupAssetTransactions {
+	s.p.NextToken = NextToken
 	return s
 }
 
-func (s *LookupAssetTransactions) AfterTimeString(after string) *LookupAssetTransactions {
-	s.p.AfterTime = after
+// NotePrefix specifies a prefix which must be contained in the note field.
+func (s *LookupAssetTransactions) NotePrefix(NotePrefix []byte) *LookupAssetTransactions {
+	s.p.NotePrefix = base64.StdEncoding.EncodeToString(NotePrefix)
+
 	return s
 }
 
-func (s *LookupAssetTransactions) BeforeTime(before time.Time) *LookupAssetTransactions {
-	beforeString := before.Format(time.RFC3339)
-	return s.BeforeTimeString(beforeString)
-}
-
-func (s *LookupAssetTransactions) AfterTime(after time.Time) *LookupAssetTransactions {
-	afterString := after.Format(time.RFC3339)
-	return s.AfterTimeString(afterString)
-}
-
-func (s *LookupAssetTransactions) CurrencyGreaterThan(greaterThan uint64) *LookupAssetTransactions {
-	s.p.CurrencyGreaterThan = greaterThan
+// RekeyTo include results which include the rekey-to field.
+func (s *LookupAssetTransactions) RekeyTo(RekeyTo bool) *LookupAssetTransactions {
+	s.p.RekeyTo = RekeyTo
 	return s
 }
 
-func (s *LookupAssetTransactions) CurrencyLessThan(lessThan uint64) *LookupAssetTransactions {
-	s.p.CurrencyLessThan = lessThan
+// Round include results for the specified round.
+func (s *LookupAssetTransactions) Round(Round uint64) *LookupAssetTransactions {
+	s.p.Round = Round
 	return s
 }
 
-func (s *LookupAssetTransactions) AddressRole(role string) *LookupAssetTransactions {
-	s.p.AddressRole = role
+// SigType sigType filters just results using the specified type of signature:
+// * sig - Standard
+// * msig - MultiSig
+// * lsig - LogicSig
+func (s *LookupAssetTransactions) SigType(SigType string) *LookupAssetTransactions {
+	s.p.SigType = SigType
 	return s
 }
 
-func (s *LookupAssetTransactions) ExcludeCloseTo(exclude bool) *LookupAssetTransactions {
-	s.p.ExcludeCloseTo = exclude
+// TxType
+func (s *LookupAssetTransactions) TxType(TxType string) *LookupAssetTransactions {
+	s.p.TxType = TxType
 	return s
 }
 
-func (s *LookupAssetTransactions) RekeyTo(rekeyTo bool) *LookupAssetTransactions {
-	s.p.RekeyTo = rekeyTo
+// TXID lookup the specific transaction by ID.
+func (s *LookupAssetTransactions) TXID(TXID string) *LookupAssetTransactions {
+	s.p.TXID = TXID
 	return s
 }
 
 func (s *LookupAssetTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d/transactions", s.index), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v/transactions", s.assetId), s.p, headers)
 	return
 }
