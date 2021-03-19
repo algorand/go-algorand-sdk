@@ -67,8 +67,8 @@ func (c *Client) PendingTransactions() *PendingTransactions {
 	return &PendingTransactions{c: c}
 }
 
-func (c *Client) SendRawTransaction(tx []byte) *SendRawTransaction {
-	return &SendRawTransaction{c: c, stx: tx}
+func (c *Client) SendRawTransaction(rawtxn []byte) *SendRawTransaction {
+	return &SendRawTransaction{c: c, rawtxn: rawtxn}
 }
 
 func (c *Client) StatusAfterBlock(round uint64) *StatusAfterBlock {
