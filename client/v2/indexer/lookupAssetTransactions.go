@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupAssetTransactionsParams contains all of the query parameters for url serialization.
 type LookupAssetTransactionsParams struct {
 
 	// AddressString only include transactions with this address in one of the
@@ -78,6 +79,7 @@ type LookupAssetTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
+// LookupAssetTransactions lookup transactions for an asset.
 type LookupAssetTransactions struct {
 	c *Client
 
@@ -219,6 +221,7 @@ func (s *LookupAssetTransactions) TXID(TXID string) *LookupAssetTransactions {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupAssetTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v/transactions", s.assetId), s.p, headers)
 	return

@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupAccountTransactionsParams contains all of the query parameters for url serialization.
 type LookupAccountTransactionsParams struct {
 
 	// AfterTime include results after the given time. Must be an RFC 3339 formatted
@@ -68,6 +69,7 @@ type LookupAccountTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
+// LookupAccountTransactions lookup account transactions.
 type LookupAccountTransactions struct {
 	c *Client
 
@@ -193,6 +195,7 @@ func (s *LookupAccountTransactions) TXID(TXID string) *LookupAccountTransactions
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/transactions", s.accountId), s.p, headers)
 	return

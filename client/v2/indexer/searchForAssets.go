@@ -7,6 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// SearchForAssetsParams contains all of the query parameters for url serialization.
 type SearchForAssetsParams struct {
 
 	// AssetID asset ID
@@ -34,6 +35,7 @@ type SearchForAssetsParams struct {
 	Unit string `url:"unit,omitempty"`
 }
 
+// SearchForAssets search for assets.
 type SearchForAssets struct {
 	c *Client
 
@@ -85,6 +87,7 @@ func (s *SearchForAssets) Unit(Unit string) *SearchForAssets {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *SearchForAssets) Do(ctx context.Context, headers ...*common.Header) (response models.AssetsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/assets", s.p, headers)
 	return

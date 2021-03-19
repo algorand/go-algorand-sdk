@@ -9,6 +9,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// PendingTransactionInformationByAddressParams contains all of the query parameters for url serialization.
 type PendingTransactionInformationByAddressParams struct {
 
 	// Format configures whether the response object is JSON or MessagePack encoded.
@@ -19,6 +20,9 @@ type PendingTransactionInformationByAddressParams struct {
 	Max uint64 `url:"max,omitempty"`
 }
 
+// PendingTransactionInformationByAddress get the list of pending transactions by
+// address, sorted by priority, in decreasing order, truncated at the end at MAX.
+// If MAX = 0, returns all pending transactions.
 type PendingTransactionInformationByAddress struct {
 	c *Client
 
@@ -34,6 +38,7 @@ func (s *PendingTransactionInformationByAddress) Max(Max uint64) *PendingTransac
 	return s
 }
 
+// Do performs the HTTP request
 func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
 	s.p.Format = "msgpack"
 	response := models.PendingTransactionsResponse{}

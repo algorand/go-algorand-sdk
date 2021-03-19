@@ -8,12 +8,14 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// SendRawTransaction broadcasts a raw transaction to the network.
 type SendRawTransaction struct {
 	c *Client
 
 	rawtxn []byte
 }
 
+// Do performs the HTTP request
 func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
 	var response models.PostTransactionsResponse
 	// Set default Content-Type, if the user didn't specify it.

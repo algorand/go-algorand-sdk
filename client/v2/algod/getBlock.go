@@ -9,12 +9,14 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// BlockParams contains all of the query parameters for url serialization.
 type BlockParams struct {
 
 	// Format configures whether the response object is JSON or MessagePack encoded.
 	Format string `url:"format,omitempty"`
 }
 
+// Block get the block for the given round.
 type Block struct {
 	c *Client
 
@@ -23,6 +25,7 @@ type Block struct {
 	p BlockParams
 }
 
+// Do performs the HTTP request
 func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
 	var response models.BlockResponse
 

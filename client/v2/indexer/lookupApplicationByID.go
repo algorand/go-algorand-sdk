@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupApplicationByIDParams contains all of the query parameters for url serialization.
 type LookupApplicationByIDParams struct {
 
 	// IncludeAll include all items including closed accounts, deleted applications,
@@ -16,6 +17,7 @@ type LookupApplicationByIDParams struct {
 	IncludeAll bool `url:"include-all,omitempty"`
 }
 
+// LookupApplicationByID lookup application.
 type LookupApplicationByID struct {
 	c *Client
 
@@ -32,6 +34,7 @@ func (s *LookupApplicationByID) IncludeAll(IncludeAll bool) *LookupApplicationBy
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupApplicationByID) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%v", s.applicationId), s.p, headers)
 	return

@@ -8,10 +8,12 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// SuggestedParams get parameters for constructing a new transaction
 type SuggestedParams struct {
 	c *Client
 }
 
+// Do performs the HTTP request
 func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (params types.SuggestedParams, err error) {
 	var response models.TransactionParametersResponse
 	err = s.c.get(ctx, &response, "/v2/transactions/params", nil, headers)

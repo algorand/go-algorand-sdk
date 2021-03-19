@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupAssetBalancesParams contains all of the query parameters for url serialization.
 type LookupAssetBalancesParams struct {
 
 	// CurrencyGreaterThan results should have an amount greater than this value.
@@ -36,6 +37,7 @@ type LookupAssetBalancesParams struct {
 	Round uint64 `url:"round,omitempty"`
 }
 
+// LookupAssetBalances lookup the list of accounts who hold this asset
 type LookupAssetBalances struct {
 	c *Client
 
@@ -87,6 +89,7 @@ func (s *LookupAssetBalances) Round(Round uint64) *LookupAssetBalances {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupAssetBalances) Do(ctx context.Context, headers ...*common.Header) (response models.AssetBalancesResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v/balances", s.assetId), s.p, headers)
 	return

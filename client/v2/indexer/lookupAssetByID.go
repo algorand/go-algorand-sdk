@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupAssetByIDParams contains all of the query parameters for url serialization.
 type LookupAssetByIDParams struct {
 
 	// IncludeAll include all items including closed accounts, deleted applications,
@@ -16,6 +17,7 @@ type LookupAssetByIDParams struct {
 	IncludeAll bool `url:"include-all,omitempty"`
 }
 
+// LookupAssetByID lookup asset information.
 type LookupAssetByID struct {
 	c *Client
 
@@ -32,6 +34,7 @@ func (s *LookupAssetByID) IncludeAll(IncludeAll bool) *LookupAssetByID {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
 	response := models.LookupAssetByIDResponse{}
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d", s.assetId), s.p, headers)

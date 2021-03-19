@@ -7,6 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// SearchAccountsParams contains all of the query parameters for url serialization.
 type SearchAccountsParams struct {
 
 	// ApplicationId application ID
@@ -45,6 +46,7 @@ type SearchAccountsParams struct {
 	Round uint64 `url:"round,omitempty"`
 }
 
+// SearchAccounts search for accounts.
 type SearchAccounts struct {
 	c *Client
 
@@ -113,6 +115,7 @@ func (s *SearchAccounts) Round(Round uint64) *SearchAccounts {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *SearchAccounts) Do(ctx context.Context, headers ...*common.Header) (response models.AccountsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/accounts", s.p, headers)
 	return

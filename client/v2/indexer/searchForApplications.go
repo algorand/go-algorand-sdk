@@ -7,6 +7,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// SearchForApplicationsParams contains all of the query parameters for url serialization.
 type SearchForApplicationsParams struct {
 
 	// ApplicationId application ID
@@ -25,6 +26,7 @@ type SearchForApplicationsParams struct {
 	Next string `url:"next,omitempty"`
 }
 
+// SearchForApplications search for applications
 type SearchForApplications struct {
 	c *Client
 
@@ -58,6 +60,7 @@ func (s *SearchForApplications) Next(Next string) *SearchForApplications {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *SearchForApplications) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/applications", s.p, headers)
 	return

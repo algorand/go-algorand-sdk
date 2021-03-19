@@ -9,6 +9,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// SearchForTransactionsParams contains all of the query parameters for url serialization.
 type SearchForTransactionsParams struct {
 
 	// AddressString only include transactions with this address in one of the
@@ -83,6 +84,7 @@ type SearchForTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
+// SearchForTransactions search for transactions.
 type SearchForTransactions struct {
 	c *Client
 
@@ -234,6 +236,7 @@ func (s *SearchForTransactions) TXID(TXID string) *SearchForTransactions {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *SearchForTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
 	err = s.c.get(ctx, &response, "/v2/transactions", s.p, headers)
 	return
