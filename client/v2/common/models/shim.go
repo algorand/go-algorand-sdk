@@ -9,16 +9,8 @@ type NodeStatus NodeStatusResponse
 // PendingTransactionInfoResponse is the single pending transaction response.
 type PendingTransactionInfoResponse PendingTransactionResponse
 
+// Supply
 type Supply SupplyResponse
 
-//type VersionBuild BuildVersion
-
-// VersionBuild defines model for the current algod build version information.
-type VersionBuild struct {
-	Branch      string `json:"branch"`
-	BuildNumber uint64 `json:"build-number"`
-	Channel     string `json:"channel"`
-	CommitHash  []byte `json:"commit-hash"`
-	Major       uint64 `json:"major"`
-	Minor       uint64 `json:"minor"`
-}
+// VersionBuild
+type VersionBuild BuildVersion
