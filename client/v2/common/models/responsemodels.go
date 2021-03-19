@@ -7,54 +7,22 @@ type RawBlockMsgpack struct {
 	Block string `json:"url,omitempty"`
 }
 
-// Supply defines model for Supply.
-type Supply struct {
+// HealthCheckResponse defines model for HealthCheckResponse.
+type HealthCheckResponse HealthCheck
 
-	// OnlineMoney
-	OnlineMoney uint64 `json:"online-money"`
-
-	// Round
-	Round uint64 `json:"current_round"`
-
-	// TotalMoney
-	TotalMoney uint64 `json:"total-money"`
+// GetBlock response is returned by Block
+type GetBlockResponse = struct {
+	Blockb64 string `json:"block"`
 }
 
-// TransactionParams contains the parameters that help a client construct a new transaction.
-type TransactionParams struct {
-
-	// ConsensusVersion indicates the consensus protocol version
-	// as of LastRound.
-	ConsensusVersion string `json:"consensus-version"`
-
-	// Fee is the suggested transaction fee
-	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
-	Fee uint64 `json:"fee"`
-
-	// GenesisID is an ID listed in the genesis block.
-	GenesisID string `json:"genesis-id"`
-
-	// GenesisHash is the hash of the genesis block.
-	Genesishash []byte `json:"genesis-hash"`
-
-	// LastRound indicates the last round seen
-	LastRound uint64 `json:"last-round"`
-
-	// The minimum transaction fee (not per byte) required for the
-	// txn to validate for the current network protocol.
-	MinFee uint64 `json:"min-fee,omitempty"`
+type LookupAccountByIDResponse struct {
+	CurrentRound uint64  `json:"current-round"`
+	Account      Account `json:"account"`
 }
 
-// VersionBuild defines model for the current algod build version information.
-type VersionBuild struct {
-	Branch      string `json:"branch"`
-	BuildNumber uint64 `json:"build-number"`
-	Channel     string `json:"channel"`
-	CommitHash  []byte `json:"commit-hash"`
-	Major       uint64 `json:"major"`
-	Minor       uint64 `json:"minor"`
+type LookupAssetByIDResponse struct {
+	CurrentRound uint64 `json:"current-round"`
+	Asset        Asset  `json:"asset"`
 }
 
 // AccountId defines model for account-id.
@@ -128,21 +96,3 @@ type TxId []byte
 
 // TxType defines model for tx-type.
 type TxType string
-
-// HealthCheckResponse defines model for HealthCheckResponse.
-type HealthCheckResponse HealthCheck
-
-// GetBlock response is returned by Block
-type GetBlockResponse = struct {
-	Blockb64 string `json:"block"`
-}
-
-type LookupAccountByIDResponse struct {
-	CurrentRound uint64  `json:"current-round"`
-	Account      Account `json:"account"`
-}
-
-type LookupAssetByIDResponse struct {
-	CurrentRound uint64 `json:"current-round"`
-	Asset        Asset  `json:"asset"`
-}
