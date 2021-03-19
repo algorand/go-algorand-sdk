@@ -14,6 +14,6 @@ type TealCompile struct {
 }
 
 func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (response models.CompileResponse, err error) {
-	err = s.c.get(ctx, &response, "/v2/teal/compile", nil, headers)
+	err = s.c.post(ctx, &response, "/v2/teal/compile", s.source, headers)
 	return
 }
