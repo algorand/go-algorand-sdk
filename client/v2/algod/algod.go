@@ -39,8 +39,8 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
-func (c *Client) AccountInformation(account string) *AccountInformation {
-	return &AccountInformation{c: c, account: account}
+func (c *Client) AccountInformation(address string) *AccountInformation {
+	return &AccountInformation{c: c, address: address}
 }
 
 func (c *Client) Block(round uint64) *Block {
