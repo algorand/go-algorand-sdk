@@ -111,3 +111,7 @@ func (c *Client) TealCompile(source []byte) *TealCompile {
 func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 	return &TealDryrun{c: c, request: request}
 }
+
+func (c *Client) BlockRaw(round uint64) *BlockRaw {
+	return &BlockRaw{c: c, round: round}
+}
