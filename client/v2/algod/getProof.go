@@ -20,8 +20,7 @@ type GetProof struct {
 	c *Client
 
 	round uint64
-
-	txid string
+	txid  string
 
 	p GetProofParams
 }

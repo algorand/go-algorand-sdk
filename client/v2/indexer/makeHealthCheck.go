@@ -7,13 +7,13 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// MakeHealthCheck returns 200 if healthy.
-type MakeHealthCheck struct {
+// HealthCheck returns 200 if healthy.
+type HealthCheck struct {
 	c *Client
 }
 
 // Do performs the HTTP request
-func (s *MakeHealthCheck) Do(ctx context.Context, headers ...*common.Header) (response models.HealthCheck, err error) {
+func (s *HealthCheck) Do(ctx context.Context, headers ...*common.Header) (response models.HealthCheckResponse, err error) {
 	err = s.c.get(ctx, &response, "/health", nil, headers)
 	return
 }
