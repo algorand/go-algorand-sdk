@@ -8,6 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
+// LookupAccountByIDParams contains all of the query parameters for url serialization.
 type LookupAccountByIDParams struct {
 
 	// IncludeAll include all items including closed accounts, deleted applications,
@@ -19,6 +20,7 @@ type LookupAccountByIDParams struct {
 	Round uint64 `url:"round,omitempty"`
 }
 
+// LookupAccountByID lookup account information.
 type LookupAccountByID struct {
 	c *Client
 
@@ -41,8 +43,9 @@ func (s *LookupAccountByID) Round(Round uint64) *LookupAccountByID {
 	return s
 }
 
+// Do performs the HTTP request
 func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
-	response := models.LookupAccountByIDResponse{}
+	response := models.AccountResponse{}
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
 	validRound = response.CurrentRound
 	result = response.Account

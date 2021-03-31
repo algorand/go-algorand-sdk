@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"path"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -19,32 +18,32 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^mock http responses in "([^"]*)" loaded from "([^"]*)"$`, mockHttpResponsesInLoadedFrom)
 	s.Step(`^expect error string to contain "([^"]*)"$`, expectErrorStringToContain)
 	s.Step(`^we make any Pending Transaction Information call$`, weMakeAnyPendingTransactionInformationCall)
-	s.Step(`^the parsed Pending Transaction Information response should have sender "([^"]*)"$`, theParsedPendingTransactionInformationResponseShouldHaveSender)
+	s.Step(`^the parsed Pending Transaction Information response should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Pending Transactions Information call$`, weMakeAnyPendingTransactionsInformationCall)
-	s.Step(`^the parsed Pending Transactions Information response should have sender "([^"]*)"$`, theParsedPendingTransactionsInformationResponseShouldHaveSender)
+	s.Step(`^the parsed Pending Transactions Information response should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Send Raw Transaction call$`, weMakeAnySendRawTransactionCall)
-	s.Step(`^the parsed Send Raw Transaction response should have txid "([^"]*)"$`, theParsedSendRawTransactionResponseShouldHaveTxid)
+	s.Step(`^the parsed Send Raw Transaction response should have txid "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Pending Transactions By Address call$`, weMakeAnyPendingTransactionsByAddressCall)
-	s.Step(`^the parsed Pending Transactions By Address response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedPendingTransactionsByAddressResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender)
+	s.Step(`^the parsed Pending Transactions By Address response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Node Status call$`, weMakeAnyNodeStatusCall)
-	s.Step(`^the parsed Node Status response should have a last round of (\d+)$`, theParsedNodeStatusResponseShouldHaveALastRoundOf)
+	s.Step(`^the parsed Node Status response should have a last round of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Ledger Supply call$`, weMakeAnyLedgerSupplyCall)
-	s.Step(`^the parsed Ledger Supply response should have totalMoney (\d+) onlineMoney (\d+) on round (\d+)$`, theParsedLedgerSupplyResponseShouldHaveTotalMoneyOnlineMoneyOnRound)
+	s.Step(`^the parsed Ledger Supply response should have totalMoney (\d+) onlineMoney (\d+) on round (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Status After Block call$`, weMakeAnyStatusAfterBlockCall)
-	s.Step(`^the parsed Status After Block response should have a last round of (\d+)$`, theParsedStatusAfterBlockResponseShouldHaveALastRoundOf)
+	s.Step(`^the parsed Status After Block response should have a last round of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Account Information call$`, weMakeAnyAccountInformationCall)
-	s.Step(`^the parsed Account Information response should have address "([^"]*)"$`, theParsedAccountInformationResponseShouldHaveAddress)
+	s.Step(`^the parsed Account Information response should have address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Get Block call$`, weMakeAnyGetBlockCall)
 	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)"$`, theParsedGetBlockResponseShouldHaveRewardsPool)
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
-	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedSuggestedTransactionParametersResponseShouldHaveFirstRoundValidOf)
+	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
 	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with max (\d+)$`, weMakeAPendingTransactionInformationAgainstTxidWithMax)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+)$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax)
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
 	s.Step(`^we make an Account Information call against account "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccount)
 	s.Step(`^we make a Get Block call against block number (\d+)$`, weMakeAGetBlockCallAgainstBlockNumber)
-	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedPendingTransactionsInformationResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender)
+	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with format "([^"]*)"$`, weMakeAPendingTransactionInformationAgainstTxidWithFormat)
 	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
@@ -56,170 +55,43 @@ func AlgodClientV2Context(s *godog.Suite) {
 	})
 }
 
-var stxResponse types.SignedTxn
-var pendingTransactionInformationResponse models.PendingTransactionInfoResponse
-
 func weMakeAnyPendingTransactionInformationCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	pendingTransactionInformationResponse, stxResponse, globalErrForExamination = algodClient.PendingTransactionInformation("").Do(context.Background())
-	return nil
+	return weMakeAnyCallTo("algod", "PendingTransactionInformation")
 }
-
-func theParsedPendingTransactionInformationResponseShouldHaveSender(sender string) error {
-	if stxResponse.Txn.Sender.String() != sender {
-		return fmt.Errorf("expected txn to have sender %s but actual sender was %s", sender, stxResponse.Txn.Sender.String())
-	}
-	return nil
-}
-
-var stxsResponse []types.SignedTxn
 
 func weMakeAnyPendingTransactionsInformationCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	_, stxsResponse, globalErrForExamination = algodClient.PendingTransactions().Do(context.Background())
-	return nil
+	return weMakeAnyCallTo("algod", "GetPendingTransactions")
 }
-
-func theParsedPendingTransactionsInformationResponseShouldHaveSender(sender string) error {
-	if stxsResponse[0].Txn.Sender.String() != sender {
-		return fmt.Errorf("expected txn to have sender %s but actual sender was %s", sender, stxsResponse[0].Txn.Sender.String())
-	}
-	return nil
-}
-
-func theParsedPendingTransactionsInformationResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender(length, idx int, sender string) error {
-	if len(stxsResponse) != length {
-		return fmt.Errorf("expected response length %d but received length %d", length, len(stxsResponse))
-	}
-	if stxsResponse[idx].Txn.Sender.String() != sender {
-		return fmt.Errorf("expected txn %d to have sender %s but real sender was %s", idx, sender, stxsResponse[idx].Txn.Sender.String())
-	}
-	return nil
-}
-
-var txidResponse string
 
 func weMakeAnySendRawTransactionCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	txidResponse, globalErrForExamination = algodClient.SendRawTransaction(nil).Do(context.Background())
-	return nil
-}
-
-func theParsedSendRawTransactionResponseShouldHaveTxid(txid string) error {
-	if txidResponse != txid {
-		return fmt.Errorf("expected txn to have txid %s but actual txid was %s", txidResponse, txid)
-	}
-	return nil
+	return weMakeAnyCallTo("algod", "RawTransaction")
 }
 
 func weMakeAnyPendingTransactionsByAddressCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	_, stxsResponse, globalErrForExamination = algodClient.PendingTransactionsByAddress("").Do(context.Background())
-	return nil
+	return weMakeAnyCallTo("algod", "GetPendingTransactionsByAddress")
 }
-
-func theParsedPendingTransactionsByAddressResponseShouldContainAnArrayOfLenAndElementNumberShouldHaveSender(expectedLen, idx int, expectedSender string) error {
-	length := len(stxsResponse)
-	if length != expectedLen {
-		return fmt.Errorf("length of response %d mismatched expected length %d", length, expectedLen)
-	}
-	if stxsResponse[idx].Txn.Sender.String() != expectedSender {
-		return fmt.Errorf("response sender %s mismatched expected sender %s", stxsResponse[idx].Txn.Sender.String(), expectedSender)
-	}
-	return nil
-}
-
-var statusResponse models.NodeStatus
 
 func weMakeAnyNodeStatusCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	statusResponse, globalErrForExamination = algodClient.Status().Do(context.Background())
-	return nil
+	return weMakeAnyCallTo("algod", "GetStatus")
 }
-
-func theParsedNodeStatusResponseShouldHaveALastRoundOf(lastRound int) error {
-	if statusResponse.LastRound != uint64(lastRound) {
-		return fmt.Errorf("response last round %d mismatched expected last round %d", statusResponse.LastRound, lastRound)
-	}
-	return nil
-}
-
-var supplyResponse models.Supply
 
 func weMakeAnyLedgerSupplyCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	supplyResponse, globalErrForExamination = algodClient.Supply().Do(context.Background())
-	return nil
-}
-
-func theParsedLedgerSupplyResponseShouldHaveTotalMoneyOnlineMoneyOnRound(total, online, round int) error {
-	if supplyResponse.TotalMoney != uint64(total) {
-		return fmt.Errorf("response total money %d mismatched expected total %d", supplyResponse.TotalMoney, uint64(total))
-	}
-	if supplyResponse.OnlineMoney != uint64(online) {
-		return fmt.Errorf("response online money %d mismatched expected online money %d", supplyResponse.OnlineMoney, uint64(online))
-	}
-	if supplyResponse.Round != uint64(round) {
-		return fmt.Errorf("response round %d mismatched expected round %d", supplyResponse.Round, uint64(round))
-	}
-	return nil
+	return weMakeAnyCallTo("algod", "GetSupply")
 }
 
 func weMakeAnyStatusAfterBlockCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	statusResponse, globalErrForExamination = algodClient.StatusAfterBlock(0).Do(context.Background())
-	return nil
+	return weMakeAnyCallTo("algod", "WaitForBlock")
 }
-
-func theParsedStatusAfterBlockResponseShouldHaveALastRoundOf(lastRound int) error {
-	if statusResponse.LastRound != uint64(lastRound) {
-		return fmt.Errorf("response last round %d mismatched expected last round %d", statusResponse.LastRound, lastRound)
-	}
-	return nil
-}
-
-var accountResponse models.Account
 
 func weMakeAnyAccountInformationCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	accountResponse, globalErrForExamination = algodClient.AccountInformation("").Do(context.Background())
-	return nil
-}
-
-func theParsedAccountInformationResponseShouldHaveAddress(address string) error {
-	if accountResponse.Address != address {
-		return fmt.Errorf("response address %s mismatched expected address %s", accountResponse.Address, address)
-	}
-	return nil
+	return weMakeAnyCallTo("algod", "GetAccountInformation")
 }
 
 var blockResponse types.Block
 
 func weMakeAnyGetBlockCall() error {
+	// This endpoint requires some sort of base64 decoding for the verification step and it isn't working properly.
+	//return weMakeAnyCallTo("algod", "GetBlock")
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
@@ -240,22 +112,8 @@ func theParsedGetBlockResponseShouldHaveRewardsPool(pool string) error {
 	return nil
 }
 
-var suggestedParamsResponse types.SuggestedParams
-
 func weMakeAnySuggestedTransactionParametersCall() error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	suggestedParamsResponse, globalErrForExamination = algodClient.SuggestedParams().Do(context.Background())
-	return nil
-}
-
-func theParsedSuggestedTransactionParametersResponseShouldHaveFirstRoundValidOf(firstValid int) error {
-	if suggestedParamsResponse.FirstRoundValid != types.Round(firstValid) {
-		return fmt.Errorf("response first round valid %d mismatched expected first round valid %d", suggestedParamsResponse.FirstRoundValid, types.Round(firstValid))
-	}
-	return nil
+	return weMakeAnyCallTo("algod", "TransactionParams")
 }
 
 func weMakeAPendingTransactionInformationAgainstTxidWithMax(txid string, max int) error {
@@ -366,6 +224,5 @@ func parsedDryrunResponseShouldHave(key string, action int) error {
 }
 
 func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
-	fullPath := path.Join("./features/resources/", directory)
-	return mockHttpResponsesInLoadedFromHelper(jsonfiles, fullPath, 0)
+	return mockHttpResponsesInLoadedFromWithStatus(jsonfiles, directory, 200)
 }

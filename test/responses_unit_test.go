@@ -24,8 +24,7 @@ var response interface{}
 // @unit
 // @unit.responses
 
-func mockHttpResponsesInLoadedFromWithStatus(
-	jsonfile, loadedFrom /* generated_responses*/ string, status int) error {
+func mockHttpResponsesInLoadedFromWithStatus(jsonfile, loadedFrom string, status int) error {
 	directory := path.Join("./features/resources/", loadedFrom)
 	baselinePath = path.Join(directory, jsonfile)
 	var err error
@@ -51,7 +50,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		switch endpoint {
 		case "lookupAccountByID":
 			round, something, err = indexerC.LookupAccountByID("").Do(context.Background())
-			response = models.LookupAccountByIDResponse{
+			response = models.AccountResponse{
 				CurrentRound: round,
 				Account:      something.(models.Account),
 			}
@@ -65,7 +64,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetBalances(10).Do(context.Background())
 		case "lookupAssetByID":
 			round, something, err = indexerC.LookupAssetByID(10).Do(context.Background())
-			response = models.LookupAssetByIDResponse{
+			response = models.AssetResponse{
 				CurrentRound: round,
 				Asset:        something.(models.Asset),
 			}
@@ -77,6 +76,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetTransactions(10).Do(context.Background())
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
+		case "lookupBlock":
+			response, err = indexerC.LookupBlock(10).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
@@ -88,6 +89,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		switch endpoint {
 		case "GetStatus":
 			response, err = algodC.Status().Do(context.Background())
+		case "GetBlock":
+			response, err = algodC.Block(10).Do(context.Background())
 		case "WaitForBlock":
 			response, err = algodC.StatusAfterBlock(10).Do(context.Background())
 		case "TealCompile":
@@ -101,14 +104,16 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "TransactionParams":
 			var sParams types.SuggestedParams
 			sParams, err = algodC.SuggestedParams().Do(context.Background())
-			response = models.TransactionParams{
+			response = models.TransactionParametersResponse{
 				ConsensusVersion: sParams.ConsensusVersion,
 				Fee:              uint64(sParams.Fee),
-				GenesisID:        sParams.GenesisID,
-				Genesishash:      sParams.GenesisHash,
+				GenesisId:        sParams.GenesisID,
+				GenesisHash:      sParams.GenesisHash,
 				LastRound:        uint64(sParams.FirstRoundValid),
 				MinFee:           sParams.MinFee,
 			}
+		case "GetAccountInformation":
+			response, err = algodC.AccountInformation("acct").Do(context.Background())
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
