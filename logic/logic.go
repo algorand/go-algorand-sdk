@@ -42,6 +42,8 @@ func CheckProgram(program []byte, args [][]byte) error {
 func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
 	const intcblockOpcode = 32
 	const bytecblockOpcode = 38
+	const pushbytesOpcode = 128
+	const pushintOpcode = 129
 	if program == nil || len(program) == 0 {
 		err = fmt.Errorf("empty program")
 		return
@@ -102,6 +104,20 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 				var foundByteArrays [][]byte
 				size, foundByteArrays, err = readByteConstBlock(program, pc)
 				byteArrays = append(byteArrays, foundByteArrays...)
+				if err != nil {
+					return
+				}
+			case pushintOpcode:
+				var foundInt uint64
+				size, foundInt, err = readPushIntOp(program, pc)
+				ints = append(ints, foundInt)
+				if err != nil {
+					return
+				}
+			case pushbytesOpcode:
+				var foundByteArray []byte
+				size, foundByteArray, err = readPushByteOp(program, pc)
+				byteArrays = append(byteArrays, foundByteArray)
 				if err != nil {
 					return
 				}
@@ -166,7 +182,7 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 			return
 		}
 		size += bytesUsed
-		if pc+size >= len(program) {
+		if pc+size+int(itemLen) > len(program) {
 			err = fmt.Errorf("bytecblock ran past end of program")
 			return
 		}
@@ -174,5 +190,35 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 		byteArrays = append(byteArrays, byteArray)
 		size += int(itemLen)
 	}
+	return
+}
+
+func readPushIntOp(program []byte, pc int) (size int, foundInt uint64, err error) {
+	size = 1
+	foundInt, bytesUsed := binary.Uvarint(program[pc+size:])
+	if bytesUsed <= 0 {
+		err = fmt.Errorf("could not decode push int const at pc=%d", pc+size)
+		return
+	}
+
+	size += bytesUsed
+	return
+}
+
+func readPushByteOp(program []byte, pc int) (size int, byteArray []byte, err error) {
+	size = 1
+	itemLen, bytesUsed := binary.Uvarint(program[pc+size:])
+	if bytesUsed <= 0 {
+		err = fmt.Errorf("could not decode push []byte const size at pc=%d", pc+size)
+		return
+	}
+
+	size += bytesUsed
+	if pc+size+int(itemLen) > len(program) {
+		err = fmt.Errorf("pushbytes ran past end of program")
+		return
+	}
+	byteArray = program[pc+size : pc+size+int(itemLen)]
+	size += int(itemLen)
 	return
 }

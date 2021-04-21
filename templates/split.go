@@ -16,8 +16,8 @@ import (
 // Split template representation
 type Split struct {
 	ContractTemplate
-	ratn        uint64
-	ratd        uint64
+	rat1        uint64
+	rat2        uint64
 	receiverOne types.Address
 	receiverTwo types.Address
 }
@@ -32,8 +32,8 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 	if err != nil {
 		return nil, err
 	}
-	ratn := ints[6]
-	ratd := ints[5]
+	rat1 := ints[6]
+	rat2 := ints[5]
 	// Convert the byteArrays[0] to receiver
 	var receiverOne types.Address //byteArrays[0]
 	n := copy(receiverOne[:], byteArrays[1])
@@ -49,12 +49,12 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 		return nil, err
 	}
 
-	ratio := float64(ratd) / float64(ratn)
+	ratio := float64(rat2) / float64(rat1)
 	amountForReceiverOneFloat := float64(amount) / (1 + ratio)
 	amountForReceiverOne := uint64(math.Round(amountForReceiverOneFloat))
 	amountForReceiverTwo := amount - amountForReceiverOne
-	if ratd*amountForReceiverOne != ratn*amountForReceiverTwo {
-		err = fmt.Errorf("could not split funds in a way that satisfied the contract ratio (%d * %d != %d * %d)", ratd, amountForReceiverOne, ratn, amountForReceiverTwo)
+	if rat2*amountForReceiverOne != rat1*amountForReceiverTwo {
+		err = fmt.Errorf("could not split funds in a way that satisfied the contract ratio (%d * %d != %d * %d)", rat2, amountForReceiverOne, rat1, amountForReceiverTwo)
 		return nil, err
 	}
 
@@ -102,32 +102,32 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 //
 // Withdrawals from this account are allowed as a group transaction which
 // sends receiverOne and receiverTwo amounts with exactly the ratio of
-// ratn/ratd.  At least minPay must be sent to receiverOne.
+// rat1/rat2.  At least minPay must be sent to receiverOne.
 // (CloseRemainderTo must be zero.)
 //
 // After expiryRound passes, all funds can be refunded to owner.
 //
 // Split ratio:
-// firstRecipient_amount * ratd == secondRecipient_amount * ratn
+// firstRecipient_amount * rat2 == secondRecipient_amount * rat1
 // or phrased another way
-// firstRecipient_amount == secondRecipient_amount * (ratn/ratd)
+// firstRecipient_amount == secondRecipient_amount * (rat1/rat2)
 //
 // Parameters:
 //  - owner: the address to refund funds to on timeout
 //  - receiverOne: the first recipient in the split account
 //  - receiverTwo: the second recipient in the split account
-//  - ratn: fraction determines resource split ratio (numerator)
-//  - ratd: fraction determines resource split ratio (denominator)
+//  - rat1: fraction determines resource split ratio
+//  - rat2: fraction determines resource split ratio
 //  - expiryRound: the round at which the account expires
 //  - minPay: minimum amount to be paid out of the account to receiverOne
 //  - maxFee: half of the maximum fee used by each split forwarding group transaction
-func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, minPay, maxFee uint64) (Split, error) {
+func MakeSplit(owner, receiverOne, receiverTwo string, rat1, rat2, expiryRound, minPay, maxFee uint64) (Split, error) {
 	const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
 	if err != nil {
 		return Split{}, err
 	}
-	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*ratd*/, 8 /*ratn*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
+	var referenceOffsets = []uint64{ /*fee*/ 4 /*timeout*/, 7 /*rat2*/, 8 /*rat1*/, 9 /*minPay*/, 10 /*owner*/, 14 /*receiver1*/, 47 /*receiver2*/, 80}
 	ownerAddr, err := types.DecodeAddress(owner)
 	if err != nil {
 		return Split{}, err
@@ -140,7 +140,7 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 	if err != nil {
 		return Split{}, err
 	}
-	injectionVector := []interface{}{maxFee, expiryRound, ratd, ratn, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
+	injectionVector := []interface{}{maxFee, expiryRound, rat2, rat1, minPay, ownerAddr, receiverOneAddr, receiverTwoAddr}
 	injectedBytes, err := inject(referenceAsBytes, referenceOffsets, injectionVector)
 	if err != nil {
 		return Split{}, err
@@ -152,8 +152,8 @@ func MakeSplit(owner, receiverOne, receiverTwo string, ratn, ratd, expiryRound, 
 			address: address.String(),
 			program: injectedBytes,
 		},
-		ratn:        ratn,
-		ratd:        ratd,
+		rat1:        rat1,
+		rat2:        rat2,
 		receiverOne: receiverOneAddr,
 		receiverTwo: receiverTwoAddr,
 	}

@@ -74,4 +74,3 @@ func (lsig LogicSig) Blank() bool {
 	}
 	return true
 }
-

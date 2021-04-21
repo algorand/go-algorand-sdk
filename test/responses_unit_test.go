@@ -3,8 +3,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 
@@ -26,8 +24,7 @@ var response interface{}
 // @unit
 // @unit.responses
 
-func mockHttpResponsesInLoadedFromWithStatus(
-	jsonfile, loadedFrom /* generated_responses*/ string, status int) error {
+func mockHttpResponsesInLoadedFromWithStatus(jsonfile, loadedFrom string, status int) error {
 	directory := path.Join("./features/resources/", loadedFrom)
 	baselinePath = path.Join(directory, jsonfile)
 	var err error
@@ -53,7 +50,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		switch endpoint {
 		case "lookupAccountByID":
 			round, something, err = indexerC.LookupAccountByID("").Do(context.Background())
-			response = models.LookupAccountByIDResponse{
+			response = models.AccountResponse{
 				CurrentRound: round,
 				Account:      something.(models.Account),
 			}
@@ -67,7 +64,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetBalances(10).Do(context.Background())
 		case "lookupAssetByID":
 			round, something, err = indexerC.LookupAssetByID(10).Do(context.Background())
-			response = models.LookupAssetByIDResponse{
+			response = models.AssetResponse{
 				CurrentRound: round,
 				Asset:        something.(models.Asset),
 			}
@@ -79,17 +76,21 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetTransactions(10).Do(context.Background())
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
+		case "lookupBlock":
+			response, err = indexerC.LookupBlock(10).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown indexer endpoint: %s", endpoint)
 		}
 	case "algod":
 		switch endpoint {
 		case "GetStatus":
 			response, err = algodC.Status().Do(context.Background())
+		case "GetBlock":
+			response, err = algodC.Block(10).Do(context.Background())
 		case "WaitForBlock":
 			response, err = algodC.StatusAfterBlock(10).Do(context.Background())
 		case "TealCompile":
@@ -103,24 +104,48 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "TransactionParams":
 			var sParams types.SuggestedParams
 			sParams, err = algodC.SuggestedParams().Do(context.Background())
-			response = models.TransactionParams{
+			response = models.TransactionParametersResponse{
 				ConsensusVersion: sParams.ConsensusVersion,
 				Fee:              uint64(sParams.Fee),
-				GenesisID:        sParams.GenesisID,
-				Genesishash:      sParams.GenesisHash,
+				GenesisId:        sParams.GenesisID,
+				GenesisHash:      sParams.GenesisHash,
 				LastRound:        uint64(sParams.FirstRoundValid),
-				MinFee:           81560,
+				MinFee:           sParams.MinFee,
 			}
+		case "GetAccountInformation":
+			response, err = algodC.AccountInformation("acct").Do(context.Background())
 		case "GetApplicationByID":
 			response, err = algodC.GetApplicationByID(10).Do(context.Background())
 		case "GetAssetByID":
 			response, err = algodC.GetAssetByID(10).Do(context.Background())
+		case "PendingTransactionInformation":
+			response, _, err = algodC.PendingTransactionInformation("transaction").Do(context.Background())
+		case "GetPendingTransactions":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactions().Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
+		case "GetPendingTransactionsByAddress":
+			var total uint64
+			var top []types.SignedTxn
+			total, top, err = algodC.PendingTransactionsByAddress("address").Do(context.Background())
+			response = models.PendingTransactionsResponse{
+				TopTransactions:   top,
+				TotalTransactions: total,
+			}
+		case "DryRun":
+			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
+		case "Proof":
+			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
 			_, response = indexerC.SearchForTransactions().Do(context.Background())
 		default:
-			err = fmt.Errorf("unknown endpoint: %s", endpoint)
+			err = fmt.Errorf("unknown algod endpoint: %s", endpoint)
 		}
 	}
 	return err
@@ -131,7 +156,6 @@ type txidresponse struct {
 }
 
 func theParsedResponseShouldEqualTheMockResponse() error {
-	var err error
 	var responseJson string
 
 	if expectedStatus != 200 {
@@ -148,16 +172,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		responseJson = string(json.Encode(response))
 	}
 
-	jsonfile, err := os.Open(baselinePath)
-	if err != nil {
-		return err
-	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
-	if err != nil {
-		return err
-	}
-	_, err = EqualJson(string(fileBytes), responseJson)
-	return err
+	return VerifyResponse(baselinePath, responseJson)
 }
 
 func ResponsesContext(s *godog.Suite) {
