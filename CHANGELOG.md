@@ -1,3 +1,6 @@
+# 1.7.0
+# Bugfix
+- Fix GetGenesis endpoint.
 # 1.6.0
 # Added
 - Code generation for more of the http client
