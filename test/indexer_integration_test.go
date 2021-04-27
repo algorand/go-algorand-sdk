@@ -589,7 +589,11 @@ func theParsedResponseShouldEqual(jsonfileName string) error {
 	var responseJson string
 
 	baselinePath := path.Join("./features/resources/", jsonfileName)
-	responseJson = string(json.Encode(response))
+	if responseStr, ok := response.(string); ok {
+		responseJson = responseStr
+	} else {
+		responseJson = string(json.Encode(response))
+	}
 
 	return VerifyResponse(baselinePath, responseJson)
 }

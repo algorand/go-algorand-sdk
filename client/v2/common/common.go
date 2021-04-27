@@ -175,6 +175,12 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 
 	responseErr := extractError(resp.StatusCode, bodyBytes)
 
+	// The caller wants a string
+	if strResponse, ok := response.(*string); ok {
+		*strResponse = string(bodyBytes)
+		return err
+	}
+
 	// Attempt to unmarshal a response regardless of whether or not there was an error.
 	err = json.Unmarshal(bodyBytes, response)
 	if responseErr != nil {

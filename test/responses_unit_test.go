@@ -140,6 +140,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
 		case "Proof":
 			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
+		case "GetGenesis":
+			response, err = algodC.GetGenesis().Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
@@ -169,7 +171,11 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		parts := strings.SplitAfterN(responseJson, ":", 2)
 		responseJson = parts[1]
 	} else {
-		responseJson = string(json.Encode(response))
+		if responseStr, ok := response.(string); ok {
+			responseJson = responseStr
+		} else {
+			responseJson = string(json.Encode(response))
+		}
 	}
 
 	return VerifyResponse(baselinePath, responseJson)
