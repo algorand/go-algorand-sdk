@@ -1,3 +1,8 @@
+# 1.8.0
+# Added
+- V2: Add MakeClientWithHeaders wrapper functions
+# Bugfix
+- Fix FlatFee computation
 # 1.7.0
 # Bugfix
 - Fix GetGenesis endpoint.
