@@ -725,5 +725,75 @@ func TestLogicSig(t *testing.T) {
 
 	verified := crypto.VerifyLogicSig(lsig, sender)
 	require.True(t, verified)
+}
 
+func TestFee(t *testing.T) {
+	testcases := []struct {
+		name     string
+		flatFee  bool
+		fee      types.MicroAlgos
+		expected types.MicroAlgos
+	}{
+		{
+			name:     "Use flat fee",
+			flatFee:  true,
+			fee:      1001,
+			expected: 1001,
+		},
+		{
+			name:     "Flat fee overridden with min fee",
+			flatFee:  true,
+			fee:      999,
+			expected: 1000,
+		},
+		{
+			name:     "Estimated fee overridden with min fee",
+			flatFee:  false,
+			fee:      1,
+			expected: 1000,
+		},
+	}
+	addr := types.Address{}.String()
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			var tx types.Transaction
+			var err error
+
+			params := types.SuggestedParams{
+				FlatFee:         testcase.flatFee,
+				Fee:             testcase.fee,
+				FirstRoundValid: 1,
+				LastRoundValid:  1001,
+				GenesisHash:     byteFromBase64("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="),
+			}
+
+			tx, err = MakeAssetTransferTxn(addr, addr, 1, nil, params, "", 1)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetAcceptanceTxn(addr, nil, params, 1)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetRevocationTxn(addr, addr, 1, addr, nil, params, 1)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetDestroyTxn(addr, nil, params, 1)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetCreateTxn(addr, nil, params, 1, 1, false, addr, addr, addr, addr, "", "", "", "")
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetConfigTxn(addr, nil, params, 1, addr, addr, addr, addr, false)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+
+			tx, err = MakeAssetFreezeTxn(addr, nil, params, 1, addr, true)
+			require.NoError(t, err)
+			require.Equal(t, testcase.expected, tx.Fee)
+		})
+	}
 }
