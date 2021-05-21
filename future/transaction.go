@@ -11,6 +11,24 @@ import (
 // MinTxnFee is v5 consensus params, in microAlgos
 const MinTxnFee = transaction.MinTxnFee
 
+func setFee(tx types.Transaction, params types.SuggestedParams) (types.Transaction, error) {
+	if !params.FlatFee {
+		eSize, err := transaction.EstimateSize(tx)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
+	} else {
+		tx.Fee = params.Fee
+	}
+
+	if tx.Fee < MinTxnFee {
+		tx.Fee = MinTxnFee
+	}
+
+	return tx, nil
+}
+
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
 // fee is fee per byte as received from algod SuggestedFee API call
@@ -62,20 +80,7 @@ func MakePaymentTxn(from, to string, amount uint64, note []byte, closeRemainderT
 		},
 	}
 
-	// Update fee
-	if !params.FlatFee {
-		eSize, err := transaction.EstimateSize(tx)
-		if err != nil {
-			return types.Transaction{}, err
-		}
-		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	return setFee(tx, params)
 }
 
 // MakeKeyRegTxn constructs a keyreg transaction using the passed parameters.
@@ -132,20 +137,7 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 		},
 	}
 
-	if !params.FlatFee {
-		// Update fee
-		eSize, err := transaction.EstimateSize(tx)
-		if err != nil {
-			return types.Transaction{}, err
-		}
-		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	return setFee(tx, params)
 }
 
 // MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
@@ -240,19 +232,7 @@ func MakeAssetCreateTxn(account string, note []byte, params types.SuggestedParam
 	}
 
 	// Update fee
-	if !params.FlatFee {
-		eSize, err := transaction.EstimateSize(tx)
-		if err != nil {
-			return types.Transaction{}, err
-		}
-		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	return setFee(tx, params)
 }
 
 // MakeAssetConfigTxn creates a tx template for changing the
@@ -329,20 +309,8 @@ func MakeAssetConfigTxn(account string, note []byte, params types.SuggestedParam
 		}
 	}
 
-	if !params.FlatFee {
-		// Update fee
-		eSize, err := transaction.EstimateSize(tx)
-		if err != nil {
-			return types.Transaction{}, err
-		}
-		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	// Update fee
+	return setFee(tx, params)
 }
 
 // transferAssetBuilder is a helper that builds asset transfer transactions:
@@ -398,18 +366,9 @@ func transferAssetBuilder(account, recipient string, amount uint64, note []byte,
 
 	tx.AssetAmount = amount
 
+
 	// Update fee
-	eSize, err := transaction.EstimateSize(tx)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	return setFee(tx, params)
 }
 
 // MakeAssetTransferTxn creates a tx for sending some asset from an asset holder to another user
@@ -500,20 +459,8 @@ func MakeAssetFreezeTxn(account string, note []byte, params types.SuggestedParam
 
 	tx.AssetFrozen = newFreezeSetting
 
-	if !params.FlatFee {
-		// Update fee
-		eSize, err := transaction.EstimateSize(tx)
-		if err != nil {
-			return types.Transaction{}, err
-		}
-		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
-	}
-
-	return tx, nil
+	// Update fee
+	return setFee(tx, params)
 }
 
 // byte32FromBase64 decodes the input base64 string and outputs a
@@ -843,24 +790,10 @@ func MakeApplicationCallTx(
 	tx.LocalStateSchema = localSchema
 	tx.GlobalStateSchema = globalSchema
 
-	setApplicationTransactionFields(&tx, sp, sender, note, group, lease, rekeyTo)
-
-	return tx, nil
-}
-
-func setApplicationTransactionFields(
-	applicationTransaction *types.Transaction,
-	sp types.SuggestedParams,
-	sender types.Address,
-	note []byte,
-	group types.Digest,
-	lease [32]byte,
-	rekeyTo types.Address) error {
-
 	var gh types.Digest
 	copy(gh[:], sp.GenesisHash)
 
-	applicationTransaction.Header = types.Header{
+	tx.Header = types.Header{
 		Sender:      sender,
 		Fee:         sp.Fee,
 		FirstValid:  sp.FirstRoundValid,
@@ -873,19 +806,8 @@ func setApplicationTransactionFields(
 		RekeyTo:     rekeyTo,
 	}
 
-	if !sp.FlatFee {
-		// Update fee
-		eSize, err := transaction.EstimateSize(*applicationTransaction)
-		if err != nil {
-			return err
-		}
-		applicationTransaction.Fee = types.MicroAlgos(eSize * uint64(sp.Fee))
-	}
-
-	if applicationTransaction.Fee < MinTxnFee {
-		applicationTransaction.Fee = MinTxnFee
-	}
-	return nil
+	// Update fee
+	return setFee(tx, sp)
 }
 
 func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
