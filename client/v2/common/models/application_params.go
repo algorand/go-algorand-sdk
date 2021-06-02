@@ -20,4 +20,7 @@ type ApplicationParams struct {
 
 	// LocalStateSchema [\lsch) local schema
 	LocalStateSchema ApplicationStateSchema `json:"local-state-schema,omitempty"`
+
+	// ExtraPages (extrapages) extra length needed for application programs
+	ExtraPages int `json:"extra-pages,omitempty"`
 }
