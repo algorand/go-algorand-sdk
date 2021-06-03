@@ -150,7 +150,7 @@ func iBuildAnApplicationTransaction(
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, extraPages)
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ func iBuildAnApplicationTransaction(
 	case "create_optin":
 		tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, extraPages)
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}

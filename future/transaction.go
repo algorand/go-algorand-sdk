@@ -535,7 +535,7 @@ func MakeApplicationCreateTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages int) (tx types.Transaction, err error) {
+	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
 
 	oncomp := types.NoOpOC
 	if optIn {
@@ -782,7 +782,7 @@ func MakeApplicationCallTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages int) (tx types.Transaction, err error) {
+	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
 	tx.Type = types.ApplicationCallTx
 	tx.ApplicationID = types.AppIndex(appIdx)
 	tx.OnCompletion = onCompletion

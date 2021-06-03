@@ -90,7 +90,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, extraPages)
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
