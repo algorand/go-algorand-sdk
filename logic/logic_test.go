@@ -106,3 +106,36 @@ func TestCheckProgramV3(t *testing.T) {
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
 }
+
+func TestCheckProgramV4(t *testing.T) {
+	// check TEAL v4 opcodes
+	require.True(t, spec.EvalMaxVersion >= 4)
+	require.True(t, spec.LogicSigVersion >= 3)
+
+	args := make([][]byte, 0)
+
+	// divmodw
+	program := []byte{0x04, 0x20, 0x03, 0x01, 0x00, 0x02, 0x22, 0x81, 0xd0, 0x0f, 0x23, 0x24, 0x1f} // int 1; pushint 2000; int 0; int 2; divmodw
+	err := CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// gloads i
+	program = []byte{0x04, 0x20, 0x01, 0x00, 0x22, 0x3b, 0x00} // int 0; gloads 0
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// callsub
+	program = []byte{0x04, 0x20, 0x02, 0x01, 0x02, 0x22, 0x88, 0x00, 0x02, 0x23, 0x12, 0x49} // int 1; callsub double; int 2; ==; double: dup;
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// b>=
+	program = []byte{0x04, 0x26, 0x02, 0x01, 0x11, 0x01, 0x10, 0x28, 0x29, 0xa7} // byte 0x11; byte 0x10; b>=
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// b^
+	program = []byte{0x04, 0x26, 0x03, 0x01, 0x11, 0x01, 0x10, 0x01, 0x01, 0x28, 0x29, 0xad, 0x2a, 0x12} // byte 0x11; byte 0x10; b^; byte 0x01; ==
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+}
