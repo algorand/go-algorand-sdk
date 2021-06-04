@@ -518,7 +518,6 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 //                 A page is 1024 bytes. This field enables execution of app programs
 //                 larger than the default maximum program size.
 
-
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
 func MakeApplicationCreateTx(
@@ -531,12 +530,13 @@ func MakeApplicationCreateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	extraPages uint32,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address) (tx types.Transaction, err error) {
 
 	oncomp := types.NoOpOC
 	if optIn {
@@ -554,13 +554,13 @@ func MakeApplicationCreateTx(
 		clearProg,
 		globalSchema,
 		localSchema,
+		extraPages,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		extraPages)
+		rekeyTo)
 }
 
 // MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
@@ -588,13 +588,13 @@ func MakeApplicationUpdateTx(
 		clearProg,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationDeleteTx makes a transaction for deleting an application (see above for args desc.)
@@ -620,13 +620,13 @@ func MakeApplicationDeleteTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationOptInTx makes a transaction for opting in to (allocating
@@ -653,13 +653,13 @@ func MakeApplicationOptInTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationCloseOutTx makes a transaction for closing out of
@@ -686,13 +686,13 @@ func MakeApplicationCloseOutTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationClearStateTx makes a transaction for clearing out all
@@ -720,13 +720,13 @@ func MakeApplicationClearStateTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationNoOpTx makes a transaction for interacting with an existing
@@ -755,13 +755,13 @@ func MakeApplicationNoOpTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo,
-		0)
+		rekeyTo)
 }
 
 // MakeApplicationCallTx is a helper for the above ApplicationCall
@@ -778,12 +778,13 @@ func MakeApplicationCallTx(
 	clearProg []byte,
 	globalSchema types.StateSchema,
 	localSchema types.StateSchema,
+	extraPages uint32,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address) (tx types.Transaction, err error) {
 	tx.Type = types.ApplicationCallTx
 	tx.ApplicationID = types.AppIndex(appIdx)
 	tx.OnCompletion = onCompletion
