@@ -86,7 +86,7 @@ type ApplicationCallTxnFields struct {
 	GlobalStateSchema StateSchema `codec:"apgs"`
 	ApprovalProgram   []byte      `codec:"apap"`
 	ClearStateProgram []byte      `codec:"apsu"`
-	ExtraProgramPages uint32      `codec:"apep,omitempty"`
+	ExtraProgramPages uint32      `codec:"apep"`
 
 	// If you add any fields here, remember you MUST modify the Empty
 	// method below!
@@ -133,7 +133,7 @@ func (ac *ApplicationCallTxnFields) Empty() bool {
 	if ac.ClearStateProgram != nil {
 		return false
 	}
-	if ac.ExtraProgramPages !=0 {
+	if ac.ExtraProgramPages != 0 {
 		return false
 	}
 	return true
