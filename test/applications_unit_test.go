@@ -38,8 +38,9 @@ func iBuildAnApplicationTransactionUnit(
 	sender, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, foreignAssets, appAccounts string,
+	extraPages int,
 	fee, firstValid, lastValid int,
-	genesisHash string, extraPages int) error {
+	genesisHash string) error {
 
 	applicationId = uint64(applicationIdInt)
 	var clearP []byte
@@ -213,7 +214,7 @@ func weMakeALookupApplicationsCall(applicationID int) error {
 func ApplicationsUnitContext(s *godog.Suite) {
 	// @unit.transactiosn
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransactionUnit)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+), fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
 
