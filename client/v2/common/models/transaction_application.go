@@ -60,4 +60,7 @@ type TransactionApplication struct {
 	// * update
 	// * delete
 	OnCompletion string `json:"on-completion,omitempty"`
+
+	// ExtraPages (extrapages) extra length requested for executing larger application programs
+	ExtraProgramPages int `json:"extra-program-pages,omitempty"`
 }
