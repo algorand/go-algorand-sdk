@@ -515,9 +515,8 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 //                 it into a block.
 //
 // - extraPages    ExtraProgramPages specifies the additional app program size requested in pages.
-//                 A page is 1024 bytes. This field enables execution of app programs
+//                 A page is 2KB. This field enables execution of app programs
 //                 larger than the default maximum program size.
-
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
