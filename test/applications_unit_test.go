@@ -39,7 +39,7 @@ func iBuildAnApplicationTransactionUnit(
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
-	genesisHash string) error {
+	genesisHash string, extraPages int) error {
 
 	applicationId = uint64(applicationIdInt)
 	var clearP []byte
@@ -90,7 +90,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
@@ -106,7 +106,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
@@ -213,7 +213,7 @@ func weMakeALookupApplicationsCall(applicationID int) error {
 func ApplicationsUnitContext(s *godog.Suite) {
 	// @unit.transactiosn
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransactionUnit)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
 
