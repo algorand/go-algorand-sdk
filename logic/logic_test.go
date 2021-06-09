@@ -110,7 +110,6 @@ func TestCheckProgramV3(t *testing.T) {
 func TestCheckProgramV4(t *testing.T) {
 	// check TEAL v4 opcodes
 	require.True(t, spec.EvalMaxVersion >= 4)
-	require.True(t, spec.LogicSigVersion >= 3)
 
 	args := make([][]byte, 0)
 
