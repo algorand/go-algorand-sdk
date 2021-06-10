@@ -70,10 +70,13 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 	for _, arg := range args {
 		length += len(arg)
 	}
+
+
 	if length > types.LogicSigMaxSize {
 		err = fmt.Errorf("program too long")
 		return
 	}
+
 
 	if opcodes == nil {
 		opcodes = make([]operation, 256)
@@ -129,8 +132,11 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 		pc = pc + size
 	}
 
-	if cost > types.LogicSigMaxCost {
-		err = fmt.Errorf("program too costly to run")
+	// recursion introduced in v4
+	if version < 4 {
+		if cost > types.LogicSigMaxCost {
+			err = fmt.Errorf("program too costly for version < 4. consider using Teal v4.")
+		}
 	}
 
 	return
