@@ -130,11 +130,9 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 		pc = pc + size
 	}
 
-	// recursion introduced in v4
-	if version < 4 {
-		if cost > types.LogicSigMaxCost {
-			err = fmt.Errorf("program too costly for Teal version < 4. consider using v4.")
-		}
+	// costs calculated dynamically starting in v4
+	if version < 4 && cost > types.LogicSigMaxCost {
+		err = fmt.Errorf("program too costly for Teal version < 4. consider using v4.")
 	}
 
 	return

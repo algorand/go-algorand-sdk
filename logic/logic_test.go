@@ -50,7 +50,7 @@ func TestCheckProgram(t *testing.T) {
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
 
-	// check 800x keccak256 fail for v1 to v3
+	// check 800x keccak256 fail for v3 and below
 	versions := []byte{0x1, 0x2, 0x3}
 	program = append(program, []byte(strings.Repeat("\x02", 800))...) // append 800x keccak256
 	for _, v := range versions {
@@ -59,7 +59,7 @@ func TestCheckProgram(t *testing.T) {
 		require.EqualError(t, err, "program too costly for Teal version < 4. consider using v4.")
 	}
 
-	// check 800x keccak256 ok for version >= 4
+	// check 800x keccak256 ok for v4 and above
 	versions = []byte{0x4}
 	for _, v := range versions {
 		program[0] = v
