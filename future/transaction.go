@@ -18,12 +18,11 @@ func setFee(tx types.Transaction, params types.SuggestedParams) (types.Transacti
 			return types.Transaction{}, err
 		}
 		tx.Fee = types.MicroAlgos(eSize * uint64(params.Fee))
+		if tx.Fee < MinTxnFee {
+			tx.Fee = MinTxnFee
+		}
 	} else {
 		tx.Fee = params.Fee
-	}
-
-	if tx.Fee < MinTxnFee {
-		tx.Fee = MinTxnFee
 	}
 
 	return tx, nil
@@ -517,7 +516,6 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 // - extraPages    ExtraProgramPages specifies the additional app program size requested in pages.
 //                 A page is 1024 bytes. This field enables execution of app programs
 //                 larger than the default maximum program size.
-
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
