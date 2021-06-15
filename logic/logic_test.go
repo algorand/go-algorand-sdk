@@ -92,7 +92,7 @@ func TestCheckProgramV2(t *testing.T) {
 }
 
 func TestCheckProgramV3(t *testing.T) {
-	// check TEAL v2 opcodes
+	// check TEAL v3 opcodes
 	require.True(t, spec.EvalMaxVersion >= 3)
 	require.True(t, spec.LogicSigVersion >= 3)
 
