@@ -742,7 +742,7 @@ func TestFee(t *testing.T) {
 			expected: 1001,
 		},
 		{
-			name:     "Flat fee does not overridden with min fee",
+			name:     "Flat fee does not get overridden with min fee",
 			flatFee:  true,
 			fee:      999,
 			expected: 999,
@@ -752,6 +752,12 @@ func TestFee(t *testing.T) {
 			flatFee:  false,
 			fee:      1,
 			expected: 1000,
+		},
+		{
+			name:     "Flat fee set to 0",
+			flatFee:  true,
+			fee:      0,
+			expected: 0,
 		},
 	}
 	addr := types.Address{}.String()
