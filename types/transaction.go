@@ -164,31 +164,31 @@ type SuggestedParams struct {
 	// Fee is in units of micro-Algos per byte.
 	// Fee may fall to zero but a group of N atomic transactions must
 	// still have a fee of at least N*MinTxnFee for the current network protocol.
-	Fee MicroAlgos
+	Fee MicroAlgos `codec:"fee"`
 
 	// Genesis ID
-	GenesisID string
+	GenesisID string `codec:"genesis-id"`
 
 	// Genesis hash
-	GenesisHash []byte
+	GenesisHash []byte `codec:"genesis-hash"`
 
 	// FirstRoundValid is the first protocol round on which the txn is valid
-	FirstRoundValid Round
+	FirstRoundValid Round `codec:"first-round"`
 
 	// LastRoundValid is the final protocol round on which the txn may be committed
-	LastRoundValid Round
+	LastRoundValid Round `codec:"last-round"`
 
 	// ConsensusVersion indicates the consensus protocol version
 	// as of LastRound.
-	ConsensusVersion string
+	ConsensusVersion string `codec:"consensus-version"`
 
 	// FlatFee indicates whether the passed fee is per-byte or per-transaction
 	// If true, txn fee may fall below the MinTxnFee for the current network protocol.
-	FlatFee bool
+	FlatFee bool `codec:"flat-fee"`
 
 	// The minimum transaction fee (not per byte) required for the
 	// txn to validate for the current network protocol.
-	MinFee uint64
+	MinFee uint64  `codec:"min-fee"`
 }
 
 // AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction
