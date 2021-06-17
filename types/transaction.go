@@ -182,7 +182,7 @@ type SuggestedParams struct {
 	// as of LastRound.
 	ConsensusVersion string `codec:"consensus-version"`
 
-// FlatFee indicates whether the passed fee is per-byte or per-transaction
+	// FlatFee indicates whether the passed fee is per-byte or per-transaction
 	// If true, txn fee may fall below the MinTxnFee for the current network protocol.
 	FlatFee bool `codec:"flat-fee"`
 
