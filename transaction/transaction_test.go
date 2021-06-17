@@ -156,7 +156,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	const clawback = addr
 	const unitName = "tst"
 	const assetName = "testcoin"
-	const testURL = "website"
+	const testURL = "websitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsitewebsi" //96 characters
 	const metadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
 	tx, err := MakeAssetCreateTxn(addr, 10, 322575, 323575, nil, "", genesisHash, total, 0, defaultFrozen, addr, reserve, freeze, clawback, unitName, assetName, testURL, metadataHash)
 	require.NoError(t, err)
@@ -167,7 +167,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 		Type: types.AssetConfigTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         4020,
+			Fee:         4920,
 			FirstValid:  322575,
 			LastValid:   323575,
 			GenesisHash: byte32ArrayFromBase64(genesisHash),
@@ -192,7 +192,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
-	signedGolden := "gqNzaWfEQEDd1OMRoQI/rzNlU4iiF50XQXmup3k5czI9hEsNqHT7K4KsfmA/0DUVkbzOwtJdRsHS8trm3Arjpy9r7AXlbAujdHhuh6RhcGFyiaJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bqN0c3SjZmVlzQ+0omZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
+	signedGolden := "gqNzaWfEQCPNXED15sdMwiSxl9K4LALy5brxBpnOtBurPK2TAtjXpxKQqN9flVtjxP0GGYVUjNx/Sez0W4v1CSU9FhYSUgOjdHhuh6RhcGFyiaJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXXZYHdlYnNpdGV3ZWJzaXRld2Vic2l0ZXdlYnNpdGV3ZWJzaXRld2Vic2l0ZXdlYnNpdGV3ZWJzaXRld2Vic2l0ZXdlYnNpdGV3ZWJzaXRld2Vic2l0ZXdlYnNpdGV3ZWJzaaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bqN0c3SjZmVlzRM4omZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
