@@ -10,7 +10,7 @@ type ApplicationLocalState struct {
 	Deleted bool `json:"deleted,omitempty"`
 
 	// Id the application which this local state is for.
-	Id uint64 `json:"id,omitempty"`
+	Id uint64 `json:"id"`
 
 	// KeyValue (tkv) storage.
 	KeyValue []TealKeyValue `json:"key-value,omitempty"`
@@ -19,5 +19,5 @@ type ApplicationLocalState struct {
 	OptedInAtRound uint64 `json:"opted-in-at-round,omitempty"`
 
 	// Schema (hsch) schema.
-	Schema ApplicationStateSchema `json:"schema,omitempty"`
+	Schema ApplicationStateSchema `json:"schema"`
 }

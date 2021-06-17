@@ -7,27 +7,27 @@ import "github.com/algorand/go-algorand-sdk/types"
 // information.
 type DryrunRequest struct {
 	// Accounts
-	Accounts []Account `json:"accounts,omitempty"`
+	Accounts []Account `json:"accounts"`
 
 	// Apps
-	Apps []Application `json:"apps,omitempty"`
+	Apps []Application `json:"apps"`
 
 	// LatestTimestamp latestTimestamp is available to some TEAL scripts. Defaults to
 	// the latest confirmed timestamp this algod is attached to.
-	LatestTimestamp uint64 `json:"latest-timestamp,omitempty"`
+	LatestTimestamp uint64 `json:"latest-timestamp"`
 
 	// ProtocolVersion protocolVersion specifies a specific version string to operate
 	// under, otherwise whatever the current protocol of the network this algod is
 	// running in.
-	ProtocolVersion string `json:"protocol-version,omitempty"`
+	ProtocolVersion string `json:"protocol-version"`
 
 	// Round round is available to some TEAL scripts. Defaults to the current round on
 	// the network this algod is attached to.
-	Round uint64 `json:"round,omitempty"`
+	Round uint64 `json:"round"`
 
 	// Sources
-	Sources []DryrunSource `json:"sources,omitempty"`
+	Sources []DryrunSource `json:"sources"`
 
 	// Txns
-	Txns []types.SignedTxn `json:"txns,omitempty"`
+	Txns []types.SignedTxn `json:"txns"`
 }

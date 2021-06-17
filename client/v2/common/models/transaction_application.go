@@ -14,7 +14,7 @@ type TransactionApplication struct {
 
 	// ApplicationId (apid) ID of the application being configured or empty if
 	// creating.
-	ApplicationId uint64 `json:"application-id,omitempty"`
+	ApplicationId uint64 `json:"application-id"`
 
 	// ApprovalProgram (apap) Logic executed for every application transaction, except
 	// when on-completion is set to "clear". It can read and write global state for the
@@ -27,6 +27,10 @@ type TransactionApplication struct {
 	// application, as well as account-specific local state. Clear state programs
 	// cannot reject the transaction.
 	ClearStateProgram []byte `json:"clear-state-program,omitempty"`
+
+	// ExtraProgramPages (epp) specifies the additional app program len requested in
+	// pages.
+	ExtraProgramPages uint64 `json:"extra-program-pages,omitempty"`
 
 	// ForeignApps (apfa) Lists the applications in addition to the application-id
 	// whose global states may be accessed by this application's approval-program and
@@ -60,7 +64,4 @@ type TransactionApplication struct {
 	// * update
 	// * delete
 	OnCompletion string `json:"on-completion,omitempty"`
-
-	// ExtraPages (extrapages) extra length requested for executing larger application programs
-	ExtraProgramPages int `json:"extra-program-pages,omitempty"`
 }

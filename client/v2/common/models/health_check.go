@@ -6,17 +6,17 @@ type HealthCheck struct {
 	Data *map[string]interface{} `json:"data,omitempty"`
 
 	// DbAvailable
-	DbAvailable bool `json:"db-available,omitempty"`
+	DbAvailable bool `json:"db-available"`
 
 	// Errors
 	Errors []string `json:"errors,omitempty"`
 
 	// IsMigrating
-	IsMigrating bool `json:"is-migrating,omitempty"`
+	IsMigrating bool `json:"is-migrating"`
 
 	// Message
-	Message string `json:"message,omitempty"`
+	Message string `json:"message"`
 
 	// Round
-	Round uint64 `json:"round,omitempty"`
+	Round uint64 `json:"round"`
 }

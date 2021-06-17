@@ -26,32 +26,32 @@ type NodeStatusResponse struct {
 	CatchpointVerifiedAccounts uint64 `json:"catchpoint-verified-accounts,omitempty"`
 
 	// CatchupTime catchupTime in nanoseconds
-	CatchupTime uint64 `json:"catchup-time,omitempty"`
+	CatchupTime uint64 `json:"catchup-time"`
 
 	// LastCatchpoint the last catchpoint seen by the node
 	LastCatchpoint string `json:"last-catchpoint,omitempty"`
 
 	// LastRound lastRound indicates the last round seen
-	LastRound uint64 `json:"last-round,omitempty"`
+	LastRound uint64 `json:"last-round"`
 
 	// LastVersion lastVersion indicates the last consensus version supported
-	LastVersion string `json:"last-version,omitempty"`
+	LastVersion string `json:"last-version"`
 
 	// NextVersion nextVersion of consensus protocol to use
-	NextVersion string `json:"next-version,omitempty"`
+	NextVersion string `json:"next-version"`
 
 	// NextVersionRound nextVersionRound is the round at which the next consensus
 	// version will apply
-	NextVersionRound uint64 `json:"next-version-round,omitempty"`
+	NextVersionRound uint64 `json:"next-version-round"`
 
 	// NextVersionSupported nextVersionSupported indicates whether the next consensus
 	// version is supported by this node
-	NextVersionSupported bool `json:"next-version-supported,omitempty"`
+	NextVersionSupported bool `json:"next-version-supported"`
 
 	// StoppedAtUnsupportedRound stoppedAtUnsupportedRound indicates that the node does
 	// not support the new rounds and has stopped making progress
-	StoppedAtUnsupportedRound bool `json:"stopped-at-unsupported-round,omitempty"`
+	StoppedAtUnsupportedRound bool `json:"stopped-at-unsupported-round"`
 
 	// TimeSinceLastRound timeSinceLastRound in nanoseconds
-	TimeSinceLastRound uint64 `json:"time-since-last-round,omitempty"`
+	TimeSinceLastRound uint64 `json:"time-since-last-round"`
 }

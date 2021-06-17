@@ -3,7 +3,7 @@ package models
 // BlockUpgradeState fields relating to a protocol upgrade.
 type BlockUpgradeState struct {
 	// CurrentProtocol (proto) The current protocol version.
-	CurrentProtocol string `json:"current-protocol,omitempty"`
+	CurrentProtocol string `json:"current-protocol"`
 
 	// NextProtocol (nextproto) The next proposed protocol version.
 	NextProtocol string `json:"next-protocol,omitempty"`

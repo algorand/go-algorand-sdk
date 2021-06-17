@@ -8,8 +8,8 @@ import "github.com/algorand/go-algorand-sdk/types"
 // fewer than **total-transactions**.
 type PendingTransactionsResponse struct {
 	// TopTransactions an array of signed transaction objects.
-	TopTransactions []types.SignedTxn `json:"top-transactions,omitempty"`
+	TopTransactions []types.SignedTxn `json:"top-transactions"`
 
 	// TotalTransactions total number of transactions in the pool.
-	TotalTransactions uint64 `json:"total-transactions,omitempty"`
+	TotalTransactions uint64 `json:"total-transactions"`
 }

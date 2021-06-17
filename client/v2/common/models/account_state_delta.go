@@ -3,8 +3,8 @@ package models
 // AccountStateDelta application state delta.
 type AccountStateDelta struct {
 	// Address
-	Address string `json:"address,omitempty"`
+	Address string `json:"address"`
 
 	// Delta application state delta.
-	Delta []EvalDeltaKeyValue `json:"delta,omitempty"`
+	Delta []EvalDeltaKeyValue `json:"delta"`
 }

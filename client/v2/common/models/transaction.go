@@ -29,9 +29,9 @@ type Transaction struct {
 	// data/transactions/asset.go : AssetTransferTxnFields
 	AssetTransferTransaction TransactionAssetTransfer `json:"asset-transfer-transaction,omitempty"`
 
-	// AuthAddr (sgnr) The address used to sign the transaction. This is used for
-	// rekeyed accounts to indicate that the sender address did not sign the
-	// transaction.
+	// AuthAddr (sgnr) this is included with signed transactions when the signing
+	// address does not equal the sender. The backend can use this to ensure that auth
+	// addr is equal to the accounts auth addr.
 	AuthAddr string `json:"auth-addr,omitempty"`
 
 	// CloseRewards (rc) rewards applied to close-remainder-to account.
@@ -52,10 +52,10 @@ type Transaction struct {
 	CreatedAssetIndex uint64 `json:"created-asset-index,omitempty"`
 
 	// Fee (fee) Transaction fee.
-	Fee uint64 `json:"fee,omitempty"`
+	Fee uint64 `json:"fee"`
 
 	// FirstValid (fv) First valid round for this transaction.
-	FirstValid uint64 `json:"first-valid,omitempty"`
+	FirstValid uint64 `json:"first-valid"`
 
 	// GenesisHash (gh) Hash of genesis block.
 	GenesisHash []byte `json:"genesis-hash,omitempty"`
@@ -73,7 +73,7 @@ type Transaction struct {
 	Group []byte `json:"group,omitempty"`
 
 	// Id transaction ID
-	Id string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// IntraRoundOffset offset into the round where this transaction was confirmed.
 	IntraRoundOffset uint64 `json:"intra-round-offset,omitempty"`
@@ -84,7 +84,7 @@ type Transaction struct {
 	KeyregTransaction TransactionKeyreg `json:"keyreg-transaction,omitempty"`
 
 	// LastValid (lv) Last valid round for this transaction.
-	LastValid uint64 `json:"last-valid,omitempty"`
+	LastValid uint64 `json:"last-valid"`
 
 	// Lease (lx) Base64 encoded 32-byte array. Lease enforces mutual exclusion of
 	// transactions. If this field is nonzero, then once the transaction is confirmed,
@@ -117,14 +117,14 @@ type Transaction struct {
 	RoundTime uint64 `json:"round-time,omitempty"`
 
 	// Sender (snd) Sender's address.
-	Sender string `json:"sender,omitempty"`
+	Sender string `json:"sender"`
 
 	// SenderRewards (rs) rewards applied to sender account.
 	SenderRewards uint64 `json:"sender-rewards,omitempty"`
 
 	// Signature validation signature associated with some data. Only one of the
 	// signatures should be provided.
-	Signature TransactionSignature `json:"signature,omitempty"`
+	Signature TransactionSignature `json:"signature"`
 
 	// Type (type) Indicates what type of transaction this is. Different types have
 	// different fields.

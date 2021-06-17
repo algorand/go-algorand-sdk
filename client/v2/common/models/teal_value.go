@@ -3,11 +3,11 @@ package models
 // TealValue represents a TEAL value.
 type TealValue struct {
 	// Bytes (tb) bytes value.
-	Bytes string `json:"bytes,omitempty"`
+	Bytes string `json:"bytes"`
 
 	// Type (tt) value type.
-	Type uint64 `json:"type,omitempty"`
+	Type uint64 `json:"type"`
 
 	// Uint (ui) uint value.
-	Uint uint64 `json:"uint,omitempty"`
+	Uint uint64 `json:"uint"`
 }

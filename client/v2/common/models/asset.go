@@ -12,11 +12,11 @@ type Asset struct {
 	DestroyedAtRound uint64 `json:"destroyed-at-round,omitempty"`
 
 	// Index unique asset identifier
-	Index uint64 `json:"index,omitempty"`
+	Index uint64 `json:"index"`
 
 	// Params assetParams specifies the parameters for an asset.
 	// (apar) when part of an AssetConfig transaction.
 	// Definition:
 	// data/transactions/asset.go : AssetParams
-	Params AssetParams `json:"params,omitempty"`
+	Params AssetParams `json:"params"`
 }
