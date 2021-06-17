@@ -183,7 +183,7 @@ type SuggestedParams struct {
 	ConsensusVersion string
 
 	// FlatFee indicates whether the passed fee is per-byte or per-transaction
-	// If true, txn fee is may fall below the MinTxnFee for the current network protocol.
+	// If true, txn fee may fall below the MinTxnFee for the current network protocol.
 	FlatFee bool
 
 	// The minimum transaction fee (not per byte) required for the
