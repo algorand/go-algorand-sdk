@@ -183,7 +183,7 @@ type SuggestedParams struct {
 	ConsensusVersion string `codec:"consensus-version"`
 
 	// If true, txn fee may fall below the MinTxnFee for the current network protocol.
-	FlatFee bool `codec"flat-fee"`
+	FlatFee bool `codec:"flat-fee"`
 
 	// The minimum transaction fee (not per byte) required for the
 	// txn to validate for the current network protocol.
