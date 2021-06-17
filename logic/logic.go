@@ -70,6 +70,7 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 	for _, arg := range args {
 		length += len(arg)
 	}
+
 	if length > types.LogicSigMaxSize {
 		err = fmt.Errorf("program too long")
 		return
@@ -129,8 +130,9 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 		pc = pc + size
 	}
 
-	if cost > types.LogicSigMaxCost {
-		err = fmt.Errorf("program too costly to run")
+	// costs calculated dynamically starting in v4
+	if version < 4 && cost > types.LogicSigMaxCost {
+		err = fmt.Errorf("program too costly for Teal version < 4. consider using v4.")
 	}
 
 	return

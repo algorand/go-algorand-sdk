@@ -9,7 +9,7 @@ type TransactionSignatureLogicsig struct {
 
 	// Logic (l) Program signed by a signature or multi signature, or hashed to be the
 	// address of ana ccount. Base64 encoded TEAL program.
-	Logic []byte `json:"logic,omitempty"`
+	Logic []byte `json:"logic"`
 
 	// MultisigSignature (msig) structure holding multiple subsignatures.
 	// Definition:

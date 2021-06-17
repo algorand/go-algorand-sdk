@@ -5,18 +5,18 @@ package models
 type AccountParticipation struct {
 	// SelectionParticipationKey (sel) Selection public key (if any) currently
 	// registered for this round.
-	SelectionParticipationKey []byte `json:"selection-participation-key,omitempty"`
+	SelectionParticipationKey []byte `json:"selection-participation-key"`
 
 	// VoteFirstValid (voteFst) First round for which this participation is valid.
-	VoteFirstValid uint64 `json:"vote-first-valid,omitempty"`
+	VoteFirstValid uint64 `json:"vote-first-valid"`
 
 	// VoteKeyDilution (voteKD) Number of subkeys in each batch of participation keys.
-	VoteKeyDilution uint64 `json:"vote-key-dilution,omitempty"`
+	VoteKeyDilution uint64 `json:"vote-key-dilution"`
 
 	// VoteLastValid (voteLst) Last round for which this participation is valid.
-	VoteLastValid uint64 `json:"vote-last-valid,omitempty"`
+	VoteLastValid uint64 `json:"vote-last-valid"`
 
 	// VoteParticipationKey (vote) root participation public key (if any) currently
 	// registered for this round.
-	VoteParticipationKey []byte `json:"vote-participation-key,omitempty"`
+	VoteParticipationKey []byte `json:"vote-participation-key"`
 }

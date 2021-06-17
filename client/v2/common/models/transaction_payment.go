@@ -5,7 +5,7 @@ package models
 // data/transactions/payment.go : PaymentTxnFields
 type TransactionPayment struct {
 	// Amount (amt) number of MicroAlgos intended to be transferred.
-	Amount uint64 `json:"amount,omitempty"`
+	Amount uint64 `json:"amount"`
 
 	// CloseAmount number of MicroAlgos that were sent to the close-remainder-to
 	// address when closing the sender account.
@@ -16,5 +16,5 @@ type TransactionPayment struct {
 	CloseRemainderTo string `json:"close-remainder-to,omitempty"`
 
 	// Receiver (rcv) receiver's address.
-	Receiver string `json:"receiver,omitempty"`
+	Receiver string `json:"receiver"`
 }

@@ -12,8 +12,8 @@ type Application struct {
 	DeletedAtRound uint64 `json:"deleted-at-round,omitempty"`
 
 	// Id (appidx) application index.
-	Id uint64 `json:"id,omitempty"`
+	Id uint64 `json:"id"`
 
 	// Params (appparams) application parameters.
-	Params ApplicationParams `json:"params,omitempty"`
+	Params ApplicationParams `json:"params"`
 }

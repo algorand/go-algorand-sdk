@@ -5,25 +5,25 @@ package models
 // data/bookkeeping/block.go : Block
 type Block struct {
 	// GenesisHash (gh) hash to which this block belongs.
-	GenesisHash []byte `json:"genesis-hash,omitempty"`
+	GenesisHash []byte `json:"genesis-hash"`
 
 	// GenesisId (gen) ID to which this block belongs.
-	GenesisId string `json:"genesis-id,omitempty"`
+	GenesisId string `json:"genesis-id"`
 
 	// PreviousBlockHash (prev) Previous block hash.
-	PreviousBlockHash []byte `json:"previous-block-hash,omitempty"`
+	PreviousBlockHash []byte `json:"previous-block-hash"`
 
 	// Rewards fields relating to rewards,
 	Rewards BlockRewards `json:"rewards,omitempty"`
 
 	// Round (rnd) Current round on which this block was appended to the chain.
-	Round uint64 `json:"round,omitempty"`
+	Round uint64 `json:"round"`
 
 	// Seed (seed) Sortition seed.
-	Seed []byte `json:"seed,omitempty"`
+	Seed []byte `json:"seed"`
 
 	// Timestamp (ts) Block creation timestamp in seconds since eposh
-	Timestamp uint64 `json:"timestamp,omitempty"`
+	Timestamp uint64 `json:"timestamp"`
 
 	// Transactions (txns) list of transactions corresponding to a given round.
 	Transactions []Transaction `json:"transactions,omitempty"`
@@ -35,7 +35,7 @@ type Block struct {
 	// transactions, only the transactions themselves. Two blocks with the same
 	// transactions but in a different order and with different signatures will have
 	// the same TxnRoot.
-	TransactionsRoot []byte `json:"transactions-root,omitempty"`
+	TransactionsRoot []byte `json:"transactions-root"`
 
 	// TxnCounter (tc) TxnCounter counts the number of transactions committed in the
 	// ledger, from the time at which support for this feature was introduced.

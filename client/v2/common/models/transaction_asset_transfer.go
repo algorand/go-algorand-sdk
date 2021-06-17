@@ -6,10 +6,10 @@ package models
 type TransactionAssetTransfer struct {
 	// Amount (aamt) Amount of asset to transfer. A zero amount transferred to self
 	// allocates that asset in the account's Assets map.
-	Amount uint64 `json:"amount,omitempty"`
+	Amount uint64 `json:"amount"`
 
 	// AssetId (xaid) ID of the asset being transferred.
-	AssetId uint64 `json:"asset-id,omitempty"`
+	AssetId uint64 `json:"asset-id"`
 
 	// CloseAmount number of assets transfered to the close-to account as part of the
 	// transaction.
@@ -22,7 +22,7 @@ type TransactionAssetTransfer struct {
 	CloseTo string `json:"close-to,omitempty"`
 
 	// Receiver (arcv) Recipient address of the transfer.
-	Receiver string `json:"receiver,omitempty"`
+	Receiver string `json:"receiver"`
 
 	// Sender (asnd) The effective sender during a clawback transactions. If this is
 	// not a zero value, the real transaction sender must be the Clawback address from

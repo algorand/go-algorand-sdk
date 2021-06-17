@@ -7,8 +7,8 @@ package models
 type StateSchema struct {
 	// NumByteSlice maximum number of TEAL byte slices that may be stored in the
 	// key/value store.
-	NumByteSlice uint64 `json:"num-byte-slice,omitempty"`
+	NumByteSlice uint64 `json:"num-byte-slice"`
 
 	// NumUint maximum number of TEAL uints that may be stored in the key/value store.
-	NumUint uint64 `json:"num-uint,omitempty"`
+	NumUint uint64 `json:"num-uint"`
 }

@@ -2,13 +2,14 @@ package future
 
 import (
 	"encoding/base64"
+	"testing"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func byteFromBase64(s string) []byte {
@@ -741,16 +742,22 @@ func TestFee(t *testing.T) {
 			expected: 1001,
 		},
 		{
-			name:     "Flat fee overridden with min fee",
+			name:     "Flat fee does not get overridden with min fee",
 			flatFee:  true,
 			fee:      999,
-			expected: 1000,
+			expected: 999,
 		},
 		{
 			name:     "Estimated fee overridden with min fee",
 			flatFee:  false,
 			fee:      1,
 			expected: 1000,
+		},
+		{
+			name:     "Flat fee set to 0",
+			flatFee:  true,
+			fee:      0,
+			expected: 0,
 		},
 	}
 	addr := types.Address{}.String()
