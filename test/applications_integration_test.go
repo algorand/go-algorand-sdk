@@ -98,7 +98,7 @@ func waitForTransaction(transactionId string) error {
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, foreignAssets, appAccounts string) error {
+	appArgs, foreignApps, foreignAssets, appAccounts string, extraPages int) error {
 
 	var clearP []byte
 	var approvalP []byte
@@ -150,7 +150,7 @@ func iBuildAnApplicationTransaction(
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ func iBuildAnApplicationTransaction(
 	case "create_optin":
 		tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func iBuildAnApplicationTransaction(
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
@@ -506,12 +506,11 @@ func theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldA
 	return nil
 }
 
-
 //@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
-	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)"$`, iBuildAnApplicationTransaction)
+	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransaction)
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)

@@ -6,19 +6,44 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 )
 
-const indexerAuthHeader = "X-Indexer-API-Token"
+const authHeader = "X-Indexer-API-Token"
 
 type Client common.Client
 
-// get performs a GET request to the specific path against the server
+// get performs a GET request to the specific path against the server, assumes JSON response
 func (c *Client) get(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
 	return (*common.Client)(c).Get(ctx, response, path, body, headers)
 }
 
-// MakeClient is the factory for constructing an IndexerClient for a given endpoint.
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+func (c *Client) getMsgpack(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).GetRawMsgpack(ctx, response, path, body, headers)
+}
+
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+func (c *Client) getRaw(ctx context.Context, path string, body interface{}, headers []*common.Header) ([]byte, error) {
+	return (*common.Client)(c).GetRaw(ctx, path, body, headers)
+}
+
+// post sends a POST request to the given path with the given request object.
+// No query parameters will be sent if request is nil.
+// response must be a pointer to an object as post writes the response there.
+func (c *Client) post(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).Post(ctx, response, path, body, headers)
+}
+
+// MakeClient is the factory for constructing a ClientV2 for a given endpoint.
 func MakeClient(address string, apiToken string) (c *Client, err error) {
-	commonClient, err := common.MakeClient(address, indexerAuthHeader, apiToken)
+	commonClient, err := common.MakeClient(address, authHeader, apiToken)
 	c = (*Client)(commonClient)
+	return
+}
+
+// MakeClientWithHeaders is the factory for constructing a ClientV2 for a
+// given endpoint with custom headers.
+func MakeClientWithHeaders(address string, apiToken string, headers []*common.Header) (c *Client, err error) {
+	commonClientWithHeaders, err := common.MakeClientWithHeaders(address, authHeader, apiToken, headers)
+	c = (*Client)(commonClientWithHeaders)
 	return
 }
 
@@ -26,38 +51,50 @@ func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
 
-func (c *Client) LookupAssetBalances(index uint64) *LookupAssetBalances {
-	return &LookupAssetBalances{c: c, index: index}
-}
-
-func (c *Client) LookupAssetTransactions(index uint64) *LookupAssetTransactions {
-	return &LookupAssetTransactions{c: c, index: index}
-}
-
-func (c *Client) LookupAccountTransactions(account string) *LookupAccountTransactions {
-	return &LookupAccountTransactions{c: c, account: account}
-}
-
-func (c *Client) LookupBlock(round uint64) *LookupBlock {
-	return &LookupBlock{c: c, round: round}
-}
-
-func (c *Client) LookupAccountByID(account string) *LookupAccountByID {
-	return &LookupAccountByID{c: c, account: account}
-}
-
-func (c *Client) LookupAssetByID(index uint64) *LookupAssetByID {
-	return &LookupAssetByID{c: c, index: index}
-}
-
 func (c *Client) SearchAccounts() *SearchAccounts {
 	return &SearchAccounts{c: c}
 }
 
-func (c *Client) SearchForTransactions() *SearchForTransactions {
-	return &SearchForTransactions{c: c}
+func (c *Client) LookupAccountByID(accountId string) *LookupAccountByID {
+	return &LookupAccountByID{c: c, accountId: accountId}
+}
+
+func (c *Client) LookupAccountTransactions(accountId string) *LookupAccountTransactions {
+	return &LookupAccountTransactions{c: c, accountId: accountId}
+}
+
+func (c *Client) SearchForApplications() *SearchForApplications {
+	return &SearchForApplications{c: c}
+}
+
+func (c *Client) LookupApplicationByID(applicationId uint64) *LookupApplicationByID {
+	return &LookupApplicationByID{c: c, applicationId: applicationId}
 }
 
 func (c *Client) SearchForAssets() *SearchForAssets {
 	return &SearchForAssets{c: c}
+}
+
+func (c *Client) LookupAssetByID(assetId uint64) *LookupAssetByID {
+	return &LookupAssetByID{c: c, assetId: assetId}
+}
+
+func (c *Client) LookupAssetBalances(assetId uint64) *LookupAssetBalances {
+	return &LookupAssetBalances{c: c, assetId: assetId}
+}
+
+func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransactions {
+	return &LookupAssetTransactions{c: c, assetId: assetId}
+}
+
+func (c *Client) LookupBlock(roundNumber uint64) *LookupBlock {
+	return &LookupBlock{c: c, roundNumber: roundNumber}
+}
+
+func (c *Client) LookupTransaction(txid string) *LookupTransaction {
+	return &LookupTransaction{c: c, txid: txid}
+}
+
+func (c *Client) SearchForTransactions() *SearchForTransactions {
+	return &SearchForTransactions{c: c}
 }

@@ -1,9 +1,24 @@
+# 1.8.0
+# Added
+- V2: Add MakeClientWithHeaders wrapper functions
+# Bugfix
+- Fix FlatFee computation
+# 1.7.0
+# Bugfix
+- Fix GetGenesis endpoint.
+# 1.6.0
+# Added
+- Code generation for more of the http client
+- Add TEAL 3 support
+- template UX tweaks
+# Bugfix
+- Make limitorder.GetSwapAssetsTransaction behave the same as other SDKs
 # 1.5.1
 # Added
 - Add `BlockRaw` method to algod API V2 client.
 # 1.5.0
 # Added
-- Support for Applications 
+- Support for Applications
 # 1.4.2
 # Bugfix
 - Fix incorrect `SendRawTransaction` path in API V2 client.
@@ -21,15 +36,15 @@
     -  support for Periodic Payment contract
 - support for SuggestedParams
 - support for RawBlock request
-- Missing transaction types 
+- Missing transaction types
 # 1.2.1
 # Added
 - Added asset decimals field.
 # 1.2.0
 # Added
 - Added support for Algorand Standardized Assets (ASA)
-- Added support for Algorand Smart Contracts (ASC) 
-    - Added support for Hashed Time Lock Contract (HTLC) 
+- Added support for Algorand Smart Contracts (ASC)
+    - Added support for Hashed Time Lock Contract (HTLC)
     - Added support for Split contract
 - Added support for Group Transactions
 - Added support for leases
@@ -41,9 +56,9 @@
 # Changed
 - Add note parameter to key registration transaction constructors
 # 1.1.2
-# Added 
+# Added
 - Support for GenesisHash
-- Updated API Models. 
+- Updated API Models.
 # 1.1.1
 ## Added
 - Indexer support
@@ -52,7 +67,7 @@
 - Multisignature support
 # 1.0.6
 ## Added
-- Support in new SuggestedFee functionality 
+- Support in new SuggestedFee functionality
 # 1.0.5
 ## Added
 - Added helper functions for preventing overflow

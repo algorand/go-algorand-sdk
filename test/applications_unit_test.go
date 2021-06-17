@@ -14,6 +14,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -39,7 +40,7 @@ func iBuildAnApplicationTransactionUnit(
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
-	genesisHash string) error {
+	genesisHash string, extraPages int) error {
 
 	applicationId = uint64(applicationIdInt)
 	var clearP []byte
@@ -90,7 +91,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "create":
 		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
@@ -106,7 +107,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
@@ -143,6 +144,30 @@ func signTheTransaction() error {
 	var err error
 	_, stx, err = crypto.SignTransaction(sk1, tx)
 	return err
+}
+
+func feeFieldIsInTxn() error {
+	var txn map[string]interface{}
+	err := msgpack.Decode(stx, &txn)
+	if err != nil {
+		return fmt.Errorf("Error while decoding txn. %v", err)
+	}
+	if _, ok := txn["txn"].(map[interface{}]interface{})["fee"]; !ok {
+		return fmt.Errorf("fee field missing. %v", err)
+	}
+	return nil
+}
+
+func feeFieldNotInTxn() error {
+	var txn map[string]interface{}
+	err := msgpack.Decode(stx, &txn)
+	if err != nil {
+		return fmt.Errorf("Error while decoding txn. %v", err)
+	}
+	if _, ok := txn["txn"].(map[interface{}]interface{})["fee"]; ok {
+		return fmt.Errorf("fee field found but it should have been omitted. %v", err)
+	}
+	return nil
 }
 
 func theBaseEncodedSignedTransactionShouldEqual(base int, golden string) error {
@@ -211,11 +236,14 @@ func weMakeALookupApplicationsCall(applicationID int) error {
 }
 
 func ApplicationsUnitContext(s *godog.Suite) {
-	// @unit.transactiosn
+	// @unit.transactions
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)"$`, iBuildAnApplicationTransactionUnit)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransactionUnit)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
+
+	s.Step(`^fee field is in txn$`, feeFieldIsInTxn)
+	s.Step(`^fee field not in txn$`, feeFieldNotInTxn)
 
 	//@unit.applications
 	s.Step(`^we make a GetAssetByID call for assetID (\d+)$`, weMakeAGetAssetByIDCall)

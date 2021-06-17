@@ -186,9 +186,52 @@ type (
 		// Closing amount for transaction.
 		ClosingAmount MicroAlgos `codec:"ca"`
 
+		// Closing amount for asset transaction.
+		AssetClosingAmount uint64 `codec:"aca"`
+
 		// Rewards applied to the Sender, Receiver, and CloseRemainderTo accounts.
 		SenderRewards   MicroAlgos `codec:"rs"`
 		ReceiverRewards MicroAlgos `codec:"rr"`
 		CloseRewards    MicroAlgos `codec:"rc"`
+		EvalDelta       EvalDelta  `codec:"dt"`
 	}
+)
+
+type EvalDelta struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	GlobalDelta StateDelta `codec:"gd"`
+
+	// When decoding EvalDeltas, the integer key represents an offset into
+	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
+	LocalDeltas map[uint64]StateDelta `codec:"ld,allocbound=config.MaxEvalDeltaAccounts"`
+}
+
+// StateDelta is a map from key/value store keys to ValueDeltas, indicating
+// what should happen for that key
+//msgp:allocbound StateDelta config.MaxStateDeltaKeys
+type StateDelta map[string]ValueDelta
+
+// ValueDelta links a DeltaAction with a value to be set
+type ValueDelta struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Action DeltaAction `codec:"at"`
+	Bytes  string      `codec:"bs"`
+	Uint   uint64      `codec:"ui"`
+}
+
+// DeltaAction is an enum of actions that may be performed when applying a
+// delta to a TEAL key/value store
+type DeltaAction uint64
+
+const (
+	// SetBytesAction indicates that a TEAL byte slice should be stored at a key
+	SetBytesAction DeltaAction = 1
+
+	// SetUintAction indicates that a Uint should be stored at a key
+	SetUintAction DeltaAction = 2
+
+	// DeleteAction indicates that the value for a particular key should be deleted
+	DeleteAction DeltaAction = 3
 )
