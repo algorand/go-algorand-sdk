@@ -10,7 +10,7 @@ type DryrunTxnResult struct {
 	AppCallTrace []DryrunState `json:"app-call-trace,omitempty"`
 
 	// Disassembly disassembled program line by line.
-	Disassembly []string `json:"disassembly,omitempty"`
+	Disassembly []string `json:"disassembly"`
 
 	// GlobalDelta application state delta.
 	GlobalDelta []EvalDeltaKeyValue `json:"global-delta,omitempty"`

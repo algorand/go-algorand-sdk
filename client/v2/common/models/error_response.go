@@ -6,5 +6,5 @@ type ErrorResponse struct {
 	Data *map[string]interface{} `json:"data,omitempty"`
 
 	// Message
-	Message string `json:"message,omitempty"`
+	Message string `json:"message"`
 }

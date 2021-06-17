@@ -43,7 +43,7 @@ type PendingTransactionResponse struct {
 	// PoolError indicates that the transaction was kicked out of this node's
 	// transaction pool (and specifies why that happened). An empty string indicates
 	// the transaction wasn't kicked out of this node's txpool due to an error.
-	PoolError string `json:"pool-error,omitempty"`
+	PoolError string `json:"pool-error"`
 
 	// ReceiverRewards rewards in microalgos applied to the receiver account.
 	ReceiverRewards uint64 `json:"receiver-rewards,omitempty"`
@@ -52,5 +52,5 @@ type PendingTransactionResponse struct {
 	SenderRewards uint64 `json:"sender-rewards,omitempty"`
 
 	// Transaction the raw signed transaction.
-	Transaction types.SignedTxn `json:"txn,omitempty"`
+	Transaction types.SignedTxn `json:"txn"`
 }

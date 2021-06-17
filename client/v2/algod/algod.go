@@ -40,6 +40,8 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 	return
 }
 
+// MakeClientWithHeaders is the factory for constructing a ClientV2 for a
+// given endpoint with custom headers.
 func MakeClientWithHeaders(address string, apiToken string, headers []*common.Header) (c *Client, err error) {
 	commonClientWithHeaders, err := common.MakeClientWithHeaders(address, authHeader, apiToken, headers)
 	c = (*Client)(commonClientWithHeaders)

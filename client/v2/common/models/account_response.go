@@ -5,8 +5,8 @@ type AccountResponse struct {
 	// Account account information at a given round.
 	// Definition:
 	// data/basics/userBalance.go : AccountData
-	Account Account `json:"account,omitempty"`
+	Account Account `json:"account"`
 
 	// CurrentRound round at which the results were computed.
-	CurrentRound uint64 `json:"current-round,omitempty"`
+	CurrentRound uint64 `json:"current-round"`
 }

@@ -6,14 +6,14 @@ type DryrunState struct {
 	Error string `json:"error,omitempty"`
 
 	// Line line number
-	Line uint64 `json:"line,omitempty"`
+	Line uint64 `json:"line"`
 
 	// Pc program counter
-	Pc uint64 `json:"pc,omitempty"`
+	Pc uint64 `json:"pc"`
 
 	// Scratch
 	Scratch []TealValue `json:"scratch,omitempty"`
 
 	// Stack
-	Stack []TealValue `json:"stack,omitempty"`
+	Stack []TealValue `json:"stack"`
 }

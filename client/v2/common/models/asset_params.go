@@ -12,13 +12,13 @@ type AssetParams struct {
 	// Creator the address that created this asset. This is the address where the
 	// parameters for this asset can be found, and also the address where unwanted
 	// asset units can be sent in the worst case.
-	Creator string `json:"creator,omitempty"`
+	Creator string `json:"creator"`
 
 	// Decimals (dc) The number of digits to use after the decimal point when
 	// displaying this asset. If 0, the asset is not divisible. If 1, the base unit of
 	// the asset is in tenths. If 2, the base unit of the asset is in hundredths, and
 	// so on. This value must be between 0 and 19 (inclusive).
-	Decimals uint64 `json:"decimals,omitempty"`
+	Decimals uint64 `json:"decimals"`
 
 	// DefaultFrozen (df) Whether holdings of this asset are frozen by default.
 	DefaultFrozen bool `json:"default-frozen,omitempty"`
@@ -42,7 +42,7 @@ type AssetParams struct {
 	Reserve string `json:"reserve,omitempty"`
 
 	// Total (t) The total number of units of this asset.
-	Total uint64 `json:"total,omitempty"`
+	Total uint64 `json:"total"`
 
 	// UnitName (un) Name of a unit of this asset, as supplied by the creator.
 	UnitName string `json:"unit-name,omitempty"`

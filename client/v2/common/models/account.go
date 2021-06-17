@@ -5,18 +5,22 @@ package models
 // data/basics/userBalance.go : AccountData
 type Account struct {
 	// Address the account public key
-	Address string `json:"address,omitempty"`
+	Address string `json:"address"`
 
 	// Amount (algo) total number of MicroAlgos in the account
-	Amount uint64 `json:"amount,omitempty"`
+	Amount uint64 `json:"amount"`
 
 	// AmountWithoutPendingRewards specifies the amount of MicroAlgos in the account,
 	// without the pending rewards.
-	AmountWithoutPendingRewards uint64 `json:"amount-without-pending-rewards,omitempty"`
+	AmountWithoutPendingRewards uint64 `json:"amount-without-pending-rewards"`
 
 	// AppsLocalState (appl) applications local data stored in this account.
 	// Note the raw object uses `map[int] -> AppLocalState` for this type.
 	AppsLocalState []ApplicationLocalState `json:"apps-local-state,omitempty"`
+
+	// AppsTotalExtraPages (teap) the sum of all extra application program pages for
+	// this account.
+	AppsTotalExtraPages uint64 `json:"apps-total-extra-pages,omitempty"`
 
 	// AppsTotalSchema (tsch) stores the sum of all of the local schemas and global
 	// schemas in this account.
@@ -55,7 +59,7 @@ type Account struct {
 	Participation AccountParticipation `json:"participation,omitempty"`
 
 	// PendingRewards amount of MicroAlgos of pending rewards in this account.
-	PendingRewards uint64 `json:"pending-rewards,omitempty"`
+	PendingRewards uint64 `json:"pending-rewards"`
 
 	// RewardBase (ebase) used as part of the rewards computation. Only applicable to
 	// accounts which are participating.
@@ -63,10 +67,10 @@ type Account struct {
 
 	// Rewards (ern) total rewards of MicroAlgos the account has received, including
 	// pending rewards.
-	Rewards uint64 `json:"rewards,omitempty"`
+	Rewards uint64 `json:"rewards"`
 
 	// Round the round for which this information is relevant.
-	Round uint64 `json:"round,omitempty"`
+	Round uint64 `json:"round"`
 
 	// SigType indicates what type of signature is used by this account, must be one
 	// of:
@@ -81,5 +85,5 @@ type Account struct {
 	// pool.
 	// * NotParticipating - indicates that the associated account is neither a
 	// delegator nor a delegate.
-	Status string `json:"status,omitempty"`
+	Status string `json:"status"`
 }

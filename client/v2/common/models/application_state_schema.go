@@ -4,8 +4,8 @@ package models
 // stored.
 type ApplicationStateSchema struct {
 	// NumByteSlice (nbs) num of byte slices.
-	NumByteSlice uint64 `json:"num-byte-slice,omitempty"`
+	NumByteSlice uint64 `json:"num-byte-slice"`
 
 	// NumUint (nui) num of uints.
-	NumUint uint64 `json:"num-uint,omitempty"`
+	NumUint uint64 `json:"num-uint"`
 }
