@@ -1,3 +1,10 @@
+# 1.9.0
+# Added
+- Support for TEAL 4 programs
+- Support for creating application with extra program pages
+- Support for setting a transaction fee below the network minimum, for use with fee pooling
+# Bugfix
+- Algod and Indexer responses will now produce JSON that matches the other SDKs
 # 1.8.0
 # Added
 - V2: Add MakeClientWithHeaders wrapper functions
