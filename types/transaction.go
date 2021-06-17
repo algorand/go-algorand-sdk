@@ -162,8 +162,8 @@ type TxGroup struct {
 type SuggestedParams struct {
 	// Fee is the suggested transaction fee
 	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
+	// Fee may fall to zero but a group of N atomic transactions must
+	// still have a fee of at least N*MinTxnFee for the current network protocol.
 	Fee MicroAlgos
 
 	// Genesis ID
@@ -183,6 +183,7 @@ type SuggestedParams struct {
 	ConsensusVersion string
 
 	// FlatFee indicates whether the passed fee is per-byte or per-transaction
+	// If true, txn fee may fall below the MinTxnFee for the current network protocol.
 	FlatFee bool
 
 	// The minimum transaction fee (not per byte) required for the
