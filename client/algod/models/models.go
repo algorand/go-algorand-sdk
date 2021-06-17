@@ -558,8 +558,8 @@ type AssetList struct {
 type TransactionFee struct {
 	// Fee is transaction fee
 	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
+	// Fee may fall to zero but a group of N atomic transactions must
+	// still have a fee of at least N*MinTxnFee for the current network protocol.
 	//
 	// required: true
 	Fee uint64 `json:"fee"`
@@ -571,8 +571,8 @@ type TransactionFee struct {
 type TransactionParams struct {
 	// Fee is the suggested transaction fee
 	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
+	// Fee may fall to zero but a group of N atomic transactions must
+	// still have a fee of at least N*MinTxnFee for the current network protocol.
 	//
 	// required: true
 	Fee uint64 `json:"fee"`

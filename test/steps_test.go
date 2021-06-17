@@ -174,7 +174,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`mnemonic for private key "([^"]*)"`, mnForSk)
 	s.Step("I create the payment transaction", createTxn)
 	s.Step(`multisig addresses "([^"]*)"`, msigAddresses)
-	s.Step("I create the multisig payment transaction", createMsigTxn)
+	s.Step("I create the multisig payment transaction$", createMsigTxn)
+	s.Step("I create the multisig payment transaction with zero fee", createMsigTxnZeroFee)
 	s.Step("I sign the multisig transaction with the private key", signMsigTxn)
 	s.Step("I sign the transaction with the private key", signTxn)
 	s.Step(`^I add a rekeyTo field with address "([^"]*)"$`, iAddARekeyToFieldWithAddress)
@@ -498,6 +499,25 @@ func createMsigTxn() error {
 		FirstRoundValid: types.Round(fv),
 		LastRoundValid:  types.Round(lv),
 		FlatFee:         false,
+	}
+	msigaddr, _ := msig.Address()
+	txn, err = future.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
+	if err != nil {
+		return err
+	}
+	return err
+
+}
+
+func createMsigTxnZeroFee() error {
+	var err error
+	paramsToUse := types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       gen,
+		GenesisHash:     gh,
+		FirstRoundValid: types.Round(fv),
+		LastRoundValid:  types.Round(lv),
+		FlatFee:         true,
 	}
 	msigaddr, _ := msig.Address()
 	txn, err = future.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)

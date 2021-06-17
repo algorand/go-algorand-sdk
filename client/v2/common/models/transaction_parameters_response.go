@@ -9,8 +9,8 @@ type TransactionParametersResponse struct {
 
 	// Fee fee is the suggested transaction fee
 	// Fee is in units of micro-Algos per byte.
-	// Fee may fall to zero but transactions must still have a fee of
-	// at least MinTxnFee for the current network protocol.
+	// Fee may fall to zero but a group of N atomic transactions must
+	// still have a fee of at least N*MinTxnFee for the current network protocol.
 	Fee uint64 `json:"fee,omitempty"`
 
 	// GenesisHash genesisHash is the hash of the genesis block.

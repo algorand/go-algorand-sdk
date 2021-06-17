@@ -140,113 +140,6 @@ func iBuildAnApplicationTransactionUnit(
 
 }
 
-func iBuildAnApplicationTransactionWithoutFeeUnit(
-	operation string,
-	applicationIdInt int,
-	sender, approvalProgram, clearProgram string,
-	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, foreignAssets, appAccounts string,
-	firstValid, lastValid int,
-	genesisHash string, extraPages int) error {
-
-	applicationId = uint64(applicationIdInt)
-	var clearP []byte
-	var approvalP []byte
-	var err error
-
-	if approvalProgram != "" {
-		approvalP, err = ioutil.ReadFile("features/resources/" + approvalProgram)
-		if err != nil {
-			return err
-		}
-	}
-
-	if clearProgram != "" {
-		clearP, err = ioutil.ReadFile("features/resources/" + clearProgram)
-		if err != nil {
-			return err
-		}
-	}
-	args, err := parseAppArgs(appArgs)
-	if err != nil {
-		return err
-	}
-	var accs []string
-	if appAccounts != "" {
-		accs = strings.Split(appAccounts, ",")
-	}
-
-	fApp, err := splitUint64(foreignApps)
-	if err != nil {
-		return err
-	}
-
-	fAssets, err := splitUint64(foreignAssets)
-	if err != nil {
-		return err
-	}
-
-	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
-	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
-
-	suggestedParams, err := getSuggestedParams(0, uint64(firstValid), uint64(lastValid), "", genesisHash, true)
-	if err != nil {
-		return err
-	}
-
-	switch operation {
-	case "create":
-		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		if err != nil {
-			return err
-		}
-
-	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
-			approvalP, clearP,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
-	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
-	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
-	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
-	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
-	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-
-}
-
 func signTheTransaction() error {
 	var err error
 	_, stx, err = crypto.SignTransaction(sk1, tx)
@@ -259,7 +152,7 @@ func feeFieldIsInTxn() error {
 	if err != nil {
 		return fmt.Errorf("Error while decoding txn. %v", err)
 	}
-	if _, ok :=txn["txn"].(map[interface {}]interface{})["fee"]; !ok {
+	if _, ok := txn["txn"].(map[interface{}]interface{})["fee"]; !ok {
 		return fmt.Errorf("fee field missing. %v", err)
 	}
 	return nil
@@ -271,7 +164,7 @@ func feeFieldNotInTxn() error {
 	if err != nil {
 		return fmt.Errorf("Error while decoding txn. %v", err)
 	}
-	if _, ok := txn["txn"].(map[interface {}]interface{})["fee"]; ok {
+	if _, ok := txn["txn"].(map[interface{}]interface{})["fee"]; ok {
 		return fmt.Errorf("fee field found but it should have been omitted. %v", err)
 	}
 	return nil
@@ -349,7 +242,6 @@ func ApplicationsUnitContext(s *godog.Suite) {
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base(\d+) encoded signed transaction should equal "([^"]*)"$`, theBaseEncodedSignedTransactionShouldEqual)
 
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransactionWithoutFeeUnit)
 	s.Step(`^fee field is in txn$`, feeFieldIsInTxn)
 	s.Step(`^fee field not in txn$`, feeFieldNotInTxn)
 
