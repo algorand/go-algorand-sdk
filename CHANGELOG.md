@@ -1,3 +1,6 @@
+# 1.9.1
+# Bugfix
+- Allow asset URLs to be up to 96 bytes
 # 1.9.0
 # Added
 - Support for TEAL 4 programs
