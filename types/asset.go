@@ -7,7 +7,7 @@ const AssetNameMaxLen = 32
 const AssetUnitNameMaxLen = 8
 
 // AssetURLMaxLen is the max length in bytes for the asset url
-const AssetURLMaxLen = 32
+const AssetURLMaxLen = 96
 
 // AssetMetadataHashLen is the length of the AssetMetadataHash in bytes
 const AssetMetadataHashLen = 32
