@@ -1,7 +1,9 @@
+# 2.0.0
+This release is equivalent to 1.9.1, but is bumped to indicate breaking API changes since 1.9.0.
 # 1.9.1
 # Bugfix
 - Allow asset URLs to be up to 96 bytes
-# 1.9.0
+# 1.9.0 - API COMPATIBILITY CHANGE
 # Added
 - Support for TEAL 4 programs
 - Support for creating application with extra program pages
