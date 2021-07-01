@@ -1,0 +1,30 @@
+# ignore cucumber test resources
+test-harness/
+test/features/
+test/features/resources/**/*.json
+test/features/resources/**/*.base64
+test/features/resources/programs/**/*.tok
+
+# Other misc files
+*.log
+*.log.archive
+*.out
+*.prof
+coverage.html
+
+# Exclude GoLand files
+.idea/
+
+# Ignore vim backup and swap files
+*~
+*.swp
+*.swo
+
+.vscode
+
+# Mac
+.DS_Store
+
+# Testing files
+*.feature
+temp

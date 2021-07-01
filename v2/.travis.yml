@@ -1,0 +1,15 @@
+dist: bionic
+language: go
+go:
+  - "1.12"
+  - "1.13"
+  - "1.14"
+install:
+  - go get -u golang.org/x/lint/golint
+script:
+  - if [ -n "$DOCKER_PASSWORD" ]; then echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ; fi
+  - make docker-test
+env:
+  global:
+  - secure: i+v/N8vdYLmnSIIq946S1yOiVFiOGKLHuuLJUzQPI61xuLximIz4q8Q38QBane78UoMTRGIbG4jfxYalljRqpQ7b0FuuPPPvI4YHB05nTMqxLk+PR+HFmyEZmWIpae0jWeA3ro1rABAbIb3v7zOYw7scslYGDgmspK4ZvdJEfS4KO2VHk+KCjM4QwJuSz++UF7KdHF7rHkH3ikw6zVHo5uAZhkaEpYA3HUpDnM1OryXQW74+8iXyCrhlL2gDYgphwiPQyucRCVEsVszx+67IIT4Ct+7DM68DwcUCpcaOnHx6bKjge2YFjuGKURja9B9bi30zPFW+l9ALFxASBTkjgUwFOAPbyTDA5Z4K/e389vbDpCVxVwOdT0lQc4sr8L9r8zzEhNQACKQTl5zqrwrJFHguO+rSWNWT0rEWQnCroz5HPpa0siTun8VlHNFvj9dtWS2fIKTCI341lO9BVRjPvIEhfHmP/LdezWvKKhRYAp5UiE5Cj2Ld0PcfMBfQbvVzSKOgEpOxJC2qIhmgFVGW9CRPLtZQDMht9aKNRlmPNxO5kD1vTyHxxUF6XByH17Db6lBNQvoiC7qByBlxFQ3mZD0GVITG3MS8/FpNxnGdmmIIZ9gYR45omAmwwhu0SeBy/oadX9pTh+2E734ks/T+mkJXXuoKO/RG945VZ3u5p1I=
+  - secure: sQSc+09VHpc3Fy4y3GjawonwWKUuSI5UbBROgdDWFrViAaTxP2JU0Shz1AZKHNwEkyMkq8DemxXctmF60jxk01gNqelPnVFodXqx46zWmpe2+2gkVpsEEQkDKHkj54mHkkYUuc2hWoSqICow/K2hhp3RL1FNPk9gLYmQxQgtJ67PBMJFJuhb/iSBPi3RknuMmDo+r4ifiCH/gG8YsD9SMbc4aBb2WGK07D7mouZjaF9KaHnctVi0s5PcUOXsN4eRyLDB6zPwy3xugEae2ZZUWny6udxqhQFWg1YeU8NqfbDD5XCbBo5xkmxxmk+/sFNqQ1pJuNyioXDfMk5z4Nl1m76+OCUXDI/OeZ2z2HviurV6pbPLAyigrOUylZz67OqtMnGUQPJ4c0Qn0SVlZCdBfaUXQN9PYOpefOAeF3LoJr3ebhnVOSekzpv4fcLFfXeeRnHu0YWP8YzgCOIK6Yyp+uhZbUjghTrU2uFYQe/Mtdue43c+ybSiQZXdu/8xt0UPgXqM2q5aHXU6hOSQyD14LHMGOE50GLb0A5JzKQpv6LjbMEO9vaAbGnOmIzFoFjQREcbHOEourbJe0l0vpJcfanxnnzVzGSvzoAtGaEAASSMuIfhDjhHiXTs7axJwxWszQsNekFB2edtZ+bBk62hbMXSUgBEHMXzGWQbXgu8KVVc=
