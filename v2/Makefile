@@ -20,4 +20,4 @@ integration:
 	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@template,@indexer,@rekey,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231" --test.v .
 
 docker-test:
-	./test/docker/run_docker.s
+	./test/docker/run_docker.sh
