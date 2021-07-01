@@ -155,6 +155,16 @@ func iBuildAnApplicationTransaction(
 			return err
 		}
 
+		// test extrapPages is optional
+		if len(approvalP) <= 2048 && len(clearP) <= 2048 {
+			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+			if err != nil {
+				return err
+			}
+		}
+
 	case "create_optin":
 		tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
@@ -162,7 +172,15 @@ func iBuildAnApplicationTransaction(
 		if err != nil {
 			return err
 		}
-
+		// test extrapPages is optional
+		if len(approvalP) <= 2048 && len(clearP) <= 2048 {
+			tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+			if err != nil {
+				return err
+			}
+		}
 	case "update":
 		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
 			approvalP, clearP,
@@ -174,7 +192,7 @@ func iBuildAnApplicationTransaction(
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})

@@ -534,7 +534,7 @@ func MakeApplicationCreateTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address, extraPages ...uint32) (tx types.Transaction, err error) {
 
 	oncomp := types.NoOpOC
 	if optIn {
@@ -558,7 +558,7 @@ func MakeApplicationCreateTx(
 		group,
 		lease,
 		rekeyTo,
-		extraPages)
+		extraPages...)
 }
 
 // MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
@@ -781,7 +781,7 @@ func MakeApplicationCallTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address, extraPagesParam ...uint32) (tx types.Transaction, err error) {
 	tx.Type = types.ApplicationCallTx
 	tx.ApplicationID = types.AppIndex(appIdx)
 	tx.OnCompletion = onCompletion
@@ -790,6 +790,12 @@ func MakeApplicationCallTx(
 	tx.Accounts, err = parseTxnAccounts(accounts)
 	if err != nil {
 		return tx, err
+	}
+
+	var extraPages uint32
+	// take only 1 extraPage value
+	if extraPagesParam != nil {
+		extraPages = extraPagesParam[0]
 	}
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)

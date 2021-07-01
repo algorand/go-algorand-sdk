@@ -603,6 +603,38 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
 
+func TestMakeApplicationCallTx(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+	note := byteFromBase64("8xMCTuLQ810=")
+	program := []byte{1, 32, 1, 1, 34}
+	args := make([][]byte, 2)
+	args[0] = []byte("123")
+	args[1] = []byte("456")
+	foreignApps := make([]uint64, 1)
+	foreignApps[0] = 10
+	foreignAssets := foreignApps
+	gSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	addr := make([]string, 1)
+	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+
+	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{}, 2, 1, 3)
+	require.NoError(t, err)
+	require.EqualValues(t, tx.ExtraProgramPages, 2)
+}
+
 func TestComputeGroupID(t *testing.T) {
 	// compare regular transactions created in SDK with 'goal clerk send' result
 	// compare transaction group created in SDK with 'goal clerk group' result
