@@ -630,9 +630,12 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 
-	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{}, 2, 1, 3)
+	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
-	require.EqualValues(t, tx.ExtraProgramPages, 2)
+	require.EqualValues(t, 0, tx.ExtraProgramPages)
+	tx, err = MakeApplicationCallTxWithExtraPages(tx, 2)
+	require.NoError(t, err)
+	require.EqualValues(t, 2, tx.ExtraProgramPages)
 }
 
 func TestComputeGroupID(t *testing.T) {

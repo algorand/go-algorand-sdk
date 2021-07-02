@@ -148,38 +148,33 @@ func iBuildAnApplicationTransaction(
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		if err != nil {
-			return err
-		}
-
-		// test extrapPages is optional
-		if len(approvalP) <= 2048 && len(clearP) <= 2048 {
+		if extraPages > 0 {
+			tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+		} else {
 			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
 				gSchema, lSchema, args, accs, fApp, fAssets,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-			if err != nil {
-				return err
-			}
 		}
 
-	case "create_optin":
-		tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		if err != nil {
 			return err
 		}
-		// test extrapPages is optional
-		if len(approvalP) <= 2048 && len(clearP) <= 2048 {
+
+	case "create_optin":
+		if extraPages > 0 {
+			tx, err = future.MakeApplicationCreateTxWithExtraPages(true, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+		} else {
 			tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
 				gSchema, lSchema, args, accs, fApp, fAssets,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-			if err != nil {
-				return err
-			}
+		}
+
+		if err != nil {
+			return err
 		}
 	case "update":
 		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
