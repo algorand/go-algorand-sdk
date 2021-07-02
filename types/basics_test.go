@@ -12,14 +12,14 @@ import (
 func TestSignedTxnFromBase64String(t *testing.T) {
 	note := []byte("Testing SignedTxnFromBase64String()")
 
-	// Create a signed transaction with a note and base64 encode it
+	// Create a signed transaction with a note and base64 encode it.
 	var st SignedTxn
 	st.Txn.Note = note
-	x := base64.StdEncoding.EncodeToString([]byte(string(msgpack.Encode(st))))
+	b64data := base64.StdEncoding.EncodeToString([]byte(string(msgpack.Encode(st))))
 
-	// Verify that FromBase64String() decodes the txn
+	// Verify that FromBase64String() decodes the txn.
 	var vst SignedTxn
-	err := vst.FromBase64String(x)
+	err := vst.FromBase64String(b64data)
 	require.NoError(t, err)
 	require.Equal(t, vst.Txn.Note, note)
 }
@@ -27,14 +27,14 @@ func TestSignedTxnFromBase64String(t *testing.T) {
 func TestBlockFromBase64String(t *testing.T) {
 	protocol := "Testing BlockFromBase64String()"
 
-	// Create a signed transaction with a note and base64 encode it
+	// Create a block with a protocol string and base64 encode it.
 	var bl Block
 	bl.CurrentProtocol = protocol
-	x := base64.StdEncoding.EncodeToString([]byte(string(msgpack.Encode(bl))))
+	b64data := base64.StdEncoding.EncodeToString([]byte(string(msgpack.Encode(bl))))
 
-	// Verify that FromBase64String() decodes the txn
+	// Verify that FromBase64String() decodes the txn.
 	var vbl Block
-	err := vbl.FromBase64String(x)
+	err := vbl.FromBase64String(b64data)
 	require.NoError(t, err)
 	require.Equal(t, vbl.CurrentProtocol, protocol)
 }
