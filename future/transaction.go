@@ -534,7 +534,7 @@ func MakeApplicationCreateTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address) (tx types.Transaction, err error) {
 
 	oncomp := types.NoOpOC
 	if optIn {
@@ -558,7 +558,53 @@ func MakeApplicationCreateTx(
 		group,
 		lease,
 		rekeyTo,
-		extraPages)
+	)
+}
+
+func MakeApplicationCreateTxWithExtraPages(
+	optIn bool,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+
+	oncomp := types.NoOpOC
+	if optIn {
+		oncomp = types.OptInOC
+	}
+
+	appCallTx, err := MakeApplicationCallTx(
+		0,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		oncomp,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo)
+
+	if err != nil {
+		return
+	}
+	return MakeApplicationCallTxWithExtraPages(appCallTx, extraPages)
 }
 
 // MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
@@ -592,7 +638,7 @@ func MakeApplicationUpdateTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationDeleteTx makes a transaction for deleting an application (see above for args desc.)
@@ -624,7 +670,7 @@ func MakeApplicationDeleteTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationOptInTx makes a transaction for opting in to (allocating
@@ -657,7 +703,7 @@ func MakeApplicationOptInTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationCloseOutTx makes a transaction for closing out of
@@ -690,7 +736,7 @@ func MakeApplicationCloseOutTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationClearStateTx makes a transaction for clearing out all
@@ -724,7 +770,7 @@ func MakeApplicationClearStateTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationNoOpTx makes a transaction for interacting with an existing
@@ -759,7 +805,7 @@ func MakeApplicationNoOpTx(
 		group,
 		lease,
 		rekeyTo,
-		0)
+	)
 }
 
 // MakeApplicationCallTx is a helper for the above ApplicationCall
@@ -781,7 +827,7 @@ func MakeApplicationCallTx(
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address) (tx types.Transaction, err error) {
 	tx.Type = types.ApplicationCallTx
 	tx.ApplicationID = types.AppIndex(appIdx)
 	tx.OnCompletion = onCompletion
@@ -798,7 +844,6 @@ func MakeApplicationCallTx(
 	tx.ClearStateProgram = clearProg
 	tx.LocalStateSchema = localSchema
 	tx.GlobalStateSchema = globalSchema
-	tx.ExtraProgramPages = extraPages
 
 	var gh types.Digest
 	copy(gh[:], sp.GenesisHash)
@@ -818,6 +863,12 @@ func MakeApplicationCallTx(
 
 	// Update fee
 	return setFee(tx, sp)
+}
+
+func MakeApplicationCallTxWithExtraPages(
+	txn types.Transaction, extraPages uint32) (types.Transaction, error) {
+	txn.ExtraProgramPages = extraPages
+	return txn, nil
 }
 
 func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
