@@ -1,5 +1,7 @@
-# 2.0.0
-This release is equivalent to 1.9.1, but is bumped to indicate breaking API changes since 1.9.0.
+# 1.9.2
+# Bug Fix
+- Update FromBase64String() to correctly return the signed transaction
+- Make MakeApplicationCreateTxWithExtraPages() and revert MakeApplicationCallTx() to make non-API-breaking
 # 1.9.1
 # Bugfix
 - Allow asset URLs to be up to 96 bytes

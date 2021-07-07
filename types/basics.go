@@ -67,7 +67,7 @@ func ToMicroAlgos(algos float64) MicroAlgos {
 	return MicroAlgos(math.Round(algos * microAlgoConversionFactor))
 }
 
-func (signedTxn SignedTxn) FromBase64String(b64string string) error {
+func (signedTxn *SignedTxn) FromBase64String(b64string string) error {
 	txnBytes, err := base64.StdEncoding.DecodeString(b64string)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (signedTxn SignedTxn) FromBase64String(b64string string) error {
 	return nil
 }
 
-func (block Block) FromBase64String(b64string string) error {
+func (block *Block) FromBase64String(b64string string) error {
 	txnBytes, err := base64.StdEncoding.DecodeString(b64string)
 	if err != nil {
 		return err

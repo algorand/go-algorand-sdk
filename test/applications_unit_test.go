@@ -89,9 +89,16 @@ func iBuildAnApplicationTransactionUnit(
 
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+		if extraPages > 0 {
+			tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+		} else {
+			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
+				gSchema, lSchema, args, accs, fApp, fAssets,
+				suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
+		}
+
 		if err != nil {
 			return err
 		}
@@ -107,7 +114,7 @@ func iBuildAnApplicationTransactionUnit(
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{}, 0)
+			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
 			suggestedParams, addr1, nil, types.Digest{}, [32]byte{}, types.Address{})
