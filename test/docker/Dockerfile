@@ -1,5 +1,5 @@
 ARG GO_IMAGE=golang:1.13-stretch
-FROM GO_IMAGE
+FROM $GO_IMAGE
 
 # Copy SDK code into the container
 RUN mkdir -p $HOME/go-algorand-sdk
