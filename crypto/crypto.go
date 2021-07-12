@@ -236,15 +236,6 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 	if err != nil {
 		return
 	}
-	// check that the address of txn matches the preimage
-	maAddress, err := ma.Address()
-	if err != nil {
-		return
-	}
-	if tx.Sender != maAddress { // array value comparison is fine
-		err = errMsigBadTxnSender
-		return
-	}
 
 	// this signer signs a transaction and sets txid from the closure
 	customSigner := func() (rawSig types.Signature, err error) {
@@ -262,6 +253,16 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 		Msig: sig,
 		Txn:  tx,
 	}
+
+	maAddress, err := ma.Address()
+	if err != nil {
+		return
+	}
+
+	if stx.Txn.Sender != maAddress {
+		stx.AuthAddr = maAddress
+	}
+
 	stxBytes = msgpack.Encode(stx)
 	return
 }
@@ -431,7 +432,11 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 /* LogicSig support */
 
-// VerifyLogicSig verifies LogicSig against assumed sender address
+// VerifyLogicSig verifies that a LogicSig contains a valid program and, if a
+// delegated signature is present, that the signature is valid.
+//
+// Note: the `sender` argument is not actually used and is only present for
+// backwards compatibility.
 func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 	if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
 		return false
@@ -445,28 +450,39 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 		return false
 	}
 
-	result = false
 	toBeSigned := programToSign(lsig.Logic)
-	// logic sig, compare hashes
-	if !hasSig && !hasMsig {
-		result = types.Digest(sha512.Sum512_256(toBeSigned)) == types.Digest(sender)
-		return
-	}
 
 	if hasSig {
-		result = ed25519.Verify(sender[:], toBeSigned, lsig.Sig[:])
-		return
+		return ed25519.Verify(lsig.SigKey[:], toBeSigned, lsig.Sig[:])
 	}
 
-	result = VerifyMultisig(sender, toBeSigned, lsig.Msig)
-	return
+	if hasMsig {
+		msigAccount, err := MultisigAccountFromSig(lsig.Msig)
+		if err != nil {
+			return false
+		}
+		addr, err := msigAccount.Address()
+		if err != nil {
+			return false
+		}
+		return VerifyMultisig(addr, toBeSigned, lsig.Msig)
+	}
+
+	// the lsig account is the hash of its program bytes, nothing left to verify
+	return true
 }
 
 // SignLogicsigTransaction takes LogicSig object and a transaction and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
-// Note, LogicSig actually can be attached to any transaction (with matching sender field for Sig and Multisig cases)
-// and it is a program's responsibility to approve/decline the transaction
+// Note, LogicSig actually can be attached to any transaction and it is a
+// program's responsibility to approve/decline the transaction
 func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	// this check is before VerifyLogicSig so that if the lsig contains Sig but
+	// not SigKey, a useful error is returned
+	addr, err := LogicSigSigningAddress(lsig)
+	if err != nil {
+		return
+	}
 
 	if !VerifyLogicSig(lsig, tx.Header.Sender) {
 		err = errLsigInvalidSignature
@@ -476,8 +492,18 @@ func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 	txid = txIDFromTransaction(tx)
 	// Construct the SignedTxn
 	stx := types.SignedTxn{
-		Lsig: lsig,
-		Txn:  tx,
+		// shallow copy lsig to get rid of SigKey
+		Lsig: types.LogicSig{
+			Logic: lsig.Logic,
+			Args:  lsig.Args,
+			Sig:   lsig.Sig,
+			Msig:  lsig.Msig,
+		},
+		Txn: tx,
+	}
+
+	if stx.Txn.Sender != addr {
+		stx.AuthAddr = addr
 	}
 
 	// Encode the SignedTxn
@@ -536,9 +562,16 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma Multi
 			return
 		}
 
+		var account Account
+		account, err = AccountFromPrivateKey(sk)
+		if err != nil {
+			return
+		}
+
 		lsig.Logic = program
 		lsig.Args = args
 		lsig.Sig = types.Signature(sig)
+		lsig.SigKey = account.PublicKey
 		return
 	}
 

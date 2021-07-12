@@ -50,11 +50,27 @@ type LogicSig struct {
 	// OR hashed to be the Address of an account.
 	Logic []byte `codec:"l"`
 
-	Sig  Signature   `codec:"sig"`
+	// The signature of the account that has delegated to this LogicSig, if any
+	Sig Signature `codec:"sig"`
+	// The key that provided Sig, if any
+	SigKey ed25519.PublicKey `codec:"sigkey"`
+
+	// The signature of the multisig account that has delegated to this LogicSig, if any
 	Msig MultisigSig `codec:"msig"`
 
 	// Args are not signed, but checked by Logic
 	Args [][]byte `codec:"arg"`
+}
+
+// Delegated returns true iff the lsig has been delegated to another account
+// with a signature.
+//
+// Note this function only checks for the presence of a delegation signature. To
+// verify the delegation signature, use VerifyLogicSig.
+func (lsig LogicSig) Delegated() bool {
+	hasSig := lsig.Sig != (Signature{})
+	hasMsig := !lsig.Msig.Blank()
+	return hasSig || hasMsig
 }
 
 // Blank returns true iff the lsig is empty. We need this instead of just
@@ -70,6 +86,9 @@ func (lsig LogicSig) Blank() bool {
 		return false
 	}
 	if lsig.Sig != (Signature{}) {
+		return false
+	}
+	if len(lsig.SigKey) != 0 {
 		return false
 	}
 	return true
