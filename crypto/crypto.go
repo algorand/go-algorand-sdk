@@ -477,14 +477,28 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 // Note, LogicSig actually can be attached to any transaction and it is a
 // program's responsibility to approve/decline the transaction
 func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	// this check is before VerifyLogicSig so that if the lsig contains Sig but
-	// not SigKey, a useful error is returned
+	missingSigKey := false
 	addr, err := LogicSigSigningAddress(lsig)
-	if err != nil {
+	if err == errLsigNoSigningKey {
+		missingSigKey = true
+		err = nil
+	} else if err != nil {
 		return
 	}
 
-	if !VerifyLogicSig(lsig, tx.Header.Sender) {
+	if missingSigKey {
+		// this branch is only here to maintain compatibility with older versions of types.LogicSig
+		// that have been serialized before the SigKey field was added.
+		toBeSigned := programToSign(lsig.Logic)
+		senderIsSigner := ed25519.Verify(tx.Header.Sender[:], toBeSigned, lsig.Sig[:])
+		if !senderIsSigner {
+			// cannot continue because while we know the sender is not the signer of the LogicSig,
+			// we don't know the sender's address to place in SignedTxn.AuthAddr
+			err = errLsigNoSigningKey
+			return
+		}
+		addr = tx.Header.Sender
+	} else if !VerifyLogicSig(lsig, tx.Header.Sender) {
 		err = errLsigInvalidSignature
 		return
 	}
