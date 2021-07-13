@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/sha512"
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/ed25519"
@@ -47,6 +48,35 @@ func GenerateAccount() (kp Account) {
 	kp.PublicKey = pk
 	kp.PrivateKey = sk
 	kp.Address = a
+	return
+}
+
+// AccountFromPrivateKey derives the remaining Account fields from only a private key
+func AccountFromPrivateKey(sk ed25519.PrivateKey) (account Account, err error) {
+	if len(sk) == ed25519.SeedSize {
+		sk = ed25519.NewKeyFromSeed(sk)
+	} else {
+		// copy sk
+		sk_copy := make(ed25519.PrivateKey, len(sk))
+		copy(sk_copy, sk)
+		sk = sk_copy
+	}
+
+	if len(sk) != ed25519.PrivateKeySize {
+		err = errInvalidPrivateKey
+		return
+	}
+
+	publicKey := sk.Public().(ed25519.PublicKey)
+	if len(publicKey) != ed25519.PublicKeySize {
+		err = errors.New("generated public key is the wrong size")
+		return
+	}
+
+	account.PrivateKey = sk
+	account.PublicKey = publicKey
+	copy(account.Address[:], publicKey)
+
 	return
 }
 
@@ -133,7 +163,10 @@ func (ma MultisigAccount) Blank() bool {
 	return true
 }
 
-// LogicSigAddress returns contract (escrow) address
+// LogicSigAddress returns the contract (escrow) address for a LogicSig.
+//
+// If the LogicSig is delegated to another account, use LogicSigDelegatedAddress
+// or LogicSigSigningAddress instead.
 func LogicSigAddress(lsig types.LogicSig) types.Address {
 	toBeSigned := programToSign(lsig.Logic)
 	checksum := sha512.Sum512_256(toBeSigned)
@@ -144,4 +177,60 @@ func LogicSigAddress(lsig types.LogicSig) types.Address {
 		panic(fmt.Sprintf("Generated public key has length of %d, expected %d", n, ed25519.PublicKeySize))
 	}
 	return addr
+}
+
+// LogicSigDelegatedAddress returns the address of the account to which this
+// LogicSig is delegated.
+//
+// An error will occur if this LogicSig is not delegated. Use
+// LogicSigSigningAddress instead if the LogicSig may not be delegated.
+func LogicSigDelegatedAddress(lsig types.LogicSig) (addr types.Address, err error) {
+	hasSig := lsig.Sig != (types.Signature{})
+	hasMsig := !lsig.Msig.Blank()
+
+	// require only one sig
+	if hasSig && hasMsig {
+		err = errLsigTooManySignatures
+		return
+	}
+
+	if hasSig {
+		if len(lsig.SigKey) == 0 {
+			err = errLsigNoSigningKey
+			return
+		}
+		n := copy(addr[:], lsig.SigKey)
+		if n != ed25519.PublicKeySize {
+			err = fmt.Errorf("Generated public key has length of %d, expected %d", n, ed25519.PublicKeySize)
+		}
+		return
+	}
+
+	if hasMsig {
+		var msigAccount MultisigAccount
+		msigAccount, err = MultisigAccountFromSig(lsig.Msig)
+		if err != nil {
+			return
+		}
+		addr, err = msigAccount.Address()
+		return
+	}
+
+	err = errLsigNoSignature
+	return
+}
+
+// LogicSigSigningAddress returns the contract address that a LogicSig can sign
+// for.
+//
+// If the LogicSig is delegated to another account, this will return the address
+// of that account.
+//
+// If the LogicSig is not delegated to another account, this will return an
+// escrow address that represents the hash of the LogicSig's program code.
+func LogicSigSigningAddress(lsig types.LogicSig) (types.Address, error) {
+	if lsig.Delegated() {
+		return LogicSigDelegatedAddress(lsig)
+	}
+	return LogicSigAddress(lsig), nil
 }
