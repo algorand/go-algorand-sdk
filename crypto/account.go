@@ -167,8 +167,8 @@ func (ma MultisigAccount) Blank() bool {
 
 // LogicSigAddress returns the contract (escrow) address for a LogicSig.
 //
-// If the LogicSig is delegated to another account, use LogicSigDelegatedAddress
-// or LogicSigSigningAddress instead.
+// NOTE: If the LogicSig is delegated to another account this will not
+// return the delegated address of the LogicSig.
 func LogicSigAddress(lsig types.LogicSig) types.Address {
 	toBeSigned := programToSign(lsig.Logic)
 	checksum := sha512.Sum512_256(toBeSigned)
