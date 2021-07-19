@@ -12,6 +12,7 @@ var errMsigInvalidSecretKey = errors.New("secret key has no corresponding public
 var errMsigMergeLessThanTwo = errors.New("cannot merge fewer than two multisig transactions")
 var errMsigMergeKeysMismatch = errors.New("multisig parameters do not match")
 var errMsigMergeInvalidDups = errors.New("mismatched duplicate signatures")
+var errMsigMergeAuthAddrMismatch = errors.New("mismatched AuthAddrs")
 var errLsigTooManySignatures = errors.New("logicsig has too many signatures, at most one of Sig or Msig may be defined")
 var errLsigNoSignature = errors.New("logicsig is not delegated")
 var errLsigInvalidSignature = errors.New("invalid logicsig signature")

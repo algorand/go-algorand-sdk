@@ -277,6 +277,7 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	var sig types.MultisigSig
 	var refAddr *types.Address
 	var refTx types.Transaction
+	var refAuthAddr types.Address
 	for _, partStxBytes := range stxsBytes {
 		partStx := types.SignedTxn{}
 		err = msgpack.Decode(partStxBytes, &partStx)
@@ -306,12 +307,19 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 				sig.Subsigs[i].Key = c
 			}
 			refTx = partStx.Txn
-		} else {
-			if partAddr != *refAddr {
-				err = errMsigMergeKeysMismatch
-				return
-			}
+			refAuthAddr = partStx.AuthAddr
 		}
+
+		if partAddr != *refAddr {
+			err = errMsigMergeKeysMismatch
+			return
+		}
+
+		if partStx.AuthAddr != refAuthAddr {
+			err = errMsigMergeAuthAddrMismatch
+			return
+		}
+
 		// now, add subsignatures appropriately
 		zeroSig := types.Signature{}
 		for i := 0; i < len(sig.Subsigs); i++ {
@@ -328,8 +336,9 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	}
 	// Encode the signedTxn
 	stx := types.SignedTxn{
-		Msig: sig,
-		Txn:  refTx,
+		Msig:     sig,
+		Txn:      refTx,
+		AuthAddr: refAuthAddr,
 	}
 	stxBytes = msgpack.Encode(stx)
 	// let's also compute the txid.
@@ -356,6 +365,10 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStx
 }
 
 // VerifyMultisig verifies an assembled MultisigSig
+//
+// addr is the address of the Multisig account
+// message is the bytes there were signed
+// msig is the Multisig signature to verify
 func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) bool {
 	msigAccount, err := MultisigAccountFromSig(msig)
 	if err != nil {
