@@ -51,31 +51,26 @@ func GenerateAccount() (kp Account) {
 	return
 }
 
-// AccountFromPrivateKey derives the remaining Account fields from only a private key
+// AccountFromPrivateKey derives the remaining Account fields from only a
+// private key. The argument sk must have a length equal to
+// ed25519.PrivateKeySize.
 func AccountFromPrivateKey(sk ed25519.PrivateKey) (account Account, err error) {
-	if len(sk) == ed25519.SeedSize {
-		sk = ed25519.NewKeyFromSeed(sk)
-	} else {
-		// copy sk
-		sk_copy := make(ed25519.PrivateKey, len(sk))
-		copy(sk_copy, sk)
-		sk = sk_copy
-	}
-
 	if len(sk) != ed25519.PrivateKeySize {
 		err = errInvalidPrivateKey
 		return
 	}
 
-	publicKey := sk.Public().(ed25519.PublicKey)
-	if len(publicKey) != ed25519.PublicKeySize {
+	// copy sk
+	account.PrivateKey = make(ed25519.PrivateKey, len(sk))
+	copy(account.PrivateKey, sk)
+
+	account.PublicKey = sk.Public().(ed25519.PublicKey)
+	if len(account.PublicKey) != ed25519.PublicKeySize {
 		err = errors.New("generated public key is the wrong size")
 		return
 	}
 
-	account.PrivateKey = sk
-	account.PublicKey = publicKey
-	copy(account.Address[:], publicKey)
+	copy(account.Address[:], account.PublicKey)
 
 	return
 }
