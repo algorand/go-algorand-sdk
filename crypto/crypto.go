@@ -500,10 +500,30 @@ func signLogicSigTransactionWithAddress(lsig types.LogicSig, lsigAddress types.A
 	return
 }
 
+// SignLogicSigAccountTransaction signs a transaction with a LogicSigAccount. It
+// returns the TxID of the signed transaction and the raw bytes ready to be
+// broadcast to the network. Note: any type of transaction can be signed by a
+// LogicSig, but the network will reject the transaction if the LogicSig's
+// program declines the transaction.
+func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	addr, err := logicSigAccount.Address()
+	if err != nil {
+		return
+	}
+
+	txid, stxBytes, err = signLogicSigTransactionWithAddress(logicSigAccount.Lsig, addr, tx)
+	return
+}
+
 // SignLogicsigTransaction takes LogicSig object and a transaction and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
 // Note, LogicSig actually can be attached to any transaction and it is a
 // program's responsibility to approve/decline the transaction
+//
+// This function supports signing transactions with a sender that differs from
+// the LogicSig's address, EXCEPT IF the LogicSig is delegated to a non-multisig
+// account. In order to properly handle that case, create a LogicSigAccount and
+// use SignLogicSigAccountTransaction instead.
 func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()

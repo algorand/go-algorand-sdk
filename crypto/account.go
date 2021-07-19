@@ -350,14 +350,3 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 	addr = LogicSigAddress(lsa.Lsig)
 	return
 }
-
-// SignTransaction signs a transaction using this LogicSigAccount.
-func (lsa LogicSigAccount) SignTransaction(tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	addr, err := lsa.Address()
-	if err != nil {
-		return
-	}
-
-	txid, stxBytes, err = signLogicSigTransactionWithAddress(lsa.Lsig, addr, tx)
-	return
-}
