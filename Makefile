@@ -5,6 +5,9 @@ TEST_SOURCES_NO_CUCUMBER := $(shell cd $(SRCPATH) && go list ./... | grep -v tes
 lint:
 	golint `go list ./... | grep -v /vendor/`
 
+fmt:
+	go fmt ./...
+
 generate:
 	cd $(SRCPATH) && go generate ./logic
 
