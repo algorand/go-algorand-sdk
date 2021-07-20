@@ -14,6 +14,9 @@ generate:
 build: generate
 	cd $(SRCPATH) && go test -run xxx_phony_test $(TEST_SOURCES)
 
+test:
+	go test $(TEST_SOURCES_NO_CUCUMBER)
+
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
 	cd test && go test --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest" --test.v .
@@ -24,3 +27,5 @@ integration:
 
 docker-test:
 	./test/docker/run_docker.sh
+
+.PHONY: test fmt
