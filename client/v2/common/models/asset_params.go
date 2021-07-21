@@ -35,8 +35,12 @@ type AssetParams struct {
 	// this metadata is up to the application.
 	MetadataHash []byte `json:"metadata-hash,omitempty"`
 
-	// Name (an) Name of this asset, as supplied by the creator.
+	// Name (an) Name of this asset, as supplied by the creator. Included only when the
+	// asset name is composed of printable utf-8 characters.
 	Name string `json:"name,omitempty"`
+
+	// NameB64 base64 encoded name of this asset, as supplied by the creator.
+	NameB64 []byte `json:"name-b64,omitempty"`
 
 	// Reserve (r) Address of account holding reserve (non-minted) units of this asset.
 	Reserve string `json:"reserve,omitempty"`
@@ -44,9 +48,20 @@ type AssetParams struct {
 	// Total (t) The total number of units of this asset.
 	Total uint64 `json:"total"`
 
-	// UnitName (un) Name of a unit of this asset, as supplied by the creator.
+	// UnitName (un) Name of a unit of this asset, as supplied by the creator. Included
+	// only when the name of a unit of this asset is composed of printable utf-8
+	// characters.
 	UnitName string `json:"unit-name,omitempty"`
 
-	// Url (au) URL where more information about the asset can be retrieved.
+	// UnitNameB64 base64 encoded name of a unit of this asset, as supplied by the
+	// creator.
+	UnitNameB64 []byte `json:"unit-name-b64,omitempty"`
+
+	// Url (au) URL where more information about the asset can be retrieved. Included
+	// only when the URL is composed of printable utf-8 characters.
 	Url string `json:"url,omitempty"`
+
+	// UrlB64 base64 encoded URL where more information about the asset can be
+	// retrieved.
+	UrlB64 []byte `json:"url-b64,omitempty"`
 }
