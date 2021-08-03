@@ -50,7 +50,10 @@ type LogicSig struct {
 	// OR hashed to be the Address of an account.
 	Logic []byte `codec:"l"`
 
-	Sig  Signature   `codec:"sig"`
+	// The signature of the account that has delegated to this LogicSig, if any
+	Sig Signature `codec:"sig"`
+
+	// The signature of the multisig account that has delegated to this LogicSig, if any
 	Msig MultisigSig `codec:"msig"`
 
 	// Args are not signed, but checked by Logic

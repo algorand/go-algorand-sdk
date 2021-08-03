@@ -6,21 +6,69 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-func TestKeyGeneration(t *testing.T) {
+func TestGenerateAccount(t *testing.T) {
 	kp := GenerateAccount()
 
 	// Public key should not be empty
-	require.NotEqual(t, kp.PublicKey, ed25519.PublicKey{})
+	require.NotEqual(t, ed25519.PublicKey{}, kp.PublicKey)
 
-	// Public key should not be empty
-	require.NotEqual(t, kp.PrivateKey, ed25519.PrivateKey{})
+	// Private key should not be empty
+	require.NotEqual(t, ed25519.PrivateKey{}, kp.PrivateKey)
+
+	// Account should equal itself
+	require.Equal(t, kp, kp)
 
 	// Address should be identical to public key
 	pk := ed25519.PublicKey(kp.Address[:])
 	require.Equal(t, pk, kp.PublicKey)
+
+	message := []byte("test message")
+	sig := ed25519.Sign(kp.PrivateKey, message)
+	// Public key should verify signature from private key
+	require.True(t, ed25519.Verify(kp.PublicKey, message, sig))
+
+	kp2 := GenerateAccount()
+	// Calling the function again should produce a different account
+	require.NotEqual(t, kp, kp2)
+}
+
+func TestAccountFromPrivateKey(t *testing.T) {
+	exampleAccount := Account{
+		PrivateKey: ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42},
+		PublicKey:  ed25519.PublicKey{0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42},
+		Address:    types.Address{0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42},
+	}
+
+	t.Run("From private key", func(t *testing.T) {
+		pk := exampleAccount.PrivateKey[:]
+
+		actual, err := AccountFromPrivateKey(pk)
+		require.NoError(t, err)
+
+		require.Equal(t, exampleAccount, actual)
+	})
+
+	t.Run("From seed only", func(t *testing.T) {
+		pk := exampleAccount.PrivateKey.Seed() // get just the seed portion of the private key (first 32 bytes)
+
+		_, err := AccountFromPrivateKey(pk)
+		require.Error(t, err, errInvalidPrivateKey)
+	})
+
+	t.Run("From mnemonic", func(t *testing.T) {
+		m := "olympic cricket tower model share zone grid twist sponsor avoid eight apology patient party success claim famous rapid donor pledge bomb mystery security ability often"
+		pk, err := mnemonic.ToPrivateKey(m)
+		require.NoError(t, err)
+
+		actual, err := AccountFromPrivateKey(pk)
+		require.NoError(t, err)
+
+		require.Equal(t, exampleAccount, actual)
+	})
 }
 
 func TestMultisigAccount_Address(t *testing.T) {
@@ -65,4 +113,275 @@ func TestMultisigAccount_Version1Only(t *testing.T) {
 		addr1,
 	})
 	require.Error(t, ma.Validate())
+}
+
+func TestLogicSigAddress(t *testing.T) {
+	program := []byte{1, 32, 1, 1, 34}
+	var args [][]byte
+
+	expectedAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
+	require.NoError(t, err)
+
+	t.Run("no sig", func(t *testing.T) {
+		var sk ed25519.PrivateKey
+		var ma MultisigAccount
+
+		lsig, err := MakeLogicSig(program, args, sk, ma)
+		require.NoError(t, err)
+
+		actualAddr := LogicSigAddress(lsig)
+		require.Equal(t, expectedAddr, actualAddr)
+	})
+
+	t.Run("single sig", func(t *testing.T) {
+		account, err := AccountFromPrivateKey(ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42})
+		require.NoError(t, err)
+
+		var ma MultisigAccount
+
+		lsig, err := MakeLogicSig(program, args, account.PrivateKey, ma)
+		require.NoError(t, err)
+
+		// for backwards compatibility, we still expect the hashed program bytes address
+		actualAddr := LogicSigAddress(lsig)
+		require.Equal(t, expectedAddr, actualAddr)
+	})
+
+	t.Run("multi sig", func(t *testing.T) {
+		ma, sk1, _, _ := makeTestMultisigAccount(t)
+
+		lsig, err := MakeLogicSig(program, args, sk1, ma)
+		require.NoError(t, err)
+
+		// for backwards compatibility, we still expect the hashed program bytes address
+		actualAddr := LogicSigAddress(lsig)
+		require.Equal(t, expectedAddr, actualAddr)
+	})
+}
+
+func TestMakeLogicSigAccount(t *testing.T) {
+	program := []byte{1, 32, 1, 1, 34}
+	args := [][]byte{
+		{0x01},
+		{0x02, 0x03},
+	}
+
+	t.Run("Escrow", func(t *testing.T) {
+		lsigAccount := MakeLogicSigAccountEscrow(program, args)
+
+		require.Equal(t, program, lsigAccount.Lsig.Logic)
+		require.Equal(t, args, lsigAccount.Lsig.Args)
+		require.Equal(t, types.Signature{}, lsigAccount.Lsig.Sig)
+		require.True(t, lsigAccount.Lsig.Msig.Blank())
+		require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+
+		require.False(t, lsigAccount.IsDelegated())
+	})
+
+	t.Run("Delegated", func(t *testing.T) {
+		account, err := AccountFromPrivateKey(ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42})
+		require.NoError(t, err)
+
+		lsigAccount, err := MakeLogicSigAccountDelegated(program, args, account.PrivateKey)
+		require.NoError(t, err)
+
+		expectedSignature := types.Signature{0x3e, 0x5, 0x3d, 0x39, 0x4d, 0xfb, 0x12, 0xbc, 0x65, 0x79, 0x9f, 0xea, 0x31, 0x8a, 0x7b, 0x8e, 0xa2, 0x51, 0x8b, 0x55, 0x2c, 0x8a, 0xbe, 0x6c, 0xd7, 0xa7, 0x65, 0x2d, 0xd8, 0xb0, 0x18, 0x7e, 0x21, 0x5, 0x2d, 0xb9, 0x24, 0x62, 0x89, 0x16, 0xe5, 0x61, 0x74, 0xcd, 0xf, 0x19, 0xac, 0xb9, 0x6c, 0x45, 0xa4, 0x29, 0x91, 0x99, 0x11, 0x1d, 0xe4, 0x7c, 0xe4, 0xfc, 0x12, 0xec, 0xce, 0x2}
+
+		require.Equal(t, program, lsigAccount.Lsig.Logic)
+		require.Equal(t, args, lsigAccount.Lsig.Args)
+		require.Equal(t, expectedSignature, lsigAccount.Lsig.Sig)
+		require.True(t, lsigAccount.Lsig.Msig.Blank())
+		require.Equal(t, account.PublicKey, lsigAccount.SigningKey)
+
+		require.True(t, lsigAccount.IsDelegated())
+	})
+
+	t.Run("DelegatedMsig", func(t *testing.T) {
+		ma, sk1, sk2, _ := makeTestMultisigAccount(t)
+
+		lsigAccount, err := MakeLogicSigAccountDelegatedMsig(program, args, ma, sk1)
+		require.NoError(t, err)
+
+		expectedMsig := types.MultisigSig{
+			Version:   ma.Version,
+			Threshold: ma.Threshold,
+			Subsigs: []types.MultisigSubsig{
+				{
+					Key: ma.Pks[0],
+					Sig: types.Signature{0x49, 0x13, 0xb8, 0x5, 0xd1, 0x9e, 0x7f, 0x2c, 0x10, 0x80, 0xf6, 0x33, 0x7e, 0x18, 0x54, 0xa7, 0xce, 0xea, 0xee, 0x10, 0xdd, 0xbd, 0x13, 0x65, 0x84, 0xbf, 0x93, 0xb7, 0x5f, 0x30, 0x63, 0x15, 0x91, 0xca, 0x23, 0xc, 0xed, 0xef, 0x23, 0xd1, 0x74, 0x1b, 0x52, 0x9d, 0xb0, 0xff, 0xef, 0x37, 0x54, 0xd6, 0x46, 0xf4, 0xb5, 0x61, 0xfc, 0x8b, 0xbc, 0x2d, 0x7b, 0x4e, 0x63, 0x5c, 0xbd, 0x2},
+				},
+				{
+					Key: ma.Pks[1],
+				},
+				{
+					Key: ma.Pks[2],
+				},
+			},
+		}
+
+		require.Equal(t, program, lsigAccount.Lsig.Logic)
+		require.Equal(t, args, lsigAccount.Lsig.Args)
+		require.Equal(t, types.Signature{}, lsigAccount.Lsig.Sig)
+		require.Equal(t, expectedMsig, lsigAccount.Lsig.Msig)
+		require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+
+		require.True(t, lsigAccount.IsDelegated())
+
+		t.Run("AppendMultisigSignature", func(t *testing.T) {
+			err := lsigAccount.AppendMultisigSignature(sk2)
+			require.NoError(t, err)
+
+			expectedMsig.Subsigs[1].Sig = types.Signature{0x64, 0xbc, 0x55, 0xdb, 0xed, 0x91, 0xa2, 0x41, 0xd4, 0x2a, 0xb6, 0x60, 0xf7, 0xe1, 0x4a, 0xb9, 0x99, 0x9a, 0x52, 0xb3, 0xb1, 0x71, 0x58, 0xce, 0xfc, 0x3f, 0x4f, 0xe7, 0xcb, 0x22, 0x41, 0x14, 0xad, 0xa9, 0x3d, 0x5e, 0x84, 0x5, 0x2, 0xa, 0x17, 0xa6, 0x69, 0x83, 0x3, 0x22, 0x4e, 0x86, 0xa3, 0x8b, 0x6a, 0x36, 0xc5, 0x54, 0xbe, 0x20, 0x50, 0xff, 0xd3, 0xee, 0xa8, 0xb3, 0x4, 0x9}
+
+			require.Equal(t, program, lsigAccount.Lsig.Logic)
+			require.Equal(t, args, lsigAccount.Lsig.Args)
+			require.Equal(t, types.Signature{}, lsigAccount.Lsig.Sig)
+			require.Equal(t, expectedMsig, lsigAccount.Lsig.Msig)
+			require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+
+			require.True(t, lsigAccount.IsDelegated())
+		})
+	})
+}
+
+func TestLogicSigAccountFromLogicSig(t *testing.T) {
+	program := []byte{1, 32, 1, 1, 34}
+	args := [][]byte{
+		{0x01},
+		{0x02, 0x03},
+	}
+
+	programAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
+	require.NoError(t, err)
+
+	programPublicKey := make(ed25519.PublicKey, len(programAddr))
+	copy(programPublicKey, programAddr[:])
+
+	t.Run("no sig", func(t *testing.T) {
+		var sk ed25519.PrivateKey
+		var ma MultisigAccount
+
+		lsig, err := MakeLogicSig(program, args, sk, ma)
+		require.NoError(t, err)
+
+		t.Run("with public key", func(t *testing.T) {
+			_, err := LogicSigAccountFromLogicSig(lsig, &programPublicKey)
+			require.Error(t, err, errLsigAccountPublicKeyNotNeeded)
+		})
+
+		t.Run("without public key", func(t *testing.T) {
+			lsigAccount, err := LogicSigAccountFromLogicSig(lsig, nil)
+			require.NoError(t, err)
+
+			require.Equal(t, lsig, lsigAccount.Lsig)
+			require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+
+			require.False(t, lsigAccount.IsDelegated())
+		})
+	})
+
+	t.Run("single sig", func(t *testing.T) {
+		account, err := AccountFromPrivateKey(ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42})
+		require.NoError(t, err)
+
+		var ma MultisigAccount
+
+		lsig, err := MakeLogicSig(program, args, account.PrivateKey, ma)
+		require.NoError(t, err)
+
+		t.Run("with correct public key", func(t *testing.T) {
+			lsigAccount, err := LogicSigAccountFromLogicSig(lsig, &account.PublicKey)
+			require.NoError(t, err)
+
+			require.Equal(t, lsig, lsigAccount.Lsig)
+			require.Equal(t, account.PublicKey, lsigAccount.SigningKey)
+
+			require.True(t, lsigAccount.IsDelegated())
+		})
+
+		t.Run("with incorrect public key", func(t *testing.T) {
+			var wrongPublicKey = make(ed25519.PublicKey, len(account.PublicKey))
+			copy(wrongPublicKey, account.PublicKey)
+			wrongPublicKey[0] = 0xff
+			_, err := LogicSigAccountFromLogicSig(lsig, &wrongPublicKey)
+			require.Error(t, err, errLsigInvalidPublicKey)
+		})
+
+		t.Run("without public key", func(t *testing.T) {
+			_, err := LogicSigAccountFromLogicSig(lsig, nil)
+			require.Error(t, err, errLsigNoPublicKey)
+		})
+	})
+
+	t.Run("multi sig", func(t *testing.T) {
+		ma, sk1, _, _ := makeTestMultisigAccount(t)
+
+		lsig, err := MakeLogicSig(program, args, sk1, ma)
+		require.NoError(t, err)
+
+		t.Run("with public key", func(t *testing.T) {
+			msigAddr, err := ma.Address()
+			require.NoError(t, err)
+
+			msigPublicKey := make(ed25519.PublicKey, len(msigAddr))
+			copy(msigPublicKey, msigAddr[:])
+
+			_, err = LogicSigAccountFromLogicSig(lsig, &msigPublicKey)
+			require.Error(t, err, errLsigAccountPublicKeyNotNeeded)
+		})
+
+		t.Run("without public key", func(t *testing.T) {
+			lsigAccount, err := LogicSigAccountFromLogicSig(lsig, nil)
+			require.NoError(t, err)
+
+			require.Equal(t, lsig, lsigAccount.Lsig)
+			require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+
+			require.True(t, lsigAccount.IsDelegated())
+		})
+	})
+}
+
+func TestLogicSigAccount_Address(t *testing.T) {
+	program := []byte{1, 32, 1, 1, 34}
+	args := [][]byte{
+		{0x01},
+		{0x02, 0x03},
+	}
+
+	t.Run("no sig", func(t *testing.T) {
+		lsigAccount := MakeLogicSigAccountEscrow(program, args)
+
+		expectedAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
+		require.NoError(t, err)
+
+		actualAddr, err := lsigAccount.Address()
+		require.NoError(t, err)
+		require.Equal(t, expectedAddr, actualAddr)
+	})
+
+	t.Run("single sig", func(t *testing.T) {
+		account, err := AccountFromPrivateKey(ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42})
+		require.NoError(t, err)
+
+		lsigAccount, err := MakeLogicSigAccountDelegated(program, args, account.PrivateKey)
+		require.NoError(t, err)
+
+		actualAddr, err := lsigAccount.Address()
+		require.NoError(t, err)
+		require.Equal(t, account.Address, actualAddr)
+	})
+
+	t.Run("multi sig", func(t *testing.T) {
+		ma, sk1, _, _ := makeTestMultisigAccount(t)
+		maAddr, err := ma.Address()
+		require.NoError(t, err)
+
+		lsigAccount, err := MakeLogicSigAccountDelegatedMsig(program, args, ma, sk1)
+		require.NoError(t, err)
+
+		actualAddr, err := lsigAccount.Address()
+		require.NoError(t, err)
+		require.Equal(t, maAddr, actualAddr)
+	})
 }
