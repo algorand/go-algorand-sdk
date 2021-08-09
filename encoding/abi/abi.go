@@ -49,8 +49,8 @@ type Type struct {
 	// only appliable to `ufixed` precision <M>
 	unsignedTypePrecision uint16
 
-	// length for static array
-	staticArrayLength uint64
+	// length for static array / tuple
+	staticLength uint64
 }
 
 // String serialization
@@ -65,7 +65,7 @@ func (t Type) String() string {
 	case Bool:
 		return "bool"
 	case ArrayStatic:
-		return "[" + strconv.FormatUint(t.staticArrayLength, 10) + "]" + t.childTypes[0].String()
+		return "[" + strconv.FormatUint(t.staticLength, 10) + "]" + t.childTypes[0].String()
 	case Address:
 		return "address"
 	case ArrayDynamic:
@@ -226,17 +226,20 @@ type Value struct {
 // Encode serialization
 func (v Value) Encode() []byte {
 	// TODO
+	return []byte{}
 }
 
 // Decode de-serialization
 func Decode(valueByte []byte, valueType Type) (Value, error) {
 	// TODO
+	return Value{}, nil
 }
 
 func (v Value) getUint() (uint64, error) {
 	// TODO: how to handle different integer sizes and precision?
 
 	// if v.valueType is not a uint64, return error
+	return uint64(0), nil
 }
 
 // TODO create get... functions
@@ -269,4 +272,5 @@ func MakeValueUint(value *big.Int, size uint16) Value {
 
 func MakeValueUfixed(value *big.Int, size uint16, precision uint16) Value {
 	// TODO: also consider how to handle differnet int sizes and precision
+	return Value{}
 }
