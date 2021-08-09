@@ -95,11 +95,12 @@ func TypeFromString(str string) (Type, error) {
 		}
 		if typeSize % 8 != 0 || typeSize < 8 || typeSize > 512 {
 			// uint + uint invalid value case
-			return makeAddressType(), fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error type: %s", trimmedStr)
+			return MakeAddressType(),
+				fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error type: %s", trimmedStr)
 		}
-		return makeUintType(uint16(typeSize)), nil
+		return MakeUintType(uint16(typeSize)), nil
 	case trimmedStr == "byte":
-		return makeByteType(), nil
+		return MakeByteType(), nil
 	case len(trimmedStr) > 6 && trimmedStr[:6] == "ufixed":
 		match, err := regexp.MatchString(trimmedStr, `^ufixed[\d]+x[\d]+$`)
 		if err != nil {
@@ -119,9 +120,9 @@ func TypeFromString(str string) (Type, error) {
 		if err != nil {
 			return Type{}, err
 		}
-		return makeUFixedType(uint16(ufixedSize), uint16(ufixedPrecision)), nil
+		return MakeUFixedType(uint16(ufixedSize), uint16(ufixedPrecision)), nil
 	case trimmedStr == "bool":
-		return makeBoolType(), nil
+		return MakeBoolType(), nil
 	case len(trimmedStr) > 2 && trimmedStr[0] == '[' && unicode.IsDigit(rune(trimmedStr[1])):
 		match, err := regexp.MatchString(trimmedStr, `^\[[\d]+\].+$`)
 		if err != nil {
@@ -142,17 +143,17 @@ func TypeFromString(str string) (Type, error) {
 		if err != nil {
 			return Type{}, err
 		}
-		return makeStaticArrayType(arrayType, arrayLength), nil
+		return MakeStaticArrayType(arrayType, arrayLength), nil
 	case trimmedStr == "address":
-		return makeAddressType(), nil
+		return MakeAddressType(), nil
 	case len(trimmedStr) > 2 && trimmedStr[:2] == "[]":
 		arrayArgType, err := TypeFromString(trimmedStr[2:])
 		if err != nil {
 			return arrayArgType, err
 		}
-		return makeDynamicArrayType(arrayArgType), nil
+		return MakeDynamicArrayType(arrayArgType), nil
 	case trimmedStr == "string":
-		return makeStringType(), nil
+		return MakeStringType(), nil
 	case len(trimmedStr) > 2 && trimmedStr[0] == '(' && trimmedStr[len(trimmedStr) - 1] == ')':
 		tupleContent := strings.Split(strings.TrimSpace(trimmedStr[1: len(trimmedStr) - 1]), ",")
 		if len(tupleContent) == 0 {
@@ -166,45 +167,45 @@ func TypeFromString(str string) (Type, error) {
 			}
 			tupleTypes[i] = ti
 		}
-		return makeTupleType(tupleTypes), nil
+		return MakeTupleType(tupleTypes), nil
 	default:
 		return Type{}, fmt.Errorf("cannot convert a string %s to an ABI type", trimmedStr)
 	}
 }
 
-func makeUintType(typeSize uint16) Type {
+func MakeUintType(typeSize uint16) Type {
 	return Type{Uint, nil, typeSize, 0, 0}
 }
 
-func makeByteType() Type {
+func MakeByteType() Type {
 	return Type{Byte, nil, 0, 0, 0}
 }
 
-func makeUFixedType(typeSize uint16, typePrecision uint16) Type {
+func MakeUFixedType(typeSize uint16, typePrecision uint16) Type {
 	return Type{Ufixed, nil, typeSize, typePrecision, 0}
 }
 
-func makeBoolType() Type {
+func MakeBoolType() Type {
 	return Type{Bool, nil, 0, 0, 0}
 }
 
-func makeStaticArrayType(argumentType Type, arrayLength uint64) Type {
+func MakeStaticArrayType(argumentType Type, arrayLength uint64) Type {
 	return Type{ArrayStatic, []Type{argumentType}, 0, 0, arrayLength}
 }
 
-func makeAddressType() Type {
+func MakeAddressType() Type {
 	return Type{Address, nil, 0, 0, 0}
 }
 
-func makeDynamicArrayType(argumentType Type) Type {
+func MakeDynamicArrayType(argumentType Type) Type {
 	return Type{ArrayDynamic, []Type{argumentType}, 0, 0, 0}
 }
 
-func makeStringType() Type {
+func MakeStringType() Type {
 	return Type{String, nil, 0, 0, 0}
 }
 
-func makeTupleType(argumentTypes []Type) Type {
+func MakeTupleType(argumentTypes []Type) Type {
 	return Type{Tuple, argumentTypes, 0, 0, uint64(len(argumentTypes))}
 }
 
