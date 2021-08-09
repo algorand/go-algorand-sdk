@@ -3,7 +3,10 @@ package abi
 import (
 	"fmt"
 	"math/big"
+	"regexp"
+	"strconv"
 	"strings"
+	"unicode"
 )
 
 /*
@@ -54,15 +57,15 @@ type Type struct {
 func (t Type) String() string {
 	switch t.typeFromEnum {
 	case Uint:
-		return "uint" + string(t.unsignedTypeSize)
+		return "uint" + strconv.Itoa(int(t.unsignedTypeSize))
 	case Byte:
 		return "byte"
 	case Ufixed:
-		return "ufixed" + string(t.unsignedTypeSize) + "x" + string(t.unsignedTypePrecision)
+		return "ufixed" + strconv.Itoa(int(t.unsignedTypeSize)) + "x" + strconv.Itoa(int(t.unsignedTypePrecision))
 	case Bool:
 		return "bool"
 	case ArrayStatic:
-		return "[" + string(t.staticArrayLength) + "]" + t.childTypes[0].String()
+		return "[" + strconv.FormatUint(t.staticArrayLength, 10) + "]" + t.childTypes[0].String()
 	case Address:
 		return "address"
 	case ArrayDynamic:
@@ -80,31 +83,93 @@ func (t Type) String() string {
 	}
 }
 
-// TypeFromstring de-serialization
+// TypeFromString de-serialization
 func TypeFromString(str string) (Type, error) {
 	trimmedStr := strings.TrimSpace(str)
 	switch {
-	// TODO uint
+	case len(trimmedStr) > 4 && trimmedStr[:4] == "uint":
+		typeSize, err := strconv.ParseUint(trimmedStr[4:], 10, 16)
+		if err != nil {
+			// uint + not-uint value appended
+			return Type{}, fmt.Errorf("ill formed uint type: %s", trimmedStr)
+		}
+		if typeSize % 8 != 0 || typeSize < 8 || typeSize > 512 {
+			// uint + uint invalid value case
+			return makeAddressType(), fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error type: %s", trimmedStr)
+		}
+		return makeUintType(uint16(typeSize)), nil
 	case trimmedStr == "byte":
 		return makeByteType(), nil
-	// TODO ufixed
+	case len(trimmedStr) > 6 && trimmedStr[:6] == "ufixed":
+		match, err := regexp.MatchString(trimmedStr, `^ufixed[\d]+x[\d]+$`)
+		if err != nil {
+			return Type{}, err
+		}
+		if !match {
+			return Type{}, fmt.Errorf("ufixed type ill formated: %s", trimmedStr)
+		}
+		re := regexp.MustCompile(`[\d]+`)
+		// guaranteed that there are 2 uint strings in ufixed string
+		ufixedNums := re.FindAllString(trimmedStr[6:], 2)
+		ufixedSize, err := strconv.ParseUint(ufixedNums[0], 10, 16)
+		if err != nil {
+			return Type{}, err
+		}
+		ufixedPrecision, err := strconv.ParseUint(ufixedNums[1], 10, 16)
+		if err != nil {
+			return Type{}, err
+		}
+		return makeUFixedType(uint16(ufixedSize), uint16(ufixedPrecision)), nil
 	case trimmedStr == "bool":
 		return makeBoolType(), nil
-	// TODO array static
+	case len(trimmedStr) > 2 && trimmedStr[0] == '[' && unicode.IsDigit(rune(trimmedStr[1])):
+		match, err := regexp.MatchString(trimmedStr, `^\[[\d]+\].+$`)
+		if err != nil {
+			return Type{}, err
+		}
+		if !match {
+			return Type{}, fmt.Errorf("static array ill formated: %s", trimmedStr)
+		}
+		re := regexp.MustCompile(`[\d]+`)
+		// guaranteed that the length of array is existing
+		arrayLengthStrArray := re.FindAllString(trimmedStr, 1)
+		arrayLength, err := strconv.ParseUint(arrayLengthStrArray[0], 10, 64)
+		if err != nil {
+			return Type{}, err
+		}
+		// parse the array element type
+		arrayType, err := TypeFromString(trimmedStr[2 + len(arrayLengthStrArray[0]):])
+		if err != nil {
+			return Type{}, err
+		}
+		return makeStaticArrayType(arrayType, arrayLength), nil
 	case trimmedStr == "address":
 		return makeAddressType(), nil
-	// TODO array dynamic
+	case len(trimmedStr) > 2 && trimmedStr[:2] == "[]":
+		arrayArgType, err := TypeFromString(trimmedStr[2:])
+		if err != nil {
+			return arrayArgType, err
+		}
+		return makeDynamicArrayType(arrayArgType), nil
 	case trimmedStr == "string":
 		return makeStringType(), nil
-	// TODO Tuple
+	case len(trimmedStr) > 2 && trimmedStr[0] == '(' && trimmedStr[len(trimmedStr) - 1] == ')':
+		tupleContent := strings.Split(strings.TrimSpace(trimmedStr[1: len(trimmedStr) - 1]), ",")
+		if len(tupleContent) == 0 {
+			return Type{}, fmt.Errorf("tuple type has no argument types")
+		}
+		tupleTypes := make([]Type, len(tupleContent))
+		for i := 0; i < len(tupleContent); i++ {
+			ti, err := TypeFromString(tupleContent[i])
+			if err != nil {
+				return Type{}, err
+			}
+			tupleTypes[i] = ti
+		}
+		return makeTupleType(tupleTypes), nil
 	default:
-		return makeTypeDummy(),
-			fmt.Errorf("Cannot convert a string %s to an ABI type", trimmedStr)
+		return Type{}, fmt.Errorf("cannot convert a string %s to an ABI type", trimmedStr)
 	}
-}
-
-func makeTypeDummy() Type {
-	return Type{0, nil, 0, 0, 0}
 }
 
 func makeUintType(typeSize uint16) Type {
@@ -131,7 +196,7 @@ func makeAddressType() Type {
 	return Type{Address, nil, 0, 0, 0}
 }
 
-func makeDynamicType(argumentType Type) Type {
+func makeDynamicArrayType(argumentType Type) Type {
 	return Type{ArrayDynamic, []Type{argumentType}, 0, 0, 0}
 }
 
