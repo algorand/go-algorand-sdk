@@ -113,3 +113,19 @@ func TestTypeFromStringStringTypeValid(t *testing.T) {
 	}
 	testValidFramework("TypeFromString string", expected, actual, t)
 }
+
+func TestMakeBoolTypeValid(t *testing.T) {
+	boolType := MakeBoolType()
+	expected := boolType.String()
+	actual := "bool"
+	testValidFramework("MakeBoolType", expected, actual, t)
+}
+
+func TestTypeFromStringBoolTypeValid(t *testing.T) {
+	expected := MakeBoolType()
+	actual, err := TypeFromString(expected.String())
+	if err != nil {
+		t.Errorf("TypeFromString testing error: Parsing error for %s", expected.String())
+	}
+	testValidFramework("TypeFromString bool", expected, actual, t)
+}
