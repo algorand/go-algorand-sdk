@@ -93,7 +93,7 @@ func TypeFromString(str string) (Type, error) {
 			// uint + not-uint value appended
 			return Type{}, fmt.Errorf("ill formed uint type: %s", trimmedStr)
 		}
-		if typeSize % 8 != 0 || typeSize < 8 || typeSize > 512 {
+		if typeSize%8 != 0 || typeSize < 8 || typeSize > 512 {
 			// uint + uint invalid value case
 			return MakeAddressType(),
 				fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error type: %s", trimmedStr)
@@ -102,16 +102,15 @@ func TypeFromString(str string) (Type, error) {
 	case trimmedStr == "byte":
 		return MakeByteType(), nil
 	case len(trimmedStr) > 6 && trimmedStr[:6] == "ufixed":
-		match, err := regexp.MatchString(trimmedStr, `^ufixed[\d]+x[\d]+$`)
+		match, err := regexp.MatchString(`^ufixed[\d]+x[\d]+$`, trimmedStr)
 		if err != nil {
 			return Type{}, err
 		}
 		if !match {
 			return Type{}, fmt.Errorf("ufixed type ill formated: %s", trimmedStr)
 		}
-		re := regexp.MustCompile(`[\d]+`)
 		// guaranteed that there are 2 uint strings in ufixed string
-		ufixedNums := re.FindAllString(trimmedStr[6:], 2)
+		ufixedNums := regexp.MustCompile(`[\d]+`).FindAllString(trimmedStr[6:], 2)
 		ufixedSize, err := strconv.ParseUint(ufixedNums[0], 10, 16)
 		if err != nil {
 			return Type{}, err
@@ -124,22 +123,21 @@ func TypeFromString(str string) (Type, error) {
 	case trimmedStr == "bool":
 		return MakeBoolType(), nil
 	case len(trimmedStr) > 2 && trimmedStr[0] == '[' && unicode.IsDigit(rune(trimmedStr[1])):
-		match, err := regexp.MatchString(trimmedStr, `^\[[\d]+\].+$`)
+		match, err := regexp.MatchString(`^\[[\d]+\].+$`, trimmedStr)
 		if err != nil {
 			return Type{}, err
 		}
 		if !match {
 			return Type{}, fmt.Errorf("static array ill formated: %s", trimmedStr)
 		}
-		re := regexp.MustCompile(`[\d]+`)
 		// guaranteed that the length of array is existing
-		arrayLengthStrArray := re.FindAllString(trimmedStr, 1)
+		arrayLengthStrArray := regexp.MustCompile(`[\d]+`).FindAllString(trimmedStr, 1)
 		arrayLength, err := strconv.ParseUint(arrayLengthStrArray[0], 10, 64)
 		if err != nil {
 			return Type{}, err
 		}
 		// parse the array element type
-		arrayType, err := TypeFromString(trimmedStr[2 + len(arrayLengthStrArray[0]):])
+		arrayType, err := TypeFromString(trimmedStr[2+len(arrayLengthStrArray[0]):])
 		if err != nil {
 			return Type{}, err
 		}
@@ -154,8 +152,8 @@ func TypeFromString(str string) (Type, error) {
 		return MakeDynamicArrayType(arrayArgType), nil
 	case trimmedStr == "string":
 		return MakeStringType(), nil
-	case len(trimmedStr) > 2 && trimmedStr[0] == '(' && trimmedStr[len(trimmedStr) - 1] == ')':
-		tupleContent := strings.Split(strings.TrimSpace(trimmedStr[1: len(trimmedStr) - 1]), ",")
+	case len(trimmedStr) > 2 && trimmedStr[0] == '(' && trimmedStr[len(trimmedStr)-1] == ')':
+		tupleContent := strings.Split(strings.TrimSpace(trimmedStr[1:len(trimmedStr)-1]), ",")
 		if len(tupleContent) == 0 {
 			return Type{}, fmt.Errorf("tuple type has no argument types")
 		}
