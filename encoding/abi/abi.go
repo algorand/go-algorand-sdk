@@ -214,12 +214,16 @@ func parseTupleContent(str string) ([]string, error) {
 		}
 		segmentRecord = append(segmentRecord, seg)
 	}
-	prevRight := segmentRecord[len(segmentRecord)-1].right
-	if prevRight != len(str)-1 {
-		segmentRecord = append(segmentRecord, segmentIndex{
-			left:  prevRight + 2, // consider right parenthesis and comma
-			right: len(str) - 1,
-		})
+	if len(segmentRecord) > 0 {
+		prevRight := segmentRecord[len(segmentRecord)-1].right
+		if prevRight != len(str)-1 {
+			segmentRecord = append(segmentRecord, segmentIndex{
+				left:  prevRight + 2, // consider right parenthesis and comma
+				right: len(str) - 1,
+			})
+		}
+	} else {
+		segmentRecord = append(segmentRecord, segmentIndex{left: 0, right: len(str) - 1})
 	}
 
 	tupleContent := []string{}
