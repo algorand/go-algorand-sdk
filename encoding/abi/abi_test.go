@@ -3,6 +3,7 @@ package abi
 import (
 	"fmt"
 	"github.com/stretchr/testify/require"
+	"math/rand"
 	"strconv"
 	"testing"
 )
@@ -17,10 +18,15 @@ func TestMakeUintTypeValid(t *testing.T) {
 }
 
 func TestMakeUintTypeInvalid(t *testing.T) {
-	// TODO something need to be added
-	// uintType, err := MakeUintType(uint16(7))
-	// require.Error(t, err)
-	// require.Equal(t, "expected message", err.Error())
+	for i := 0; i <= 1000; i++ {
+		randInput := rand.Uint32()
+		for randInput % 8 == 0 && randInput <= 512 && randInput >= 8 {
+			randInput = rand.Uint32()
+		}
+		// note: if a var mod 8 = 0 (or not) in uint32, then it should mod 8 = 0 (or not) in uint16.
+		_, err := MakeUintType(uint16(randInput))
+		require.Error(t, err, "MakeUintType: should throw error on size input %d", randInput)
+	}
 }
 
 func TestTypeFromStringUintTypeValid(t *testing.T) {
@@ -33,28 +39,28 @@ func TestTypeFromStringUintTypeValid(t *testing.T) {
 }
 
 func TestTypeFromStringUintTypeInvalid(t *testing.T) {
-	// TODO something need to be added
+	for i := 0; i <= 1000; i++ {
+		randInput := rand.Uint64()
+		for randInput % 8 == 0 && randInput <= 512 && randInput >= 8 {
+			randInput = rand.Uint64()
+		}
+		errorInput := "uint" + strconv.FormatUint(randInput, 10)
+		_, err := TypeFromString(errorInput)
+		require.Error(t, err, "MakeUintType: should throw error on size input %d", randInput)
+	}
 
-	// testCases := []struct {
-	// 	input string
-	// 	expected Type
-	// }{
-	// 	{
-	// 		input: "uint64",
-	// 		expected: MakeUintType(uint16(64)),
-	// 	},
-	// 	{
-	// 		input: "(uint64, (uint128, ufixed512x100))",
-	// 		expected: MakeUintType(uint16(64)),
-	// 	}
-	// }
-
-	// for index, test := range ... {
-	// 	t.Run(fmt.Sprintf("test %d", index), func(t *testing.T) {
-	// 		t.Error("abc")
-	// 	})
-	// }
-
+	var additionalTestCases = []string{
+		"uint123x345",
+		"uint 128",
+		"uint_8",
+		"uint[32]",
+	}
+	for _, testcase := range additionalTestCases {
+		t.Run(fmt.Sprintf("TypeFromString uint %s", testcase), func(t *testing.T) {
+			_, err := TypeFromString(testcase)
+			require.Error(t, err, "TypeFromString uint: should throw error on input %s", testcase)
+		})
+	}
 }
 
 func TestMakeUfixedTypeValid(t *testing.T) {

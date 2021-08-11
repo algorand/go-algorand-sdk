@@ -121,7 +121,7 @@ func TypeFromString(str string) (Type, error) {
 	case str == "bool":
 		return MakeBoolType(), nil
 	case strings.HasPrefix(str, "]") && unicode.IsDigit(rune(str[len(str)-2])):
-		stringMatches := regexp.MustCompile(`^.+\[([\d]+)]$`).FindStringSubmatch(str)
+		stringMatches := regexp.MustCompile(`^[a-z\d\[\](),]+\[([\d]+)]$`).FindStringSubmatch(str)
 		// match the string itself, then array length
 		if len(stringMatches) != 2 {
 			return Type{}, fmt.Errorf("static array ill formated: %s", str)
@@ -307,7 +307,11 @@ func MakeStringType() Type {
 }
 
 func MakeTupleType(argumentTypes []Type) Type {
-	return Type{Tuple, argumentTypes, 0, 0, uint32(len(argumentTypes))}
+	return Type{
+		typeFromEnum: Tuple,
+		childTypes:   argumentTypes,
+		staticLength: uint32(len(argumentTypes)),
+	}
 }
 
 // Need a struct which represents an ABI value. This struct would probably
