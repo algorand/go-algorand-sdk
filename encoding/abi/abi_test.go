@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+// TODO need a fuzz test for the parsing
+
 func TestMakeUintTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
 		uintType, _ := MakeUintType(uint16(i))
@@ -40,20 +42,23 @@ func TestTypeFromStringUintTypeValid(t *testing.T) {
 
 func TestTypeFromStringUintTypeInvalid(t *testing.T) {
 	for i := 0; i <= 1000; i++ {
-		randInput := rand.Uint64()
-		for randInput % 8 == 0 && randInput <= 512 && randInput >= 8 {
-			randInput = rand.Uint64()
+		randSize := rand.Uint64()
+		for randSize% 8 == 0 && randSize <= 512 && randSize >= 8 {
+			randSize = rand.Uint64()
 		}
-		errorInput := "uint" + strconv.FormatUint(randInput, 10)
+		errorInput := "uint" + strconv.FormatUint(randSize, 10)
 		_, err := TypeFromString(errorInput)
-		require.Error(t, err, "MakeUintType: should throw error on size input %d", randInput)
+		require.Error(t, err, "MakeUintType: should throw error on size input %d", randSize)
 	}
 
 	var additionalTestCases = []string{
 		"uint123x345",
 		"uint 128",
-		"uint_8",
+		"uint8 ",
+		"uint!8",
 		"uint[32]",
+		"uint-893",
+		"uint#120\\",
 	}
 	for _, testcase := range additionalTestCases {
 		t.Run(fmt.Sprintf("TypeFromString uint %s", testcase), func(t *testing.T) {
@@ -74,6 +79,21 @@ func TestMakeUfixedTypeValid(t *testing.T) {
 	}
 }
 
+func TestMakeUfixedTypeInvalid(t *testing.T) {
+	for i := 0; i <= 10000; i++ {
+		randSize := rand.Uint64()
+		for randSize% 8 == 0 && randSize <= 512 && randSize >= 8 {
+			randSize = rand.Uint64()
+		}
+		randPrecision := rand.Uint32()
+		for randPrecision >= 1 && randPrecision <= 160 {
+			randPrecision = rand.Uint32()
+		}
+		_, err := MakeUFixedType(uint16(randSize), uint16(randPrecision))
+		require.Error(t, err, "MakeUintType: should throw error on size input %d", randSize)
+	}
+}
+
 func TestTypeFromStringUfixedTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
 		for j := 1; j <= 160; j++ {
@@ -82,6 +102,38 @@ func TestTypeFromStringUfixedTypeValid(t *testing.T) {
 			require.Equal(t, nil, err, "TypeFromString ufixed parsing error: %s", expected.String())
 			require.Equal(t, expected, actual, "TypeFromString ufixed: expected %s, actual %s", expected.String(), actual.String())
 		}
+	}
+}
+
+func TestTypeFromStringUfixedTypeInvalid(t *testing.T) {
+	for i := 0; i <= 10000; i++ {
+		randSize := rand.Uint64()
+		for randSize% 8 == 0 && randSize <= 512 && randSize >= 8 {
+			randSize = rand.Uint64()
+		}
+		randPrecision := rand.Uint64()
+		for randPrecision >= 1 && randPrecision <= 160 {
+			randPrecision = rand.Uint64()
+		}
+		errorInput := "ufixed" + strconv.FormatUint(randSize, 10) + "x" + strconv.FormatUint(randPrecision, 10)
+		_, err := TypeFromString(errorInput)
+		require.Error(t, err, "MakeUintType: should throw error on size input %d", randSize)
+	}
+
+	var additionalTestCases = []string{
+		"ufixed123x345",
+		"ufixed 128 x 100",
+		"ufixed64x10 ",
+		"ufixed!8x2 ",
+		"ufixed[32]x16",
+		"ufixed-64x+100",
+		"ufixed16x+12",
+	}
+	for _, testcase := range additionalTestCases {
+		t.Run(fmt.Sprintf("TypeFromString uint %s", testcase), func(t *testing.T) {
+			_, err := TypeFromString(testcase)
+			require.Error(t, err, "TypeFromString uint: should throw error on input %s", testcase)
+		})
 	}
 }
 

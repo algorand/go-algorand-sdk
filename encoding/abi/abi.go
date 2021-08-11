@@ -99,7 +99,7 @@ func TypeFromString(str string) (Type, error) {
 	case str == "byte":
 		return MakeByteType(), nil
 	case strings.HasPrefix(str, "ufixed"):
-		stringMatches := regexp.MustCompile(`^ufixed([\d]+)x([\d]+)`).FindStringSubmatch(str)
+		stringMatches := regexp.MustCompile(`^ufixed([\d]+)x([\d]+)$`).FindStringSubmatch(str)
 		// match string itself, then type-size, and type-precision
 		if len(stringMatches) != 3 {
 			return Type{}, fmt.Errorf("ill formed ufixed type: %s", str)
