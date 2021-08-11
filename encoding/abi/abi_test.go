@@ -121,6 +121,7 @@ func TestTypeFromStringUfixedTypeInvalid(t *testing.T) {
 	}
 
 	var additionalTestCases = []string{
+		"ufixed000000000016x0000010",
 		"ufixed123x345",
 		"ufixed 128 x 100",
 		"ufixed64x10 ",

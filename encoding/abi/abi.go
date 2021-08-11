@@ -99,7 +99,7 @@ func TypeFromString(str string) (Type, error) {
 	case str == "byte":
 		return MakeByteType(), nil
 	case strings.HasPrefix(str, "ufixed"):
-		stringMatches := regexp.MustCompile(`^ufixed([\d]+)x([\d]+)$`).FindStringSubmatch(str)
+		stringMatches := regexp.MustCompile(`^ufixed([1-9][\d]*)x([1-9][\d]*)$`).FindStringSubmatch(str)
 		// match string itself, then type-size, and type-precision
 		if len(stringMatches) != 3 {
 			return Type{}, fmt.Errorf("ill formed ufixed type: %s", str)
@@ -121,7 +121,7 @@ func TypeFromString(str string) (Type, error) {
 	case str == "bool":
 		return MakeBoolType(), nil
 	case strings.HasPrefix(str, "]") && unicode.IsDigit(rune(str[len(str)-2])):
-		stringMatches := regexp.MustCompile(`^[a-z\d\[\](),]+\[([\d]+)]$`).FindStringSubmatch(str)
+		stringMatches := regexp.MustCompile(`^[a-z\d\[\](),]+\[([1-9][\d]*)]$`).FindStringSubmatch(str)
 		// match the string itself, then array length
 		if len(stringMatches) != 2 {
 			return Type{}, fmt.Errorf("static array ill formated: %s", str)
