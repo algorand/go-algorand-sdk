@@ -44,9 +44,9 @@ type Type struct {
 	typeFromEnum BaseType
 	childTypes   []Type
 
-	// only appliable to `uint` size <N> or `ufixed` size <N>
+	// only can be applied to `uint` size <N> or `ufixed` size <N>
 	unsignedTypeSize uint16
-	// only appliable to `ufixed` precision <M>
+	// only can be applied to `ufixed` precision <M>
 	unsignedTypePrecision uint16
 
 	// length for static array / tuple
@@ -121,7 +121,7 @@ func TypeFromString(str string) (Type, error) {
 	case str == "bool":
 		return MakeBoolType(), nil
 	case strings.HasPrefix(str, "]") && unicode.IsDigit(rune(str[len(str)-2])):
-		stringMatches := regexp.MustCompile(`^.+\[([\d]+)\]$`).FindStringSubmatch(str)
+		stringMatches := regexp.MustCompile(`^.+\[([\d]+)]$`).FindStringSubmatch(str)
 		// match the string itself, then array length
 		if len(stringMatches) != 2 {
 			return Type{}, fmt.Errorf("static array ill formated: %s", str)
@@ -172,7 +172,8 @@ func TypeFromString(str string) (Type, error) {
 func parseTupleContent(str string) ([]string, error) {
 	type segmentIndex struct{ left, right int }
 
-	parenSegmentRecord, stack := []segmentIndex{}, []int{}
+	parenSegmentRecord, stack := make([]segmentIndex, 0), make([]int, 0)
+	// get the most exterior parentheses segment (not overlapped by other parentheses)
 	for index, chr := range str {
 		if chr == '(' {
 			stack = append(stack, index)
@@ -194,31 +195,33 @@ func parseTupleContent(str string) ([]string, error) {
 		return []string{}, fmt.Errorf("unpaired parentheses: %s", str)
 	}
 
-	segmentRecord := []segmentIndex{}
+	segmentRecord := make([]segmentIndex, 0)
+	// iterate through parentheses segment and separate string into segments
 	for _, seg := range parenSegmentRecord {
 		if len(segmentRecord) == 0 {
 			if seg.left != 0 {
 				segmentRecord = append(segmentRecord, segmentIndex{
 					left:  0,
-					right: seg.left - 2, // consider comma and left parenthesis
+					right: seg.left - 1,
 				})
 			}
 		} else {
 			prevRight := segmentRecord[len(segmentRecord)-1].right
 			if prevRight+1 < seg.left {
 				segmentRecord = append(segmentRecord, segmentIndex{
-					left:  prevRight + 2, // consider right parenthesis and comma
-					right: seg.left - 2,  // consider comma and left parenthesis
+					left:  prevRight + 1,
+					right: seg.left - 1,
 				})
 			}
 		}
 		segmentRecord = append(segmentRecord, seg)
 	}
+	// last segment, or only 1 segment case
 	if len(segmentRecord) > 0 {
 		prevRight := segmentRecord[len(segmentRecord)-1].right
 		if prevRight != len(str)-1 {
 			segmentRecord = append(segmentRecord, segmentIndex{
-				left:  prevRight + 2, // consider right parenthesis and comma
+				left:  prevRight + 1,
 				right: len(str) - 1,
 			})
 		}
@@ -226,9 +229,10 @@ func parseTupleContent(str string) ([]string, error) {
 		segmentRecord = append(segmentRecord, segmentIndex{left: 0, right: len(str) - 1})
 	}
 
-	tupleContent := []string{}
+	tupleContent := make([]string, 0)
 	for _, segment := range segmentRecord {
 		segmentStr := str[segment.left : segment.right+1]
+		segmentStr = strings.Trim(segmentStr, ",")
 		if strings.HasPrefix(segmentStr, "(") {
 			tupleContent = append(tupleContent, segmentStr)
 		} else {
