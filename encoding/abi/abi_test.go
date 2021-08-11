@@ -8,6 +8,7 @@ import (
 )
 
 func testValidFramework(funcName string, expected interface{}, actual interface{}, t *testing.T) {
+	// add equal method for struct Type
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("%s testing error: expect %s, got %s", funcName, expected, actual)
 	}
@@ -15,7 +16,7 @@ func testValidFramework(funcName string, expected interface{}, actual interface{
 
 func TestMakeUintTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
-		uintType := MakeUintType(uint16(i))
+		uintType, _ := MakeUintType(uint16(i))
 		expected := "uint" + strconv.Itoa(i)
 		actual := uintType.String()
 		testValidFramework("MakeUintType", expected, actual, t)
@@ -24,11 +25,14 @@ func TestMakeUintTypeValid(t *testing.T) {
 
 func TestMakeUintTypeInvalid(t *testing.T) {
 	// TODO something need to be added
+	// uintType, err := MakeUintType(uint16(7))
+	// require.Error(t, err)
+	// require.Equal(t, "expected message", err.Error())
 }
 
 func TestTypeFromStringUintTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
-		expected := MakeUintType(uint16(i))
+		expected, _ := MakeUintType(uint16(i))
 		actual, err := TypeFromString(expected.String())
 		if err != nil {
 			t.Errorf("TypeFromString testing error: Parsing error for %s", expected.String())
@@ -39,6 +43,27 @@ func TestTypeFromStringUintTypeValid(t *testing.T) {
 
 func TestTypeFromStringUintTypeInvalid(t *testing.T) {
 	// TODO something need to be added
+
+	// testCases := []struct {
+	// 	input string
+	// 	expected Type
+	// }{
+	// 	{
+	// 		input: "uint64",
+	// 		expected: MakeUintType(uint16(64)),
+	// 	},
+	// 	{
+	// 		input: "(uint64, (uint128, ufixed512x100))",
+	// 		expected: MakeUintType(uint16(64)),
+	// 	}
+	// }
+
+	// for index, test := range ... {
+	// 	t.Run(fmt.Sprintf("test %d", index), func(t *testing.T) {
+	// 		t.Error("abc")
+	// 	})
+	// }
+
 }
 
 func TestMakeByteTypeValid(t *testing.T) {
@@ -60,7 +85,7 @@ func TestTypeFromStringByteTypeValid(t *testing.T) {
 func TestMakeUfixedTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
 		for j := 1; j <= 160; j++ {
-			ufixedType := MakeUFixedType(uint16(i), uint16(j))
+			ufixedType, _ := MakeUFixedType(uint16(i), uint16(j))
 			expected := "ufixed" + strconv.Itoa(i) + "x" + strconv.Itoa(j)
 			actual := ufixedType.String()
 			testValidFramework("MakeUfixedType", expected, actual, t)
@@ -71,7 +96,7 @@ func TestMakeUfixedTypeValid(t *testing.T) {
 func TestTypeFromStringUfixedTypeValid(t *testing.T) {
 	for i := 8; i <= 512; i += 8 {
 		for j := 1; j <= 160; j++ {
-			expected := MakeUFixedType(uint16(i), uint16(j))
+			expected, _ := MakeUFixedType(uint16(i), uint16(j))
 			actual, err := TypeFromString("ufixed" + strconv.Itoa(i) + "x" + strconv.Itoa(j))
 			if err != nil {
 				fmt.Println(err)

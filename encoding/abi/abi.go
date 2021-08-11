@@ -50,7 +50,7 @@ type Type struct {
 	unsignedTypePrecision uint16
 
 	// length for static array / tuple
-	staticLength uint64
+	staticLength uint32
 }
 
 // String serialization
@@ -65,11 +65,11 @@ func (t Type) String() string {
 	case Bool:
 		return "bool"
 	case ArrayStatic:
-		return "[" + strconv.FormatUint(t.staticLength, 10) + "]" + t.childTypes[0].String()
+		return t.childTypes[0].String() + "[" + strconv.Itoa(int(t.staticLength)) + "]"
 	case Address:
 		return "address"
 	case ArrayDynamic:
-		return "[]" + t.childTypes[0].String()
+		return t.childTypes[0].String() + "[]"
 	case String:
 		return "string"
 	case Tuple:
@@ -77,7 +77,7 @@ func (t Type) String() string {
 		for i := 0; i < len(t.childTypes); i++ {
 			typeStrings[i] = t.childTypes[i].String()
 		}
-		return "(" + strings.Join(typeStrings, ", ") + ")"
+		return "(" + strings.Join(typeStrings, ",") + ")"
 	default:
 		return "Bruh you should not be here"
 	}
@@ -85,76 +85,74 @@ func (t Type) String() string {
 
 // TypeFromString de-serialization
 func TypeFromString(str string) (Type, error) {
-	trimmedStr := strings.TrimSpace(str)
 	switch {
-	case len(trimmedStr) > 4 && trimmedStr[:4] == "uint":
-		typeSize, err := strconv.ParseUint(trimmedStr[4:], 10, 16)
+	case strings.HasPrefix(str, "uint"):
+		typeSize, err := strconv.ParseUint(str[4:], 10, 16)
 		if err != nil {
-			// uint + not-uint value appended
-			return Type{}, fmt.Errorf("ill formed uint type: %s", trimmedStr)
+			return Type{}, fmt.Errorf("ill formed uint type: %s", str)
 		}
-		if typeSize%8 != 0 || typeSize < 8 || typeSize > 512 {
-			// uint + uint invalid value case
-			return MakeAddressType(),
-				fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error type: %s", trimmedStr)
-		}
-		return MakeUintType(uint16(typeSize)), nil
-	case trimmedStr == "byte":
-		return MakeByteType(), nil
-	case len(trimmedStr) > 6 && trimmedStr[:6] == "ufixed":
-		match, err := regexp.MatchString(`^ufixed[\d]+x[\d]+$`, trimmedStr)
+		uintTypeRes, err := MakeUintType(uint16(typeSize))
 		if err != nil {
 			return Type{}, err
 		}
-		if !match {
-			return Type{}, fmt.Errorf("ufixed type ill formated: %s", trimmedStr)
+		return uintTypeRes, nil
+	case str == "byte":
+		return MakeByteType(), nil
+	case strings.HasPrefix(str, "ufixed"):
+		stringMatches := regexp.MustCompile(`^ufixed([\d]+)x([\d]+)`).FindStringSubmatch(str)
+		// match string itself, then type-size, and type-precision
+		if len(stringMatches) != 3 {
+			return Type{}, fmt.Errorf("ill formed ufixed type: %s", str)
 		}
 		// guaranteed that there are 2 uint strings in ufixed string
-		ufixedNums := regexp.MustCompile(`[\d]+`).FindAllString(trimmedStr[6:], 2)
-		ufixedSize, err := strconv.ParseUint(ufixedNums[0], 10, 16)
+		ufixedSize, err := strconv.ParseUint(stringMatches[1], 10, 16)
 		if err != nil {
 			return Type{}, err
 		}
-		ufixedPrecision, err := strconv.ParseUint(ufixedNums[1], 10, 16)
+		ufixedPrecision, err := strconv.ParseUint(stringMatches[2], 10, 16)
 		if err != nil {
 			return Type{}, err
 		}
-		return MakeUFixedType(uint16(ufixedSize), uint16(ufixedPrecision)), nil
-	case trimmedStr == "bool":
+		ufixedTypeRes, err := MakeUFixedType(uint16(ufixedSize), uint16(ufixedPrecision))
+		if err != nil {
+			return Type{}, err
+		}
+		return ufixedTypeRes, nil
+	case str == "bool":
 		return MakeBoolType(), nil
-	case len(trimmedStr) > 2 && trimmedStr[0] == '[' && unicode.IsDigit(rune(trimmedStr[1])):
-		match, err := regexp.MatchString(`^\[[\d]+\].+$`, trimmedStr)
-		if err != nil {
-			return Type{}, err
-		}
-		if !match {
-			return Type{}, fmt.Errorf("static array ill formated: %s", trimmedStr)
+	case strings.HasPrefix(str, "]") && unicode.IsDigit(rune(str[len(str)-2])):
+		stringMatches := regexp.MustCompile(`^.+\[([\d]+)\]$`).FindStringSubmatch(str)
+		// match the string itself, then array length
+		if len(stringMatches) != 2 {
+			return Type{}, fmt.Errorf("static array ill formated: %s", str)
 		}
 		// guaranteed that the length of array is existing
-		arrayLengthStrArray := regexp.MustCompile(`[\d]+`).FindAllString(trimmedStr, 1)
-		arrayLength, err := strconv.ParseUint(arrayLengthStrArray[0], 10, 64)
+		arrayLengthStr := stringMatches[1]
+		arrayLength, err := strconv.ParseUint(arrayLengthStr, 10, 32)
 		if err != nil {
 			return Type{}, err
 		}
 		// parse the array element type
-		arrayType, err := TypeFromString(trimmedStr[2+len(arrayLengthStrArray[0]):])
+		arrayType, err := TypeFromString(str[:len(str)-(2+len(arrayLengthStr))])
 		if err != nil {
 			return Type{}, err
 		}
-		return MakeStaticArrayType(arrayType, arrayLength), nil
-	case trimmedStr == "address":
+		return MakeStaticArrayType(arrayType, uint32(arrayLength)), nil
+	case str == "address":
 		return MakeAddressType(), nil
-	case len(trimmedStr) > 2 && trimmedStr[:2] == "[]":
-		arrayArgType, err := TypeFromString(trimmedStr[2:])
+	case strings.HasSuffix(str, "[]"):
+		arrayArgType, err := TypeFromString(str[:len(str)-2])
 		if err != nil {
 			return arrayArgType, err
 		}
 		return MakeDynamicArrayType(arrayArgType), nil
-	case trimmedStr == "string":
+	case str == "string":
 		return MakeStringType(), nil
-	case len(trimmedStr) > 2 && trimmedStr[0] == '(' && trimmedStr[len(trimmedStr)-1] == ')':
-		tupleContent := strings.Split(strings.TrimSpace(trimmedStr[1:len(trimmedStr)-1]), ",")
-		if len(tupleContent) == 0 {
+	case len(str) > 2 && str[0] == '(' && str[len(str)-1] == ')':
+		tupleContent, err := parseTupleContent(strings.TrimSpace(str[1 : len(str)-1]))
+		if err != nil {
+			return Type{}, err
+		} else if len(tupleContent) == 0 {
 			return Type{}, fmt.Errorf("tuple type has no argument types")
 		}
 		tupleTypes := make([]Type, len(tupleContent))
@@ -167,44 +165,141 @@ func TypeFromString(str string) (Type, error) {
 		}
 		return MakeTupleType(tupleTypes), nil
 	default:
-		return Type{}, fmt.Errorf("cannot convert a string %s to an ABI type", trimmedStr)
+		return Type{}, fmt.Errorf("cannot convert a string %s to an ABI type", str)
 	}
 }
 
-func MakeUintType(typeSize uint16) Type {
-	return Type{Uint, nil, typeSize, 0, 0}
+func parseTupleContent(str string) ([]string, error) {
+	type segmentIndex struct{ left, right int }
+
+	parenSegmentRecord, stack := []segmentIndex{}, []int{}
+	for index, chr := range str {
+		if chr == '(' {
+			stack = append(stack, index)
+		} else if chr == ')' {
+			if len(stack) == 0 {
+				return []string{}, fmt.Errorf("unpaired parentheses: %s", str)
+			}
+			leftParenIndex := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if len(stack) == 0 {
+				parenSegmentRecord = append(parenSegmentRecord, segmentIndex{
+					left:  leftParenIndex,
+					right: index,
+				})
+			}
+		}
+	}
+	if len(stack) != 0 {
+		return []string{}, fmt.Errorf("unpaired parentheses: %s", str)
+	}
+
+	segmentRecord := []segmentIndex{}
+	for _, seg := range parenSegmentRecord {
+		if len(segmentRecord) == 0 {
+			if seg.left != 0 {
+				segmentRecord = append(segmentRecord, segmentIndex{
+					left:  0,
+					right: seg.left - 1,
+				})
+			}
+		} else {
+			prevRight := segmentRecord[len(segmentRecord)-1].right
+			if prevRight+1 < seg.left {
+				segmentRecord = append(segmentRecord, segmentIndex{
+					left:  prevRight + 1,
+					right: seg.left - 1,
+				})
+			}
+		}
+		segmentRecord = append(segmentRecord, seg)
+	}
+	prevRight := segmentRecord[len(segmentRecord)-1].right
+	if prevRight != len(str)-1 {
+		segmentRecord = append(segmentRecord, segmentIndex{
+			left:  prevRight + 1,
+			right: len(str) - 1,
+		})
+	}
+
+	tupleContent := []string{}
+	for _, segment := range segmentRecord {
+		segmentStr := str[segment.left : segment.right+1]
+		if strings.HasPrefix(segmentStr, "(") {
+			tupleContent = append(tupleContent, segmentStr)
+		} else {
+			segmentStrs := strings.Split(segmentStr, ",")
+			tupleContent = append(tupleContent, segmentStrs...)
+		}
+	}
+	return tupleContent, nil
+}
+
+func MakeUintType(typeSize uint16) (Type, error) {
+	if typeSize%8 != 0 || typeSize < 8 || typeSize > 512 {
+		return Type{}, fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error typesize: %d", typeSize)
+	}
+	return Type{
+		typeFromEnum:     Uint,
+		unsignedTypeSize: typeSize,
+	}, nil
 }
 
 func MakeByteType() Type {
-	return Type{Byte, nil, 0, 0, 0}
+	return Type{
+		typeFromEnum: Byte,
+	}
 }
 
-func MakeUFixedType(typeSize uint16, typePrecision uint16) Type {
-	return Type{Ufixed, nil, typeSize, typePrecision, 0}
+func MakeUFixedType(typeSize uint16, typePrecision uint16) (Type, error) {
+	if typeSize%8 != 0 || typeSize < 8 || typeSize > 512 {
+		return Type{}, fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error typesize: %d", typeSize)
+	}
+	if typePrecision > 160 || typePrecision < 1 {
+		return Type{}, fmt.Errorf("type uint precision range [1, 160]")
+	}
+	return Type{
+		typeFromEnum:          Ufixed,
+		unsignedTypeSize:      typeSize,
+		unsignedTypePrecision: typePrecision,
+	}, nil
 }
 
 func MakeBoolType() Type {
-	return Type{Bool, nil, 0, 0, 0}
+	return Type{
+		typeFromEnum: Bool,
+	}
 }
 
-func MakeStaticArrayType(argumentType Type, arrayLength uint64) Type {
-	return Type{ArrayStatic, []Type{argumentType}, 0, 0, arrayLength}
+func MakeStaticArrayType(argumentType Type, arrayLength uint32) Type {
+	return Type{
+		typeFromEnum: ArrayStatic,
+		childTypes:   []Type{argumentType},
+		staticLength: arrayLength,
+	}
 }
 
 func MakeAddressType() Type {
-	return Type{Address, nil, 0, 0, 0}
+	return Type{
+		typeFromEnum: Address,
+	}
 }
 
 func MakeDynamicArrayType(argumentType Type) Type {
-	return Type{ArrayDynamic, []Type{argumentType}, 0, 0, 0}
+	return Type{
+		typeFromEnum: ArrayDynamic,
+		childTypes:   []Type{argumentType},
+	}
 }
 
 func MakeStringType() Type {
-	return Type{String, nil, 0, 0, 0}
+	return Type{
+		typeFromEnum: String,
+	}
 }
 
 func MakeTupleType(argumentTypes []Type) Type {
-	return Type{Tuple, argumentTypes, 0, 0, uint64(len(argumentTypes))}
+	return Type{Tuple, argumentTypes, 0, 0, uint32(len(argumentTypes))}
 }
 
 // Need a struct which represents an ABI value. This struct would probably
@@ -266,6 +361,7 @@ func MakeValueUint64(value uint64) Value {
 
 func MakeValueUint(value *big.Int, size uint16) Value {
 	return MakeValueUfixed(value, size, 0)
+	// change the value type later
 }
 
 func MakeValueUfixed(value *big.Int, size uint16, precision uint16) Value {
