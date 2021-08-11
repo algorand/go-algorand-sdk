@@ -200,15 +200,15 @@ func parseTupleContent(str string) ([]string, error) {
 			if seg.left != 0 {
 				segmentRecord = append(segmentRecord, segmentIndex{
 					left:  0,
-					right: seg.left - 1,
+					right: seg.left - 2, // consider comma and left parenthesis
 				})
 			}
 		} else {
 			prevRight := segmentRecord[len(segmentRecord)-1].right
 			if prevRight+1 < seg.left {
 				segmentRecord = append(segmentRecord, segmentIndex{
-					left:  prevRight + 1,
-					right: seg.left - 1,
+					left:  prevRight + 2, // consider right parenthesis and comma
+					right: seg.left - 2,  // consider comma and left parenthesis
 				})
 			}
 		}
