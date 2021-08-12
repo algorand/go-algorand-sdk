@@ -235,7 +235,11 @@ func parseTupleContent(str string) ([]string, error) {
 		segmentStr := str[segment.left : segment.right+1]
 		segmentStr = strings.Trim(segmentStr, ",")
 		if len(segmentStr) == 0 {
-			continue
+			if segment.right + 1 - segment.left > 1 {
+				return []string{}, fmt.Errorf("no consequtive commas")
+			} else {
+				continue
+			}
 		}
 		if strings.HasPrefix(segmentStr, "(") {
 			tupleContent = append(tupleContent, segmentStr)

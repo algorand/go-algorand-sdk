@@ -372,6 +372,14 @@ func TestTypeFromStringInvalid(t *testing.T) {
 		"[][][]",
 		"stuff[]",
 		// static array
+		"ufixed32x10[0]",
+		"byte[10 ]",
+		"uint64[0x21]",
+		// tuple
+		"()",
+		"((uint32)",
+		"(byte,,byte)",
+		"((byte),,(byte))",
 	}
 	for _, testcase := range testcases {
 		t.Run(fmt.Sprintf("TypeFromString dynamic array test %s", testcase), func(t *testing.T) {
