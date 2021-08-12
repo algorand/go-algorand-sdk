@@ -174,6 +174,7 @@ func parseTupleContent(str string) ([]string, error) {
 
 	parenSegmentRecord, stack := make([]segmentIndex, 0), make([]int, 0)
 	// get the most exterior parentheses segment (not overlapped by other parentheses)
+	// illustration: "*****,(*****),*****" => ["*****", "(*****)", "*****"]
 	for index, chr := range str {
 		if chr == '(' {
 			stack = append(stack, index)
