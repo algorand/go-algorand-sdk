@@ -203,6 +203,117 @@ func TestTypeFromStringValid(t *testing.T) {
 				),
 			),
 		},
+		// static array
+		{
+			input:    "address[100]",
+			testType: "static array",
+			expected: MakeStaticArrayType(
+				MakeAddressType(),
+				uint32(100),
+			),
+		},
+		{
+			input:    "uint64[][200]",
+			testType: "static array",
+			expected: MakeStaticArrayType(
+				MakeDynamicArrayType(
+					Type{typeFromEnum: Uint, unsignedTypeSize: uint16(64)},
+				),
+				uint32(200),
+			),
+		},
+		// tuple type
+		{
+			input:    "(uint32,(address,byte,bool[10],ufixed256x10[]),byte[])",
+			testType: "tuple type",
+			expected: MakeTupleType(
+				[]Type{
+					{
+						typeFromEnum:     Uint,
+						unsignedTypeSize: uint16(32),
+					},
+					MakeTupleType(
+						[]Type{
+							MakeAddressType(),
+							MakeByteType(),
+							MakeStaticArrayType(MakeBoolType(), uint32(10)),
+							MakeDynamicArrayType(
+								Type{
+									typeFromEnum:          Ufixed,
+									unsignedTypeSize:      uint16(256),
+									unsignedTypePrecision: uint16(10),
+								},
+							),
+						},
+					),
+					MakeDynamicArrayType(MakeByteType()),
+				},
+			),
+		},
+		{
+			input:    "(uint32,(address,byte,bool[10],(ufixed256x10[])))",
+			testType: "tuple type",
+			expected: MakeTupleType(
+				[]Type{
+					{
+						typeFromEnum:     Uint,
+						unsignedTypeSize: uint16(32),
+					},
+					MakeTupleType(
+						[]Type{
+							MakeAddressType(),
+							MakeByteType(),
+							MakeStaticArrayType(MakeBoolType(), uint32(10)),
+							MakeTupleType(
+								[]Type{
+									MakeDynamicArrayType(
+										Type{
+											typeFromEnum:          Ufixed,
+											unsignedTypeSize:      uint16(256),
+											unsignedTypePrecision: uint16(10),
+										},
+									),
+								},
+							),
+						},
+					),
+				},
+			),
+		},
+		{
+			input:    "((uint32),(address,(byte,bool[10],ufixed256x10[])))",
+			testType: "tuple type",
+			expected: MakeTupleType(
+				[]Type{
+					MakeTupleType(
+						[]Type{
+							{
+								typeFromEnum:     Uint,
+								unsignedTypeSize: uint16(32),
+							},
+						},
+					),
+					MakeTupleType(
+						[]Type{
+							MakeAddressType(),
+							MakeTupleType(
+								[]Type{
+									MakeByteType(),
+									MakeStaticArrayType(MakeBoolType(), uint32(10)),
+									MakeDynamicArrayType(
+										Type{
+											typeFromEnum:          Ufixed,
+											unsignedTypeSize:      uint16(256),
+											unsignedTypePrecision: uint16(10),
+										},
+									),
+								},
+							),
+						},
+					),
+				},
+			),
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(fmt.Sprintf("TypeFromString test %s", testcase.testType), func(t *testing.T) {

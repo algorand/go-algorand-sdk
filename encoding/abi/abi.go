@@ -234,6 +234,9 @@ func parseTupleContent(str string) ([]string, error) {
 	for _, segment := range segmentRecord {
 		segmentStr := str[segment.left : segment.right+1]
 		segmentStr = strings.Trim(segmentStr, ",")
+		if len(segmentStr) == 0 {
+			continue
+		}
 		if strings.HasPrefix(segmentStr, "(") {
 			tupleContent = append(tupleContent, segmentStr)
 		} else {
