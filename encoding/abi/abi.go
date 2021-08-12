@@ -86,6 +86,30 @@ func (t Type) String() string {
 // TypeFromString de-serialization
 func TypeFromString(str string) (Type, error) {
 	switch {
+	case strings.HasSuffix(str, "[]"):
+		arrayArgType, err := TypeFromString(str[:len(str)-2])
+		if err != nil {
+			return arrayArgType, err
+		}
+		return MakeDynamicArrayType(arrayArgType), nil
+	case strings.HasSuffix(str, "]") && len(str) >= 2 && unicode.IsDigit(rune(str[len(str)-2])):
+		stringMatches := regexp.MustCompile(`^[a-z\d\[\](),]+\[([1-9][\d]*)]$`).FindStringSubmatch(str)
+		// match the string itself, then array length
+		if len(stringMatches) != 2 {
+			return Type{}, fmt.Errorf("static array ill formated: %s", str)
+		}
+		// guaranteed that the length of array is existing
+		arrayLengthStr := stringMatches[1]
+		arrayLength, err := strconv.ParseUint(arrayLengthStr, 10, 32)
+		if err != nil {
+			return Type{}, err
+		}
+		// parse the array element type
+		arrayType, err := TypeFromString(str[:len(str)-(2+len(arrayLengthStr))])
+		if err != nil {
+			return Type{}, err
+		}
+		return MakeStaticArrayType(arrayType, uint32(arrayLength)), nil
 	case strings.HasPrefix(str, "uint"):
 		typeSize, err := strconv.ParseUint(str[4:], 10, 16)
 		if err != nil {
@@ -120,32 +144,8 @@ func TypeFromString(str string) (Type, error) {
 		return ufixedTypeRes, nil
 	case str == "bool":
 		return MakeBoolType(), nil
-	case strings.HasPrefix(str, "]") && unicode.IsDigit(rune(str[len(str)-2])):
-		stringMatches := regexp.MustCompile(`^[a-z\d\[\](),]+\[([1-9][\d]*)]$`).FindStringSubmatch(str)
-		// match the string itself, then array length
-		if len(stringMatches) != 2 {
-			return Type{}, fmt.Errorf("static array ill formated: %s", str)
-		}
-		// guaranteed that the length of array is existing
-		arrayLengthStr := stringMatches[1]
-		arrayLength, err := strconv.ParseUint(arrayLengthStr, 10, 32)
-		if err != nil {
-			return Type{}, err
-		}
-		// parse the array element type
-		arrayType, err := TypeFromString(str[:len(str)-(2+len(arrayLengthStr))])
-		if err != nil {
-			return Type{}, err
-		}
-		return MakeStaticArrayType(arrayType, uint32(arrayLength)), nil
 	case str == "address":
 		return MakeAddressType(), nil
-	case strings.HasSuffix(str, "[]"):
-		arrayArgType, err := TypeFromString(str[:len(str)-2])
-		if err != nil {
-			return arrayArgType, err
-		}
-		return MakeDynamicArrayType(arrayArgType), nil
 	case str == "string":
 		return MakeStringType(), nil
 	case len(str) > 2 && str[0] == '(' && str[len(str)-1] == ')':
