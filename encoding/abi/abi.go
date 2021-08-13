@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -359,12 +360,24 @@ func (v Value) Encode() []byte {
 		bytesValue, _ := GetByte(v)
 		return []byte{bytesValue}
 	case ArrayStatic:
-		return []byte{}
+		staticArrayBytes := make([]byte, 0)
+		for i := 0; i < int(v.valueType.staticLength); i++ {
+			element, _ := GetStaticArrayByIndex(v, uint16(i))
+			staticArrayBytes = append(staticArrayBytes, element.Encode()...)
+		}
+		return staticArrayBytes
 	case Address:
 		addressValue, _ := GetAddress(v)
 		return addressValue[:]
 	case ArrayDynamic:
-		return []byte{}
+		dynamicArrayBytes := make([]byte, 2)
+		arrayLen := reflect.ValueOf(v.value).Len()
+		binary.BigEndian.PutUint16(dynamicArrayBytes, uint16(arrayLen))
+		for i := 0; i < arrayLen; i++ {
+			element, _ := GetDynamicArrayByIndex(v, uint16(i))
+			dynamicArrayBytes = append(dynamicArrayBytes, element.Encode()...)
+		}
+		return dynamicArrayBytes
 	case String:
 		// need to rework, like dynamic array
 		stringValue, _ := GetString(v)
@@ -375,6 +388,7 @@ func (v Value) Encode() []byte {
 		stringBytes = append(stringBytes, []byte(stringValue)...)
 		return stringBytes
 	case Tuple:
+		// TODO need to check tuple specs
 		return []byte{}
 	default:
 		return []byte("bruh you should not be here in encoding")
@@ -610,26 +624,30 @@ func GetAddress(value Value) ([32]byte, error) {
 	return addressForm, nil
 }
 
-func GetDynamicArrayByIndex(value Value, index uint16) (interface{}, error) {
+func GetDynamicArrayByIndex(value Value, index uint16) (Value, error) {
 	if value.valueType.typeFromEnum != ArrayDynamic {
-		return nil, fmt.Errorf("value type unmatch, should be dynamic array")
+		return Value{}, fmt.Errorf("value type unmatch, should be dynamic array")
 	}
-	// XXX this line is suspicious
-	elements := value.value.([]interface{})
-	if int(index) >= len(elements) {
-		return nil, fmt.Errorf("dynamic array cannot get element: index out of scope")
+	elements := reflect.ValueOf(value.value)
+	if int(index) >= elements.Len() {
+		return Value{}, fmt.Errorf("dynamic array cannot get element: index out of scope")
 	}
-	return elements[index], nil
+	return Value{
+		valueType: value.valueType.childTypes[0],
+		value:     elements.Index(int(index)).Interface(),
+	}, nil
 }
 
-func GetStaticArrayByIndex(value Value, index uint16) (interface{}, error) {
+func GetStaticArrayByIndex(value Value, index uint16) (Value, error) {
 	if value.valueType.typeFromEnum != ArrayStatic {
-		return nil, fmt.Errorf("value type unmatch, should be static array")
+		return Value{}, fmt.Errorf("value type unmatch, should be static array")
 	}
 	if index >= value.valueType.staticLength {
-		return nil, fmt.Errorf("static array cannot get element: index out of scope")
+		return Value{}, fmt.Errorf("static array cannot get element: index out of scope")
 	}
-	// XXX this line is suspicious
-	elements := value.value.([]interface{})
-	return elements[index], nil
+	elements := reflect.ValueOf(value.value)
+	return Value{
+		valueType: value.valueType.childTypes[0],
+		value:     elements.Index(int(index)).Interface(),
+	}, nil
 }
