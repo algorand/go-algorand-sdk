@@ -66,7 +66,7 @@ func TestMakeTypeValid(t *testing.T) {
 					unsignedTypeSize:      uint16(128),
 					unsignedTypePrecision: uint16(10),
 				},
-				uint32(100),
+				uint16(100),
 			),
 			testType: "dynamic array",
 			expected: "ufixed128x10[100]",
@@ -75,9 +75,9 @@ func TestMakeTypeValid(t *testing.T) {
 			input: MakeStaticArrayType(
 				MakeStaticArrayType(
 					MakeBoolType(),
-					uint32(128),
+					uint16(128),
 				),
-				uint32(256),
+				uint16(256),
 			),
 			testType: "dynamic array",
 			expected: "bool[128][256]",
@@ -94,7 +94,7 @@ func TestMakeTypeValid(t *testing.T) {
 						[]Type{
 							MakeAddressType(),
 							MakeByteType(),
-							MakeStaticArrayType(MakeBoolType(), uint32(10)),
+							MakeStaticArrayType(MakeBoolType(), uint16(10)),
 							MakeDynamicArrayType(
 								Type{
 									typeFromEnum:          Ufixed,
@@ -209,7 +209,7 @@ func TestTypeFromStringValid(t *testing.T) {
 			testType: "static array",
 			expected: MakeStaticArrayType(
 				MakeAddressType(),
-				uint32(100),
+				uint16(100),
 			),
 		},
 		{
@@ -219,7 +219,7 @@ func TestTypeFromStringValid(t *testing.T) {
 				MakeDynamicArrayType(
 					Type{typeFromEnum: Uint, unsignedTypeSize: uint16(64)},
 				),
-				uint32(200),
+				uint16(200),
 			),
 		},
 		// tuple type
@@ -236,7 +236,7 @@ func TestTypeFromStringValid(t *testing.T) {
 						[]Type{
 							MakeAddressType(),
 							MakeByteType(),
-							MakeStaticArrayType(MakeBoolType(), uint32(10)),
+							MakeStaticArrayType(MakeBoolType(), uint16(10)),
 							MakeDynamicArrayType(
 								Type{
 									typeFromEnum:          Ufixed,
@@ -263,7 +263,7 @@ func TestTypeFromStringValid(t *testing.T) {
 						[]Type{
 							MakeAddressType(),
 							MakeByteType(),
-							MakeStaticArrayType(MakeBoolType(), uint32(10)),
+							MakeStaticArrayType(MakeBoolType(), uint16(10)),
 							MakeTupleType(
 								[]Type{
 									MakeDynamicArrayType(
@@ -299,7 +299,7 @@ func TestTypeFromStringValid(t *testing.T) {
 							MakeTupleType(
 								[]Type{
 									MakeByteType(),
-									MakeStaticArrayType(MakeBoolType(), uint32(10)),
+									MakeStaticArrayType(MakeBoolType(), uint16(10)),
 									MakeDynamicArrayType(
 										Type{
 											typeFromEnum:          Ufixed,
