@@ -345,8 +345,25 @@ func (v Value) Encode() []byte {
 	case Ufixed:
 		ufixedValue, _ := GetUfixed(v)
 		return ufixedValue.Num().Bytes()
-	default:
+	case Bool:
 		return []byte{}
+	case Byte:
+		bytesValue, _ := GetBytes(v)
+		return bytesValue
+	case ArrayStatic:
+		return []byte{}
+	case Address:
+		addressValue, _ := GetAddress(v)
+		return addressValue[:]
+	case ArrayDynamic:
+		return []byte{}
+	case String:
+		stringValue, _ := GetString(v)
+		return []byte(stringValue)
+	case Tuple:
+		return []byte{}
+	default:
+		return []byte("bruh you should not be here in encoding")
 	}
 }
 
@@ -355,10 +372,7 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 	switch valueType.typeFromEnum {
 	case Uint:
 		uintValue := big.NewInt(0).SetBytes(valueByte)
-		return Value{
-			valueType: valueType,
-			value:     uintValue,
-		}, nil
+		return MakeUint(uintValue, valueType.unsignedTypeSize)
 	case Ufixed:
 		ufixedNumerator := big.NewInt(0).SetBytes(valueByte)
 		ufixedDenominator := big.NewInt(0).Exp(
@@ -366,12 +380,28 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 			nil,
 		)
 		ufixedValue := big.NewRat(1, 1).SetFrac(ufixedNumerator, ufixedDenominator)
-		return Value{
-			valueType: valueType,
-			value:     ufixedValue,
-		}, nil
+		return MakeUfixed(ufixedValue, valueType.unsignedTypeSize, valueType.unsignedTypePrecision)
+	case Bool:
+		return Value{}, nil
+	case Byte:
+		return MakeByte(valueByte), nil
+	case ArrayStatic:
+		return Value{}, nil
+	case Address:
+		if len(valueByte) != 32 {
+			return Value{}, fmt.Errorf("address should be length 32")
+		}
+		var byteAssign [32]byte
+		copy(byteAssign[:], valueByte)
+		return MakeAddress(byteAssign), nil
+	case ArrayDynamic:
+		return Value{}, nil
+	case String:
+		return MakeString(string(valueByte)), nil
+	case Tuple:
+		return Value{}, nil
 	default:
-		return Value{}, fmt.Errorf("error in type argument, unknown type")
+		return Value{}, fmt.Errorf("bruh you should not be here in decoding: unknown type error")
 	}
 }
 
@@ -394,8 +424,7 @@ func MakeUint32(value uint32) (Value, error) {
 }
 
 func MakeUint64(value uint64) (Value, error) {
-	bigInt := big.NewInt(int64(0))
-	bigInt.SetUint64(value)
+	bigInt := big.NewInt(int64(0)).SetUint64(value)
 	return MakeUint(bigInt, 64)
 }
 
@@ -437,6 +466,27 @@ func MakeUfixed(value *big.Rat, size uint16, precision uint16) (Value, error) {
 		valueType: ufixedValueType,
 		value:     value,
 	}, nil
+}
+
+func MakeString(value string) Value {
+	return Value{
+		valueType: MakeStringType(),
+		value:     value,
+	}
+}
+
+func MakeByte(value []byte) Value {
+	return Value{
+		valueType: MakeByteType(),
+		value:     value,
+	}
+}
+
+func MakeAddress(value [32]byte) Value {
+	return Value{
+		valueType: MakeAddressType(),
+		value:     value,
+	}
 }
 
 func GetUint8(value Value) (uint8, error) {
@@ -485,4 +535,28 @@ func GetUfixed(value Value) (*big.Rat, error) {
 	}
 	ufixedForm := value.value.(*big.Rat)
 	return ufixedForm, nil
+}
+
+func GetString(value Value) (string, error) {
+	if value.valueType.typeFromEnum != String {
+		return "", fmt.Errorf("value type unmatch, should be ufixed")
+	}
+	stringForm := value.value.(string)
+	return stringForm, nil
+}
+
+func GetBytes(value Value) ([]byte, error) {
+	if value.valueType.typeFromEnum != Byte {
+		return []byte{}, fmt.Errorf("value type unmatch, should be bytes")
+	}
+	bytesForm := value.value.([]byte)
+	return bytesForm, nil
+}
+
+func GetAddress(value Value) ([32]byte, error) {
+	if value.valueType.typeFromEnum != Address {
+		return [32]byte{}, fmt.Errorf("value type unmatch, should be address")
+	}
+	addressForm := value.value.([32]byte)
+	return addressForm, nil
 }
