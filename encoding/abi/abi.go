@@ -235,7 +235,7 @@ func parseTupleContent(str string) ([]string, error) {
 		segmentStr := str[segment.left : segment.right+1]
 		segmentStr = strings.Trim(segmentStr, ",")
 		if len(segmentStr) == 0 {
-			if segment.right + 1 - segment.left > 1 {
+			if segment.right+1-segment.left > 1 {
 				return []string{}, fmt.Errorf("no consequtive commas")
 			} else {
 				continue
@@ -338,8 +338,16 @@ type Value struct {
 
 // Encode serialization
 func (v Value) Encode() []byte {
-	// TODO
-	return []byte{}
+	switch v.valueType.typeFromEnum {
+	case Uint:
+		bigIntValue, _ := GetUint(v)
+		return bigIntValue.Bytes()
+	case Ufixed:
+		ufixedValue, _ := GetUfixed(v)
+		return ufixedValue.Num().Bytes()
+	default:
+		return []byte{}
+	}
 }
 
 // Decode de-serialization
@@ -348,43 +356,114 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 	return Value{}, nil
 }
 
-func (v Value) getUint() (uint64, error) {
-	// TODO: how to handle different integer sizes and precision?
-
-	// if v.valueType is not a uint64, return error
-	return uint64(0), nil
-}
-
 // TODO create get... functions
 // TODO if its get array/tuple function, pass index and take the element
 
-func MakeValueUint8(value uint8) Value {
+func MakeUint8(value uint8) (Value, error) {
 	bigInt := big.NewInt(int64(value))
-	return MakeValueUint(bigInt, 8)
+	return MakeUint(bigInt, 8)
 }
 
-func MakeValueUint16(value uint16) Value {
+func MakeUint16(value uint16) (Value, error) {
 	bigInt := big.NewInt(int64(value))
-	return MakeValueUint(bigInt, 16)
+	return MakeUint(bigInt, 16)
 }
 
-func MakeValueUint32(value uint32) Value {
+func MakeUint32(value uint32) (Value, error) {
 	bigInt := big.NewInt(int64(value))
-	return MakeValueUint(bigInt, 32)
+	return MakeUint(bigInt, 32)
 }
 
-func MakeValueUint64(value uint64) Value {
+func MakeUint64(value uint64) (Value, error) {
 	bigInt := big.NewInt(int64(0))
 	bigInt.SetUint64(value)
-	return MakeValueUint(bigInt, 64)
+	return MakeUint(bigInt, 64)
 }
 
-func MakeValueUint(value *big.Int, size uint16) Value {
-	return MakeValueUfixed(value, size, 0)
-	// change the value type later
+func MakeUint(value *big.Int, size uint16) (Value, error) {
+	typeUint, err := MakeUintType(size)
+	if err != nil {
+		return Value{}, err
+	}
+	upperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
+	if value.Cmp(upperLimit) >= 0 {
+		return Value{}, fmt.Errorf("passed value larger than uint size %d", size)
+	}
+	return Value{
+		valueType: typeUint,
+		value:     value,
+	}, nil
 }
 
-func MakeValueUfixed(value *big.Int, size uint16, precision uint16) Value {
-	// TODO: also consider how to handle differnet int sizes and precision
-	return Value{}
+func MakeUfixed(value *big.Rat, size uint16, precision uint16) (Value, error) {
+	ufixedValueType, err := MakeUFixedType(size, precision)
+	if err != nil {
+		return Value{}, nil
+	}
+	denomSize := big.NewInt(0).Exp(
+		big.NewInt(10), big.NewInt(int64(precision)),
+		nil,
+	)
+	if value.Denom() != denomSize {
+		return Value{}, fmt.Errorf("denominator size do not match")
+	}
+	numSize := big.NewInt(0).Mul(
+		big.NewInt(0).Lsh(big.NewInt(1), uint(size)),
+		denomSize,
+	)
+	if numSize.Cmp(value.Num()) <= 0 {
+		return Value{}, fmt.Errorf("numerator size overflow")
+	}
+	return Value{
+		valueType: ufixedValueType,
+		value:     value,
+	}, nil
+}
+
+func GetUint8(value Value) (uint8, error) {
+	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize > 8) {
+		return 0, fmt.Errorf("value type unmatch or size too large")
+	}
+	bigIntForm := value.value.(*big.Int)
+	return uint8(bigIntForm.Uint64()), nil
+}
+
+func GetUint16(value Value) (uint16, error) {
+	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize > 16) {
+		return 0, fmt.Errorf("value type unmatch or size too large")
+	}
+	bigIntForm := value.value.(*big.Int)
+	return uint16(bigIntForm.Uint64()), nil
+}
+
+func GetUint32(value Value) (uint32, error) {
+	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize > 32) {
+		return 0, fmt.Errorf("value type unmatch or size too large")
+	}
+	bigIntForm := value.value.(*big.Int)
+	return uint32(bigIntForm.Uint64()), nil
+}
+
+func GetUint64(value Value) (uint64, error) {
+	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize > 64) {
+		return 0, fmt.Errorf("value type unmatch or size too large")
+	}
+	bigIntForm := value.value.(*big.Int)
+	return bigIntForm.Uint64(), nil
+}
+
+func GetUint(value Value) (*big.Int, error) {
+	if value.valueType.typeFromEnum != Uint {
+		return nil, fmt.Errorf("value type unmatch or size too large")
+	}
+	bigIntForm := value.value.(*big.Int)
+	return bigIntForm, nil
+}
+
+func GetUfixed(value Value) (*big.Rat, error) {
+	if value.valueType.typeFromEnum != Ufixed {
+		return nil, fmt.Errorf("value type unmatch, should be ufixed")
+	}
+	ufixedForm := value.value.(*big.Rat)
+	return ufixedForm, nil
 }
