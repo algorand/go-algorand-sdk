@@ -352,8 +352,27 @@ func (v Value) Encode() []byte {
 
 // Decode de-serialization
 func Decode(valueByte []byte, valueType Type) (Value, error) {
-	// TODO
-	return Value{}, nil
+	switch valueType.typeFromEnum {
+	case Uint:
+		uintValue := big.NewInt(0).SetBytes(valueByte)
+		return Value{
+			valueType: valueType,
+			value:     uintValue,
+		}, nil
+	case Ufixed:
+		ufixedNumerator := big.NewInt(0).SetBytes(valueByte)
+		ufixedDenominator := big.NewInt(0).Exp(
+			big.NewInt(10), big.NewInt(int64(valueType.unsignedTypePrecision)),
+			nil,
+		)
+		ufixedValue := big.NewRat(1, 1).SetFrac(ufixedNumerator, ufixedDenominator)
+		return Value{
+			valueType: valueType,
+			value:     ufixedValue,
+		}, nil
+	default:
+		return Value{}, fmt.Errorf("error in type argument, unknown type")
+	}
 }
 
 // TODO create get... functions
