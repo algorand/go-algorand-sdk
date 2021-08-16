@@ -540,6 +540,26 @@ func MakeStaticArray(value []interface{}, elemType Type) Value {
 	}
 }
 
+func MakeTuple(value []interface{}, tupleType []Type) (Value, error) {
+	if len(value) != len(tupleType) {
+		return Value{}, fmt.Errorf("tuple make: tuple element number unmatch with tuple type number")
+	}
+	if len(value) == 0 {
+		return Value{}, fmt.Errorf("empty tuple")
+	}
+	return Value{
+		valueType: MakeTupleType(tupleType),
+		value:     value,
+	}, nil
+}
+
+func MakeBool(value bool) Value {
+	return Value{
+		valueType: MakeBoolType(),
+		value:     value,
+	}
+}
+
 func GetUint8(value Value) (uint8, error) {
 	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize <= 8) {
 		return 0, fmt.Errorf("value type unmatch or size too large")
@@ -650,4 +670,26 @@ func GetStaticArrayByIndex(value Value, index uint16) (Value, error) {
 		valueType: value.valueType.childTypes[0],
 		value:     elements.Index(int(index)).Interface(),
 	}, nil
+}
+
+func GetTupleByIndex(value Value, index uint16) (Value, error) {
+	if value.valueType.typeFromEnum != Tuple {
+		return Value{}, fmt.Errorf("value type unmatch, should be tuple")
+	}
+	elements := reflect.ValueOf(value.value)
+	if int(index) >= elements.Len() {
+		return Value{}, fmt.Errorf("tuple cannot get element: index out of scope")
+	}
+	return Value{
+		valueType: value.valueType.childTypes[index],
+		value:     elements.Index(int(index)).Interface(),
+	}, nil
+}
+
+func GetBool(value Value) (bool, error) {
+	if value.valueType.typeFromEnum != Bool {
+		return false, fmt.Errorf("value type unmatch, should be bool")
+	}
+	boolForm := value.value.(bool)
+	return boolForm, nil
 }
