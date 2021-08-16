@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -47,9 +46,9 @@ type Type struct {
 	childTypes   []Type
 
 	// only can be applied to `uint` size <N> or `ufixed` size <N>
-	unsignedTypeSize uint16
+	typeSize uint16
 	// only can be applied to `ufixed` precision <M>
-	unsignedTypePrecision uint16
+	typePrecision uint16
 
 	// length for static array / tuple
 	/*
@@ -57,6 +56,7 @@ type Type struct {
 		the type is uint16, which allows for only lenth in [0, 2^16 - 1]
 		representation of static length can only be constrained in uint16 type
 	*/
+	// TODO may want to change back to uint32/uint64
 	staticLength uint16
 }
 
@@ -64,11 +64,11 @@ type Type struct {
 func (t Type) String() string {
 	switch t.typeFromEnum {
 	case Uint:
-		return "uint" + strconv.Itoa(int(t.unsignedTypeSize))
+		return "uint" + strconv.Itoa(int(t.typeSize))
 	case Byte:
 		return "byte"
 	case Ufixed:
-		return "ufixed" + strconv.Itoa(int(t.unsignedTypeSize)) + "x" + strconv.Itoa(int(t.unsignedTypePrecision))
+		return "ufixed" + strconv.Itoa(int(t.typeSize)) + "x" + strconv.Itoa(int(t.typePrecision))
 	case Bool:
 		return "bool"
 	case ArrayStatic:
@@ -87,6 +87,58 @@ func (t Type) String() string {
 		return "(" + strings.Join(typeStrings, ",") + ")"
 	default:
 		return "Bruh you should not be here"
+	}
+}
+
+func (t Type) Equal(t0 Type) bool {
+	// assume t and t0 are well-formed
+	switch t.typeFromEnum {
+	case Byte, Bool, Address, String:
+		return t.typeFromEnum == t0.typeFromEnum
+	case Uint:
+		return t.typeFromEnum == t0.typeFromEnum && t.typeSize == t0.typeSize
+	case Ufixed:
+		if t0.typeFromEnum != Ufixed {
+			return false
+		} else if t0.typePrecision != t.typePrecision || t0.typeSize != t.typeSize {
+			return false
+		} else {
+			return true
+		}
+	case ArrayStatic:
+		if t0.typeFromEnum != ArrayStatic {
+			return false
+		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
+			return false
+		} else if t.staticLength != t0.staticLength {
+			return false
+		} else {
+			return t.childTypes[0].Equal(t0.childTypes[0])
+		}
+	case ArrayDynamic:
+		if t0.typeFromEnum != ArrayStatic {
+			return false
+		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
+			return false
+		} else {
+			return t.childTypes[0].Equal(t0.childTypes[0])
+		}
+	case Tuple:
+		if t0.typeFromEnum != Tuple {
+			return false
+		} else if t.staticLength != t0.staticLength || int(t.staticLength) != len(t0.childTypes) {
+			return false
+		} else {
+			for i := 0; i < int(t.staticLength); i++ {
+				compRes := t.childTypes[i].Equal(t0.childTypes[i])
+				if !compRes {
+					return false
+				}
+			}
+			return true
+		}
+	default:
+		return false
 	}
 }
 
@@ -203,59 +255,34 @@ func parseTupleContent(str string) ([]string, error) {
 		return []string{}, fmt.Errorf("unpaired parentheses: %s", str)
 	}
 
-	segmentRecord := make([]segmentIndex, 0)
-	// iterate through parentheses segment and separate string into segments
-	for _, seg := range parenSegmentRecord {
-		if len(segmentRecord) == 0 {
-			if seg.left != 0 {
-				segmentRecord = append(segmentRecord, segmentIndex{
-					left:  0,
-					right: seg.left - 1,
-				})
-			}
-		} else {
-			prevRight := segmentRecord[len(segmentRecord)-1].right
-			if prevRight+1 < seg.left {
-				segmentRecord = append(segmentRecord, segmentIndex{
-					left:  prevRight + 1,
-					right: seg.left - 1,
-				})
-			}
-		}
-		segmentRecord = append(segmentRecord, seg)
-	}
-	// last segment, or only 1 segment case
-	if len(segmentRecord) > 0 {
-		prevRight := segmentRecord[len(segmentRecord)-1].right
-		if prevRight != len(str)-1 {
-			segmentRecord = append(segmentRecord, segmentIndex{
-				left:  prevRight + 1,
-				right: len(str) - 1,
-			})
-		}
-	} else {
-		segmentRecord = append(segmentRecord, segmentIndex{left: 0, right: len(str) - 1})
+	// kudos to Jason Paulos
+	if strings.Contains(str, ",,") {
+		return []string{}, fmt.Errorf("no consequtive commas")
 	}
 
-	tupleContent := make([]string, 0)
-	for _, segment := range segmentRecord {
-		segmentStr := str[segment.left : segment.right+1]
-		segmentStr = strings.Trim(segmentStr, ",")
-		if len(segmentStr) == 0 {
-			if segment.right+1-segment.left > 1 {
-				return []string{}, fmt.Errorf("no consequtive commas")
-			} else {
-				continue
-			}
-		}
-		if strings.HasPrefix(segmentStr, "(") {
-			tupleContent = append(tupleContent, segmentStr)
-		} else {
-			segmentStrs := strings.Split(segmentStr, ",")
-			tupleContent = append(tupleContent, segmentStrs...)
+	strCopied := str
+	for i := len(parenSegmentRecord) - 1; i >= 0; i-- {
+		segment := parenSegmentRecord[i]
+		strCopied = strCopied[:segment.left] + strCopied[segment.right+1:]
+	}
+
+	segments := strings.Split(strCopied, ",")
+	emptyStrIndex := make([]int, 0)
+	for index, str := range segments {
+		if str == "" {
+			emptyStrIndex = append(emptyStrIndex, index)
 		}
 	}
-	return tupleContent, nil
+
+	if len(emptyStrIndex) != len(parenSegmentRecord) {
+		return []string{}, fmt.Errorf("head tail comma is not allowed")
+	}
+
+	for index, replaceIndex := range emptyStrIndex {
+		segments[replaceIndex] = str[parenSegmentRecord[index].left : parenSegmentRecord[index].right+1]
+	}
+
+	return segments, nil
 }
 
 func MakeUintType(typeSize uint16) (Type, error) {
@@ -263,8 +290,8 @@ func MakeUintType(typeSize uint16) (Type, error) {
 		return Type{}, fmt.Errorf("type uint size mod 8 = 0, range [8, 512], error typesize: %d", typeSize)
 	}
 	return Type{
-		typeFromEnum:     Uint,
-		unsignedTypeSize: typeSize,
+		typeFromEnum: Uint,
+		typeSize:     typeSize,
 	}, nil
 }
 
@@ -282,9 +309,9 @@ func MakeUFixedType(typeSize uint16, typePrecision uint16) (Type, error) {
 		return Type{}, fmt.Errorf("type uint precision range [1, 160]")
 	}
 	return Type{
-		typeFromEnum:          Ufixed,
-		unsignedTypeSize:      typeSize,
-		unsignedTypePrecision: typePrecision,
+		typeFromEnum:  Ufixed,
+		typeSize:      typeSize,
+		typePrecision: typePrecision,
 	}, nil
 }
 
@@ -344,54 +371,83 @@ type Value struct {
 }
 
 // Encode serialization
-func (v Value) Encode() []byte {
+func (v Value) Encode() ([]byte, error) {
 	switch v.valueType.typeFromEnum {
 	case Uint:
-		bigIntValue, _ := GetUint(v)
-		buffer := make([]byte, v.valueType.unsignedTypeSize/8)
-		return bigIntValue.FillBytes(buffer)
+		bigIntValue, err := GetUint(v)
+		if err != nil {
+			return []byte{}, err
+		}
+		buffer := make([]byte, v.valueType.typeSize/8)
+		return bigIntValue.FillBytes(buffer), nil
 	case Ufixed:
-		ufixedValue, _ := GetUfixed(v)
-		buffer := make([]byte, v.valueType.unsignedTypeSize/8)
-		return ufixedValue.Num().FillBytes(buffer)
+		ufixedValue, err := GetUfixed(v)
+		if err != nil {
+			return []byte{}, nil
+		}
+		buffer := make([]byte, v.valueType.typeSize/8)
+		return ufixedValue.Num().FillBytes(buffer), nil
 	case Bool:
-		return []byte{}
+		// TODO
+		return []byte{}, nil
 	case Byte:
-		bytesValue, _ := GetByte(v)
-		return []byte{bytesValue}
+		bytesValue, err := GetByte(v)
+		if err != nil {
+			return []byte{}, nil
+		}
+		return []byte{bytesValue}, nil
 	case ArrayStatic:
 		staticArrayBytes := make([]byte, 0)
 		for i := 0; i < int(v.valueType.staticLength); i++ {
-			element, _ := GetStaticArrayByIndex(v, uint16(i))
-			staticArrayBytes = append(staticArrayBytes, element.Encode()...)
+			element, err := GetStaticArrayByIndex(v, uint16(i))
+			if err != nil {
+				return []byte{}, err
+			}
+			elementEncoded, err := element.Encode()
+			if err != nil {
+				return []byte{}, nil
+			}
+			staticArrayBytes = append(staticArrayBytes, elementEncoded...)
 		}
-		return staticArrayBytes
+		return staticArrayBytes, nil
 	case Address:
-		addressValue, _ := GetAddress(v)
-		return addressValue[:]
+		addressValue, err := GetAddress(v)
+		if err != nil {
+			return []byte{}, err
+		}
+		return addressValue[:], nil
 	case ArrayDynamic:
 		dynamicArrayBytes := make([]byte, 2)
-		arrayLen := reflect.ValueOf(v.value).Len()
-		binary.BigEndian.PutUint16(dynamicArrayBytes, uint16(arrayLen))
-		for i := 0; i < arrayLen; i++ {
-			element, _ := GetDynamicArrayByIndex(v, uint16(i))
-			dynamicArrayBytes = append(dynamicArrayBytes, element.Encode()...)
+		arrayElems := v.value.([]Value)
+		binary.BigEndian.PutUint16(dynamicArrayBytes, uint16(len(arrayElems)))
+		for i := 0; i < len(arrayElems); i++ {
+			element, err := GetDynamicArrayByIndex(v, uint16(i))
+			if err != nil {
+				return []byte{}, err
+			}
+			elementEncoded, err := element.Encode()
+			if err != nil {
+				return []byte{}, err
+			}
+			dynamicArrayBytes = append(dynamicArrayBytes, elementEncoded...)
 		}
-		return dynamicArrayBytes
+		return dynamicArrayBytes, nil
 	case String:
-		// need to rework, like dynamic array
-		stringValue, _ := GetString(v)
+		stringValue, err := GetString(v)
+		if err != nil {
+			return []byte{}, err
+		}
 		length := uint16(len(stringValue))
 		stringBytes := make([]byte, 2)
 		binary.BigEndian.PutUint16(stringBytes, length)
 		// encode length + string to byte array
 		stringBytes = append(stringBytes, []byte(stringValue)...)
-		return stringBytes
+		return stringBytes, nil
 	case Tuple:
 		// TODO need to check tuple specs
-		return []byte{}
+		return []byte{}, nil
 	default:
-		return []byte("bruh you should not be here in encoding")
+		return []byte{}, fmt.Errorf("bruh you should not be here in encoding")
 	}
 }
 
@@ -400,15 +456,15 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 	switch valueType.typeFromEnum {
 	case Uint:
 		uintValue := big.NewInt(0).SetBytes(valueByte)
-		return MakeUint(uintValue, valueType.unsignedTypeSize)
+		return MakeUint(uintValue, valueType.typeSize)
 	case Ufixed:
 		ufixedNumerator := big.NewInt(0).SetBytes(valueByte)
 		ufixedDenominator := big.NewInt(0).Exp(
-			big.NewInt(10), big.NewInt(int64(valueType.unsignedTypePrecision)),
+			big.NewInt(10), big.NewInt(int64(valueType.typePrecision)),
 			nil,
 		)
 		ufixedValue := big.NewRat(1, 1).SetFrac(ufixedNumerator, ufixedDenominator)
-		return MakeUfixed(ufixedValue, valueType.unsignedTypeSize, valueType.unsignedTypePrecision)
+		return MakeUfixed(ufixedValue, valueType.typeSize, valueType.typePrecision)
 	case Bool:
 		return Value{}, nil
 	case Byte:
@@ -428,7 +484,7 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 	case ArrayDynamic:
 		return Value{}, nil
 	case String:
-		if len(valueByte) <= 2 {
+		if len(valueByte) < 2 {
 			return Value{}, fmt.Errorf("string format corrupted")
 		}
 		stringLenBytes := valueByte[:2]
@@ -444,9 +500,6 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		return Value{}, fmt.Errorf("bruh you should not be here in decoding: unknown type error")
 	}
 }
-
-// TODO create get... functions
-// TODO if its get array/tuple function, pass index and take the element
 
 func MakeUint8(value uint8) (Value, error) {
 	bigInt := big.NewInt(int64(value))
@@ -493,7 +546,7 @@ func MakeUfixed(value *big.Rat, size uint16, precision uint16) (Value, error) {
 		nil,
 	)
 	if value.Denom() != denomSize {
-		return Value{}, fmt.Errorf("denominator size do not match")
+		return Value{}, fmt.Errorf("ufixed precision size do not match")
 	}
 	numSize := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
 	if numSize.Cmp(value.Num()) <= 0 {
@@ -526,30 +579,48 @@ func MakeAddress(value [32]byte) Value {
 	}
 }
 
-func MakeDynamicArray(value []interface{}, elemType Type) Value {
+func MakeDynamicArray(values []Value, elemType Type) (Value, error) {
+	for i := 0; i < len(values); i++ {
+		if !values[i].valueType.Equal(elemType) {
+			return Value{}, fmt.Errorf("type mismatch: %s and %s",
+				values[i].valueType.String(), elemType.String())
+		}
+	}
 	return Value{
 		valueType: MakeDynamicArrayType(elemType),
-		value:     value,
-	}
+		value:     values,
+	}, nil
 }
 
-func MakeStaticArray(value []interface{}, elemType Type) Value {
+func MakeStaticArray(values []Value, elemType Type) (Value, error) {
+	for i := 0; i < len(values); i++ {
+		if !values[i].valueType.Equal(elemType) {
+			return Value{}, fmt.Errorf("type mismatch: %s and %s",
+				values[i].valueType.String(), elemType.String())
+		}
+	}
 	return Value{
-		valueType: MakeStaticArrayType(elemType, uint16(len(value))),
-		value:     value,
-	}
+		valueType: MakeStaticArrayType(elemType, uint16(len(values))),
+		value:     values,
+	}, nil
 }
 
-func MakeTuple(value []interface{}, tupleType []Type) (Value, error) {
-	if len(value) != len(tupleType) {
+func MakeTuple(values []Value, tupleType []Type) (Value, error) {
+	if len(values) != len(tupleType) {
 		return Value{}, fmt.Errorf("tuple make: tuple element number unmatch with tuple type number")
 	}
-	if len(value) == 0 {
+	if len(values) == 0 {
 		return Value{}, fmt.Errorf("empty tuple")
+	}
+	for i := 0; i < len(values); i++ {
+		if !values[i].valueType.Equal(tupleType[i]) {
+			return Value{}, fmt.Errorf("type mismatch: %s and %s",
+				values[i].valueType.String(), tupleType[i].String())
+		}
 	}
 	return Value{
 		valueType: MakeTupleType(tupleType),
-		value:     value,
+		value:     values,
 	}, nil
 }
 
@@ -561,34 +632,46 @@ func MakeBool(value bool) Value {
 }
 
 func GetUint8(value Value) (uint8, error) {
-	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize <= 8) {
+	if value.valueType.typeFromEnum != Uint || value.valueType.typeSize > 8 {
 		return 0, fmt.Errorf("value type unmatch or size too large")
 	}
-	bigIntForm := value.value.(*big.Int)
+	bigIntForm, err := GetUint(value)
+	if err != nil {
+		return 0, err
+	}
 	return uint8(bigIntForm.Uint64()), nil
 }
 
 func GetUint16(value Value) (uint16, error) {
-	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize <= 16) {
+	if value.valueType.typeFromEnum != Uint || value.valueType.typeSize > 16 {
 		return 0, fmt.Errorf("value type unmatch or size too large")
 	}
-	bigIntForm := value.value.(*big.Int)
+	bigIntForm, err := GetUint(value)
+	if err != nil {
+		return 0, err
+	}
 	return uint16(bigIntForm.Uint64()), nil
 }
 
 func GetUint32(value Value) (uint32, error) {
-	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize <= 32) {
+	if value.valueType.typeFromEnum != Uint || value.valueType.typeSize > 32 {
 		return 0, fmt.Errorf("value type unmatch or size too large")
 	}
-	bigIntForm := value.value.(*big.Int)
+	bigIntForm, err := GetUint(value)
+	if err != nil {
+		return 0, err
+	}
 	return uint32(bigIntForm.Uint64()), nil
 }
 
 func GetUint64(value Value) (uint64, error) {
-	if !(value.valueType.typeFromEnum == Uint && value.valueType.unsignedTypeSize <= 64) {
+	if value.valueType.typeFromEnum != Uint || value.valueType.typeSize > 64 {
 		return 0, fmt.Errorf("value type unmatch or size too large")
 	}
-	bigIntForm := value.value.(*big.Int)
+	bigIntForm, err := GetUint(value)
+	if err != nil {
+		return 0, err
+	}
 	return bigIntForm.Uint64(), nil
 }
 
@@ -597,7 +680,7 @@ func GetUint(value Value) (*big.Int, error) {
 		return nil, fmt.Errorf("value type unmatch")
 	}
 	bigIntForm := value.value.(*big.Int)
-	sizeThreshold := big.NewInt(0).Lsh(big.NewInt(1), uint(value.valueType.unsignedTypeSize))
+	sizeThreshold := big.NewInt(0).Lsh(big.NewInt(1), uint(value.valueType.typeSize))
 	if sizeThreshold.Cmp(bigIntForm) <= 0 {
 		return nil, fmt.Errorf("value is larger than uint size")
 	}
@@ -609,9 +692,9 @@ func GetUfixed(value Value) (*big.Rat, error) {
 		return nil, fmt.Errorf("value type unmatch, should be ufixed")
 	}
 	ufixedForm := value.value.(*big.Rat)
-	numinatorSize := big.NewInt(0).Lsh(big.NewInt(1), uint(value.valueType.unsignedTypeSize))
+	numinatorSize := big.NewInt(0).Lsh(big.NewInt(1), uint(value.valueType.typeSize))
 	denomSize := big.NewInt(0).Exp(
-		big.NewInt(10), big.NewInt(int64(value.valueType.unsignedTypePrecision)),
+		big.NewInt(10), big.NewInt(int64(value.valueType.typePrecision)),
 		nil,
 	)
 	if denomSize.Cmp(ufixedForm.Denom()) != 0 || numinatorSize.Cmp(ufixedForm.Num()) <= 0 {
@@ -648,14 +731,11 @@ func GetDynamicArrayByIndex(value Value, index uint16) (Value, error) {
 	if value.valueType.typeFromEnum != ArrayDynamic {
 		return Value{}, fmt.Errorf("value type unmatch, should be dynamic array")
 	}
-	elements := reflect.ValueOf(value.value)
-	if int(index) >= elements.Len() {
+	elements := value.value.([]Value)
+	if int(index) >= len(elements) {
 		return Value{}, fmt.Errorf("dynamic array cannot get element: index out of scope")
 	}
-	return Value{
-		valueType: value.valueType.childTypes[0],
-		value:     elements.Index(int(index)).Interface(),
-	}, nil
+	return elements[index], nil
 }
 
 func GetStaticArrayByIndex(value Value, index uint16) (Value, error) {
@@ -665,25 +745,19 @@ func GetStaticArrayByIndex(value Value, index uint16) (Value, error) {
 	if index >= value.valueType.staticLength {
 		return Value{}, fmt.Errorf("static array cannot get element: index out of scope")
 	}
-	elements := reflect.ValueOf(value.value)
-	return Value{
-		valueType: value.valueType.childTypes[0],
-		value:     elements.Index(int(index)).Interface(),
-	}, nil
+	elements := value.value.([]Value)
+	return elements[index], nil
 }
 
 func GetTupleByIndex(value Value, index uint16) (Value, error) {
 	if value.valueType.typeFromEnum != Tuple {
 		return Value{}, fmt.Errorf("value type unmatch, should be tuple")
 	}
-	elements := reflect.ValueOf(value.value)
-	if int(index) >= elements.Len() {
+	elements := value.value.([]Value)
+	if int(index) >= len(elements) {
 		return Value{}, fmt.Errorf("tuple cannot get element: index out of scope")
 	}
-	return Value{
-		valueType: value.valueType.childTypes[index],
-		value:     elements.Index(int(index)).Interface(),
-	}, nil
+	return elements[index], nil
 }
 
 func GetBool(value Value) (bool, error) {

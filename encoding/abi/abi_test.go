@@ -43,8 +43,8 @@ func TestMakeTypeValid(t *testing.T) {
 		{
 			input: MakeDynamicArrayType(
 				Type{
-					typeFromEnum:     Uint,
-					unsignedTypeSize: uint16(32),
+					typeFromEnum: Uint,
+					typeSize:     uint16(32),
 				},
 			),
 			testType: "dynamic array",
@@ -62,9 +62,9 @@ func TestMakeTypeValid(t *testing.T) {
 		{
 			input: MakeStaticArrayType(
 				Type{
-					typeFromEnum:          Ufixed,
-					unsignedTypeSize:      uint16(128),
-					unsignedTypePrecision: uint16(10),
+					typeFromEnum:  Ufixed,
+					typeSize:      uint16(128),
+					typePrecision: uint16(10),
 				},
 				uint16(100),
 			),
@@ -87,8 +87,8 @@ func TestMakeTypeValid(t *testing.T) {
 			input: MakeTupleType(
 				[]Type{
 					{
-						typeFromEnum:     Uint,
-						unsignedTypeSize: uint16(32),
+						typeFromEnum: Uint,
+						typeSize:     uint16(32),
 					},
 					MakeTupleType(
 						[]Type{
@@ -97,9 +97,9 @@ func TestMakeTypeValid(t *testing.T) {
 							MakeStaticArrayType(MakeBoolType(), uint16(10)),
 							MakeDynamicArrayType(
 								Type{
-									typeFromEnum:          Ufixed,
-									unsignedTypeSize:      uint16(256),
-									unsignedTypePrecision: uint16(10),
+									typeFromEnum:  Ufixed,
+									typeSize:      uint16(256),
+									typePrecision: uint16(10),
 								},
 							),
 						},
@@ -177,16 +177,16 @@ func TestTypeFromStringValid(t *testing.T) {
 		{
 			input:    "uint256[]",
 			testType: "dynamic array",
-			expected: MakeDynamicArrayType(Type{typeFromEnum: Uint, unsignedTypeSize: 256}),
+			expected: MakeDynamicArrayType(Type{typeFromEnum: Uint, typeSize: 256}),
 		},
 		{
 			input:    "ufixed256x64[]",
 			testType: "dynamic array",
 			expected: MakeDynamicArrayType(
 				Type{
-					typeFromEnum:          Ufixed,
-					unsignedTypeSize:      256,
-					unsignedTypePrecision: 64,
+					typeFromEnum:  Ufixed,
+					typeSize:      256,
+					typePrecision: 64,
 				},
 			),
 		},
@@ -217,7 +217,7 @@ func TestTypeFromStringValid(t *testing.T) {
 			testType: "static array",
 			expected: MakeStaticArrayType(
 				MakeDynamicArrayType(
-					Type{typeFromEnum: Uint, unsignedTypeSize: uint16(64)},
+					Type{typeFromEnum: Uint, typeSize: uint16(64)},
 				),
 				uint16(200),
 			),
@@ -229,8 +229,8 @@ func TestTypeFromStringValid(t *testing.T) {
 			expected: MakeTupleType(
 				[]Type{
 					{
-						typeFromEnum:     Uint,
-						unsignedTypeSize: uint16(32),
+						typeFromEnum: Uint,
+						typeSize:     uint16(32),
 					},
 					MakeTupleType(
 						[]Type{
@@ -239,9 +239,9 @@ func TestTypeFromStringValid(t *testing.T) {
 							MakeStaticArrayType(MakeBoolType(), uint16(10)),
 							MakeDynamicArrayType(
 								Type{
-									typeFromEnum:          Ufixed,
-									unsignedTypeSize:      uint16(256),
-									unsignedTypePrecision: uint16(10),
+									typeFromEnum:  Ufixed,
+									typeSize:      uint16(256),
+									typePrecision: uint16(10),
 								},
 							),
 						},
@@ -256,8 +256,8 @@ func TestTypeFromStringValid(t *testing.T) {
 			expected: MakeTupleType(
 				[]Type{
 					{
-						typeFromEnum:     Uint,
-						unsignedTypeSize: uint16(32),
+						typeFromEnum: Uint,
+						typeSize:     uint16(32),
 					},
 					MakeTupleType(
 						[]Type{
@@ -268,9 +268,9 @@ func TestTypeFromStringValid(t *testing.T) {
 								[]Type{
 									MakeDynamicArrayType(
 										Type{
-											typeFromEnum:          Ufixed,
-											unsignedTypeSize:      uint16(256),
-											unsignedTypePrecision: uint16(10),
+											typeFromEnum:  Ufixed,
+											typeSize:      uint16(256),
+											typePrecision: uint16(10),
 										},
 									),
 								},
@@ -288,8 +288,8 @@ func TestTypeFromStringValid(t *testing.T) {
 					MakeTupleType(
 						[]Type{
 							{
-								typeFromEnum:     Uint,
-								unsignedTypeSize: uint16(32),
+								typeFromEnum: Uint,
+								typeSize:     uint16(32),
 							},
 						},
 					),
@@ -302,9 +302,9 @@ func TestTypeFromStringValid(t *testing.T) {
 									MakeStaticArrayType(MakeBoolType(), uint16(10)),
 									MakeDynamicArrayType(
 										Type{
-											typeFromEnum:          Ufixed,
-											unsignedTypeSize:      uint16(256),
-											unsignedTypePrecision: uint16(10),
+											typeFromEnum:  Ufixed,
+											typeSize:      uint16(256),
+											typePrecision: uint16(10),
 										},
 									),
 								},
