@@ -504,12 +504,125 @@ func (v Value) Encode() ([]byte, error) {
 	}
 }
 
+func findBoolBefore(typeList []Type, index int) int {
+	before := 0
+	for index-before >= 0 {
+		if typeList[index-before].typeFromEnum == Bool {
+			if index-before > 0 {
+				before++
+			} else {
+				break
+			}
+		} else {
+			before--
+			break
+		}
+	}
+	return before
+}
+
+func findBoolafter(typeList []Type, index int) int {
+	after := 0
+	for index+after < len(typeList) {
+		if typeList[index+after].typeFromEnum == Bool {
+			if index+after != len(typeList)-1 {
+				after++
+			} else {
+				break
+			}
+		} else {
+			after--
+			break
+		}
+	}
+	return after
+}
+
+func compressMultipleBool(valueList []Value) (uint8, error) {
+	var res uint8 = 0
+	for i := 0; i < len(valueList); i++ {
+		if valueList[i].valueType.typeFromEnum != Bool {
+			return 0, fmt.Errorf("bool type not matching in compressMultipleBool")
+		}
+		boolVal, err := GetBool(valueList[i])
+		if err != nil {
+			return 0, err
+		}
+		if boolVal {
+			res |= (1 << (7 - i))
+		}
+	}
+	return res, nil
+}
+
 func tupleEncoding(v Value) ([]byte, error) {
 	if v.valueType.typeFromEnum != Tuple {
 		return []byte{}, fmt.Errorf("tupe not supported in tupleEncoding")
 	}
-	// todo stuffs to do
-	return []byte{}, nil
+	heads, tails := make([][]byte, len(v.valueType.childTypes)), make([][]byte, len(v.valueType.childTypes))
+	for i := 0; i < len(v.valueType.childTypes); i++ {
+		switch v.valueType.childTypes[i].IsDynamic() {
+		case true:
+			headsPlaceholder := []byte{0x00, 0x00}
+			heads = append(heads, headsPlaceholder)
+			tailEncoding, err := v.Encode()
+			if err != nil {
+				return []byte{}, err
+			}
+			tails = append(tails, tailEncoding)
+		case false:
+			if v.valueType.typeFromEnum == Bool {
+				// search previous bool
+				before := findBoolBefore(v.valueType.childTypes, i)
+				// search after bool
+				after := findBoolafter(v.valueType.childTypes, i)
+				// append to heads and tails
+				if before%8 == 0 {
+					if after > 7 {
+						after = 7
+					}
+					tupleElems := v.value.([]Value)
+					compressed, err := compressMultipleBool(tupleElems[i : i+after+1])
+					if err != nil {
+						return []byte{}, err
+					}
+					heads = append(heads, []byte{compressed})
+				} else {
+					heads = append(heads, nil)
+				}
+				tails = append(tails, nil)
+			} else {
+				encodeTi, err := v.Encode()
+				if err != nil {
+					return []byte{}, err
+				}
+				heads = append(heads, encodeTi)
+				tails = append(tails, nil)
+			}
+		}
+	}
+
+	// adjust heads for dynamic type
+	headLength := 0
+	for i := 0; i < len(v.valueType.childTypes); i++ {
+		headLength += len(heads[i])
+	}
+
+	tailCurrLength := 0
+	for i := 0; i < len(v.valueType.childTypes); i++ {
+		if len(heads[i]) == 2 && binary.BigEndian.Uint16(heads[i]) == 0 {
+			headValue := headLength + tailCurrLength
+			binary.BigEndian.PutUint16(heads[i], uint16(headValue))
+		}
+		tailCurrLength += len(tails[i])
+	}
+
+	head, tail := make([]byte, 0), make([]byte, 0)
+	for i := 0; i < len(v.valueType.childTypes); i++ {
+		head = append(head, heads[i]...)
+		tail = append(tail, tails[i]...)
+	}
+	return append(head, tail...), nil
 }
 
 // Decode de-serialization
