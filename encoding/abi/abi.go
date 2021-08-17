@@ -549,7 +549,7 @@ func compressMultipleBool(valueList []Value) (uint8, error) {
 			return 0, err
 		}
 		if boolVal {
-			res |= (1 << (7 - i))
+			res |= 1 << (7 - i)
 		}
 	}
 	return res, nil
@@ -629,9 +629,17 @@ func tupleEncoding(v Value) ([]byte, error) {
 func Decode(valueByte []byte, valueType Type) (Value, error) {
 	switch valueType.typeFromEnum {
 	case Uint:
+		if len(valueByte) != int(valueType.typeSize)/8 {
+			return Value{},
+				fmt.Errorf("uint size %d byte, given byte size unmatch", int(valueType.typeSize)/8)
+		}
 		uintValue := big.NewInt(0).SetBytes(valueByte)
 		return MakeUint(uintValue, valueType.typeSize)
 	case Ufixed:
+		if len(valueByte) != int(valueType.typeSize)/8 {
+			return Value{},
+				fmt.Errorf("ufixed size %d byte, given byte size unmatch", int(valueType.typeSize)/8)
+		}
 		ufixedNumerator := big.NewInt(0).SetBytes(valueByte)
 		ufixedDenominator := big.NewInt(0).Exp(
 			big.NewInt(10), big.NewInt(int64(valueType.typePrecision)),
@@ -640,15 +648,21 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		ufixedValue := big.NewRat(1, 1).SetFrac(ufixedNumerator, ufixedDenominator)
 		return MakeUfixed(ufixedValue, valueType.typeSize, valueType.typePrecision)
 	case Bool:
-		return Value{}, nil
+		if len(valueByte) != 1 {
+			return Value{}, fmt.Errorf("boolean byte should be length 1 byte")
+		}
+		boolValue := valueByte[0] > 0
+		return MakeBool(boolValue), nil
 	case Byte:
 		if len(valueByte) != 1 {
 			return Value{}, fmt.Errorf("byte should be length 1")
 		}
 		return MakeByte(valueByte[0]), nil
 	case ArrayStatic:
+		// TODO
 		return Value{}, nil
 	case Address:
+		// TODO
 		if len(valueByte) != 32 {
 			return Value{}, fmt.Errorf("address should be length 32")
 		}
@@ -656,8 +670,10 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		copy(byteAssign[:], valueByte)
 		return MakeAddress(byteAssign), nil
 	case ArrayDynamic:
+		// TODO
 		return Value{}, nil
 	case String:
+		// TODO
 		if len(valueByte) < 2 {
 			return Value{}, fmt.Errorf("string format corrupted")
 		}
@@ -669,6 +685,7 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		}
 		return MakeString(stringValue), nil
 	case Tuple:
+		// TODO
 		return Value{}, nil
 	default:
 		return Value{}, fmt.Errorf("bruh you should not be here in decoding: unknown type error")
