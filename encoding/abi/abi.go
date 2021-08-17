@@ -587,6 +587,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 						return []byte{}, err
 					}
 					heads = append(heads, []byte{compressed})
+					i += (after + 1)
 				} else {
 					heads = append(heads, nil)
 				}
