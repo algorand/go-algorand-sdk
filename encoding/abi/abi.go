@@ -587,6 +587,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 						return []byte{}, err
 					}
 					heads = append(heads, []byte{compressed})
+					i += after
 				} else {
 					heads = append(heads, nil)
 				}
@@ -604,12 +605,12 @@ func tupleEncoding(v Value) ([]byte, error) {
 
 	// adjust heads for dynamic type
 	headLength := 0
-	for i := 0; i < len(v.valueType.childTypes); i++ {
-		headLength += len(heads[i])
+	for _, headTi := range heads {
+		headLength += len(headTi)
 	}
 
 	tailCurrLength := 0
-	for i := 0; i < len(v.valueType.childTypes); i++ {
+	for i := 0; i < len(heads); i++ {
 		if len(heads[i]) == 2 && binary.BigEndian.Uint16(heads[i]) == 0 {
 			headValue := headLength + tailCurrLength
 			binary.BigEndian.PutUint16(heads[i], uint16(headValue))
@@ -618,7 +619,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 	}
 
 	head, tail := make([]byte, 0), make([]byte, 0)
-	for i := 0; i < len(v.valueType.childTypes); i++ {
+	for i := 0; i < len(heads); i++ {
 		head = append(head, heads[i]...)
 		tail = append(tail, tails[i]...)
 	}
