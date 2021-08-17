@@ -142,6 +142,26 @@ func (t Type) Equal(t0 Type) bool {
 	}
 }
 
+func (t Type) IsDynamic() bool {
+	switch t.typeFromEnum {
+	case Address, Byte, Uint, Ufixed, Bool, String:
+		return false
+	case ArrayStatic:
+		return t.childTypes[0].IsDynamic()
+	case ArrayDynamic:
+		return true
+	case Tuple:
+		for _, childT := range t.childTypes {
+			if childT.IsDynamic() {
+				return true
+			}
+		}
+		return false
+	default:
+		return false
+	}
+}
+
 // TypeFromString de-serialization
 func TypeFromString(str string) (Type, error) {
 	switch {
@@ -373,6 +393,57 @@ type Value struct {
 	value     interface{}
 }
 
+func (v Value) arrayToTuple() (Value, error) {
+	var childT []Type
+	var valueArr []Value
+
+	switch v.valueType.typeFromEnum {
+	case String:
+		strValue, err := GetString(v)
+		if err != nil {
+			return Value{}, err
+		}
+		strByte := []byte(strValue)
+		childT, valueArr = make([]Type, len(strByte)), make([]Value, len(strByte))
+		for i := 0; i < len(strByte); i++ {
+			childT[i] = MakeByteType()
+			valueArr[i] = MakeByte(strByte[i])
+		}
+	case Address:
+		addr, err := GetAddress(v)
+		if err != nil {
+			return Value{}, err
+		}
+		childT, valueArr = make([]Type, 32), make([]Value, 32)
+		for i := 0; i < 32; i++ {
+			childT[i] = MakeByteType()
+			valueArr[i] = MakeByte(addr[i])
+		}
+	case ArrayStatic:
+		// wonder if we can just put v.value inside the tuple value
+		childT = make([]Type, v.valueType.staticLength)
+		for i := 0; i < int(v.valueType.staticLength); i++ {
+			childT[i] = v.valueType
+		}
+		valueArr = v.value.([]Value)
+	case ArrayDynamic:
+		// wonder if we can just put v.value inside the tuple value
+		arrayElems := v.value.([]Value)
+		childT = make([]Type, len(arrayElems))
+		for i := 0; i < len(arrayElems); i++ {
+			childT[i] = v.valueType
+		}
+		valueArr = arrayElems
+	default:
+		return Value{}, fmt.Errorf("value type not supported to convertion to tuple")
+	}
+
+	return Value{
+		valueType: MakeTupleType(childT),
+		value:     valueArr,
+	}, nil
+}
+
 // Encode serialization
 func (v Value) Encode() ([]byte, error) {
 	switch v.valueType.typeFromEnum {
@@ -391,67 +462,54 @@ func (v Value) Encode() ([]byte, error) {
 		buffer := make([]byte, v.valueType.typeSize/8)
 		return ufixedValue.Num().FillBytes(buffer), nil
 	case Bool:
-		// TODO
-		return []byte{}, nil
+		boolValue, err := GetBool(v)
+		if err != nil {
+			return []byte{}, err
+		}
+		if boolValue {
+			return []byte{0x80}, nil
+		} else {
+			return []byte{0x00}, nil
+		}
 	case Byte:
 		bytesValue, err := GetByte(v)
 		if err != nil {
 			return []byte{}, nil
 		}
 		return []byte{bytesValue}, nil
-	case ArrayStatic:
-		staticArrayBytes := make([]byte, 0)
-		for i := 0; i < int(v.valueType.staticLength); i++ {
-			element, err := GetStaticArrayByIndex(v, uint16(i))
-			if err != nil {
-				return []byte{}, err
-			}
-			elementEncoded, err := element.Encode()
-			if err != nil {
-				return []byte{}, err
-			}
-			staticArrayBytes = append(staticArrayBytes, elementEncoded...)
-		}
-		return staticArrayBytes, nil
-	case Address:
-		addressValue, err := GetAddress(v)
+	case ArrayStatic, Address:
+		convertedTuple, err := v.arrayToTuple()
 		if err != nil {
 			return []byte{}, err
 		}
-		return addressValue[:], nil
-	case ArrayDynamic:
-		dynamicArrayBytes := make([]byte, 2)
-		arrayElems := v.value.([]Value)
-		binary.BigEndian.PutUint16(dynamicArrayBytes, uint16(len(arrayElems)))
-		for i := 0; i < len(arrayElems); i++ {
-			element, err := GetDynamicArrayByIndex(v, uint16(i))
-			if err != nil {
-				return []byte{}, err
-			}
-			elementEncoded, err := element.Encode()
-			if err != nil {
-				return []byte{}, err
-			}
-			dynamicArrayBytes = append(dynamicArrayBytes, elementEncoded...)
-		}
-		return dynamicArrayBytes, nil
-	case String:
-		stringValue, err := GetString(v)
+		return tupleEncoding(convertedTuple)
+	case ArrayDynamic, String:
+		convertedTuple, err := v.arrayToTuple()
 		if err != nil {
 			return []byte{}, err
 		}
-		length := uint16(len(stringValue))
-		stringBytes := make([]byte, 2)
-		binary.BigEndian.PutUint16(stringBytes, length)
-		// encode length + string to byte array
-		stringBytes = append(stringBytes, []byte(stringValue)...)
-		return stringBytes, nil
+		length := len(convertedTuple.valueType.childTypes)
+		lengthEncode := make([]byte, 2)
+		binary.BigEndian.PutUint16(lengthEncode, uint16(length))
+
+		encoded, err := tupleEncoding(convertedTuple)
+		if err != nil {
+			return []byte{}, err
+		}
+		return append(lengthEncode, encoded...), nil
 	case Tuple:
-		// TODO need to check tuple specs
-		return []byte{}, nil
+		return tupleEncoding(v)
 	default:
 		return []byte{}, fmt.Errorf("bruh you should not be here in encoding")
 	}
+}
+
+func tupleEncoding(v Value) ([]byte, error) {
+	if v.valueType.typeFromEnum != Tuple {
+		return []byte{}, fmt.Errorf("tupe not supported in tupleEncoding")
+	}
+	// todo stuffs to do
+	return []byte{}, nil
 }
 
 // Decode de-serialization
