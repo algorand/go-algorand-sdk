@@ -260,12 +260,14 @@ func parseTupleContent(str string) ([]string, error) {
 		return []string{}, fmt.Errorf("no consequtive commas")
 	}
 
+	// take out tuple-formed type str in tuple argument
 	strCopied := str
 	for i := len(parenSegmentRecord) - 1; i >= 0; i-- {
 		segment := parenSegmentRecord[i]
 		strCopied = strCopied[:segment.left] + strCopied[segment.right+1:]
 	}
 
+	// maintain list of empty strings as placeholders for tuple-formed type str
 	segments := strings.Split(strCopied, ",")
 	emptyStrIndex := make([]int, 0)
 	for index, str := range segments {
@@ -278,6 +280,7 @@ func parseTupleContent(str string) ([]string, error) {
 		return []string{}, fmt.Errorf("head tail comma is not allowed")
 	}
 
+	// replace back the tuple-formed type str
 	for index, replaceIndex := range emptyStrIndex {
 		segments[replaceIndex] = str[parenSegmentRecord[index].left : parenSegmentRecord[index].right+1]
 	}
@@ -405,7 +408,7 @@ func (v Value) Encode() ([]byte, error) {
 			}
 			elementEncoded, err := element.Encode()
 			if err != nil {
-				return []byte{}, nil
+				return []byte{}, err
 			}
 			staticArrayBytes = append(staticArrayBytes, elementEncoded...)
 		}
