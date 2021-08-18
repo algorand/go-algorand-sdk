@@ -609,21 +609,19 @@ func tupleEncoding(v Value) ([]byte, error) {
 				// search after bool
 				after := findBoolLR(v.valueType.childTypes, i, 1)
 				// append to heads and tails
-				if before%8 == 0 {
-					if after > 7 {
-						after = 7
-					}
-					tupleElems := v.value.([]Value)
-					compressed, err := compressMultipleBool(tupleElems[i : i+after+1])
-					if err != nil {
-						return []byte{}, err
-					}
-					heads = append(heads, []byte{compressed})
-					i += after
-				} else {
-					// seems like a branch never entered
-					heads = append(heads, nil)
+				if before%8 != 0 {
+					return []byte{}, fmt.Errorf("expected before has number of bool mod 8 = 0")
 				}
+				if after > 7 {
+					after = 7
+				}
+				tupleElems := v.value.([]Value)
+				compressed, err := compressMultipleBool(tupleElems[i : i+after+1])
+				if err != nil {
+					return []byte{}, err
+				}
+				heads = append(heads, []byte{compressed})
+				i += after
 				tails = append(tails, nil)
 			} else {
 				encodeTi, err := v.Encode()
