@@ -547,42 +547,29 @@ func (v Value) Encode() ([]byte, error) {
 	}
 }
 
-func findBoolBefore(typeList []Type, index int) int {
-	before := 0
-	for index-before >= 0 {
-		if typeList[index-before].typeFromEnum == Bool {
-			if index-before > 0 {
-				before++
+func findBoolLR(typeList []Type, index int, delta int) int {
+	until := 0
+	for index-until >= 0 && index+until < len(typeList) {
+		curr := index + delta*until
+		if typeList[curr].typeFromEnum == Bool {
+			if curr != len(typeList)-1 && curr > 0 {
+				until++
 			} else {
 				break
 			}
 		} else {
-			before--
+			until--
 			break
 		}
 	}
-	return before
-}
-
-func findBoolafter(typeList []Type, index int) int {
-	after := 0
-	for index+after < len(typeList) {
-		if typeList[index+after].typeFromEnum == Bool {
-			if index+after != len(typeList)-1 {
-				after++
-			} else {
-				break
-			}
-		} else {
-			after--
-			break
-		}
-	}
-	return after
+	return until
 }
 
 func compressMultipleBool(valueList []Value) (uint8, error) {
 	var res uint8 = 0
+	if len(valueList) > 8 {
+		return 0, fmt.Errorf("value list passed in should be less than length 8")
+	}
 	for i := 0; i < len(valueList); i++ {
 		if valueList[i].valueType.typeFromEnum != Bool {
 			return 0, fmt.Errorf("bool type not matching in compressMultipleBool")
@@ -603,11 +590,13 @@ func tupleEncoding(v Value) ([]byte, error) {
 		return []byte{}, fmt.Errorf("tupe not supported in tupleEncoding")
 	}
 	heads, tails := make([][]byte, len(v.valueType.childTypes)), make([][]byte, len(v.valueType.childTypes))
+	isDynamicIndex := make(map[int]bool)
 	for i := 0; i < len(v.valueType.childTypes); i++ {
 		switch v.valueType.childTypes[i].IsDynamic() {
 		case true:
 			headsPlaceholder := []byte{0x00, 0x00}
 			heads = append(heads, headsPlaceholder)
+			isDynamicIndex[len(heads)-1] = true
 			tailEncoding, err := v.Encode()
 			if err != nil {
 				return []byte{}, err
@@ -616,9 +605,9 @@ func tupleEncoding(v Value) ([]byte, error) {
 		case false:
 			if v.valueType.typeFromEnum == Bool {
 				// search previous bool
-				before := findBoolBefore(v.valueType.childTypes, i)
+				before := findBoolLR(v.valueType.childTypes, i, -1)
 				// search after bool
-				after := findBoolafter(v.valueType.childTypes, i)
+				after := findBoolLR(v.valueType.childTypes, i, 1)
 				// append to heads and tails
 				if before%8 == 0 {
 					if after > 7 {
@@ -632,6 +621,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 					heads = append(heads, []byte{compressed})
 					i += after
 				} else {
+					// seems like a branch never entered
 					heads = append(heads, nil)
 				}
 				tails = append(tails, nil)
@@ -643,6 +633,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 				heads = append(heads, encodeTi)
 				tails = append(tails, nil)
 			}
+			isDynamicIndex[len(heads)-1] = false
 		}
 	}
 
@@ -654,7 +645,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 
 	tailCurrLength := 0
 	for i := 0; i < len(heads); i++ {
-		if len(heads[i]) == 2 && binary.BigEndian.Uint16(heads[i]) == 0 {
+		if isDynamicIndex[i] {
 			headValue := headLength + tailCurrLength
 			binary.BigEndian.PutUint16(heads[i], uint16(headValue))
 		}
@@ -776,9 +767,9 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 			// if bool ...
 			if valueType.childTypes[i].typeFromEnum == Bool {
 				// search previous bool
-				before := findBoolBefore(valueType.childTypes, i)
+				before := findBoolLR(valueType.childTypes, i, -1)
 				// search after bool
-				after := findBoolafter(valueType.childTypes, i)
+				after := findBoolLR(valueType.childTypes, i, 1)
 				if before%8 == 0 {
 					if after > 7 {
 						after = 7
