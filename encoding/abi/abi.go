@@ -785,8 +785,8 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 					}
 					// parse bool in a byte to multiple byte strings
 					for boolIndex := 0; boolIndex <= after; boolIndex++ {
-						boolValue := valueBytes[iterIndex] & (1 << (7 - boolIndex))
-						if boolValue > 0 {
+						boolValue := valueBytes[iterIndex] << boolIndex
+						if boolValue >= 0x80 {
 							valuePartition = append(valuePartition, []byte{0x80})
 						} else {
 							valuePartition = append(valuePartition, []byte{0x00})
