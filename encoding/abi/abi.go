@@ -162,6 +162,49 @@ func (t Type) IsDynamic() bool {
 	}
 }
 
+func (t Type) byteLen() (int, error) {
+	switch t.typeFromEnum {
+	case Address:
+		return 32, nil
+	case Byte:
+		return 1, nil
+	case Uint, Ufixed:
+		return int(t.typeSize), nil
+	case Bool:
+		return 1, nil
+	case String:
+		return -1, fmt.Errorf("dynamic type")
+	case ArrayStatic:
+		if t.IsDynamic() {
+			return -1, fmt.Errorf("dynamic type")
+		} else {
+			elemByteLen, err := t.childTypes[0].byteLen()
+			if err != nil {
+				return -1, err
+			}
+			return int(t.staticLength) * elemByteLen, nil
+		}
+	case ArrayDynamic:
+		return -1, fmt.Errorf("dynamic type")
+	case Tuple:
+		if t.IsDynamic() {
+			return -1, fmt.Errorf("dynamic type")
+		} else {
+			size := 0
+			for _, childT := range t.childTypes {
+				childByteSize, err := childT.byteLen()
+				if err != nil {
+					return -1, err
+				}
+				size += childByteSize
+			}
+			return size, nil
+		}
+	default:
+		return -1, fmt.Errorf("bruh you should not be here")
+	}
+}
+
 // TypeFromString de-serialization
 func TypeFromString(str string) (Type, error) {
 	switch {
@@ -248,9 +291,9 @@ func TypeFromString(str string) (Type, error) {
 	}
 }
 
-func parseTupleContent(str string) ([]string, error) {
-	type segmentIndex struct{ left, right int }
+type segmentIndex struct{ left, right int }
 
+func parseTupleContent(str string) ([]string, error) {
 	parenSegmentRecord, stack := make([]segmentIndex, 0), make([]int, 0)
 	// get the most exterior parentheses segment (not overlapped by other parentheses)
 	// illustration: "*****,(*****),*****" => ["*****", "(*****)", "*****"]
@@ -660,10 +703,18 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		}
 		return MakeByte(valueByte[0]), nil
 	case ArrayStatic:
-		// TODO
-		return Value{}, nil
+		childT := make([]Type, valueType.staticLength)
+		for i := 0; i < int(valueType.staticLength); i++ {
+			childT[i] = valueType.childTypes[0]
+		}
+		converted := MakeTupleType(childT)
+		tupleDecoded, err := tupleDecoding(valueByte, converted)
+		if err != nil {
+			return Value{}, err
+		}
+		tupleDecoded.valueType = valueType
+		return tupleDecoded, nil
 	case Address:
-		// TODO
 		if len(valueByte) != 32 {
 			return Value{}, fmt.Errorf("address should be length 32")
 		}
@@ -671,26 +722,114 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 		copy(byteAssign[:], valueByte)
 		return MakeAddress(byteAssign), nil
 	case ArrayDynamic:
-		// TODO
-		return Value{}, nil
+		if len(valueByte) < 2 {
+			return Value{}, fmt.Errorf("dynamic array format corrupted")
+		}
+		dynamicLen := binary.BigEndian.Uint16(valueByte[:2])
+		childT := make([]Type, dynamicLen)
+		for i := 0; i < int(dynamicLen); i++ {
+			childT[i] = valueType.childTypes[0]
+		}
+		converted := MakeTupleType(childT)
+		tupleDecoded, err := tupleDecoding(valueByte, converted)
+		if err != nil {
+			return Value{}, err
+		}
+		tupleDecoded.valueType = valueType
+		return tupleDecoded, nil
 	case String:
-		// TODO
 		if len(valueByte) < 2 {
 			return Value{}, fmt.Errorf("string format corrupted")
 		}
 		stringLenBytes := valueByte[:2]
-		stringLen := binary.BigEndian.Uint16(stringLenBytes)
-		stringValue := string(valueByte[2:])
-		if len(stringValue) != int(stringLen) {
-			return Value{}, fmt.Errorf("string value do not match string length")
+		byteLen := binary.BigEndian.Uint16(stringLenBytes)
+		if len(valueByte[2:]) != int(byteLen) {
+			return Value{}, fmt.Errorf("string representation in byte: length not matching")
 		}
-		return MakeString(stringValue), nil
+		return MakeString(string(valueByte[2:])), nil
 	case Tuple:
-		// TODO
-		return Value{}, nil
+		return tupleDecoding(valueByte, valueType)
 	default:
 		return Value{}, fmt.Errorf("bruh you should not be here in decoding: unknown type error")
 	}
+}
+
+func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
+	dynamicSegments, valuePartition := make([]segmentIndex, 0), make([][]byte, 0)
+	iterIndex := 0
+	for i := 0; i < len(valueType.childTypes); i++ {
+		if valueType.childTypes[i].IsDynamic() {
+			if len(valueBytes[iterIndex:]) < 2 {
+				return Value{}, fmt.Errorf("ill formed tuple encoding")
+			}
+			dynamicIndex := binary.BigEndian.Uint16(valueBytes[iterIndex : iterIndex+2])
+			if len(dynamicSegments) > 0 {
+				dynamicSegments[len(dynamicSegments)-1].right = int(dynamicIndex) - 1
+			}
+			dynamicSegments = append(dynamicSegments, segmentIndex{
+				left:  int(dynamicIndex),
+				right: -1,
+			})
+			valuePartition = append(valuePartition, nil)
+			iterIndex += 2
+		} else {
+			// if bool ...
+			if valueType.childTypes[i].typeFromEnum == Bool {
+				// search previous bool
+				before := findBoolBefore(valueType.childTypes, i)
+				// search after bool
+				after := findBoolafter(valueType.childTypes, i)
+				if before%8 == 0 {
+					if after > 7 {
+						after = 7
+					}
+					// parse bool in a byte to multiple byte strings
+					for boolIndex := 0; boolIndex <= after; boolIndex++ {
+						boolValue := valueBytes[iterIndex] & (1 << (7 - boolIndex))
+						if boolValue > 0 {
+							valuePartition = append(valuePartition, []byte{0x80})
+						} else {
+							valuePartition = append(valuePartition, []byte{0x00})
+						}
+					}
+					i += after
+					iterIndex += 1
+				}
+			} else {
+				// not bool ...
+				currLen, err := valueType.childTypes[i].byteLen()
+				if err != nil {
+					return Value{}, nil
+				}
+				valuePartition = append(valuePartition, valueBytes[iterIndex:iterIndex+currLen])
+				iterIndex += currLen
+			}
+		}
+	}
+	if len(dynamicSegments) > 0 {
+		dynamicSegments[len(dynamicSegments)-1].right = len(valueBytes) - 1
+	}
+
+	segIndex := 0
+	for i := 0; i < len(valueType.childTypes); i++ {
+		if valuePartition[i] == nil {
+			valuePartition[i] = valueBytes[dynamicSegments[segIndex].left : dynamicSegments[segIndex].right+1]
+			segIndex++
+		}
+	}
+
+	values := make([]Value, 0)
+	for i := 0; i < len(valueType.childTypes); i++ {
+		valueTi, err := Decode(valuePartition[i], valueType.childTypes[i])
+		if err != nil {
+			return Value{}, err
+		}
+		values = append(values, valueTi)
+	}
+	return Value{
+		valueType: valueType,
+		value:     values,
+	}, nil
 }
 
 func MakeUint8(value uint8) (Value, error) {
