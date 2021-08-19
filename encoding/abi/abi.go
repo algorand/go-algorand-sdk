@@ -294,6 +294,9 @@ func TypeFromString(str string) (Type, error) {
 type segmentIndex struct{ left, right int }
 
 func parseTupleContent(str string) ([]string, error) {
+	// argument str is the content between parentheses of tuple, i.e.
+	// (...... str ......)
+	//  ^               ^
 	parenSegmentRecord, stack := make([]segmentIndex, 0), make([]int, 0)
 	// get the most exterior parentheses segment (not overlapped by other parentheses)
 	// illustration: "*****,(*****),*****" => ["*****", "(*****)", "*****"]
@@ -500,10 +503,14 @@ func (v Value) Encode() ([]byte, error) {
 	case Ufixed:
 		ufixedValue, err := GetUfixed(v)
 		if err != nil {
-			return []byte{}, nil
+			return []byte{}, err
 		}
 		buffer := make([]byte, v.valueType.typeSize/8)
-		return ufixedValue.Num().FillBytes(buffer), nil
+		denomSize := big.NewInt(1).Exp(big.NewInt(10), big.NewInt(int64(v.valueType.typePrecision)), nil)
+		denomRat := big.NewRat(1, 1).SetFrac(denomSize, big.NewInt(1))
+		numRat := denomRat.Mul(denomRat, ufixedValue)
+		numRat.Num().FillBytes(buffer)
+		return buffer, nil
 	case Bool:
 		boolValue, err := GetBool(v)
 		if err != nil {
@@ -543,7 +550,7 @@ func (v Value) Encode() ([]byte, error) {
 	case Tuple:
 		return tupleEncoding(v)
 	default:
-		return []byte{}, fmt.Errorf("bruh you should not be here in encoding")
+		return []byte{}, fmt.Errorf("bruh you should not be here in encoding: unknown type error")
 	}
 }
 
@@ -865,12 +872,13 @@ func MakeUfixed(value *big.Rat, size uint16, precision uint16) (Value, error) {
 		big.NewInt(10), big.NewInt(int64(precision)),
 		nil,
 	)
-	if value.Denom() != denomSize {
-		return Value{}, fmt.Errorf("ufixed precision size do not match")
+	numUpperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
+	ufixedLimit := big.NewRat(1, 1).SetFrac(numUpperLimit, denomSize)
+	if value.Denom().Cmp(denomSize) > 0 {
+		return Value{}, fmt.Errorf("value precision overflow")
 	}
-	numSize := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
-	if numSize.Cmp(value.Num()) <= 0 {
-		return Value{}, fmt.Errorf("numerator size overflow")
+	if value.Cmp(big.NewRat(0, 1)) < 0 || value.Cmp(ufixedLimit) >= 0 {
+		return Value{}, fmt.Errorf("ufixed value out of scope")
 	}
 	return Value{
 		valueType: ufixedValueType,
@@ -1017,8 +1025,12 @@ func GetUfixed(value Value) (*big.Rat, error) {
 		big.NewInt(10), big.NewInt(int64(value.valueType.typePrecision)),
 		nil,
 	)
-	if denomSize.Cmp(ufixedForm.Denom()) != 0 || numinatorSize.Cmp(ufixedForm.Num()) <= 0 {
-		return nil, fmt.Errorf("denominator size do not match, or numinator size overflow")
+	ufixedLimit := big.NewRat(1, 1).SetFrac(numinatorSize, denomSize)
+	if ufixedForm.Denom().Cmp(denomSize) > 0 {
+		return nil, fmt.Errorf("denominator size overflow")
+	}
+	if ufixedForm.Cmp(big.NewRat(0, 1)) < 0 || ufixedForm.Cmp(ufixedLimit) >= 0 {
+		return nil, fmt.Errorf("ufixed < 0 or ufixed larger than limit")
 	}
 	return ufixedForm, nil
 }
