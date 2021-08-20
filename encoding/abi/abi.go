@@ -598,17 +598,18 @@ func tupleEncoding(v Value) ([]byte, error) {
 	}
 	heads, tails := make([][]byte, len(v.valueType.childTypes)), make([][]byte, len(v.valueType.childTypes))
 	isDynamicIndex := make(map[int]bool)
+	tupleElems := v.value.([]Value)
 	for i := 0; i < len(v.valueType.childTypes); i++ {
 		switch v.valueType.childTypes[i].IsDynamic() {
 		case true:
 			headsPlaceholder := []byte{0x00, 0x00}
-			heads = append(heads, headsPlaceholder)
-			isDynamicIndex[len(heads)-1] = true
-			tailEncoding, err := v.Encode()
+			heads[i] = headsPlaceholder
+			isDynamicIndex[i] = true
+			tailEncoding, err := tupleElems[i].Encode()
 			if err != nil {
 				return []byte{}, err
 			}
-			tails = append(tails, tailEncoding)
+			tails[i] = tailEncoding
 		case false:
 			if v.valueType.typeFromEnum == Bool {
 				// search previous bool
@@ -622,23 +623,22 @@ func tupleEncoding(v Value) ([]byte, error) {
 				if after > 7 {
 					after = 7
 				}
-				tupleElems := v.value.([]Value)
 				compressed, err := compressMultipleBool(tupleElems[i : i+after+1])
 				if err != nil {
 					return []byte{}, err
 				}
-				heads = append(heads, []byte{compressed})
+				heads[i] = []byte{compressed}
 				i += after
-				tails = append(tails, nil)
+				tails[i] = nil
 			} else {
-				encodeTi, err := v.Encode()
+				encodeTi, err := tupleElems[i].Encode()
 				if err != nil {
 					return []byte{}, err
 				}
-				heads = append(heads, encodeTi)
-				tails = append(tails, nil)
+				heads[i] = encodeTi
+				tails[i] = nil
 			}
-			isDynamicIndex[len(heads)-1] = false
+			isDynamicIndex[i] = false
 		}
 	}
 

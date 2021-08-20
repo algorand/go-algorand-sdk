@@ -45,6 +45,23 @@ func TestEncodeValid(t *testing.T) {
 			}
 		}
 	}
+
+	upperLimit := big.NewInt(0).Lsh(big.NewInt(1), 256)
+	for i := 0; i < 1000; i++ {
+		randomAddrInt, err := rand.Int(rand.Reader, upperLimit)
+		require.NoError(t, err, "cryptographic random int init fail")
+
+		address := make([]byte, 32)
+		randomAddrInt.FillBytes(address)
+
+		var addrBytes [32]byte
+		copy(addrBytes[:], address[:32])
+
+		addressValue := MakeAddress(addrBytes)
+		addrEncode, err := addressValue.Encode()
+		require.NoError(t, err, "address encode fail")
+		require.Equal(t, address, addrEncode, "encode addr not match with expected")
+	}
 }
 
 func TestEncodeInvalid(t *testing.T) {
