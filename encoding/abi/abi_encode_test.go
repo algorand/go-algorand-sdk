@@ -2,11 +2,16 @@ package abi
 
 import (
 	"crypto/rand"
+	"encoding/binary"
+	"fmt"
 	"math/big"
 	"testing"
 
+	"github.com/chrismcguire/gobberish"
 	"github.com/stretchr/testify/require"
 )
+
+// test with go test -cover -v
 
 func TestEncodeValid(t *testing.T) {
 	for intSize := 8; intSize <= 512; intSize += 8 {
@@ -82,9 +87,38 @@ func TestEncodeValid(t *testing.T) {
 		require.Equal(t, expected, byteEncode, "encode byte not match with expected")
 	}
 
-	// string test
-	for length := 1; length <= 1000; length++ {
+	for length := 1; length <= 10; length++ {
+		for i := 0; i < 10; i++ {
+			utf8Str := gobberish.GenerateString(length)
+			strValue := MakeString(utf8Str)
+			utf8ByteLen := len([]byte(utf8Str))
+			head := make([]byte, 2)
+			binary.BigEndian.PutUint16(head, uint16(utf8ByteLen))
+			expected := append(head, []byte(utf8Str)...)
+			strEncode, err := strValue.Encode()
+			require.NoError(t, err, "string encode fail")
+			require.Equal(t, expected, strEncode, "encode string not match with expected")
+		}
+	}
 
+	var testcases = []struct {
+		input          []Value
+		childT         []Type
+		testType       string
+		valueConstruct func([]Value, interface{}) (Value, error)
+		expected       []byte
+	}{
+		// array static
+
+		// array dynamic
+
+		// tuple
+	}
+
+	for _, testcase := range testcases {
+		t.Run(fmt.Sprintf("test %s", testcase.testType), func(t *testing.T) {
+
+		})
 	}
 }
 
