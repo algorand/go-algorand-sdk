@@ -658,7 +658,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 	}
 
 	head, tail := make([]byte, 0), make([]byte, 0)
-	for i := 0; i < len(heads); i++ {
+	for i := 0; i < len(v.valueType.childTypes); i++ {
 		head = append(head, heads[i]...)
 		tail = append(tail, tails[i]...)
 	}

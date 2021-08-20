@@ -62,6 +62,30 @@ func TestEncodeValid(t *testing.T) {
 		require.NoError(t, err, "address encode fail")
 		require.Equal(t, address, addrEncode, "encode addr not match with expected")
 	}
+
+	for i := 0; i < 2; i++ {
+		boolValue := MakeBool(i == 1)
+		boolEncode, err := boolValue.Encode()
+		require.NoError(t, err, "bool encode fail")
+		expected := []byte{0x00}
+		if i == 1 {
+			expected = []byte{0x80}
+		}
+		require.Equal(t, expected, boolEncode, "encode bool not match with expected")
+	}
+
+	for i := 0; i < (1 << 8); i++ {
+		byteValue := MakeByte(byte(i))
+		byteEncode, err := byteValue.Encode()
+		require.NoError(t, err, "byte encode fail")
+		expected := []byte{byte(i)}
+		require.Equal(t, expected, byteEncode, "encode byte not match with expected")
+	}
+
+	// string test
+	for length := 1; length <= 1000; length++ {
+
+	}
 }
 
 func TestEncodeInvalid(t *testing.T) {
