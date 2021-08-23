@@ -476,18 +476,22 @@ func (v Value) Encode() ([]byte, error) {
 		if err != nil {
 			return []byte{}, err
 		}
-		buffer := make([]byte, v.valueType.typeSize/8)
-		return bigIntValue.FillBytes(buffer), nil
+		bigIntBytes := bigIntValue.Bytes()
+		buffer := make([]byte, v.valueType.typeSize/8-uint16(len(bigIntBytes)))
+		buffer = append(buffer, bigIntBytes...)
+		return buffer, nil
 	case Ufixed:
 		ufixedValue, err := GetUfixed(v)
 		if err != nil {
 			return []byte{}, err
 		}
-		buffer := make([]byte, v.valueType.typeSize/8)
 		denomSize := big.NewInt(1).Exp(big.NewInt(10), big.NewInt(int64(v.valueType.typePrecision)), nil)
 		denomRat := big.NewRat(1, 1).SetFrac(denomSize, big.NewInt(1))
 		numRat := denomRat.Mul(denomRat, ufixedValue)
-		numRat.Num().FillBytes(buffer)
+		encodeVal := numRat.Num()
+		encodeBuffer := encodeVal.Bytes()
+		buffer := make([]byte, v.valueType.typeSize/8-uint16(len(encodeBuffer)))
+		buffer = append(buffer, encodeBuffer...)
 		return buffer, nil
 	case Bool:
 		boolValue, err := GetBool(v)
@@ -564,7 +568,7 @@ func compressMultipleBool(valueList []Value) (uint8, error) {
 			return 0, err
 		}
 		if boolVal {
-			res |= 1 << (7 - i)
+			res |= 1 << uint(7-i)
 		}
 	}
 	return res, nil
@@ -758,7 +762,7 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 						after = 7
 					}
 					// parse bool in a byte to multiple byte strings
-					for boolIndex := 0; boolIndex <= after; boolIndex++ {
+					for boolIndex := uint(0); boolIndex <= uint(after); boolIndex++ {
 						boolValue := valueBytes[iterIndex] << boolIndex
 						if boolValue >= 0x80 {
 							valuePartition = append(valuePartition, []byte{0x80})
