@@ -359,11 +359,11 @@ func (t Type) Equal(t0 Type) bool {
 
 func (t Type) IsDynamic() bool {
 	switch t.typeFromEnum {
-	case Address, Byte, Uint, Ufixed, Bool, String:
+	case Address, Byte, Uint, Ufixed, Bool:
 		return false
 	case ArrayStatic:
 		return t.childTypes[0].IsDynamic()
-	case ArrayDynamic:
+	case ArrayDynamic, String:
 		return true
 	case Tuple:
 		for _, childT := range t.childTypes {

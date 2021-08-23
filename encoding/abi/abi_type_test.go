@@ -397,11 +397,11 @@ func generateTupleType(baseTypes []Type, tupleTypes []Type) Type {
 	}
 	tupleLen := 0
 	for tupleLen == 0 {
-		tupleLen = rand.Intn(10)
+		tupleLen = rand.Intn(20)
 	}
 	resultTypes := make([]Type, tupleLen)
 	for i := 0; i < tupleLen; i++ {
-		baseOrTuple := rand.Intn(10)
+		baseOrTuple := rand.Intn(5)
 		if baseOrTuple == 1 && len(tupleTypes) > 0 {
 			resultTypes[i] = tupleTypes[rand.Intn(len(tupleTypes))]
 		} else {
