@@ -23,8 +23,9 @@ func TestEncodeValid(t *testing.T) {
 			require.NoError(t, err, "makeUint Fail")
 			encodedUint, err := valueUint.Encode()
 			require.NoError(t, err, "uint encode fail")
-			buffer := make([]byte, intSize/8)
-			randomInt.FillBytes(buffer)
+			randomIntByte := randomInt.Bytes()
+			buffer := make([]byte, intSize/8-len(randomIntByte))
+			buffer = append(buffer, randomIntByte...)
 			require.Equal(t, buffer, encodedUint, "encode uint not match with expected")
 		}
 	}
@@ -44,8 +45,9 @@ func TestEncodeValid(t *testing.T) {
 				encodedUfixed, err := valueUfixed.Encode()
 				require.NoError(t, err, "ufixed encode fail")
 
-				buffer := make([]byte, size/8)
-				randomInt.FillBytes(buffer)
+				randomBytes := randomInt.Bytes()
+				buffer := make([]byte, size/8-len(randomBytes))
+				buffer = append(buffer, randomBytes...)
 				require.Equal(t, buffer, encodedUfixed, "encode ufixed not match with expected")
 			}
 		}
@@ -56,8 +58,9 @@ func TestEncodeValid(t *testing.T) {
 		randomAddrInt, err := rand.Int(rand.Reader, upperLimit)
 		require.NoError(t, err, "cryptographic random int init fail")
 
-		address := make([]byte, 32)
-		randomAddrInt.FillBytes(address)
+		addressBytes := randomAddrInt.Bytes()
+		address := make([]byte, 32-len(addressBytes))
+		address = append(address, addressBytes...)
 
 		var addrBytes [32]byte
 		copy(addrBytes[:], address[:32])
