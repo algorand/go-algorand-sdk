@@ -378,7 +378,12 @@ func TestTypeFromStringInvalid(t *testing.T) {
 		"byte[10 ]",
 		"uint64[0x21]",
 		// tuple
+		"(ufixed128x10))",
+		"(,uint128,byte[])",
+		"(address,ufixed64x5,)",
+		"(byte[16],somethingwrong)",
 		"()",
+		"(                )",
 		"((uint32)",
 		"(byte,,byte)",
 		"((byte),,(byte))",

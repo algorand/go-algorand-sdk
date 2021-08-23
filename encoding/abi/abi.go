@@ -151,11 +151,12 @@ func TypeFromString(str string) (Type, error) {
 	case str == "string":
 		return MakeStringType(), nil
 	case len(str) > 2 && str[0] == '(' && str[len(str)-1] == ')':
-		tupleContent, err := parseTupleContent(strings.TrimSpace(str[1 : len(str)-1]))
+		if strings.Contains(str[1:len(str)-1], " ") {
+			return Type{}, fmt.Errorf("tuple should not contain space")
+		}
+		tupleContent, err := parseTupleContent(str[1 : len(str)-1])
 		if err != nil {
 			return Type{}, err
-		} else if len(tupleContent) == 0 {
-			return Type{}, fmt.Errorf("tuple type has no argument types")
 		}
 		tupleTypes := make([]Type, len(tupleContent))
 		for i := 0; i < len(tupleContent); i++ {
@@ -308,8 +309,6 @@ func MakeTupleType(argumentTypes []Type) Type {
 func (t Type) Equal(t0 Type) bool {
 	// assume t and t0 are well-formed
 	switch t.typeFromEnum {
-	case Byte, Bool, Address, String:
-		return t.typeFromEnum == t0.typeFromEnum
 	case Uint:
 		return t.typeFromEnum == t0.typeFromEnum && t.typeSize == t0.typeSize
 	case Ufixed:
@@ -353,14 +352,12 @@ func (t Type) Equal(t0 Type) bool {
 			return true
 		}
 	default:
-		return false
+		return t.typeFromEnum == t0.typeFromEnum
 	}
 }
 
 func (t Type) IsDynamic() bool {
 	switch t.typeFromEnum {
-	case Address, Byte, Uint, Ufixed, Bool:
-		return false
 	case ArrayStatic:
 		return t.childTypes[0].IsDynamic()
 	case ArrayDynamic, String:
