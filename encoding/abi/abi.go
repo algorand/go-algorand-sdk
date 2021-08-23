@@ -36,11 +36,6 @@ const (
 	Tuple
 )
 
-// Need a struct which represents an ABI type. In the case of tuples and arrays,
-// a type may have "children" types as well
-// - Need a method to convert this to a string, e.g. (uint64,byte[]) for a tuple
-// - Need a function to parse such a string back to this struct
-
 type Type struct {
 	typeFromEnum BaseType
 	childTypes   []Type
@@ -87,121 +82,6 @@ func (t Type) String() string {
 		return "(" + strings.Join(typeStrings, ",") + ")"
 	default:
 		return "Bruh you should not be here"
-	}
-}
-
-func (t Type) Equal(t0 Type) bool {
-	// assume t and t0 are well-formed
-	switch t.typeFromEnum {
-	case Byte, Bool, Address, String:
-		return t.typeFromEnum == t0.typeFromEnum
-	case Uint:
-		return t.typeFromEnum == t0.typeFromEnum && t.typeSize == t0.typeSize
-	case Ufixed:
-		if t0.typeFromEnum != Ufixed {
-			return false
-		} else if t0.typePrecision != t.typePrecision || t0.typeSize != t.typeSize {
-			return false
-		} else {
-			return true
-		}
-	case ArrayStatic:
-		if t0.typeFromEnum != ArrayStatic {
-			return false
-		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
-			return false
-		} else if t.staticLength != t0.staticLength {
-			return false
-		} else {
-			return t.childTypes[0].Equal(t0.childTypes[0])
-		}
-	case ArrayDynamic:
-		if t0.typeFromEnum != ArrayStatic {
-			return false
-		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
-			return false
-		} else {
-			return t.childTypes[0].Equal(t0.childTypes[0])
-		}
-	case Tuple:
-		if t0.typeFromEnum != Tuple {
-			return false
-		} else if t.staticLength != t0.staticLength || int(t.staticLength) != len(t0.childTypes) {
-			return false
-		} else {
-			for i := 0; i < int(t.staticLength); i++ {
-				compRes := t.childTypes[i].Equal(t0.childTypes[i])
-				if !compRes {
-					return false
-				}
-			}
-			return true
-		}
-	default:
-		return false
-	}
-}
-
-func (t Type) IsDynamic() bool {
-	switch t.typeFromEnum {
-	case Address, Byte, Uint, Ufixed, Bool, String:
-		return false
-	case ArrayStatic:
-		return t.childTypes[0].IsDynamic()
-	case ArrayDynamic:
-		return true
-	case Tuple:
-		for _, childT := range t.childTypes {
-			if childT.IsDynamic() {
-				return true
-			}
-		}
-		return false
-	default:
-		return false
-	}
-}
-
-func (t Type) byteLen() (int, error) {
-	switch t.typeFromEnum {
-	case Address:
-		return 32, nil
-	case Byte:
-		return 1, nil
-	case Uint, Ufixed:
-		return int(t.typeSize), nil
-	case Bool:
-		return 1, nil
-	case String:
-		return -1, fmt.Errorf("dynamic type")
-	case ArrayStatic:
-		if t.IsDynamic() {
-			return -1, fmt.Errorf("dynamic type")
-		} else {
-			elemByteLen, err := t.childTypes[0].byteLen()
-			if err != nil {
-				return -1, err
-			}
-			return int(t.staticLength) * elemByteLen, nil
-		}
-	case ArrayDynamic:
-		return -1, fmt.Errorf("dynamic type")
-	case Tuple:
-		if t.IsDynamic() {
-			return -1, fmt.Errorf("dynamic type")
-		} else {
-			size := 0
-			for _, childT := range t.childTypes {
-				childByteSize, err := childT.byteLen()
-				if err != nil {
-					return -1, err
-				}
-				size += childByteSize
-			}
-			return size, nil
-		}
-	default:
-		return -1, fmt.Errorf("bruh you should not be here")
 	}
 }
 
@@ -425,14 +305,120 @@ func MakeTupleType(argumentTypes []Type) Type {
 	}
 }
 
-// Need a struct which represents an ABI value. This struct would probably
-// contain the ABI type struct and an interface{} for its value(s)
-// - Need a way to encode this struct to bytes
-// - Need a way to decode bytes into this struct
-// - Need a way for the user to create and populate this struct
-//    - This encompasses two cases: creating Values from golang values, and
-//		modifying existing Value structs. For now creating is more important.
-// - Need a way for the user to get specific values from this struct
+func (t Type) Equal(t0 Type) bool {
+	// assume t and t0 are well-formed
+	switch t.typeFromEnum {
+	case Byte, Bool, Address, String:
+		return t.typeFromEnum == t0.typeFromEnum
+	case Uint:
+		return t.typeFromEnum == t0.typeFromEnum && t.typeSize == t0.typeSize
+	case Ufixed:
+		if t0.typeFromEnum != Ufixed {
+			return false
+		} else if t0.typePrecision != t.typePrecision || t0.typeSize != t.typeSize {
+			return false
+		} else {
+			return true
+		}
+	case ArrayStatic:
+		if t0.typeFromEnum != ArrayStatic {
+			return false
+		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
+			return false
+		} else if t.staticLength != t0.staticLength {
+			return false
+		} else {
+			return t.childTypes[0].Equal(t0.childTypes[0])
+		}
+	case ArrayDynamic:
+		if t0.typeFromEnum != ArrayDynamic {
+			return false
+		} else if len(t.childTypes) != len(t0.childTypes) || len(t0.childTypes) != 1 {
+			return false
+		} else {
+			return t.childTypes[0].Equal(t0.childTypes[0])
+		}
+	case Tuple:
+		if t0.typeFromEnum != Tuple {
+			return false
+		} else if t.staticLength != t0.staticLength || int(t.staticLength) != len(t0.childTypes) {
+			return false
+		} else {
+			for i := 0; i < int(t.staticLength); i++ {
+				compRes := t.childTypes[i].Equal(t0.childTypes[i])
+				if !compRes {
+					return false
+				}
+			}
+			return true
+		}
+	default:
+		return false
+	}
+}
+
+func (t Type) IsDynamic() bool {
+	switch t.typeFromEnum {
+	case Address, Byte, Uint, Ufixed, Bool, String:
+		return false
+	case ArrayStatic:
+		return t.childTypes[0].IsDynamic()
+	case ArrayDynamic:
+		return true
+	case Tuple:
+		for _, childT := range t.childTypes {
+			if childT.IsDynamic() {
+				return true
+			}
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+func (t Type) byteLen() (int, error) {
+	switch t.typeFromEnum {
+	case Address:
+		return 32, nil
+	case Byte:
+		return 1, nil
+	case Uint, Ufixed:
+		return int(t.typeSize), nil
+	case Bool:
+		return 1, nil
+	case String:
+		return -1, fmt.Errorf("dynamic type")
+	case ArrayStatic:
+		if t.IsDynamic() {
+			return -1, fmt.Errorf("dynamic type")
+		} else {
+			elemByteLen, err := t.childTypes[0].byteLen()
+			if err != nil {
+				return -1, err
+			}
+			return int(t.staticLength) * elemByteLen, nil
+		}
+	case ArrayDynamic:
+		return -1, fmt.Errorf("dynamic type")
+	case Tuple:
+		if t.IsDynamic() {
+			return -1, fmt.Errorf("dynamic type")
+		} else {
+			size := 0
+			for _, childT := range t.childTypes {
+				childByteSize, err := childT.byteLen()
+				if err != nil {
+					return -1, err
+				}
+				size += childByteSize
+			}
+			return size, nil
+		}
+	default:
+		return -1, fmt.Errorf("bruh you should not be here")
+	}
+}
 
 type Value struct {
 	valueType Type

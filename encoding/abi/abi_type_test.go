@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -386,5 +388,100 @@ func TestTypeFromStringInvalid(t *testing.T) {
 			_, err := TypeFromString(testcase)
 			require.Error(t, err, "%s should throw error", testcase)
 		})
+	}
+}
+
+func generateTupleType(baseTypes []Type, tupleTypes []Type) Type {
+	if len(baseTypes) == 0 && len(tupleTypes) == 0 {
+		panic("should not pass all nil arrays into generateTupleType")
+	}
+	tupleLen := 0
+	for tupleLen == 0 {
+		tupleLen = rand.Intn(10)
+	}
+	resultTypes := make([]Type, tupleLen)
+	for i := 0; i < tupleLen; i++ {
+		baseOrTuple := rand.Intn(10)
+		if baseOrTuple == 1 && len(tupleTypes) > 0 {
+			resultTypes[i] = tupleTypes[rand.Intn(len(tupleTypes))]
+		} else {
+			resultTypes[i] = baseTypes[rand.Intn(len(baseTypes))]
+		}
+	}
+	return MakeTupleType(resultTypes)
+}
+
+func TestTypeEqualIsDynamic(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+
+	var testpool = []Type{
+		MakeBoolType(),
+		MakeAddressType(),
+		MakeStringType(),
+		MakeByteType(),
+	}
+	for i := 8; i <= 512; i += 8 {
+		uintT, err := MakeUintType(uint16(i))
+		require.NoError(t, err, "make uint type error")
+		testpool = append(testpool, uintT)
+	}
+	for i := 8; i <= 512; i += 8 {
+		for j := 1; j <= 160; j++ {
+			ufixedT, err := MakeUFixedType(uint16(i), uint16(j))
+			require.NoError(t, err, "make ufixed type error")
+			testpool = append(testpool, ufixedT)
+		}
+	}
+	for _, testcase := range testpool {
+		testpool = append(testpool, MakeDynamicArrayType(testcase))
+		testpool = append(testpool, MakeStaticArrayType(testcase, 10))
+		testpool = append(testpool, MakeStaticArrayType(testcase, 20))
+	}
+
+	for _, testcase := range testpool {
+		require.True(t, testcase.Equal(testcase), "test type self equal error")
+	}
+	baseTestCount := 0
+	for baseTestCount < 1000 {
+		index0 := rand.Intn(len(testpool))
+		index1 := rand.Intn(len(testpool))
+		if index0 == index1 {
+			continue
+		}
+		require.False(t, testpool[index0].Equal(testpool[index1]),
+			"test type not equal error\n%s\n%s",
+			testpool[index0].String(), testpool[index1].String())
+		baseTestCount++
+	}
+
+	testpoolTuple := make([]Type, 0)
+	for i := 0; i < 1000; i++ {
+		testpoolTuple = append(testpoolTuple, generateTupleType(testpool, testpoolTuple))
+	}
+	for _, testcaseTuple := range testpoolTuple {
+		require.True(t, testcaseTuple.Equal(testcaseTuple), "test type tuple equal error")
+	}
+
+	tupleTestCount := 0
+	for tupleTestCount < 1000 {
+		index0 := rand.Intn(len(testpoolTuple))
+		index1 := rand.Intn(len(testpoolTuple))
+		if testpoolTuple[index0].String() == testpoolTuple[index1].String() {
+			continue
+		}
+		require.False(t, testpoolTuple[index0].Equal(testpoolTuple[index1]),
+			"test type tuple not equal error\n%s\n%s",
+			testpoolTuple[index0].String(), testpoolTuple[index1].String())
+		tupleTestCount++
+	}
+
+	testpool = append(testpool, testpoolTuple...)
+	isDynamicCount := 0
+	for isDynamicCount < 1000 {
+		index := rand.Intn(len(testpool))
+		isDynamic := strings.Contains(testpool[index].String(), "[]")
+		require.Equal(t, isDynamic, testpool[index].IsDynamic(),
+			"test type isDynamic error\n%s", testpool[index].String())
+		isDynamicCount++
 	}
 }
