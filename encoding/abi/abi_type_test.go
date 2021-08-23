@@ -411,7 +411,7 @@ func generateTupleType(baseTypes []Type, tupleTypes []Type) Type {
 	return MakeTupleType(resultTypes)
 }
 
-func TestTypeEqualIsDynamic(t *testing.T) {
+func TestTypeMISC(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
 	var testpool = []Type{
@@ -483,5 +483,34 @@ func TestTypeEqualIsDynamic(t *testing.T) {
 		require.Equal(t, isDynamic, testpool[index].IsDynamic(),
 			"test type isDynamic error\n%s", testpool[index].String())
 		isDynamicCount++
+	}
+
+	byteLenTestCount := 0
+	for byteLenTestCount < 1000 {
+		index := rand.Intn(len(testpool))
+		testType := testpool[index]
+		byteLen, err := testType.ByteLen()
+		if testType.IsDynamic() {
+			require.Error(t, err, "byteLen test error on %s dynamic type, should have error",
+				testType.String())
+		} else {
+			if testType.typeFromEnum == Tuple {
+				sizeSum := 0
+				for _, childT := range testType.childTypes {
+					childSize, err := childT.ByteLen()
+					require.NoError(t, err, "valid tuple child type should not return error: %s", childT.String())
+					sizeSum += childSize
+				}
+				require.Equal(t, sizeSum, byteLen,
+					"%s do not match calculated byte length %d", testType.String(), sizeSum)
+			} else if testType.typeFromEnum == ArrayStatic {
+				childSize, err := testType.childTypes[0].ByteLen()
+				require.NoError(t, err, "%s should not return error", testType.childTypes[0].String())
+				expected := childSize * int(testType.staticLength)
+				require.Equal(t, expected, byteLen,
+					"%s do not match calculated byte length %d", testType.String(), expected)
+			}
+		}
+		byteLenTestCount++
 	}
 }

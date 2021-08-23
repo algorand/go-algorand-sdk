@@ -377,7 +377,11 @@ func (t Type) IsDynamic() bool {
 	}
 }
 
-func (t Type) byteLen() (int, error) {
+func (t Type) ByteLen() (int, error) {
+	if t.IsDynamic() {
+		return -1, fmt.Errorf("dynamic type")
+	}
+
 	switch t.typeFromEnum {
 	case Address:
 		return 32, nil
@@ -387,34 +391,22 @@ func (t Type) byteLen() (int, error) {
 		return int(t.typeSize), nil
 	case Bool:
 		return 1, nil
-	case String:
-		return -1, fmt.Errorf("dynamic type")
 	case ArrayStatic:
-		if t.IsDynamic() {
-			return -1, fmt.Errorf("dynamic type")
-		} else {
-			elemByteLen, err := t.childTypes[0].byteLen()
+		elemByteLen, err := t.childTypes[0].ByteLen()
+		if err != nil {
+			return -1, err
+		}
+		return int(t.staticLength) * elemByteLen, nil
+	case Tuple:
+		size := 0
+		for _, childT := range t.childTypes {
+			childByteSize, err := childT.ByteLen()
 			if err != nil {
 				return -1, err
 			}
-			return int(t.staticLength) * elemByteLen, nil
+			size += childByteSize
 		}
-	case ArrayDynamic:
-		return -1, fmt.Errorf("dynamic type")
-	case Tuple:
-		if t.IsDynamic() {
-			return -1, fmt.Errorf("dynamic type")
-		} else {
-			size := 0
-			for _, childT := range t.childTypes {
-				childByteSize, err := childT.byteLen()
-				if err != nil {
-					return -1, err
-				}
-				size += childByteSize
-			}
-			return size, nil
-		}
+		return size, nil
 	default:
 		return -1, fmt.Errorf("bruh you should not be here")
 	}
@@ -779,7 +771,7 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 				}
 			} else {
 				// not bool ...
-				currLen, err := valueType.childTypes[i].byteLen()
+				currLen, err := valueType.childTypes[i].ByteLen()
 				if err != nil {
 					return Value{}, nil
 				}
