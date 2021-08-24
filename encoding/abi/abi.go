@@ -444,7 +444,7 @@ func (v Value) arrayToTuple() (Value, error) {
 		// wonder if we can just put v.value inside the tuple value
 		childT = make([]Type, v.valueType.staticLength)
 		for i := 0; i < int(v.valueType.staticLength); i++ {
-			childT[i] = v.valueType
+			childT[i] = v.valueType.childTypes[0]
 		}
 		valueArr = v.value.([]Value)
 	case ArrayDynamic:
@@ -535,10 +535,12 @@ func (v Value) Encode() ([]byte, error) {
 
 func findBoolLR(typeList []Type, index int, delta int) int {
 	until := 0
-	for index-until >= 0 && index+until < len(typeList) {
+	for true {
 		curr := index + delta*until
 		if typeList[curr].typeFromEnum == Bool {
-			if curr != len(typeList)-1 && curr > 0 {
+			if curr != len(typeList) - 1 && delta > 0 {
+				until++
+			} else if curr > 0 && delta < 0 {
 				until++
 			} else {
 				break
@@ -579,7 +581,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 	isDynamicIndex := make(map[int]bool)
 	tupleElems := v.value.([]Value)
 	for i := 0; i < len(v.valueType.childTypes); i++ {
-		switch v.valueType.childTypes[i].IsDynamic() {
+		switch tupleElems[i].valueType.IsDynamic() {
 		case true:
 			headsPlaceholder := []byte{0x00, 0x00}
 			heads[i] = headsPlaceholder
@@ -590,7 +592,7 @@ func tupleEncoding(v Value) ([]byte, error) {
 			}
 			tails[i] = tailEncoding
 		case false:
-			if v.valueType.typeFromEnum == Bool {
+			if tupleElems[i].valueType.typeFromEnum == Bool {
 				// search previous bool
 				before := findBoolLR(v.valueType.childTypes, i, -1)
 				// search after bool

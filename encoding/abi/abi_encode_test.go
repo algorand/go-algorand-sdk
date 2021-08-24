@@ -3,7 +3,6 @@ package abi
 import (
 	"crypto/rand"
 	"encoding/binary"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -102,25 +101,33 @@ func TestEncodeValid(t *testing.T) {
 		}
 	}
 
-	var testcases = []struct {
-		input          []Value
-		childT         []Type
-		testType       string
-		valueConstruct func([]Value, interface{}) (Value, error)
-		expected       []byte
-	}{
-		// array static
+	t.Run("static array on bool", func(t *testing.T) {
+		inputBase := []bool{true, false, false, true, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected := []byte{byte(0b10011000)}
+		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make static array should not return error")
+		boolArrEncode, err := boolArr.Encode()
+		require.NoError(t, err, "static bool array should not return error")
+		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
+	})
 
-		// array dynamic
-
-		// tuple
-	}
-
-	for _, testcase := range testcases {
-		t.Run(fmt.Sprintf("test %s", testcase.testType), func(t *testing.T) {
-
-		})
-	}
+	t.Run("static array on bool", func(t *testing.T) {
+		inputBase := []bool{false, false, false, true, true, false, true, false, true, false, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected := []byte{byte(0b00011010), byte(0b10100000)}
+		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make static array should not return error")
+		boolArrEncode, err := boolArr.Encode()
+		require.NoError(t, err, "static bool array should not return error")
+		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
+	})
 }
 
 func TestEncodeInvalid(t *testing.T) {

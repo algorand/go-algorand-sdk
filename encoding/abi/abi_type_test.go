@@ -490,6 +490,16 @@ func TestTypeMISC(t *testing.T) {
 		isDynamicCount++
 	}
 
+	addressByteLen, err := MakeAddressType().ByteLen()
+	require.NoError(t, err, "address type bytelen should not return error")
+	require.Equal(t, 32, addressByteLen, "address type bytelen should be 32")
+	byteByteLen, err := MakeByteType().ByteLen()
+	require.NoError(t, err, "byte type bytelen should not return error")
+	require.Equal(t, 1, byteByteLen, "byte type bytelen should be 1")
+	boolByteLen, err := MakeBoolType().ByteLen()
+	require.NoError(t, err, "bool type bytelen should be 1")
+	require.Equal(t, 1, boolByteLen, "bool type bytelen should be 1")
+
 	byteLenTestCount := 0
 	for byteLenTestCount < 1000 {
 		index := rand.Intn(len(testpool))
