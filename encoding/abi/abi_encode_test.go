@@ -101,13 +101,15 @@ func TestEncodeValid(t *testing.T) {
 		}
 	}
 
-	t.Run("static array on bool", func(t *testing.T) {
+	t.Run("static bool array encoding", func(t *testing.T) {
 		inputBase := []bool{true, false, false, true, true}
 		arrayElems := make([]Value, len(inputBase))
 		for index, bVal := range inputBase {
 			arrayElems[index] = MakeBool(bVal)
 		}
-		expected := []byte{byte(0b10011000)}
+		expected := []byte{
+			byte(0b10011000),
+		}
 		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make static array should not return error")
 		boolArrEncode, err := boolArr.Encode()
@@ -115,18 +117,40 @@ func TestEncodeValid(t *testing.T) {
 		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
 	})
 
-	t.Run("static array on bool", func(t *testing.T) {
+	t.Run("static bool array encoding", func(t *testing.T) {
 		inputBase := []bool{false, false, false, true, true, false, true, false, true, false, true}
 		arrayElems := make([]Value, len(inputBase))
 		for index, bVal := range inputBase {
 			arrayElems[index] = MakeBool(bVal)
 		}
-		expected := []byte{byte(0b00011010), byte(0b10100000)}
+		expected := []byte{
+			byte(0b00011010),
+			byte(0b10100000),
+		}
 		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make static array should not return error")
 		boolArrEncode, err := boolArr.Encode()
 		require.NoError(t, err, "static bool array should not return error")
 		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
+	})
+
+	t.Run("dynamic bool array encoding", func(t *testing.T) {
+		inputBase := []bool{false, true, false, true, false, true, false, true, false, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected := []byte{
+			byte(0x00),
+			byte(0x0A),
+			byte(0b01010101),
+			byte(0b01000000),
+		}
+		boolArr, err := MakeDynamicArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make dynamic array should not return error")
+		boolArrEncode, err := boolArr.Encode()
+		require.NoError(t, err, "dynamic bool array should not return error")
+		require.Equal(t, expected, boolArrEncode, "dynamic bool array encode not match expected")
 	})
 }
 

@@ -441,18 +441,16 @@ func (v Value) arrayToTuple() (Value, error) {
 			valueArr[i] = MakeByte(addr[i])
 		}
 	case ArrayStatic:
-		// wonder if we can just put v.value inside the tuple value
 		childT = make([]Type, v.valueType.staticLength)
 		for i := 0; i < int(v.valueType.staticLength); i++ {
 			childT[i] = v.valueType.childTypes[0]
 		}
 		valueArr = v.value.([]Value)
 	case ArrayDynamic:
-		// wonder if we can just put v.value inside the tuple value
 		arrayElems := v.value.([]Value)
 		childT = make([]Type, len(arrayElems))
 		for i := 0; i < len(arrayElems); i++ {
-			childT[i] = v.valueType
+			childT[i] = v.valueType.childTypes[0]
 		}
 		valueArr = arrayElems
 	default:
@@ -538,7 +536,7 @@ func findBoolLR(typeList []Type, index int, delta int) int {
 	for true {
 		curr := index + delta*until
 		if typeList[curr].typeFromEnum == Bool {
-			if curr != len(typeList) - 1 && delta > 0 {
+			if curr != len(typeList)-1 && delta > 0 {
 				until++
 			} else if curr > 0 && delta < 0 {
 				until++
