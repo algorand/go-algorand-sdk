@@ -108,7 +108,7 @@ func TestEncodeValid(t *testing.T) {
 			arrayElems[index] = MakeBool(bVal)
 		}
 		expected := []byte{
-			byte(0b10011000),
+			0b10011000,
 		}
 		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make static array should not return error")
@@ -183,7 +183,98 @@ func TestEncodeInvalid(t *testing.T) {
 }
 
 func TestDecodeValid(t *testing.T) {
-	// TODO uint, ufixed, byte, address
+	for intSize := 8; intSize <= 512; intSize += 8 {
+		upperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(intSize))
+		for i := 0; i < 1000; i++ {
+			randomInt, err := rand.Int(rand.Reader, upperLimit)
+			require.NoError(t, err, "cryptographic random int init fail")
+			valueUint, err := MakeUint(randomInt, uint16(intSize))
+			require.NoError(t, err, "makeUint Fail")
+			encodedUint, err := valueUint.Encode()
+			require.NoError(t, err, "uint encode fail")
+			uintType, err := MakeUintType(uint16(intSize))
+			require.NoError(t, err, "uint type make fail")
+			decodedUint, err := Decode(encodedUint, uintType)
+			require.NoError(t, err, "decoding uint should not return error")
+			require.Equal(t, valueUint, decodedUint, "decode uint fail to match expected value")
+		}
+	}
+
+	for size := 8; size <= 512; size += 8 {
+		upperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
+		for precision := 1; precision <= 160; precision++ {
+			denomLimit := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(precision)), nil)
+			for i := 0; i < 10; i++ {
+				randomInt, err := rand.Int(rand.Reader, upperLimit)
+				require.NoError(t, err, "cryptographic random int init fail")
+
+				ufixedRational := big.NewRat(1, 1).SetFrac(randomInt, denomLimit)
+				valueUfixed, err := MakeUfixed(ufixedRational, uint16(size), uint16(precision))
+				require.NoError(t, err, "makeUfixed Fail")
+
+				encodedUfixed, err := valueUfixed.Encode()
+				require.NoError(t, err, "ufixed encode fail")
+
+				ufixedType, err := MakeUFixedType(uint16(size), uint16(precision))
+				require.NoError(t, err, "ufixed type make fail")
+
+				decodedUfixed, err := Decode(encodedUfixed, ufixedType)
+				require.NoError(t, err, "decoding ufixed should not return error")
+				require.Equal(t, valueUfixed, decodedUfixed, "decode ufixed fail to match expected value")
+			}
+		}
+	}
+
+	upperLimit := big.NewInt(0).Lsh(big.NewInt(1), 256)
+	for i := 0; i < 1000; i++ {
+		randomAddrInt, err := rand.Int(rand.Reader, upperLimit)
+		require.NoError(t, err, "cryptographic random int init fail")
+
+		addressBytes := randomAddrInt.Bytes()
+		address := make([]byte, 32-len(addressBytes))
+		address = append(address, addressBytes...)
+
+		var addrBytes [32]byte
+		copy(addrBytes[:], address[:32])
+
+		addressValue := MakeAddress(addrBytes)
+		addrEncode, err := addressValue.Encode()
+		require.NoError(t, err, "address encode fail")
+
+		addressDecoded, err := Decode(addrEncode, MakeAddressType())
+		require.NoError(t, err, "decoding address should not return error")
+		require.Equal(t, addressValue, addressDecoded, "decode addr not match with expected")
+	}
+
+	for i := 0; i < 2; i++ {
+		boolValue := MakeBool(i == 1)
+		boolEncode, err := boolValue.Encode()
+		require.NoError(t, err, "bool encode fail")
+		boolDecode, err := Decode(boolEncode, MakeBoolType())
+		require.NoError(t, err, "decoding bool should not return error")
+		require.Equal(t, boolValue, boolDecode, "decode bool not match with expected")
+	}
+
+	for i := 0; i < (1 << 8); i++ {
+		byteValue := MakeByte(byte(i))
+		byteEncode, err := byteValue.Encode()
+		require.NoError(t, err, "byte encode fail")
+		byteDecode, err := Decode(byteEncode, MakeByteType())
+		require.NoError(t, err, "decoding byte should not return error")
+		require.Equal(t, byteValue, byteDecode, "decode byte not match with expected")
+	}
+
+	for length := 1; length <= 10; length++ {
+		for i := 0; i < 10; i++ {
+			utf8Str := gobberish.GenerateString(length)
+			strValue := MakeString(utf8Str)
+			strEncode, err := strValue.Encode()
+			require.NoError(t, err, "string encode fail")
+			strDecode, err := Decode(strEncode, MakeStringType())
+			require.NoError(t, err, "decoding string should not return error")
+			require.Equal(t, strValue, strDecode, "encode string not match with expected")
+		}
+	}
 
 	t.Run("static bool array decode", func(t *testing.T) {
 		inputBase := []bool{true, false, false, true, true}
@@ -214,6 +305,25 @@ func TestDecodeValid(t *testing.T) {
 		)
 		require.NoError(t, err, "decoding static bool array should not return error")
 		require.Equal(t, expected, actual, "static bool array decode do not match expected")
+	})
+
+	t.Run("static uint array decode", func(t *testing.T) {
+		inputUint := []uint64{1, 2, 3, 4, 5, 6, 7, 8}
+		arrayElems := make([]Value, len(inputUint))
+		for index, uintVal := range inputUint {
+			temp, err := MakeUint64(uintVal)
+			require.NoError(t, err, "make uint64 should not return error")
+			arrayElems[index] = temp
+		}
+		uintT, err := MakeUintType(64)
+		require.NoError(t, err, "make uint64 type should not return error")
+		expected, err := MakeStaticArray(arrayElems, uintT)
+		require.NoError(t, err, "make uint64 static array should not return error")
+		arrayEncoded, err := expected.Encode()
+		require.NoError(t, err, "uint64 static array encode should not return error")
+		arrayDecoded, err := Decode(arrayEncoded, MakeStaticArrayType(uintT, uint16(len(inputUint))))
+		require.NoError(t, err, "uint64 static array decode should not return error")
+		require.Equal(t, expected, arrayDecoded, "uint64 static array decode do not match with expected value")
 	})
 
 	t.Run("dynamic bool array decode", func(t *testing.T) {

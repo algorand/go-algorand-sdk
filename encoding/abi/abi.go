@@ -385,7 +385,7 @@ func (t Type) ByteLen() (int, error) {
 	case Byte:
 		return 1, nil
 	case Uint, Ufixed:
-		return int(t.typeSize), nil
+		return int(t.typeSize / 8), nil
 	case Bool:
 		return 1, nil
 	case ArrayStatic:
@@ -760,6 +760,7 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 					}
 					// parse bool in a byte to multiple byte strings
 					for boolIndex := uint(0); boolIndex <= uint(after); boolIndex++ {
+						// each time check the significant bit, from left to right
 						boolValue := valueBytes[iterIndex] << boolIndex
 						if boolValue >= 0x80 {
 							valuePartition = append(valuePartition, []byte{0x80})
