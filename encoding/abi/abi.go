@@ -706,7 +706,7 @@ func Decode(valueByte []byte, valueType Type) (Value, error) {
 			childT[i] = valueType.childTypes[0]
 		}
 		converted := MakeTupleType(childT)
-		tupleDecoded, err := tupleDecoding(valueByte, converted)
+		tupleDecoded, err := tupleDecoding(valueByte[2:], converted)
 		if err != nil {
 			return Value{}, err
 		}

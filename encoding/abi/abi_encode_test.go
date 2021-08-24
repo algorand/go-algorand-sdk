@@ -113,7 +113,7 @@ func TestEncodeValid(t *testing.T) {
 		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make static array should not return error")
 		boolArrEncode, err := boolArr.Encode()
-		require.NoError(t, err, "static bool array should not return error")
+		require.NoError(t, err, "static bool array encoding should not return error")
 		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
 	})
 
@@ -124,13 +124,12 @@ func TestEncodeValid(t *testing.T) {
 			arrayElems[index] = MakeBool(bVal)
 		}
 		expected := []byte{
-			byte(0b00011010),
-			byte(0b10100000),
+			0b00011010, 0b10100000,
 		}
 		boolArr, err := MakeStaticArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make static array should not return error")
 		boolArrEncode, err := boolArr.Encode()
-		require.NoError(t, err, "static bool array should not return error")
+		require.NoError(t, err, "static bool array encoding should not return error")
 		require.Equal(t, expected, boolArrEncode, "static bool array encode not match expected")
 	})
 
@@ -141,16 +140,41 @@ func TestEncodeValid(t *testing.T) {
 			arrayElems[index] = MakeBool(bVal)
 		}
 		expected := []byte{
-			byte(0x00),
-			byte(0x0A),
-			byte(0b01010101),
-			byte(0b01000000),
+			0x00, 0x0A, 0b01010101, 0b01000000,
 		}
 		boolArr, err := MakeDynamicArray(arrayElems, MakeBoolType())
 		require.NoError(t, err, "make dynamic array should not return error")
 		boolArrEncode, err := boolArr.Encode()
-		require.NoError(t, err, "dynamic bool array should not return error")
+		require.NoError(t, err, "dynamic bool array encoding should not return error")
 		require.Equal(t, expected, boolArrEncode, "dynamic bool array encode not match expected")
+	})
+
+	t.Run("dynamic tuple encoding", func(t *testing.T) {
+		inputBase := []interface{}{
+			"ABC", true, false, true, false, "DEF",
+		}
+		tupleElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			temp, ok := bVal.(string)
+			if ok {
+				tupleElems[index] = MakeString(temp)
+			} else {
+				temp := bVal.(bool)
+				tupleElems[index] = MakeBool(temp)
+			}
+		}
+		expected := []byte{
+			0x00, 0x05, 0b10100000, 0x00, 0x0A,
+			0x00, 0x03, byte('A'), byte('B'), byte('C'),
+			0x00, 0x03, byte('D'), byte('E'), byte('F'),
+		}
+		stringTuple, err := MakeTuple(tupleElems, []Type{
+			MakeStringType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeStringType(),
+		})
+		require.NoError(t, err, "make string tuple should not return error")
+		stringTupleEncode, err := stringTuple.Encode()
+		require.NoError(t, err, "string tuple encoding should not return error")
+		require.Equal(t, expected, stringTupleEncode, "string tuple encoding not match expected")
 	})
 }
 
@@ -159,7 +183,84 @@ func TestEncodeInvalid(t *testing.T) {
 }
 
 func TestDecodeValid(t *testing.T) {
+	// TODO uint, ufixed, byte, address
 
+	t.Run("static bool array decode", func(t *testing.T) {
+		inputBase := []bool{true, false, false, true, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected, err := MakeStaticArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make expected value should not return error")
+		actual, err := Decode([]byte{0b10011000}, MakeStaticArrayType(MakeBoolType(), uint16(len(inputBase))))
+		require.NoError(t, err, "decoding static bool array should not return error")
+		require.Equal(t, expected, actual, "static bool array decode do not match expected")
+	})
+
+	t.Run("static bool array decode", func(t *testing.T) {
+		inputBase := []bool{false, false, false, true, true, false, true, false, true, false, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected, err := MakeStaticArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make expected value should not return error")
+		actual, err := Decode(
+			[]byte{
+				0b00011010, 0b10100000,
+			},
+			MakeStaticArrayType(MakeBoolType(), uint16(len(inputBase))),
+		)
+		require.NoError(t, err, "decoding static bool array should not return error")
+		require.Equal(t, expected, actual, "static bool array decode do not match expected")
+	})
+
+	t.Run("dynamic bool array decode", func(t *testing.T) {
+		inputBase := []bool{false, true, false, true, false, true, false, true, false, true}
+		arrayElems := make([]Value, len(inputBase))
+		for index, bVal := range inputBase {
+			arrayElems[index] = MakeBool(bVal)
+		}
+		expected, err := MakeDynamicArray(arrayElems, MakeBoolType())
+		require.NoError(t, err, "make expected value should not return error")
+		inputEncoded := []byte{
+			0x00, 0x0A, 0b01010101, 0b01000000,
+		}
+		actual, err := Decode(inputEncoded, MakeDynamicArrayType(MakeBoolType()))
+		require.NoError(t, err, "decode dynamic array should not return error")
+		require.Equal(t, expected, actual, "decode dynamic array do not match expected")
+	})
+
+	t.Run("dynamic tuple decoding", func(t *testing.T) {
+		inputEncode := []byte{
+			0x00, 0x05, 0b10100000, 0x00, 0x0A,
+			0x00, 0x03, byte('A'), byte('B'), byte('C'),
+			0x00, 0x03, byte('D'), byte('E'), byte('F'),
+		}
+		expectedBase := []interface{}{
+			"ABC", true, false, true, false, "DEF",
+		}
+		tupleElems := make([]Value, len(expectedBase))
+		for index, bVal := range expectedBase {
+			temp, ok := bVal.(string)
+			if ok {
+				tupleElems[index] = MakeString(temp)
+			} else {
+				temp := bVal.(bool)
+				tupleElems[index] = MakeBool(temp)
+			}
+		}
+		expected, err := MakeTuple(tupleElems, []Type{
+			MakeStringType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeStringType(),
+		})
+		require.NoError(t, err, "make expected value should not return error")
+		actual, err := Decode(inputEncode, MakeTupleType([]Type{
+			MakeStringType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeStringType(),
+		}))
+		require.NoError(t, err, "decoding dynamic tuple should not return error")
+		require.Equal(t, expected, actual, "dynamic tuple not match with expected")
+	})
 }
 
 func TestDecodeInvalid(t *testing.T) {
