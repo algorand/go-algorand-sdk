@@ -789,6 +789,10 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 	segIndex := 0
 	for i := 0; i < len(valueType.childTypes); i++ {
 		if valuePartition[i] == nil {
+			if dynamicSegments[segIndex].left >= len(valueBytes) ||
+				dynamicSegments[segIndex].right+1 >= len(valueBytes) {
+				return Value{}, fmt.Errorf("tuple dynamic index out of scope")
+			}
 			valuePartition[i] = valueBytes[dynamicSegments[segIndex].left : dynamicSegments[segIndex].right+1]
 			segIndex++
 		}
