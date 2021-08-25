@@ -370,5 +370,95 @@ func TestDecodeValid(t *testing.T) {
 }
 
 func TestDecodeInvalid(t *testing.T) {
+	t.Run("corrupted static bool array decode", func(t *testing.T) {
+		inputBase := []byte{0b11111111}
+		arrayType := MakeStaticArrayType(MakeBoolType(), 9)
+		_, err := Decode(inputBase, arrayType)
+		require.Error(t, err, "decoding corrupted static bool array should return error")
+	})
 
+	t.Run("corrupted static bool array decode", func(t *testing.T) {
+		inputBase := []byte{0b01001011, 0b00000000}
+		arrayType := MakeStaticArrayType(MakeBoolType(), 8)
+		_, err := Decode(inputBase, arrayType)
+		require.Error(t, err, "decoding corrupted static bool array should return error")
+	})
+
+	t.Run("static uint array decode", func(t *testing.T) {
+		inputBase := []byte{
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 1,
+			0, 0, 0, 0, 0, 0, 0, 2,
+			0, 0, 0, 0, 0, 0, 0, 3,
+			0, 0, 0, 0, 0, 0, 0, 4,
+			0, 0, 0, 0, 0, 0, 0, 5,
+			0, 0, 0, 0, 0, 0, 0, 6,
+		}
+		uintT, err := MakeUintType(64)
+		require.NoError(t, err, "make uint64 type should not return error")
+		uintTArray := MakeStaticArrayType(uintT, 8)
+		_, err = Decode(inputBase, uintTArray)
+		require.Error(t, err, "corrupted uint64 static array decode should return error")
+	})
+
+	t.Run("static uint array decode", func(t *testing.T) {
+		inputBase := []byte{
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 1,
+			0, 0, 0, 0, 0, 0, 0, 2,
+			0, 0, 0, 0, 0, 0, 0, 3,
+			0, 0, 0, 0, 0, 0, 0, 4,
+			0, 0, 0, 0, 0, 0, 0, 5,
+			0, 0, 0, 0, 0, 0, 0, 6,
+			0, 0, 0, 0, 0, 0, 0, 7,
+		}
+		uintT, err := MakeUintType(64)
+		require.NoError(t, err, "make uint64 type should not return error")
+		uintTArray := MakeStaticArrayType(uintT, 7)
+		_, err = Decode(inputBase, uintTArray)
+		require.Error(t, err, "corrupted uint64 static array decode should return error")
+	})
+
+	t.Run("corrupted dynamic bool array decode", func(t *testing.T) {
+		inputBase := []byte{
+			0x00, 0x0A, 0b10101010,
+		}
+		dynamicT := MakeDynamicArrayType(MakeBoolType())
+		_, err := Decode(inputBase, dynamicT)
+		require.Error(t, err, "decode corrupted dynamic array should return error")
+	})
+
+	t.Run("corrupted dynamic bool array decode", func(t *testing.T) {
+		inputBase := []byte{
+			0x00, 0x07, 0b10101010, 0b00000000,
+		}
+		dynamicT := MakeDynamicArrayType(MakeBoolType())
+		_, err := Decode(inputBase, dynamicT)
+		require.Error(t, err, "decode corrupted dynamic array should return error")
+	})
+
+	t.Run("corrupted dynamic tuple decoding", func(t *testing.T) {
+		inputEncode := []byte{
+			0x00, 0x04, 0b10100000, 0x00, 0x0A,
+			0x00, 0x03, byte('A'), byte('B'), byte('C'),
+			0x00, 0x03, byte('D'), byte('E'), byte('F'),
+		}
+		expectedBase := []interface{}{
+			"ABC", true, false, true, false, "DEF",
+		}
+		tupleElems := make([]Value, len(expectedBase))
+		for index, bVal := range expectedBase {
+			temp, ok := bVal.(string)
+			if ok {
+				tupleElems[index] = MakeString(temp)
+			} else {
+				temp := bVal.(bool)
+				tupleElems[index] = MakeBool(temp)
+			}
+		}
+		_, err := Decode(inputEncode, MakeTupleType([]Type{
+			MakeStringType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeBoolType(), MakeStringType(),
+		}))
+		require.Error(t, err, "corrupted decoding dynamic tuple should return error")
+	})
 }

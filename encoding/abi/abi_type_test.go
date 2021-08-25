@@ -484,8 +484,9 @@ func TestTypeMISC(t *testing.T) {
 	isDynamicCount := 0
 	for isDynamicCount < 1000 {
 		index := rand.Intn(len(testpool))
-		isDynamic := strings.Contains(testpool[index].String(), "[]")
-		require.Equal(t, isDynamic, testpool[index].IsDynamic(),
+		isDynamicArr := strings.Contains(testpool[index].String(), "[]")
+		isDynamicStr := strings.Contains(testpool[index].String(), "string")
+		require.Equal(t, isDynamicArr || isDynamicStr, testpool[index].IsDynamic(),
 			"test type isDynamic error\n%s", testpool[index].String())
 		isDynamicCount++
 	}

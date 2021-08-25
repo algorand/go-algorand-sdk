@@ -781,9 +781,16 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 				iterIndex += currLen
 			}
 		}
+		if i != len(valueType.childTypes)-1 && iterIndex >= len(valueBytes) {
+			return Value{}, fmt.Errorf("input byte not enough to decode")
+		}
 	}
 	if len(dynamicSegments) > 0 {
 		dynamicSegments[len(dynamicSegments)-1].right = len(valueBytes) - 1
+		iterIndex = len(valueBytes)
+	}
+	if iterIndex < len(valueBytes) {
+		return Value{}, fmt.Errorf("input byte not fully consumed")
 	}
 
 	// check segment indices are valid
