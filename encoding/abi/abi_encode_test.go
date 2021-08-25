@@ -25,10 +25,24 @@ func TestEncodeValid(t *testing.T) {
 			buffer = append(buffer, randomIntByte...)
 			require.Equal(t, buffer, encodedUint, "encode uint not match with expected")
 		}
+		// 2^[size] - 1 test
+		largest := big.NewInt(0).Add(
+			upperLimit,
+			big.NewInt(1).Neg(big.NewInt(1)),
+		)
+		valueLargest, err := MakeUint(largest, uint16(intSize))
+		require.NoError(t, err, "make largest uint fail")
+		encoded, err := valueLargest.Encode()
+		require.NoError(t, err, "largest uint encode error")
+		require.Equal(t, largest.Bytes(), encoded, "encode uint largest do not match with expected")
 	}
 
 	for size := 8; size <= 512; size += 8 {
 		upperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(size))
+		largest := big.NewInt(0).Add(
+			upperLimit,
+			big.NewInt(1).Neg(big.NewInt(1)),
+		)
 		for precision := 1; precision <= 160; precision++ {
 			denomLimit := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(precision)), nil)
 			for i := 0; i < 10; i++ {
@@ -47,6 +61,13 @@ func TestEncodeValid(t *testing.T) {
 				buffer = append(buffer, randomBytes...)
 				require.Equal(t, buffer, encodedUfixed, "encode ufixed not match with expected")
 			}
+			// (2^[size] - 1) / (10^[precision]) test
+			ufixedLargest := big.NewRat(1, 1).SetFrac(largest, denomLimit)
+			ufixedLargestValue, err := MakeUfixed(ufixedLargest, uint16(size), uint16(precision))
+			require.NoError(t, err, "make largest ufixed fail")
+			ufixedLargestEncode, err := ufixedLargestValue.Encode()
+			require.NoError(t, err, "largest ufixed encode error")
+			require.Equal(t, largest.Bytes(), ufixedLargestEncode, "encode ufixed largest do not match with expected")
 		}
 	}
 
