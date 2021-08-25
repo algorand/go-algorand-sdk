@@ -178,10 +178,6 @@ func TestEncodeValid(t *testing.T) {
 	})
 }
 
-func TestEncodeInvalid(t *testing.T) {
-
-}
-
 func TestDecodeValid(t *testing.T) {
 	for intSize := 8; intSize <= 512; intSize += 8 {
 		upperLimit := big.NewInt(0).Lsh(big.NewInt(1), uint(intSize))

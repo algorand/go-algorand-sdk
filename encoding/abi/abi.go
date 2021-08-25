@@ -786,11 +786,29 @@ func tupleDecoding(valueBytes []byte, valueType Type) (Value, error) {
 		dynamicSegments[len(dynamicSegments)-1].right = len(valueBytes) - 1
 	}
 
+	// check segment indices are valid
+	segIndexArr := make([]int, len(dynamicSegments)*2)
+	for index, segment := range dynamicSegments {
+		segIndexArr[index*2] = segment.left
+		segIndexArr[index*2+1] = segment.right
+	}
+	for i := 0; i < len(segIndexArr); i++ {
+		if i%2 == 1 {
+			if i != len(segIndexArr)-1 && segIndexArr[i]+1 != segIndexArr[i+1] {
+				return Value{}, fmt.Errorf("dynamic segment should sit next to each other")
+			}
+		} else {
+			if segIndexArr[i] >= segIndexArr[i+1] {
+				return Value{}, fmt.Errorf("dynamic segment should display a [l, r] space")
+			}
+		}
+	}
+
 	segIndex := 0
 	for i := 0; i < len(valueType.childTypes); i++ {
 		if valuePartition[i] == nil {
 			if dynamicSegments[segIndex].left >= len(valueBytes) ||
-				dynamicSegments[segIndex].right+1 >= len(valueBytes) {
+				dynamicSegments[segIndex].right >= len(valueBytes) {
 				return Value{}, fmt.Errorf("tuple dynamic index out of scope")
 			}
 			valuePartition[i] = valueBytes[dynamicSegments[segIndex].left : dynamicSegments[segIndex].right+1]
