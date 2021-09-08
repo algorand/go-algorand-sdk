@@ -16,7 +16,7 @@ type WaitForConfirmation struct {
 	txid string
 
 	// The number of rounds to block before existing with an error. If zero, there is no timeout
-	timeout uint64
+	waitRounds uint64
 }
 
 // Do performs the HTTP request
@@ -30,8 +30,8 @@ func (s *WaitForConfirmation) Do(ctx context.Context, headers ...*common.Header)
 	currentRound := lastRound + 1
 
 	for {
-		// Check that the `timeout` has not passed
-		if s.timeout > 0 && currentRound > lastRound+s.timeout {
+		// Check that the `waitRounds` has not passed
+		if s.waitRounds > 0 && currentRound > lastRound+s.waitRounds {
 			err = fmt.Errorf("Wait for transaction id %s timed out", s.txid)
 			return
 		}
