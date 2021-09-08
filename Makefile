@@ -5,11 +5,17 @@ TEST_SOURCES_NO_CUCUMBER := $(shell cd $(SRCPATH) && go list ./... | grep -v tes
 lint:
 	golint `go list ./... | grep -v /vendor/`
 
+fmt:
+	go fmt ./...
+
 generate:
 	cd $(SRCPATH) && go generate ./logic
 
 build: generate
 	cd $(SRCPATH) && go test -run xxx_phony_test $(TEST_SOURCES)
+
+test:
+	go test $(TEST_SOURCES_NO_CUCUMBER)
 
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
@@ -21,3 +27,5 @@ integration:
 
 docker-test:
 	./test/docker/run_docker.sh
+
+.PHONY: test fmt

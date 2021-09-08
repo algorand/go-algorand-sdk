@@ -1,3 +1,11 @@
+# 1.10.0
+# Added
+- New github Issue template
+- Signing support for rekeying to LogicSig/MultiSig account
+- Asset Base64 Fields
+# BugFix
+- Use correct go version in CI
+# BugFix
 # 1.9.2
 # Bug Fix
 - Update FromBase64String() to correctly return the signed transaction

@@ -188,7 +188,7 @@ type SuggestedParams struct {
 
 	// The minimum transaction fee (not per byte) required for the
 	// txn to validate for the current network protocol.
-	MinFee uint64  `codec:"min-fee"`
+	MinFee uint64 `codec:"min-fee"`
 }
 
 // AddLease adds the passed lease (see types/transaction.go) to the header of the passed transaction

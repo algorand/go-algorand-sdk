@@ -236,15 +236,6 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 	if err != nil {
 		return
 	}
-	// check that the address of txn matches the preimage
-	maAddress, err := ma.Address()
-	if err != nil {
-		return
-	}
-	if tx.Sender != maAddress { // array value comparison is fine
-		err = errMsigBadTxnSender
-		return
-	}
 
 	// this signer signs a transaction and sets txid from the closure
 	customSigner := func() (rawSig types.Signature, err error) {
@@ -262,6 +253,16 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 		Msig: sig,
 		Txn:  tx,
 	}
+
+	maAddress, err := ma.Address()
+	if err != nil {
+		return
+	}
+
+	if stx.Txn.Sender != maAddress {
+		stx.AuthAddr = maAddress
+	}
+
 	stxBytes = msgpack.Encode(stx)
 	return
 }
@@ -276,6 +277,7 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	var sig types.MultisigSig
 	var refAddr *types.Address
 	var refTx types.Transaction
+	var refAuthAddr types.Address
 	for _, partStxBytes := range stxsBytes {
 		partStx := types.SignedTxn{}
 		err = msgpack.Decode(partStxBytes, &partStx)
@@ -305,12 +307,19 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 				sig.Subsigs[i].Key = c
 			}
 			refTx = partStx.Txn
-		} else {
-			if partAddr != *refAddr {
-				err = errMsigMergeKeysMismatch
-				return
-			}
+			refAuthAddr = partStx.AuthAddr
 		}
+
+		if partAddr != *refAddr {
+			err = errMsigMergeKeysMismatch
+			return
+		}
+
+		if partStx.AuthAddr != refAuthAddr {
+			err = errMsigMergeAuthAddrMismatch
+			return
+		}
+
 		// now, add subsignatures appropriately
 		zeroSig := types.Signature{}
 		for i := 0; i < len(sig.Subsigs); i++ {
@@ -327,8 +336,9 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	}
 	// Encode the signedTxn
 	stx := types.SignedTxn{
-		Msig: sig,
-		Txn:  refTx,
+		Msig:     sig,
+		Txn:      refTx,
+		AuthAddr: refAuthAddr,
 	}
 	stxBytes = msgpack.Encode(stx)
 	// let's also compute the txid.
@@ -355,6 +365,10 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStx
 }
 
 // VerifyMultisig verifies an assembled MultisigSig
+//
+// addr is the address of the Multisig account
+// message is the bytes there were signed
+// msig is the Multisig signature to verify
 func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) bool {
 	msigAccount, err := MultisigAccountFromSig(msig)
 	if err != nil {
@@ -431,8 +445,14 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 /* LogicSig support */
 
-// VerifyLogicSig verifies LogicSig against assumed sender address
-func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
+// VerifyLogicSig verifies that a LogicSig contains a valid program and, if a
+// delegated signature is present, that the signature is valid.
+//
+// The singleSigner argument is only used in the case of a delegated LogicSig
+// whose delegating account is backed by a single private key (i.e. not a
+// multsig account). In that case, it should be the address of the delegating
+// account.
+func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
 		return false
 	}
@@ -445,30 +465,34 @@ func VerifyLogicSig(lsig types.LogicSig, sender types.Address) (result bool) {
 		return false
 	}
 
-	result = false
 	toBeSigned := programToSign(lsig.Logic)
-	// logic sig, compare hashes
-	if !hasSig && !hasMsig {
-		result = types.Digest(sha512.Sum512_256(toBeSigned)) == types.Digest(sender)
-		return
-	}
 
 	if hasSig {
-		result = ed25519.Verify(sender[:], toBeSigned, lsig.Sig[:])
-		return
+		return ed25519.Verify(singleSigner[:], toBeSigned, lsig.Sig[:])
 	}
 
-	result = VerifyMultisig(sender, toBeSigned, lsig.Msig)
-	return
+	if hasMsig {
+		msigAccount, err := MultisigAccountFromSig(lsig.Msig)
+		if err != nil {
+			return false
+		}
+		addr, err := msigAccount.Address()
+		if err != nil {
+			return false
+		}
+		return VerifyMultisig(addr, toBeSigned, lsig.Msig)
+	}
+
+	// the lsig account is the hash of its program bytes, nothing left to verify
+	return true
 }
 
-// SignLogicsigTransaction takes LogicSig object and a transaction and returns the
-// bytes of a signed transaction ready to be broadcasted to the network
-// Note, LogicSig actually can be attached to any transaction (with matching sender field for Sig and Multisig cases)
-// and it is a program's responsibility to approve/decline the transaction
-func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+// signLogicSigTransactionWithAddress signs a transaction with a LogicSig.
+//
+// lsigAddress is the address of the account that the LogicSig represents.
+func signLogicSigTransactionWithAddress(lsig types.LogicSig, lsigAddress types.Address, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 
-	if !VerifyLogicSig(lsig, tx.Header.Sender) {
+	if !VerifyLogicSig(lsig, lsigAddress) {
 		err = errLsigInvalidSignature
 		return
 	}
@@ -480,8 +504,66 @@ func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 		Txn:  tx,
 	}
 
+	if stx.Txn.Sender != lsigAddress {
+		stx.AuthAddr = lsigAddress
+	}
+
 	// Encode the SignedTxn
 	stxBytes = msgpack.Encode(stx)
+	return
+}
+
+// SignLogicSigAccountTransaction signs a transaction with a LogicSigAccount. It
+// returns the TxID of the signed transaction and the raw bytes ready to be
+// broadcast to the network. Note: any type of transaction can be signed by a
+// LogicSig, but the network will reject the transaction if the LogicSig's
+// program declines the transaction.
+func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	addr, err := logicSigAccount.Address()
+	if err != nil {
+		return
+	}
+
+	txid, stxBytes, err = signLogicSigTransactionWithAddress(logicSigAccount.Lsig, addr, tx)
+	return
+}
+
+// SignLogicsigTransaction takes LogicSig object and a transaction and returns the
+// bytes of a signed transaction ready to be broadcasted to the network
+// Note, LogicSig actually can be attached to any transaction and it is a
+// program's responsibility to approve/decline the transaction
+//
+// This function supports signing transactions with a sender that differs from
+// the LogicSig's address, EXCEPT IF the LogicSig is delegated to a non-multisig
+// account. In order to properly handle that case, create a LogicSigAccount and
+// use SignLogicSigAccountTransaction instead.
+func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	hasSig := lsig.Sig != (types.Signature{})
+	hasMsig := !lsig.Msig.Blank()
+
+	// the address that the LogicSig represents
+	var lsigAddress types.Address
+	if hasSig {
+		// For a LogicSig with a non-multisig delegating account, we cannot derive
+		// the address of that account from only its signature, so assume the
+		// delegating account is the sender. If that's not the case, the signing
+		// will fail.
+		lsigAddress = tx.Header.Sender
+	} else if hasMsig {
+		var msigAccount MultisigAccount
+		msigAccount, err = MultisigAccountFromSig(lsig.Msig)
+		if err != nil {
+			return
+		}
+		lsigAddress, err = msigAccount.Address()
+		if err != nil {
+			return
+		}
+	} else {
+		lsigAddress = LogicSigAddress(lsig)
+	}
+
+	txid, stxBytes, err = signLogicSigTransactionWithAddress(lsig, lsigAddress, tx)
 	return
 }
 
@@ -510,6 +592,11 @@ func AddressFromProgram(program []byte) types.Address {
 }
 
 // MakeLogicSig produces a new LogicSig signature.
+//
+// THIS FUNCTION IS DEPRECATED. It will be removed in v2 of this library. Use
+// one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
+// MakeLogicSigAccountDelegatedMsig instead.
+//
 // The function can work in three modes:
 // 1. If no sk and ma provided then it returns contract-only LogicSig
 // 2. If no ma provides, it returns Sig delegated LogicSig
