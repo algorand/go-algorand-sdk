@@ -3,6 +3,7 @@ package templates
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
@@ -28,6 +29,8 @@ type DynamicFee struct {
 //  - period: the time between a pair of withdrawal periods
 //  - expiryRound: the round at which the account expires
 //  - maxFee: maximum fee used by the withdrawal transaction
+//
+// Deprecated: Use TealCompile source compilation instead.
 func MakeDynamicFee(receiver, closeRemainder string, amount, firstValid, lastValid uint64) (DynamicFee, error) {
 	leaseBytes := make([]byte, 32)
 	crypto.RandomBytes(leaseBytes)
@@ -81,6 +84,8 @@ func makeDynamicFeeWithLease(receiver, closeRemainder, lease string, amount, fir
 // fee - fee per byte for both transactions
 // firstValid - first protocol round on which both transactions will be valid
 // lastValid - last protocol round on which both transactions will be valid
+//
+// Deprecated: Use TealCompile source compilation instead.
 func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, privateKey ed25519.PrivateKey, fee uint64) ([]byte, error) {
 	txn.Fee = types.MicroAlgos(fee)
 	eSize, err := transaction.EstimateSize(txn)
@@ -135,6 +140,8 @@ func GetDynamicFeeTransactions(txn types.Transaction, lsig types.LogicSig, priva
 // Parameters:
 // contract - the bytearray representing the contract in question
 // genesisHash - the bytearray representing the network for the txns
+//
+// Deprecated: Use TealCompile source compilation instead.
 func SignDynamicFee(contract []byte, privateKey ed25519.PrivateKey, genesisHash []byte) (txn types.Transaction, lsig types.LogicSig, err error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {

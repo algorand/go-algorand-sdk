@@ -4,10 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // ContractTemplate template representation
+//
+// Deprecated: Use TealCompile source compilation instead.
 type ContractTemplate struct {
 	address string
 	program []byte

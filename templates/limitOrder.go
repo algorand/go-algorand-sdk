@@ -2,12 +2,15 @@ package templates
 
 import (
 	"encoding/base64"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // LimitOrder represents a swap between Algos and an Asset at some ratio or better.
+//
+// Deprecated: Use TealCompile source compilation instead.
 type LimitOrder struct {
 	ContractTemplate
 	assetID uint64
@@ -23,6 +26,8 @@ type LimitOrder struct {
 // the first payment sends money (Algos) from contract to the recipient (we'll call him Buyer), closing the rest of the account to Owner
 // the second payment sends money (the asset) from Buyer to the Owner
 // these transactions will be rejected if they do not meet the restrictions set by the contract
+//
+// Deprecated: Use TealCompile source compilation instead.
 func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, microAlgoAmount uint64, contract, secretKey []byte, params types.SuggestedParams) ([]byte, error) {
 	var buyerAddress types.Address
 	copy(buyerAddress[:], secretKey[32:])
@@ -91,6 +96,8 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, microAlgoAmoun
 //  - expiryRound: the round at which the account expires
 //  - minTrade: the minimum amount (of Algos) to be traded away
 //  - maxFee: maximum fee used by the limit order transaction
+//
+// Deprecated: Use TealCompile source compilation instead.
 func MakeLimitOrder(owner string, assetID, ratn, ratd, expiryRound, minTrade, maxFee uint64) (LimitOrder, error) {
 	const referenceProgram = "ASAKAAEFAgYEBwgJCiYBIP68oLsUSlpOp7Q4pGgayA5soQW8tgf8VlMlyVaV9qITMRYiEjEQIxIQMQEkDhAyBCMSQABVMgQlEjEIIQQNEDEJMgMSEDMBECEFEhAzAREhBhIQMwEUKBIQMwETMgMSEDMBEiEHHTUCNQExCCEIHTUENQM0ATQDDUAAJDQBNAMSNAI0BA8QQAAWADEJKBIxAiEJDRAxBzIDEhAxCCISEBA="
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)

@@ -3,6 +3,7 @@ package templates
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/logic"
@@ -11,6 +12,8 @@ import (
 )
 
 // PeriodicPayment template representation
+//
+// Deprecated: Use TealCompile source compilation instead.
 type PeriodicPayment struct {
 	ContractTemplate
 }
@@ -20,6 +23,8 @@ type PeriodicPayment struct {
 // firstValid: the first round on which the txn will be valid
 // fee: the fee in microalgos per byte of the payment txn
 // genesisHash: the hash representing the network for the txn
+//
+// Deprecated: Use TealCompile source compilation instead.
 func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee uint64, genesisHash []byte) ([]byte, error) {
 	address := crypto.AddressFromProgram(contract)
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
@@ -78,6 +83,8 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee ui
 //  - period: the time between a pair of withdrawal periods
 //  - expiryRound: the round at which the account expires
 //  - maxFee: maximum fee used by the withdrawal transaction
+//
+// Deprecated: Use TealCompile source compilation instead.
 func MakePeriodicPayment(receiver string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {
 	leaseBytes := make([]byte, 32)
 	crypto.RandomBytes(leaseBytes)

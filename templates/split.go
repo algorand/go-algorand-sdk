@@ -14,6 +14,8 @@ import (
 )
 
 // Split template representation
+//
+// Deprecated: Use TealCompile source compilation instead.
 type Split struct {
 	ContractTemplate
 	rat1        uint64
@@ -27,6 +29,8 @@ type Split struct {
 // contract: the bytecode of the contract to be used
 // amount: uint64 total number of algos to be transferred (payment1_amount + payment2_amount)
 // params: is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+//
+// Deprecated: Use TealCompile source compilation instead.
 func GetSplitFundsTransaction(contract []byte, amount uint64, params types.SuggestedParams) ([]byte, error) {
 	ints, byteArrays, err := logic.ReadProgram(contract, nil)
 	if err != nil {
@@ -121,6 +125,8 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 //  - expiryRound: the round at which the account expires
 //  - minPay: minimum amount to be paid out of the account to receiverOne
 //  - maxFee: half of the maximum fee used by each split forwarding group transaction
+//
+// Deprecated: Use TealCompile source compilation instead.
 func MakeSplit(owner, receiverOne, receiverTwo string, rat1, rat2, expiryRound, minPay, maxFee uint64) (Split, error) {
 	const referenceProgram = "ASAIAQUCAAYHCAkmAyCztwQn0+DycN+vsk+vJWcsoz/b7NDS6i33HOkvTpf+YiC3qUpIgHGWE8/1LPh9SGCalSN7IaITeeWSXbfsS5wsXyC4kBQ38Z8zcwWVAym4S8vpFB/c0XC6R4mnPi9EBADsPDEQIhIxASMMEDIEJBJAABkxCSgSMQcyAxIQMQglEhAxAiEEDRAiQAAuMwAAMwEAEjEJMgMSEDMABykSEDMBByoSEDMACCEFCzMBCCEGCxIQMwAIIQcPEBA="
 	referenceAsBytes, err := base64.StdEncoding.DecodeString(referenceProgram)
