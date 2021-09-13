@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/types"
@@ -33,6 +34,8 @@ type HTLC struct {
 // - hashImage : string the hash image in base64
 // - expiryRound : uint64 the round on which the assets can be transferred back to owner
 // - maxFee : uint64 the maximum fee that can be paid to the network by the account
+//
+// Deprecated: Use TealCompile source compilation instead.
 func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxFee uint64) (HTLC, error) {
 	var referenceProgram string
 	if hashFunction == "sha256" {
@@ -77,6 +80,8 @@ func MakeHTLC(owner, receiver, hashFunction, hashImage string, expiryRound, maxF
 }
 
 // SignTransactionWithHTLCUnlock accepts a transaction, such as a payment, and builds the HTLC-unlocking signature around that transaction
+//
+// Deprecated: Use TealCompile source compilation instead.
 func SignTransactionWithHTLCUnlock(program []byte, txn types.Transaction, preImageAsBase64 string) (txid string, stx []byte, err error) {
 	preImageAsArgument, err := base64.StdEncoding.DecodeString(preImageAsBase64)
 	if err != nil {
