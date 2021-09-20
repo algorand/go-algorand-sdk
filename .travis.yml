@@ -9,7 +9,7 @@ go:
 install:
   - go get -u golang.org/x/lint/golint
 script:
-  - if [ -n "$DOCKER_PASSWORD" ]; then echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ; fi
+  - if [ -n "$DOCKER_PASSWORD2" ]; then echo "$DOCKER_PASSWORD2" | docker login -u "$DOCKER_USERNAME" --password-stdin ; fi
   - make docker-test
 env:
   global:
