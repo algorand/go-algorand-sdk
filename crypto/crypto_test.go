@@ -723,7 +723,10 @@ func TestTealSign(t *testing.T) {
 	require.Equal(t, sig1, sig2)
 
 	pk := sk.Public().(ed25519.PublicKey)
-	msg := bytes.Join([][]byte{programDataPrefix, addr[:], data}, nil)
-	verified := ed25519.Verify(pk, msg, sig1[:])
+	verified := TealVerify(pk, data, addr, sig1)
 	require.True(t, verified)
+
+	data[0] += 1
+	verified2 := TealVerify(pk, data, addr, sig1)
+	require.False(t, verified2)
 }

@@ -1003,7 +1003,7 @@ params := types.SuggestedParams {
 txn, err = MakeAssetRevocationTxn(revocationManager, revocationTarget, amount, recipient, note, params, assetIndex);
 ```
 
-## Rekying
+## Rekeying
 To rekey an account to a new address, simply call the `Rekey` function on any transaction.
 ```golang
 ...
