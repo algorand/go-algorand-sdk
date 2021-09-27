@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"encoding/hex"
 	"strings"
 	"testing"
 
@@ -157,6 +158,27 @@ func TestCheckProgramV4(t *testing.T) {
 
 	// loop
 	program = []byte{0x04, 0x20, 0x04, 0x01, 0x02, 0x0a, 0x10, 0x22, 0x23, 0x0b, 0x49, 0x24, 0x0c, 0x40, 0xff, 0xf8, 0x25, 0x12} // int 1; loop: int 2; *; dup; int 10; <; bnz loop; int 16; ==
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+}
+
+func TestCheckProgramV5(t *testing.T) {
+	// check TEAL v5 opcodes
+	require.True(t, spec.EvalMaxVersion >= 5)
+
+	args := make([][]byte, 0)
+
+	// itxn ops
+	program, err := hex.DecodeString("052001c0843db18101b21022b2083100b207b3b4082212")
+	// itxn_begin; int pay; itxn_field TypeEnum; int 1000000; itxn_field Amount; txn Sender; itxn_field Receiver; itxn_submit; itxn Amount; int 1000000; ==
+	require.NoError(t, err)
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// ECDSA ops
+	program, err = hex.DecodeString("058008746573746461746103802079bfa8245aeac0e714b7bd2b3252d03979e5e7a43cb039715a5f8109a7dd9ba180200753d317e54350d1d102289afbde3002add4529f10b9f7d3d223843985de62e0802103abfb5e6e331fb871e423f354e2bd78a384ef7cb07ac8bbf27d2dd1eca00e73c106000500")
+	// byte "testdata"; sha512_256; byte 0x79bfa8245aeac0e714b7bd2b3252d03979e5e7a43cb039715a5f8109a7dd9ba1; byte 0x0753d317e54350d1d102289afbde3002add4529f10b9f7d3d223843985de62e0; byte 0x03abfb5e6e331fb871e423f354e2bd78a384ef7cb07ac8bbf27d2dd1eca00e73c1; ecdsa_pk_decompress Secp256k1; ecdsa_verify Secp256k1
+	require.NoError(t, err)
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
 }
