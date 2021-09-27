@@ -71,6 +71,10 @@ func (c *Client) LookupApplicationByID(applicationId uint64) *LookupApplicationB
 	return &LookupApplicationByID{c: c, applicationId: applicationId}
 }
 
+func (c *Client) LookupApplicationLogsByID(applicationId uint64) *LookupApplicationLogsByID {
+	return &LookupApplicationLogsByID{c: c, applicationId: applicationId}
+}
+
 func (c *Client) SearchForAssets() *SearchForAssets {
 	return &SearchForAssets{c: c}
 }
