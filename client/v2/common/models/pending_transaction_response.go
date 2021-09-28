@@ -2,15 +2,9 @@ package models
 
 import "github.com/algorand/go-algorand-sdk/types"
 
-// PendingTransactionResponse given a transaction id of a recently submitted
-// transaction, it returns information about it. There are several cases when this
-// might succeed:
-// - transaction committed (committed round > 0)
-// - transaction still in the pool (committed round = 0, pool error = "")
-// - transaction removed from pool due to error (committed round = 0, pool error !=
-// "")
-// Or the transaction may have happened sufficiently long ago that the node no
-// longer remembers it, and this will return an error.
+// PendingTransactionResponse details about a pending transaction. If the
+// transaction was recently confirmed, includes confirmation details like the round
+// and reward details.
 type PendingTransactionResponse struct {
 	// ApplicationIndex the application index if the transaction was found and it
 	// created an application.
@@ -36,9 +30,15 @@ type PendingTransactionResponse struct {
 	// executed by this transaction.
 	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
 
+	// InnerTxns inner transactions produced by application execution.
+	InnerTxns []PendingTransactionResponse `json:"inner-txns,omitempty"`
+
 	// LocalStateDelta (ld) Local state key/value changes for the application being
 	// executed by this transaction.
 	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
+
+	// Logs (lg) Logs for the application being executed by this transaction.
+	Logs [][]byte `json:"logs,omitempty"`
 
 	// PoolError indicates that the transaction was kicked out of this node's
 	// transaction pool (and specifies why that happened). An empty string indicates

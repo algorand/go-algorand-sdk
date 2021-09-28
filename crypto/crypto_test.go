@@ -730,3 +730,11 @@ func TestTealSign(t *testing.T) {
 	verified2 := TealVerify(pk, data, addr, sig1)
 	require.False(t, verified2)
 }
+
+func TestGetApplicationAddress(t *testing.T) {
+	appID := uint64(77)
+	expected := "PCYUFPA2ZTOYWTP43MX2MOX2OWAIAXUDNC2WFCXAGMRUZ3DYD6BWFDL5YM"
+
+	actual := GetApplicationAddress(appID)
+	require.Equal(t, expected, actual.String())
+}

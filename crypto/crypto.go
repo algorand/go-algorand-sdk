@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+	"encoding/binary"
 	"fmt"
 
 	"golang.org/x/crypto/ed25519"
@@ -31,6 +32,9 @@ var programPrefix = []byte("Program")
 
 // programDataPrefix is prepended to teal sign data
 var programDataPrefix = []byte("ProgData")
+
+// appIDPrefix is prepended to application IDs in order to compute addresses
+var appIDPrefix = []byte("appID")
 
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
@@ -704,4 +708,16 @@ func TealVerify(pk ed25519.PublicKey, data []byte, contractAddress types.Address
 	toBeVerified := bytes.Join(msgParts, nil)
 
 	return ed25519.Verify(pk, toBeVerified, rawSig[:])
+}
+
+// GetApplicationAddress returns the address corresponding to an application's escrow account.
+func GetApplicationAddress(appID uint64) types.Address {
+	encodedAppID := make([]byte, 8)
+	binary.BigEndian.PutUint64(encodedAppID, appID)
+
+	parts := [][]byte{appIDPrefix, encodedAppID}
+	toBeHashed := bytes.Join(parts, nil)
+
+	hash := sha512.Sum512_256(toBeHashed)
+	return types.Address(hash)
 }
