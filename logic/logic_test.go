@@ -181,4 +181,11 @@ func TestCheckProgramV5(t *testing.T) {
 	require.NoError(t, err)
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
+
+	// cover, uncover, log
+	program, err = hex.DecodeString("058001618001628001634e024f025050b08101")
+	// byte "a"; byte "b"; byte "c"; cover 2; uncover 2; concat; concat; log; int 1
+	require.NoError(t, err)
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
 }
