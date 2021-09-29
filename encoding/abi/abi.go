@@ -7,19 +7,19 @@ import (
 )
 
 type Value struct {
-	abiVal abi.Value
+	abi.Value
 }
 
 type Type struct {
-	abiType abi.Type
+	abi.Type
 }
 
 func (val Value) Encode() ([]byte, error) {
-	return val.abiVal.Encode()
+	return val.Value.Encode()
 }
 
 func Decode(encoded []byte, abiType Type) (Value, error) {
-	abiVal, err := abi.Decode(encoded, abiType.abiType)
+	abiVal, err := abi.Decode(encoded, abiType.Type)
 	if err != nil {
 		return Value{}, err
 	}
@@ -27,7 +27,7 @@ func Decode(encoded []byte, abiType Type) (Value, error) {
 }
 
 func (t Type) String() string {
-	return t.abiType.String()
+	return t.Type.String()
 }
 
 func TypeFromString(str string) (Type, error) {
@@ -43,7 +43,7 @@ func MakeUint8(val uint8) Value {
 }
 
 func (val Value) GetUint8() (uint8, error) {
-	return val.abiVal.GetUint8()
+	return val.Value.GetUint8()
 }
 
 func MakeUint16(val uint16) Value {
@@ -51,7 +51,7 @@ func MakeUint16(val uint16) Value {
 }
 
 func (val Value) GetUint16() (uint16, error) {
-	return val.abiVal.GetUint16()
+	return val.Value.GetUint16()
 }
 
 func MakeUint32(val uint32) Value {
@@ -59,7 +59,7 @@ func MakeUint32(val uint32) Value {
 }
 
 func (val Value) GetUint32() (uint32, error) {
-	return val.abiVal.GetUint32()
+	return val.Value.GetUint32()
 }
 
 func MakeUint64(val uint64) Value {
@@ -67,7 +67,7 @@ func MakeUint64(val uint64) Value {
 }
 
 func (val Value) GetUint64() (uint64, error) {
-	return val.abiVal.GetUint64()
+	return val.Value.GetUint64()
 }
 
 func MakeUint(val *big.Int, size uint16) (Value, error) {
@@ -79,7 +79,7 @@ func MakeUint(val *big.Int, size uint16) (Value, error) {
 }
 
 func (val Value) GetUint() (*big.Int, error) {
-	return val.abiVal.GetUint()
+	return val.Value.GetUint()
 }
 
 func MakeUfixed(val *big.Int, size uint16, precision uint16) (Value, error) {
@@ -91,7 +91,7 @@ func MakeUfixed(val *big.Int, size uint16, precision uint16) (Value, error) {
 }
 
 func (val Value) GetUfixed() (*big.Int, error) {
-	return val.abiVal.GetUfixed()
+	return val.Value.GetUfixed()
 }
 
 func MakeString(val string) Value {
@@ -99,7 +99,7 @@ func MakeString(val string) Value {
 }
 
 func (val Value) GetString() (string, error) {
-	return val.abiVal.GetString()
+	return val.Value.GetString()
 }
 
 func MakeByte(val byte) Value {
@@ -107,7 +107,7 @@ func MakeByte(val byte) Value {
 }
 
 func (val Value) GetByte() (byte, error) {
-	return val.abiVal.GetByte()
+	return val.Value.GetByte()
 }
 
 func MakeAddress(val [32]byte) Value {
@@ -115,7 +115,7 @@ func MakeAddress(val [32]byte) Value {
 }
 
 func (val Value) GetAddress() ([32]byte, error) {
-	return val.abiVal.GetAddress()
+	return val.Value.GetAddress()
 }
 
 func MakeBool(val bool) Value {
@@ -123,15 +123,15 @@ func MakeBool(val bool) Value {
 }
 
 func (val Value) GetBool() (bool, error) {
-	return val.abiVal.GetBool()
+	return val.Value.GetBool()
 }
 
 func MakeDynamicArray(values []Value, elemType Type) (Value, error) {
 	tempValues := make([]abi.Value, len(values))
 	for i := 0; i < len(values); i++ {
-		tempValues[i] = values[i].abiVal
+		tempValues[i] = values[i].Value
 	}
-	abiDynamicArray, err := abi.MakeDynamicArray(tempValues, elemType.abiType)
+	abiDynamicArray, err := abi.MakeDynamicArray(tempValues, elemType.Type)
 	if err != nil {
 		return Value{}, err
 	}
@@ -141,7 +141,7 @@ func MakeDynamicArray(values []Value, elemType Type) (Value, error) {
 func MakeStaticArray(values []Value) (Value, error) {
 	tempValues := make([]abi.Value, len(values))
 	for i := 0; i < len(values); i++ {
-		tempValues[i] = values[i].abiVal
+		tempValues[i] = values[i].Value
 	}
 	abiStaticArray, err := abi.MakeStaticArray(tempValues)
 	if err != nil {
@@ -153,7 +153,7 @@ func MakeStaticArray(values []Value) (Value, error) {
 func MakeTuple(values []Value) (Value, error) {
 	tempValues := make([]abi.Value, len(values))
 	for i := 0; i < len(values); i++ {
-		tempValues[i] = values[i].abiVal
+		tempValues[i] = values[i].Value
 	}
 	abiTuple, err := abi.MakeTuple(tempValues)
 	if err != nil {
@@ -163,7 +163,7 @@ func MakeTuple(values []Value) (Value, error) {
 }
 
 func (val Value) GetValueByIndex(index uint16) (Value, error) {
-	abiIndexVal, err := val.abiVal.GetValueByIndex(index)
+	abiIndexVal, err := val.Value.GetValueByIndex(index)
 	if err != nil {
 		return Value{}, err
 	}
@@ -203,17 +203,17 @@ func MakeBoolType() Type {
 }
 
 func MakeDynamicArrayType(elemType Type) Type {
-	return Type{abi.MakeDynamicArrayType(elemType.abiType)}
+	return Type{abi.MakeDynamicArrayType(elemType.Type)}
 }
 
 func MakeStaticArrayType(elemType Type, length uint16) Type {
-	return Type{abi.MakeStaticArrayType(elemType.abiType, length)}
+	return Type{abi.MakeStaticArrayType(elemType.Type, length)}
 }
 
 func MakeTupleType(elemTypes []Type) (Type, error) {
 	tempTypes := make([]abi.Type, len(elemTypes))
 	for i := 0; i < len(elemTypes); i++ {
-		tempTypes[i] = elemTypes[i].abiType
+		tempTypes[i] = elemTypes[i].Type
 	}
 	tupleT, err := abi.MakeTupleType(tempTypes)
 	if err != nil {
