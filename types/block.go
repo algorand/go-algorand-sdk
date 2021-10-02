@@ -194,6 +194,9 @@ type (
 		ReceiverRewards MicroAlgos `codec:"rr"`
 		CloseRewards    MicroAlgos `codec:"rc"`
 		EvalDelta       EvalDelta  `codec:"dt"`
+
+		ConfigAsset   uint64 `codec:"caid"`
+		ApplicationID uint64 `codec:"apid"`
 	}
 )
 
@@ -205,6 +208,10 @@ type EvalDelta struct {
 	// When decoding EvalDeltas, the integer key represents an offset into
 	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
 	LocalDeltas map[uint64]StateDelta `codec:"ld,allocbound=config.MaxEvalDeltaAccounts"`
+	
+	Logs []string `codec:"lg"`
+
+	InnerTxns []SignedTxnWithAD `codec:"itx"`
 }
 
 // StateDelta is a map from key/value store keys to ValueDeltas, indicating
