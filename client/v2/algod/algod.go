@@ -104,8 +104,8 @@ func (c *Client) PendingTransactionInformation(txid string) *PendingTransactionI
 	return &PendingTransactionInformation{c: c, txid: txid}
 }
 
-func (c *Client) WaitForConfirmation(txid string, timeout uint64) *WaitForConfirmation {
-	return &WaitForConfirmation{c: c, txid: txid, timeout: timeout}
+func (c *Client) WaitForConfirmation(txid string, waitRounds uint64) *WaitForConfirmation {
+	return &WaitForConfirmation{c: c, txid: txid, waitRounds: waitRounds}
 }
 
 func (c *Client) GetApplicationByID(applicationId uint64) *GetApplicationByID {
