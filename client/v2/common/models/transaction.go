@@ -1,7 +1,8 @@
 package models
 
 // Transaction contains all fields common to all transactions and serves as an
-// envelope to all transactions type.
+// envelope to all transactions type. Represents both regular and inner
+// transactions.
 // Definition:
 // data/transactions/signedtxn.go : SignedTxn
 // data/transactions/transaction.go : Transaction
@@ -73,7 +74,10 @@ type Transaction struct {
 	Group []byte `json:"group,omitempty"`
 
 	// Id transaction ID
-	Id string `json:"id"`
+	Id string `json:"id,omitempty"`
+
+	// InnerTxns inner transactions produced by application execution.
+	InnerTxns []Transaction `json:"inner-txns,omitempty"`
 
 	// IntraRoundOffset offset into the round where this transaction was confirmed.
 	IntraRoundOffset uint64 `json:"intra-round-offset,omitempty"`
@@ -96,6 +100,9 @@ type Transaction struct {
 	// LocalStateDelta (ld) Local state key/value changes for the application being
 	// executed by this transaction.
 	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
+
+	// Logs (lg) Logs for the application being executed by this transaction.
+	Logs [][]byte `json:"logs,omitempty"`
 
 	// Note (note) Free form data.
 	Note []byte `json:"note,omitempty"`
@@ -124,7 +131,7 @@ type Transaction struct {
 
 	// Signature validation signature associated with some data. Only one of the
 	// signatures should be provided.
-	Signature TransactionSignature `json:"signature"`
+	Signature TransactionSignature `json:"signature,omitempty"`
 
 	// Type (type) Indicates what type of transaction this is. Different types have
 	// different fields.

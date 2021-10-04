@@ -1,3 +1,10 @@
+# 1.11.0
+# Added
+- add TealVerify function (#242)
+- Support AVM 1.0 (#248)
+- Test with go 1.17 in ci (#237)
+# Changed
+- Mark contract binary template code as Deprecated (#241)
 # 1.10.0
 # Added
 - New github Issue template
@@ -5,7 +12,6 @@
 - Asset Base64 Fields
 # BugFix
 - Use correct go version in CI
-# BugFix
 # 1.9.2
 # Bug Fix
 - Update FromBase64String() to correctly return the signed transaction
