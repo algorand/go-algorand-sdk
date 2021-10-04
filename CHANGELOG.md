@@ -2,10 +2,9 @@
 # Added
 - add TealVerify function (#242)
 - Support AVM 1.0 (#248)
+- Test with go 1.17 in ci (#237)
 # Changed
 - Mark contract binary template code as Deprecated (#241)
-# BugFix
-- Test with go 1.17 in ci (#237)
 # 1.10.0
 # Added
 - New github Issue template
