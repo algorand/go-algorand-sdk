@@ -1,16 +1,17 @@
-package algod
+package future
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
 // WaitForConfirmation waits for a pending transaction to be accepted by the network
 type WaitForConfirmation struct {
-	c *Client
+	c *algod.Client
 
 	// The ID of the pending transaction to wait for
 	txid string
