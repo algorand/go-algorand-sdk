@@ -9,20 +9,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// WaitForConfirmation waits for a pending transaction to be accepted by the network
-type WaitForConfirmation struct {
-	c *algod.Client
-
-	// The ID of the pending transaction to wait for
-	txid string
-
-	// The number of rounds to block before existing with an error. If zero, there is no timeout
-	waitRounds uint64
-}
-
-// Do performs the HTTP request
-func (s *WaitForConfirmation) Do(ctx context.Context, headers ...*common.Header) (response models.NodeStatus, err error) {
-	response, err = s.c.Status().Do(ctx, headers...)
+// `WaitForConfirmation` waits for a pending transaction to be accepted by the network
+// `txid`: The ID of the pending transaction to wait for
+// `waitRounds`: The number of rounds to block before existing with an error. If zero, there is no timeout
+func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx context.Context, headers ...*common.Header) (response models.NodeStatus, err error) {
+	response, err = c.Status().Do(ctx, headers...)
 	if err != nil {
 		return
 	}
@@ -32,13 +23,13 @@ func (s *WaitForConfirmation) Do(ctx context.Context, headers ...*common.Header)
 
 	for {
 		// Check that the `waitRounds` has not passed
-		if s.waitRounds > 0 && currentRound > lastRound+s.waitRounds {
-			err = fmt.Errorf("Wait for transaction id %s timed out", s.txid)
+		if waitRounds > 0 && currentRound > lastRound+waitRounds {
+			err = fmt.Errorf("Wait for transaction id %s timed out", txid)
 			return
 		}
 
 		var txInfo models.PendingTransactionInfoResponse
-		txInfo, _, err = s.c.PendingTransactionInformation(s.txid).Do(ctx, headers...)
+		txInfo, _, err = c.PendingTransactionInformation(txid).Do(ctx, headers...)
 		if err != nil {
 			return
 		}
@@ -49,7 +40,7 @@ func (s *WaitForConfirmation) Do(ctx context.Context, headers ...*common.Header)
 		}
 
 		// Wait until the block for the `currentRound` is confirmed
-		response, err = s.c.StatusAfterBlock(currentRound).Do(ctx, headers...)
+		response, err = c.StatusAfterBlock(currentRound).Do(ctx, headers...)
 		if err != nil {
 			return
 		}
