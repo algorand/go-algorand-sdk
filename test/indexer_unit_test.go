@@ -45,6 +45,7 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have authorizing address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have rekey-to "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" RekeyTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo)
+	s.Step(`^we make a LookupApplicationLogsByID call with applicationID (\d+) limit (\d+) minRound (\d+) maxRound (\d+) nextToken "([^"]*)" sender "([^"]*)" and txID "([^"]*)"$`, weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundNextTokenSenderAndTxID)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -250,4 +251,13 @@ func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessTha
 
 func weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndex(limit int, creator, name, unit string, index int) error {
 	return weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndexAndAfterAsset(limit, creator, name, unit, index, 0)
+}
+
+func weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundNextTokenSenderAndTxID(appID, limit, minRound, maxRound int, nextToken, sender, txID string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	indexerClient.LookupApplicationLogsByID(uint64(appID)).Limit(uint64(limit)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Next(nextToken).SenderAddress(sender).Txid(txID).Do(context.Background())
+	return nil
 }
