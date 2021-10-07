@@ -12,8 +12,8 @@ import (
 // `WaitForConfirmation` waits for a pending transaction to be accepted by the network
 // `txid`: The ID of the pending transaction to wait for
 // `waitRounds`: The number of rounds to block before existing with an error. If zero, there is no timeout
-func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx context.Context, headers ...*common.Header) (response models.NodeStatus, err error) {
-	response, err = c.Status().Do(ctx, headers...)
+func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx context.Context, headers ...*common.Header) (txInfo models.PendingTransactionInfoResponse, err error) {
+	response, err := c.Status().Do(ctx, headers...)
 	if err != nil {
 		return
 	}
@@ -28,7 +28,6 @@ func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx co
 			return
 		}
 
-		var txInfo models.PendingTransactionInfoResponse
 		txInfo, _, err = c.PendingTransactionInformation(txid).Do(ctx, headers...)
 		if err != nil {
 			return
