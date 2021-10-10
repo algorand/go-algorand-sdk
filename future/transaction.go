@@ -30,7 +30,7 @@ func setFee(tx types.Transaction, params types.SuggestedParams) (types.Transacti
 
 // MakePaymentTxn constructs a payment transaction using the passed parameters.
 // `from` and `to` addresses should be checksummed, human-readable addresses
-// fee is fee per byte as received from algod SuggestedFee API call
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
 func MakePaymentTxn(from, to string, amount uint64, note []byte, closeRemainderTo string, params types.SuggestedParams) (types.Transaction, error) {
 	// Decode from address
 	fromAddr, err := types.DecodeAddress(from)
