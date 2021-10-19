@@ -19,4 +19,8 @@ type AccountParticipation struct {
 	// VoteParticipationKey (vote) root participation public key (if any) currently
 	// registered for this round.
 	VoteParticipationKey []byte `json:"vote-participation-key"`
+
+	// StateProofID (bprfkey) block proof public key used in key registration
+	// transactions.
+	StateProofID Verifier `json:"state-proof-id,omitempty"`
 }

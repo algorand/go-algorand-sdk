@@ -35,12 +35,13 @@ type SignedTxn struct {
 type KeyregTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	VotePK           VotePK `codec:"votekey"`
-	SelectionPK      VRFPK  `codec:"selkey"`
-	VoteFirst        Round  `codec:"votefst"`
-	VoteLast         Round  `codec:"votelst"`
-	VoteKeyDilution  uint64 `codec:"votekd"`
-	Nonparticipation bool   `codec:"nonpart"`
+	VotePK           VotePK   `codec:"votekey"`
+	SelectionPK      VRFPK    `codec:"selkey"`
+	VoteFirst        Round    `codec:"votefst"`
+	VoteLast         Round    `codec:"votelst"`
+	VoteKeyDilution  uint64   `codec:"votekd"`
+	Nonparticipation bool     `codec:"nonpart"`
+	StateProofID     Verifier `codec:"bprfkey"`
 }
 
 // PaymentTxnFields captures the fields used by payment transactions.

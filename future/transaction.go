@@ -139,6 +139,71 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 	return setFee(tx, params)
 }
 
+// MakeKeyRegTxnV2 constructs a keyreg transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - note is a byte array
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+// KeyReg parameters:
+// - votePK is a base64-encoded string corresponding to the root participation public key
+// - selectionKey is a base64-encoded string corresponding to the vrf public key
+// - voteFirst is the first round this participation key is valid
+// - voteLast is the last round this participation key is valid
+// - voteKeyDilution is the dilution for the 2-level participation key
+// - stateProofID is a base64-encoded string corresponding to the block proof public key
+func MakeKeyRegTxnV2(account string, note []byte, params types.SuggestedParams, voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64, stateProofID types.Verifier) (types.Transaction, error) {
+	// Decode account address
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	if len(params.GenesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("key registration transaction must contain a genesisHash")
+	}
+
+	var gh types.Digest
+	copy(gh[:], params.GenesisHash)
+	var votePKBytes [32]byte
+	var selectionPKBytes [32]byte
+
+	if len(voteKey) > 0 {
+		votePKBytes, err = byte32FromBase64(voteKey)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+	}
+
+	if len(selectionKey) > 0 {
+		selectionPKBytes, err = byte32FromBase64(selectionKey)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+	}
+
+	tx := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      accountAddr,
+			Fee:         params.Fee,
+			FirstValid:  params.FirstRoundValid,
+			LastValid:   params.LastRoundValid,
+			Note:        note,
+			GenesisHash: gh,
+			GenesisID:   params.GenesisID,
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:          types.VotePK(votePKBytes),
+			SelectionPK:     types.VRFPK(selectionPKBytes),
+			VoteFirst:       types.Round(voteFirst),
+			VoteLast:        types.Round(voteLast),
+			VoteKeyDilution: voteKeyDilution,
+			StateProofID:    stateProofID,
+		},
+	}
+
+	return setFee(tx, params)
+}
+
 // MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address which will send the transaction.
 // - note is a byte array

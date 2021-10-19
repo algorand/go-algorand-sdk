@@ -2,8 +2,9 @@ package types
 
 import (
 	"encoding/base64"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"math"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -54,6 +55,12 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
+
+// Verifier is a state proof
+type Verifier struct {
+	Root         [32]byte `codec:"r"`
+	HasValidRoot bool     `codec:"vr"`
+}
 
 const microAlgoConversionFactor = 1e6
 

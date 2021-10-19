@@ -96,6 +96,11 @@ type Participation struct { // Round and Address fields are redundant if Partici
 	//
 	// required: true
 	VoteKeyDilution uint64 `json:"votekd"`
+
+	// StateProof is used to sign compact certificates. might be nil
+	//
+	// required: false
+	StateProof []byte `json:"blkprfpkb64,omitempty"`
 }
 
 // Account Description
@@ -462,6 +467,11 @@ type KeyregTransactionType struct {
 	//
 	// required: false
 	VoteKeyDilution uint64 `json:"votekd"`
+
+	// BlockProofPK is the block proof public key used in key registration transactions
+	//
+	// required: false
+	BlockProofPK types.Verifier `json:"bprfkey"`
 }
 
 // TransactionResults contains information about the side effects of a transaction
