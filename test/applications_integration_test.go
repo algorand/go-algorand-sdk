@@ -61,36 +61,9 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	err = waitForTransaction(ltxid)
+	_, err = future.WaitForConfirmation(algodV2client, ltxid, 0, context.Background())
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func waitForTransaction(transactionId string) error {
-	status, err := algodV2client.Status().Do(context.Background())
-	if err != nil {
-		return err
-	}
-	stopRound := status.LastRound + 10
-
-	for {
-		lstatus, _, err := algodV2client.PendingTransactionInformation(transactionId).Do(context.Background())
-		if err != nil {
-			return err
-		}
-		if lstatus.ConfirmedRound > 0 {
-			break // end the waiting
-		}
-		status, err := algodV2client.Status().Do(context.Background())
-		if err != nil {
-			return err
-		}
-		if status.LastRound > stopRound { // last round sent tx is valid
-			return fmt.Errorf("Transaction not accepted.")
-		}
-		time.Sleep(100 * time.Millisecond)
 	}
 	return nil
 }
@@ -240,7 +213,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) e
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	err := waitForTransaction(txid)
+	_, err := future.WaitForConfirmation(algodV2client, txid, 0, context.Background())
 	if err != nil {
 		return err
 	}
