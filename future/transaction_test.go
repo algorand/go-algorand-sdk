@@ -179,7 +179,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		GenesisHash:     ghAsArray[:],
 	}
 	stateProof:= types.Verifier{Root: [32]byte{1}, HasValidRoot: true}
-	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, stateProof)
+	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, false, stateProof)
 	require.NoError(t, err)
 
 	a, err := types.DecodeAddress(addr)
@@ -188,7 +188,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		Type: types.KeyRegistrationTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3700,
+			Fee:         3550,
 			FirstValid:  322575,
 			LastValid:   323575,
 			Note:        []byte{45, 67},

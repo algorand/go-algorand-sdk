@@ -2089,17 +2089,3 @@ func tealCheckDryrun(result string) error {
 	return nil
 
 }
-
-func byteFromBase64(s string) []byte {
-	b, _ := base64.StdEncoding.DecodeString(s)
-	return b
-}
-
-func byte32ArrayFromBase64(s string) (out [32]byte) {
-	slice := byteFromBase64(s)
-	if len(slice) != 32 {
-		panic("wrong length: input slice not 32 bytes")
-	}
-	copy(out[:], slice)
-	return
-}
