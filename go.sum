@@ -4,6 +4,10 @@ github.com/algorand/go-algorand v0.0.0-20211013193246-3572e1f9ac43 h1:dzZacHeLAI
 github.com/algorand/go-algorand v0.0.0-20211013193246-3572e1f9ac43/go.mod h1:2OYkkOELFF9+x4HYJBoE4WVjuE+wW0EjKV0zbBxbMMA=
 github.com/algorand/go-algorand v0.0.0-20211018202402-1bf3bd37aad6 h1:yhBZXOgn1BSKnGLzjts3Cc3KZGvP2eGiRbeOjSrP6qg=
 github.com/algorand/go-algorand v0.0.0-20211018202402-1bf3bd37aad6/go.mod h1:2OYkkOELFF9+x4HYJBoE4WVjuE+wW0EjKV0zbBxbMMA=
+github.com/algorand/go-algorand v0.0.0-20211020113600-e853e2ea278f h1:AQAybnGfTX0iRVZs6CVp1hXmV0gu8M5vlgn0rvmDcoY=
+github.com/algorand/go-algorand v0.0.0-20211020113600-e853e2ea278f/go.mod h1:2OYkkOELFF9+x4HYJBoE4WVjuE+wW0EjKV0zbBxbMMA=
+github.com/algorand/go-algorand v0.0.0-20211020145413-1e5603c2691d h1:pvpyJyfRjmjPKZvLO8Ja+EMk7uwNWaS7OLq6ZN/11U0=
+github.com/algorand/go-algorand v0.0.0-20211020145413-1e5603c2691d/go.mod h1:2OYkkOELFF9+x4HYJBoE4WVjuE+wW0EjKV0zbBxbMMA=
 github.com/algorand/go-codec v1.1.2/go.mod h1:A3YI4V24jUUnU1eNekNmx2fLi60FvlNssqOiUsyfNM8=
 github.com/algorand/go-codec v1.1.6-algorand h1:zdBZ0nPfsiho3JHnkaGyuUOLZQonbtFe9eOEcor1HlE=
 github.com/algorand/go-codec v1.1.6-algorand/go.mod h1:A3YI4V24jUUnU1eNekNmx2fLi60FvlNssqOiUsyfNM8=

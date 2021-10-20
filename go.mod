@@ -3,7 +3,7 @@ module github.com/algorand/go-algorand-sdk
 go 1.13
 
 require (
-	github.com/algorand/go-algorand v0.0.0-20211018202402-1bf3bd37aad6
+	github.com/algorand/go-algorand v0.0.0-20211020145413-1e5603c2691d
 	github.com/algorand/go-codec v1.1.7
 	github.com/algorand/go-codec/codec v1.1.7
 	github.com/cucumber/godog v0.8.1
