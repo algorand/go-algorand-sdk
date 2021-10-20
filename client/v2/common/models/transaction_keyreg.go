@@ -24,8 +24,4 @@ type TransactionKeyreg struct {
 	// VoteParticipationKey (votekey) Participation public key used in key registration
 	// transactions.
 	VoteParticipationKey []byte `json:"vote-participation-key,omitempty"`
-
-	// StateProofID (bprfkey) block proof public key used in key registration
-	// transactions.
-	StateProofID Verifier `json:"state-proof-id,omitempty"`
 }
