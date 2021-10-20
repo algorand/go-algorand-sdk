@@ -85,6 +85,8 @@ var selkey string
 var votefst uint64
 var votelst uint64
 var votekd uint64
+var nonpart bool
+var stateProofID types.Verifier
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
@@ -253,7 +255,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I get transactions by address and date", txnsByAddrDate)
 	s.Step(`key registration transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)`, keyregTxnParams)
 	s.Step("I create the key registration transaction", createKeyregTxn)
-	s.Step("default V2 key registration transaction", createKeyregTxnV2)
+	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregTxnV2)
 	s.Step(`^I get recent transactions, limited by (\d+) transactions$`, getTxnsByCount)
 	s.Step(`^I can get account information`, newAccInfo)
 	s.Step(`^I can get the transaction by ID$`, txnbyID)
@@ -1370,16 +1372,30 @@ func createKeyregTxn() (err error) {
 	return err
 }
 
-func createKeyregTxnV2() (err error) {
+func createKeyregTxnV2(keyregType string) (err error) {
 	params, err := acl.BuildSuggestedParams()
 	if err != nil {
 		return err
 	}
+	lastRound = uint64(params.FirstRoundValid)
 	pk = accounts[0]
-	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd, types.Verifier{})
+	if keyregType == "online"{
+		nonpart = false
+		votekey = "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo="
+		selkey = "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc="
+		votefst = uint64(params.LastRoundValid - 10)
+		votelst = uint64(10111)
+		votekd = uint64(11)
+		stateProofID = types.Verifier{Root: [32]byte{1},HasValidRoot: true}
+	}else if keyregType == "nonparticipation"{
+		nonpart = true
+	}
+
+	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,stateProofID)
 	if err != nil {
 		return err
 	}
+
 	return err
 }
 
@@ -2071,4 +2087,19 @@ func tealCheckDryrun(result string) error {
 		return fmt.Errorf("dryrun status %s != %s", result, msgs[len(msgs)-1])
 	}
 	return nil
+
+}
+
+func byteFromBase64(s string) []byte {
+	b, _ := base64.StdEncoding.DecodeString(s)
+	return b
+}
+
+func byte32ArrayFromBase64(s string) (out [32]byte) {
+	slice := byteFromBase64(s)
+	if len(slice) != 32 {
+		panic("wrong length: input slice not 32 bytes")
+	}
+	copy(out[:], slice)
+	return
 }
