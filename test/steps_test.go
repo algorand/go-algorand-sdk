@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/sha512"
+
+	//"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/gob"
@@ -1378,20 +1381,24 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		return err
 	}
 	lastRound = uint64(params.FirstRoundValid)
-	pk = accounts[0]
+	pk=accounts[0]
+	addr,_:= types.DecodeAddress("DN2XR4ICNN5WLUPU7KILTDRM5LDKDGP6WVHRU65VHEHF3RAW44FLRCEAQM")
 	if keyregType == "online"{
+		s:="mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
+		b, _:=base64.StdEncoding.DecodeString(s)
+		r:= sha512.Sum512_256(b)
 		nonpart = false
-		votekey = "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo="
-		selkey = "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc="
-		votefst = uint64(params.LastRoundValid - 10)
-		votelst = uint64(10111)
-		votekd = uint64(11)
-		stateProofID = types.Verifier{Root: [32]byte{1},HasValidRoot: true}
+		votekey ="HxDxUGQSg2zygHmj21eLmKqm+PDN8fAdk5sSkYmwG8w="
+		selkey =  "wAjRw646vyariSwKXZfR5DDI3XSQYy+6gMq1biPOriA="
+		votefst = uint64(0)
+		votelst = uint64(3000)
+		votekd = uint64(10000)
+		stateProofID = types.Verifier{Root:r ,HasValidRoot: true}
 	}else if keyregType == "nonparticipation"{
 		nonpart = true
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,stateProofID)
+	txn, err = future.MakeKeyRegTxnV2(addr.String(), note, params, votekey, selkey, votefst, votelst, votekd,stateProofID)
 	if err != nil {
 		return err
 	}
@@ -2088,4 +2095,17 @@ func tealCheckDryrun(result string) error {
 	}
 	return nil
 
+}
+func byteFromBase64(s string) []byte {
+	b, _ := base64.StdEncoding.DecodeString(s)
+	return b
+}
+
+func byte32ArrayFromBase64(s string) (out [32]byte) {
+	slice := byteFromBase64(s)
+	if len(slice) != 32 {
+		panic("wrong length: input slice not 32 bytes")
+	}
+	copy(out[:], slice)
+	return
 }
