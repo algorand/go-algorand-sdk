@@ -178,7 +178,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		LastRoundValid:  323575,
 		GenesisHash:     ghAsArray[:],
 	}
-	stateProof:= types.Verifier{Root: [32]byte{1}, HasValidRoot: true}
+	stateProof := types.Verifier{Root: [64]byte{1}, HasValidRoot: true}
 	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, false, stateProof)
 	require.NoError(t, err)
 
@@ -201,7 +201,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 			VoteFirst:       10000,
 			VoteLast:        10111,
 			VoteKeyDilution: 11,
-			StateProofID: stateProof,
+			StateProofID:    stateProof,
 		},
 	}
 	require.Equal(t, expKeyRegTxn, tx)

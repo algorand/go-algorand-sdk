@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"crypto/sha512"
+	//"crypto/sha512"
 
 	//"crypto/sha512"
 	"encoding/base32"
@@ -1380,25 +1380,35 @@ func createKeyregTxnV2(keyregType string) (err error) {
 	if err != nil {
 		return err
 	}
-	lastRound = uint64(params.FirstRoundValid)
-	pk=accounts[0]
-	addr,_:= types.DecodeAddress("DN2XR4ICNN5WLUPU7KILTDRM5LDKDGP6WVHRU65VHEHF3RAW44FLRCEAQM")
+	lastRound = uint64(params.LastRoundValid)
+	pk=accounts[1]
 	if keyregType == "online"{
-		s:="mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
-		b, _:=base64.StdEncoding.DecodeString(s)
-		r:= sha512.Sum512_256(b)
 		nonpart = false
-		votekey ="HxDxUGQSg2zygHmj21eLmKqm+PDN8fAdk5sSkYmwG8w="
-		selkey =  "wAjRw646vyariSwKXZfR5DDI3XSQYy+6gMq1biPOriA="
+		votekey ="9mr13Ri8rFepxN3ghIUrZNui6LqqM5hEzB45Rri5lkU="
+		selkey =  "dx717L3uOIIb/jr9OIyls1l5Ei00NFgRa380w7TnPr4="
 		votefst = uint64(0)
-		votelst = uint64(3000)
+		votelst = uint64(30001)
 		votekd = uint64(10000)
-		stateProofID = types.Verifier{Root:r ,HasValidRoot: true}
+		stateProofID = types.Verifier{Root:[64]byte{1} ,HasValidRoot: true}
 	}else if keyregType == "nonparticipation"{
 		nonpart = true
+		votekey =""
+		selkey =  ""
+		votefst = 0
+		votelst = 0
+		votekd = 0
+		stateProofID = types.Verifier{}
+	}else if keyregType == "offline"{
+		nonpart = false
+		votekey =""
+		selkey =  ""
+		votefst = 0
+		votelst = 0
+		votekd = 0
+		stateProofID = types.Verifier{}
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(addr.String(), note, params, votekey, selkey, votefst, votelst, votekd,stateProofID)
+	txn, err = future.MakeKeyRegTxnV2(accounts[1], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,stateProofID)
 	if err != nil {
 		return err
 	}
