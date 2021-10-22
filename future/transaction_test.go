@@ -188,7 +188,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		Type: types.KeyRegistrationTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3550,
+			Fee:         3870,
 			FirstValid:  322575,
 			LastValid:   323575,
 			Note:        []byte{45, 67},
