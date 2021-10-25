@@ -41,7 +41,7 @@ type KeyregTxnFields struct {
 	VoteLast         Round    `codec:"votelst"`
 	VoteKeyDilution  uint64   `codec:"votekd"`
 	Nonparticipation bool     `codec:"nonpart"`
-	StateProofID     Verifier `codec:"bprfkey"`
+	StateProofPK     Verifier `codec:"sprfkey"`
 }
 
 // PaymentTxnFields captures the fields used by payment transactions.

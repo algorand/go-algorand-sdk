@@ -201,7 +201,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 			VoteFirst:       10000,
 			VoteLast:        10111,
 			VoteKeyDilution: 11,
-			StateProofID:    stateProof,
+			StateProofPK:    stateProof,
 		},
 	}
 	require.Equal(t, expKeyRegTxn, tx)

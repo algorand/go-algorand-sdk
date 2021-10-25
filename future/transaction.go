@@ -150,8 +150,8 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 // - voteLast is the last round this participation key is valid
 // - voteKeyDilution is the dilution for the 2-level participation key
 // - nonpart is an indicator marking a key registration participating or nonparticipating
-// - stateProofID is a base64-encoded string corresponding to the block proof public key
-func MakeKeyRegTxnV2(account string, note []byte, params types.SuggestedParams, voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64, nonpart bool, stateProofID types.Verifier) (types.Transaction, error) {
+// - StateProofPK is a base64-encoded string corresponding to the block proof public key
+func MakeKeyRegTxnV2(account string, note []byte, params types.SuggestedParams, voteKey, selectionKey string, voteFirst, voteLast, voteKeyDilution uint64, nonpart bool, StateProofPK types.Verifier) (types.Transaction, error) {
 	// Decode account address
 	accountAddr, err := types.DecodeAddress(account)
 	if err != nil {
@@ -199,7 +199,7 @@ func MakeKeyRegTxnV2(account string, note []byte, params types.SuggestedParams, 
 			VoteLast:         types.Round(voteLast),
 			VoteKeyDilution:  voteKeyDilution,
 			Nonparticipation: nonpart,
-			StateProofID:     stateProofID,
+			StateProofPK:     StateProofPK,
 		},
 	}
 

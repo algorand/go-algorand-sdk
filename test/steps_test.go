@@ -89,7 +89,7 @@ var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var stateProofID types.Verifier
+var StateProofPK types.Verifier
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
@@ -1389,7 +1389,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = uint64(0)
 		votelst = uint64(30001)
 		votekd = uint64(10000)
-		stateProofID = types.Verifier{Root:[64]byte{1} ,HasValidRoot: true}
+		StateProofPK = types.Verifier{Root:[64]byte{1} ,HasValidRoot: true}
 	}else if keyregType == "nonparticipation"{
 		nonpart = true
 		votekey =""
@@ -1397,7 +1397,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofID = types.Verifier{}
+		StateProofPK = types.Verifier{}
 	}else if keyregType == "offline"{
 		nonpart = false
 		votekey =""
@@ -1405,10 +1405,10 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofID = types.Verifier{}
+		StateProofPK = types.Verifier{}
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(accounts[1], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,stateProofID)
+	txn, err = future.MakeKeyRegTxnV2(accounts[1], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,StateProofPK)
 	if err != nil {
 		return err
 	}
