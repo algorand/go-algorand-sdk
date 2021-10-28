@@ -199,7 +199,7 @@ func MakeKeyRegTxnV2(account string, note []byte, params types.SuggestedParams, 
 			VoteLast:         types.Round(voteLast),
 			VoteKeyDilution:  voteKeyDilution,
 			Nonparticipation: nonpart,
-			StateProofPK:     StateProofPK,
+			StateProofPK:     stateProofPK,
 		},
 	}
 
