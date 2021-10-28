@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	//"crypto/sha512"
-
-	//"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/gob"
@@ -89,7 +86,7 @@ var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var StateProofPK types.Verifier
+var stateProofPK types.Verifier
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
@@ -1389,7 +1386,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = uint64(0)
 		votelst = uint64(30001)
 		votekd = uint64(10000)
-		StateProofPK = types.Verifier{Root:[64]byte{1}}
+		stateProofPK = types.Verifier{Root:[64]byte{1}}
 	}else if keyregType == "nonparticipation"{
 		nonpart = true
 		votekey =""
@@ -1397,7 +1394,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		StateProofPK = types.Verifier{}
+		stateProofPK = types.Verifier{}
 	}else if keyregType == "offline"{
 		nonpart = false
 		votekey =""
@@ -1405,10 +1402,10 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		StateProofPK = types.Verifier{}
+		stateProofPK = types.Verifier{}
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,StateProofPK)
+	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,stateProofPK)
 	if err != nil {
 		return err
 	}
@@ -2104,18 +2101,4 @@ func tealCheckDryrun(result string) error {
 		return fmt.Errorf("dryrun status %s != %s", result, msgs[len(msgs)-1])
 	}
 	return nil
-
-}
-func byteFromBase64(s string) []byte {
-	b, _ := base64.StdEncoding.DecodeString(s)
-	return b
-}
-
-func byte32ArrayFromBase64(s string) (out [32]byte) {
-	slice := byteFromBase64(s)
-	if len(slice) != 32 {
-		panic("wrong length: input slice not 32 bytes")
-	}
-	copy(out[:], slice)
-	return
 }
