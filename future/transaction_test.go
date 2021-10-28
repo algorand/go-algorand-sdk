@@ -178,17 +178,41 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		LastRoundValid:  323575,
 		GenesisHash:     ghAsArray[:],
 	}
-	stateProof := types.Verifier{Root: [64]byte{1}, HasValidRoot: true}
-	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, false, stateProof)
+	// nonparticipation
+	stateProof := types.Verifier{Root: [64]byte{}}
+	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "", "", 0, 0, 0, true, stateProof)
 	require.NoError(t, err)
-
 	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
 	expKeyRegTxn := types.Transaction{
 		Type: types.KeyRegistrationTx,
 		Header: types.Header{
 			Sender:      a,
-			Fee:         3870,
+			Fee:         2020,
+			FirstValid:  322575,
+			LastValid:   323575,
+			Note:        []byte{45, 67},
+			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+			GenesisID:   "",
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			Nonparticipation: true,
+		},
+	}
+	require.Equal(t, expKeyRegTxn, tx)
+
+	// online
+	stateProof = types.Verifier{Root: [64]byte{1}}
+	tx, err = MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, false, stateProof)
+	require.NoError(t, err)
+
+	a, err = types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expKeyRegTxn = types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         3830,
 			FirstValid:  322575,
 			LastValid:   323575,
 			Note:        []byte{45, 67},
@@ -201,6 +225,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 			VoteFirst:       10000,
 			VoteLast:        10111,
 			VoteKeyDilution: 11,
+			Nonparticipation: false,
 			StateProofPK:    stateProof,
 		},
 	}

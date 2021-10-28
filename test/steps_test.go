@@ -1381,7 +1381,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		return err
 	}
 	lastRound = uint64(params.LastRoundValid)
-	pk=accounts[1]
+	pk=accounts[0]
 	if keyregType == "online"{
 		nonpart = false
 		votekey ="9mr13Ri8rFepxN3ghIUrZNui6LqqM5hEzB45Rri5lkU="
@@ -1389,7 +1389,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = uint64(0)
 		votelst = uint64(30001)
 		votekd = uint64(10000)
-		StateProofPK = types.Verifier{Root:[64]byte{1} ,HasValidRoot: true}
+		StateProofPK = types.Verifier{Root:[64]byte{1}}
 	}else if keyregType == "nonparticipation"{
 		nonpart = true
 		votekey =""
@@ -1408,7 +1408,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		StateProofPK = types.Verifier{}
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(accounts[1], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,StateProofPK)
+	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd,nonpart,StateProofPK)
 	if err != nil {
 		return err
 	}

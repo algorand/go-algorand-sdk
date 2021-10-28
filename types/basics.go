@@ -59,7 +59,6 @@ type Digest [hashLenBytes]byte
 // Verifier is a state proof
 type Verifier struct {
 	Root         [64]byte `codec:"r"`
-	HasValidRoot bool     `codec:"vr"`
 }
 
 const microAlgoConversionFactor = 1e6
