@@ -44,6 +44,11 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
+	// signature must include method name
+	if openIdx == 0 {
+		return Method{}, errors.New("Method signature has invalid format")
+	}
+
 	name := methodStr[:openIdx]
 	stringArgs := strings.Split(methodStr[openIdx+1:closeIdx], ",")
 	returnType := methodStr[closeIdx+1:]
@@ -104,6 +109,6 @@ type Interface struct {
 
 type Contract struct {
 	Name    string   `json:"name"`
-	AppId   string   `json:"appId"`
+	AppId   uint64   `json:"appId"`
 	Methods []Method `json:"methods"`
 }

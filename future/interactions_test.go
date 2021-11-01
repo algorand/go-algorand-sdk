@@ -185,11 +185,11 @@ func TestEncodeJsonContract(t *testing.T) {
 
 	contract := Contract{
 		Name:    "contract",
-		AppId:   "123",
+		AppId:   123,
 		Methods: []Method{method},
 	}
 
-	expected := `{"name":"contract","appId":"123","methods":[{"name":"add","args":[{"name":"0","type":"uint32"},{"name":"1","type":"uint32"}],"returns":{"type":"uint32"}}]}`
+	expected := `{"name":"contract","appId":123,"methods":[{"name":"add","args":[{"name":"0","type":"uint32"},{"name":"1","type":"uint32"}],"returns":{"type":"uint32"}}]}`
 
 	jsonContract, err := json.Marshal(contract)
 	require.NoError(t, err)
@@ -211,11 +211,11 @@ func TestEncodeJsonContractWithDescription(t *testing.T) {
 
 	contract := Contract{
 		Name:    "contract",
-		AppId:   "123",
+		AppId:   123,
 		Methods: []Method{method},
 	}
 
-	expected := `{"name":"contract","appId":"123","methods":[{"name":"add","desc":"description","args":[{"name":"0","type":"uint32","desc":"description"},{"name":"1","type":"uint32","desc":"description"}],"returns":{"type":"uint32","desc":"description"}}]}`
+	expected := `{"name":"contract","appId":123,"methods":[{"name":"add","desc":"description","args":[{"name":"0","type":"uint32","desc":"description"},{"name":"1","type":"uint32","desc":"description"}],"returns":{"type":"uint32","desc":"description"}}]}`
 
 	jsonContract, err := json.Marshal(contract)
 	require.NoError(t, err)
