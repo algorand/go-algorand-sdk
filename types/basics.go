@@ -38,6 +38,9 @@ const LogicSigMaxSize = 1000
 // LogicSigMaxCost is a max execution const of a TEAL program
 const LogicSigMaxCost = 20000
 
+// KeyStoreRootSize is the size, in bytes, of keyreg verifier
+const KeyStoreRootSize = 64
+
 // MicroAlgos are the base unit of currency in Algorand
 type MicroAlgos uint64
 
@@ -57,9 +60,7 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 type Digest [hashLenBytes]byte
 
 // Verifier is a state proof
-type Verifier struct {
-	Root         [64]byte `codec:"r"`
-}
+type Verifier [KeyStoreRootSize]byte
 
 const microAlgoConversionFactor = 1e6
 
