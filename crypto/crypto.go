@@ -87,13 +87,6 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 	return
 }
 
-func GetSignatureForTransaction(sk ed25519.PrivateKey, tx types.Transaction) []byte {
-	toBeSigned := rawTransactionBytesToSign(tx)
-
-	// Sign the encoded transaction
-	return ed25519.Sign(sk, toBeSigned)
-}
-
 // rawTransactionBytesToSign returns the byte form of the tx that we actually sign
 // and compute txID from.
 func rawTransactionBytesToSign(tx types.Transaction) []byte {
