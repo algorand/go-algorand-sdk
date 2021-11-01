@@ -3,6 +3,7 @@ package future
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
@@ -23,7 +24,7 @@ type TransactionSigner = func(txGroup []types.Transaction, indexesToSign []int) 
 /**
  * Create a TransactionSigner that can sign transactions for the provided basic Account.
  */
-func makeBasicAccountTransactionSigner(account crypto.Account) TransactionSigner {
+func MakeBasicAccountTransactionSigner(account crypto.Account) TransactionSigner {
 
 	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
 		var stxs [][]byte
@@ -45,7 +46,7 @@ func makeBasicAccountTransactionSigner(account crypto.Account) TransactionSigner
 /**
  * Create a TransactionSigner that can sign transactions for the provided LogicSigAccount.
  */
-func makeLogicSigAccountTransactionSigner(logicSigAccount crypto.LogicSigAccount) TransactionSigner {
+func MakeLogicSigAccountTransactionSigner(logicSigAccount crypto.LogicSigAccount) TransactionSigner {
 
 	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
 		var stxs [][]byte
@@ -69,15 +70,17 @@ func makeLogicSigAccountTransactionSigner(logicSigAccount crypto.LogicSigAccount
  * @param msig - The Multisig account metadata
  * @param sks - An array of private keys belonging to the msig which should sign the transactions.
  */
-func makeMultiSigAccountTransactionSigner(msig crypto.MultisigAccount, sks [][]byte) TransactionSigner {
+func MakeMultiSigAccountTransactionSigner(msig crypto.MultisigAccount, sks [][]byte) TransactionSigner {
 
 	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
 		var stxs [][]byte
 		var txids []string
 		for _, pos := range indexesToSign {
 			var unmergedStxs [][]byte
+			var txid string
 			for _, sk := range sks {
-				_, unmergedStxBytes, err := crypto.SignMultisigTransaction(sk, msig, txGroup[pos])
+				tempTxid, unmergedStxBytes, err := crypto.SignMultisigTransaction(sk, msig, txGroup[pos])
+				txid = tempTxid
 				if err != nil {
 					return nil, nil, err
 				}
@@ -85,13 +88,19 @@ func makeMultiSigAccountTransactionSigner(msig crypto.MultisigAccount, sks [][]b
 				unmergedStxs = append(unmergedStxs, unmergedStxBytes)
 			}
 
-			txid, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
-			if err != nil {
-				return nil, nil, err
-			}
+			if len(sks) > 1 {
+				tempTxid, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
+				txid = tempTxid
+				if err != nil {
+					return nil, nil, err
+				}
 
-			stxs = append(stxs, stxBytes)
-			txids = append(txids, txid)
+				stxs = append(stxs, stxBytes)
+				txids = append(txids, txid)
+			} else {
+				stxs = append(stxs, unmergedStxs[0])
+				txids = append(txids, txid)
+			}
 		}
 
 		return stxs, txids, nil
@@ -110,58 +119,75 @@ type MethodArgument interface {
 	IsMethodArgument()
 }
 
-type ABIValue struct {
-	abi.Value
-}
+type ABIValue abi.Value
 
-func (abiValue ABIValue) IsMethodArgument()              {}
-func (txSigner TransactionWithSigner) IsMethodArgument() {}
+func (abiValue ABIValue) IsMethodArgument()                 {}
+func (txAndSigner TransactionWithSigner) IsMethodArgument() {}
 
 type AtomicTransactionComposerStatus = int
 
 const (
 	/** The atomic group is still under construction. */
-	BUILDING AtomicTransactionComposerStatus = 1
+	BUILDING AtomicTransactionComposerStatus = iota
 
 	/** The atomic group has been finalized, but not yet signed. */
-	BUILT = 2
+	BUILT
 
 	/** The atomic group has been finalized and signed, but not yet submitted to the network. */
-	SIGNED = 3
+	SIGNED
 
 	/** The atomic gorup has been finalized, signed, and submitted to the network. */
-	SUBMITTED = 4
+	SUBMITTED
 
 	/** The atomic group has been finalized, signed, submitted, and successfully committed to a block. */
-	COMMITTED = 5
+	COMMITTED
 )
+
+/** The maximum size of an atomic transaction group. */
+const MAX_GROUP_SIZE = 16
 
 /** A class used to construct and execute atomic transaction groups */
 type AtomicTransactionComposer struct {
-
-	/** The maximum size of an atomic transaction group. */
-	MAX_GROUP_SIZE int
-
+	/** The current status of the composer. The status increases monotonically. */
 	status AtomicTransactionComposerStatus
 
+	/** The transactions in the group with their respective signers. If status is greater then BUILDING
+	then this slice cannot change. */
 	transactions []TransactionWithSigner
 
+	/** Method calls constructed from information passed into AddMethodCall(). Used in Execute() to extract
+	return values. */
+	methodCalls []Method
+
+	/** The raw signed transactions populated after invocation of GatherSignatures(). */
 	signedTxs [][]byte
 
+	/** Txids of the transactions in this group. Populated after invocation to GatherSignatures() and used
+	in Execute() to gather transaction information */
 	txids []string
+}
+
+func MakeAtomicTransactionComposer() AtomicTransactionComposer {
+	return AtomicTransactionComposer{
+		status:       BUILDING,
+		transactions: []TransactionWithSigner{},
+		methodCalls:  []Method{},
+		signedTxs:    [][]byte{},
+		txids:        []string{},
+	}
 }
 
 /**
 * Get the status of this composer's transaction group.
  */
-func (atc *AtomicTransactionComposer) getStatus() AtomicTransactionComposerStatus {
+func (atc *AtomicTransactionComposer) GetStatus() AtomicTransactionComposerStatus {
 	return atc.status
 }
 
 /**
 * Get the number of transactions currently in this atomic group.
  */
-func (atc *AtomicTransactionComposer) count() int {
+func (atc *AtomicTransactionComposer) Count() int {
 	return len(atc.transactions)
 }
 
@@ -169,8 +195,19 @@ func (atc *AtomicTransactionComposer) count() int {
 * Create a new composer with the same underlying transactions. The new composer's status will be
 * BUILDING, so additional transactions may be added to it.
  */
-func (atc *AtomicTransactionComposer) clone() AtomicTransactionComposer {
+func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
+	newTxs := atc.transactions
+	for _, txAndSigner := range newTxs {
+		txAndSigner.Txn.Group = types.Digest{}
+	}
 
+	return AtomicTransactionComposer{
+		status:       BUILDING,
+		transactions: newTxs,
+		methodCalls:  atc.methodCalls,
+		signedTxs:    [][]byte{},
+		txids:        []string{},
+	}
 }
 
 /**
@@ -179,13 +216,13 @@ func (atc *AtomicTransactionComposer) clone() AtomicTransactionComposer {
 * An error will be thrown if the composer's status is not BUILDING, or if adding this transaction
 * causes the current group to exceed MAX_GROUP_SIZE.
  */
-func (atc *AtomicTransactionComposer) addTransaction(txnAndSigner TransactionWithSigner) error {
+func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWithSigner) error {
 	if atc.status != BUILDING {
-		return errors.New("Transactions cannot be added when the status of the transaction composer is not BUILDING")
+		return errors.New("STATUS MUST BE BUILDING IN ORDER TO ADD TRANSACTION")
 	}
 
-	if atc.count() == atc.MAX_GROUP_SIZE {
-		return errors.New("The transaction composer has reached its MAX_GROUP_SIZE: %d", atc.MAX_GROUP_SIZE)
+	if atc.Count() == MAX_GROUP_SIZE {
+		return fmt.Errorf("REACHED MAX_GROUP_SIZE: %d", MAX_GROUP_SIZE)
 	}
 
 	atc.transactions = append(atc.transactions, txnAndSigner)
@@ -199,19 +236,17 @@ func (atc *AtomicTransactionComposer) addTransaction(txnAndSigner TransactionWit
 * causes the current group to exceed MAX_GROUP_SIZE, or if the provided arguments are invalid
 * for the given method.
  */
-func (atc *AtomicTransactionComposer) addMethodCall(
+func (atc *AtomicTransactionComposer) AddMethodCall(
 	/** The ID of the smart contract to call */
 	appID uint64,
 	/** The method to call on the smart contract */
-	method abi.Method,
+	method Method,
 	/** The arguments to include in the method call. If omitted, no arguments will be passed to the method. */
 	methodArgs []MethodArgument,
 	/** The address of the sender of this application call */
 	sender types.Address,
 	/** Transactions params to use for this application call */
 	suggestedParams types.SuggestedParams,
-	/** The OnComplete action to take for this application call. If omitted, OnApplicationComplete.NoOpOC will be used. */
-	onComplete types.OnCompletion,
 	/** The note value for this application call */
 	note []byte,
 	/** The lease value for this application call */
@@ -222,31 +257,34 @@ func (atc *AtomicTransactionComposer) addMethodCall(
 	signer TransactionSigner) error {
 
 	if atc.status != BUILDING {
-		return errors.New("Transactions cannot be added when the status of the transaction composer is not BUILDING")
+		return errors.New("STATUS MUST BE BUILDING IN ORDER TO ADD TRANSACTION")
 	}
 
+	selectorValue := method.GetSelector()
+	encodedAbiArgs := [][]byte{selectorValue}
+
+	// insert selector as first param
 	var abiArgs []ABIValue
 	for _, methodArg := range methodArgs {
 		switch v := methodArg.(type) {
 		case ABIValue:
 			abiArgs = append(abiArgs, v)
 		case TransactionWithSigner:
-			err := atc.addTransaction(v)
+			err := atc.AddTransaction(v)
 			if err != nil {
 				return err
 			}
 		default:
-			return errors.New("MethodArg has type %s, only ABIValues and TransactionSigners are allowed")
+			return errors.New("MethodArg must be either ABIValue or TransactionSigner")
 		}
 	}
 
-	if atc.count() == atc.MAX_GROUP_SIZE {
-		return errors.New("The transaction composer has reached its MAX_GROUP_SIZE: %d", atc.MAX_GROUP_SIZE)
+	if atc.Count() == MAX_GROUP_SIZE {
+		return fmt.Errorf("REACHED MAX_GROUP_SIZE: %d", MAX_GROUP_SIZE)
 	}
 
-	var encodedAbiArgs [][]byte
 	for _, abiArg := range abiArgs {
-		encodedArg, err := abiArg.Encode()
+		encodedArg, err := abiArg.AbiType.Encode(abiArg.RawValue)
 		if err != nil {
 			return err
 		}
@@ -271,12 +309,13 @@ func (atc *AtomicTransactionComposer) addMethodCall(
 		return err
 	}
 
-	txSigner := TransactionWithSigner{
+	txAndSigner := TransactionWithSigner{
 		Txn:    tx,
 		Signer: signer,
 	}
 
-	atc.transactions = append(atc.transactions, txSigner)
+	atc.transactions = append(atc.transactions, txAndSigner)
+	atc.methodCalls = append(atc.methodCalls, method)
 	return nil
 }
 
@@ -285,14 +324,14 @@ func (atc *AtomicTransactionComposer) addMethodCall(
 *
 * The composer's status will be at least BUILT after executing this method.
  */
-func (atc *AtomicTransactionComposer) buildGroup() ([]TransactionWithSigner, error) {
+func (atc *AtomicTransactionComposer) BuildGroup() ([]TransactionWithSigner, error) {
 	if atc.status > BUILDING {
 		return atc.transactions, nil
 	}
 
 	var txns []types.Transaction
-	for _, txSigner := range atc.transactions {
-		txns = append(txns, txSigner.Txn)
+	for _, txAndSigner := range atc.transactions {
+		txns = append(txns, txAndSigner.Txn)
 	}
 
 	gid, err := crypto.ComputeGroupID(txns)
@@ -300,14 +339,11 @@ func (atc *AtomicTransactionComposer) buildGroup() ([]TransactionWithSigner, err
 		return nil, err
 	}
 
-	for _, txSigner := range atc.transactions {
-		txSigner.Txn.Group = gid
+	for _, txAndSigner := range atc.transactions {
+		txAndSigner.Txn.Group = gid
 	}
 
-	if atc.status == BUILDING {
-		atc.status = BUILT
-	}
-
+	atc.status = BUILT
 	return atc.transactions, nil
 }
 
@@ -321,24 +357,24 @@ func (atc *AtomicTransactionComposer) buildGroup() ([]TransactionWithSigner, err
 *
 * @returns A promise that resolves to an array of signed transactions.
  */
-func (atc *AtomicTransactionComposer) gatherSignatures() ([][]byte, error) {
+func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 	// if status is at least signed then return cached signed transactions
 	if atc.status >= SIGNED {
 		return atc.signedTxs, nil
 	}
 
 	// retrieve built transactions and verify status is BUILT
-	txs, err := atc.buildGroup()
+	txs, err := atc.BuildGroup()
 	if err != nil {
 		return nil, err
 	}
 
 	var sigTxs [][]byte
 	var txids []string
-	for _, txSigner := range txs {
-		txGroup := []types.Transaction{txSigner.Txn}
+	for _, txAndSigner := range txs {
+		txGroup := []types.Transaction{txAndSigner.Txn}
 		indexesToSign := []int{0}
-		sigStx, txid, err := txSigner.Signer(txGroup, indexesToSign)
+		sigStx, txid, err := txAndSigner.Signer(txGroup, indexesToSign)
 		if err != nil {
 			return nil, err
 		}
@@ -364,16 +400,16 @@ func (atc *AtomicTransactionComposer) gatherSignatures() ([][]byte, error) {
 *
 * @returns A promise that, upon success, resolves to a list of TxIDs of the submitted transactions.
  */
-func (atc *AtomicTransactionComposer) submit(client *algod.Client) ([]string, error) {
+func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, error) {
 	if atc.status > SUBMITTED {
-		return nil, errors.New("Transaction composer status must be SUBMITTED or lower")
+		return nil, errors.New("STATUS MUST BE SUBMITTED OR LOWER")
 	}
 
 	if atc.status == SUBMITTED {
 		return atc.txids, nil
 	}
 
-	stxs, err := atc.gatherSignatures()
+	stxs, err := atc.GatherSignatures()
 	if err != nil {
 		return nil, err
 	}
@@ -406,15 +442,59 @@ func (atc *AtomicTransactionComposer) submit(client *algod.Client) ([]string, er
 *   one element for each method call transaction in this group. If a method has no return value
 *   (void), then the method results array will contain null for that method's return value.
  */
-func (atc *AtomicTransactionComposer) execute(client *algod.Client) (int, []string, []ABIValue, error) {
+func (atc *AtomicTransactionComposer) Execute(client *algod.Client) (int, []string, []ABIValue, error) {
 	if atc.status > SUBMITTED {
-		return 0, nil, nil, errors.New("Transaction composer status is already COMMITTED")
+		return 0, nil, nil, errors.New("STATUS IS ALREADY COMMITTED")
 	}
 
-	_, err := atc.submit(client)
+	_, err := atc.Submit(client)
 	if err != nil {
 		return 0, nil, nil, err
 	}
 
-	return 0, nil, nil, err
+	txinfo, err := WaitForConfirmation(client, atc.txids[0], 0, context.Background())
+	if err != nil {
+		return 0, nil, nil, err
+	}
+
+	var returnValues []ABIValue
+	for i, txid := range atc.txids {
+		if atc.transactions[i].Txn.Type != types.ApplicationCallTx {
+			continue
+		}
+
+		txinfo, _, err := client.PendingTransactionInformation(txid).Do(context.Background())
+		if err != nil {
+			return 0, nil, nil, err
+		}
+
+		for _, log := range txinfo.Logs {
+			isReturnValue := true
+			for _, b := range log[:4] {
+				isReturnValue = isReturnValue && (b == 0)
+			}
+
+			if isReturnValue {
+				abiType, err := abi.TypeOf(atc.methodCalls[i].Returns.AbiType)
+				if err != nil {
+					return 0, nil, nil, err
+				}
+
+				rawAbiValue, err := abiType.Decode(log[4:])
+				if err != nil {
+					return 0, nil, nil, err
+				}
+
+				abiValue := ABIValue{
+					AbiType:  abiType,
+					RawValue: rawAbiValue,
+				}
+				returnValues = append(returnValues, abiValue)
+
+				break
+			}
+		}
+	}
+
+	return int(txinfo.ConfirmedRound), atc.txids, returnValues, err
 }
