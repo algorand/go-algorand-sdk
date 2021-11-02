@@ -26,6 +26,15 @@ func byte32ArrayFromBase64(s string) (out [32]byte) {
 	return
 }
 
+func byte64ArrayFromBase64(s string) (out [64]byte) {
+	slice := byteFromBase64(s)
+	if len(slice) != 64 {
+		panic("wrong length: input slice not 64 bytes")
+	}
+	copy(out[:], slice)
+	return
+}
+
 func TestMakePaymentTxn(t *testing.T) {
 	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
@@ -169,7 +178,7 @@ func TestMakeKeyRegTxn(t *testing.T) {
 	require.Equal(t, expKeyRegTxn, tx)
 }
 
-func TestMakeKeyRegTxnv2(t *testing.T) {
+func TestMakeKeyRegTxnWithStateProofKey(t *testing.T) {
 	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
 	ghAsArray := byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
 	params := types.SuggestedParams{
@@ -179,8 +188,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 		GenesisHash:     ghAsArray[:],
 	}
 	// nonparticipation
-	stateProof := types.Verifier{}
-	tx, err := MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "", "", 0, 0, 0, true, stateProof)
+	tx, err := MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "", "", "", 0, 0, 0,true)
 	require.NoError(t, err)
 	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
@@ -202,8 +210,8 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 	require.Equal(t, expKeyRegTxn, tx)
 
 	// online
-	stateProof = [64]byte{1}
-	tx, err = MakeKeyRegTxnV2(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", 10000, 10111, 11, false, stateProof)
+	stateProof := "mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
+	tx, err = MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", stateProof,10000, 10111, 11, false)
 	require.NoError(t, err)
 
 	a, err = types.DecodeAddress(addr)
@@ -226,7 +234,7 @@ func TestMakeKeyRegTxnv2(t *testing.T) {
 			VoteLast:         10111,
 			VoteKeyDilution:  11,
 			Nonparticipation: false,
-			StateProofPK:     stateProof,
+			StateProofPK:     byte64ArrayFromBase64(stateProof),
 		},
 	}
 	require.Equal(t, expKeyRegTxn, tx)
