@@ -103,13 +103,15 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		}
 	}
 
-	// must process final arg
-	strArg := stringArgs[prevPos:]
-	_, err = abi.TypeOf(strArg)
-	if err != nil {
-		return Method{}, err
+	if len(stringArgs) > 0 {
+		// must process final arg
+		strArg := stringArgs[prevPos:]
+		_, err = abi.TypeOf(strArg)
+		if err != nil {
+			return Method{}, err
+		}
+		argTypes = append(argTypes, strArg)
 	}
-	argTypes = append(argTypes, strArg)
 
 	returnType := methodStr[closeIdx+1:]
 	if returnType != "void" {

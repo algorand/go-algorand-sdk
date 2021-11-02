@@ -64,6 +64,22 @@ func TestMethodFromSignatureWithVoidReturn(t *testing.T) {
 	require.Equal(t, expected, result)
 }
 
+func TestMethodFromSignatureWithNoArgs(t *testing.T) {
+	expectedArgs := []Arg{}
+	expected := Method{
+		Name:    "add",
+		Desc:    "",
+		Args:    expectedArgs,
+		Returns: Return{AbiType: "void", Desc: ""},
+	}
+
+	methodSig := "add()void"
+	result, err := MethodFromSignature(methodSig)
+
+	require.NoError(t, err)
+	require.Equal(t, expected, result)
+}
+
 func TestMethodFromSignatureInvalidFormat(t *testing.T) {
 	methodSig := "add)uint32,uint32)uint32"
 	_, err := MethodFromSignature(methodSig)
