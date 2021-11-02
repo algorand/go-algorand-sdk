@@ -139,7 +139,7 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 	return setFee(tx, params)
 }
 
-// MakeKeyRegTxnV2 constructs a keyreg transaction using the passed parameters.
+// MakeKeyRegTxnWithStateProofKey constructs a keyreg transaction using the passed parameters.
 // - account is a checksummed, human-readable address for which we register the given participation key.
 // - note is a byte array
 // - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
