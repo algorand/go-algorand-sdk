@@ -140,14 +140,14 @@ func buildKeyregTransaction(sender, nonparticipation string,
 // buildKeyregTransaction above
 func buildLegacyAppCallTransaction(
 	operation string,
-	applicationIdInt int,
+	applicationId int,
 	sender, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
 	genesisHash string, extraPages int) error {
 
-	if applicationIdInt < 0 || globalBytes < 0 || globalInts < 0 || localBytes < 0 || localInts < 0 || extraPages < 0 || fee < 0 || firstValid < 0 || lastValid < 0 {
+	if applicationId < 0 || globalBytes < 0 || globalInts < 0 || localBytes < 0 || localInts < 0 || extraPages < 0 || fee < 0 || firstValid < 0 || lastValid < 0 {
 		return fmt.Errorf("Integer arguments cannot be negative")
 	}
 
@@ -217,24 +217,24 @@ func buildLegacyAppCallTransaction(
 			gSchema, lSchema, args, accs, fApp, fAssets,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets,
 			approvalP, clearP,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
+		tx, err = future.MakeApplicationCallTx(uint64(applicationId), args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets,
 			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)
