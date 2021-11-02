@@ -255,7 +255,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I get transactions by address and date", txnsByAddrDate)
 	s.Step(`key registration transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)`, keyregTxnParams)
 	s.Step("I create the key registration transaction", createKeyregTxn)
-	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregTxnV2)
+	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
 	s.Step(`^I get recent transactions, limited by (\d+) transactions$`, getTxnsByCount)
 	s.Step(`^I can get account information`, newAccInfo)
 	s.Step(`^I can get the transaction by ID$`, txnbyID)
@@ -1372,7 +1372,7 @@ func createKeyregTxn() (err error) {
 	return err
 }
 
-func createKeyregTxnV2(keyregType string) (err error) {
+func createKeyregWithStateProof(keyregType string) (err error) {
 	params, err := acl.BuildSuggestedParams()
 	if err != nil {
 		return err
