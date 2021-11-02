@@ -3,6 +3,7 @@ package future
 import (
 	"crypto/sha512"
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -29,18 +30,32 @@ type Method struct {
 
 func MethodFromSignature(methodStr string) (Method, error) {
 	openCnt := strings.Count(methodStr, "(")
-	if openCnt == 0 || openCnt > 1 {
+	if openCnt == 0 {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
 	closeCnt := strings.Count(methodStr, ")")
-	if closeCnt == 0 || closeCnt > 1 {
+	if closeCnt != openCnt {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
 	openIdx := strings.Index(methodStr, "(")
-	closeIdx := strings.Index(methodStr, ")")
-	if openIdx > closeIdx {
+	parenCnt := 0
+	closeIdx := -1
+	for pos := openIdx; pos < len(methodStr); pos++ {
+		if methodStr[pos] == '(' {
+			parenCnt++
+		} else if methodStr[pos] == ')' {
+			parenCnt--
+		}
+
+		if parenCnt == 0 {
+			closeIdx = pos
+			break
+		}
+	}
+
+	if closeIdx == -1 {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
@@ -50,23 +65,60 @@ func MethodFromSignature(methodStr string) (Method, error) {
 	}
 
 	name := methodStr[:openIdx]
-	stringArgs := strings.Split(methodStr[openIdx+1:closeIdx], ",")
-	returnType := methodStr[closeIdx+1:]
+	namePattern := "[_a-zA-Z][_a-zA-Z0-9]+"
+	_, err := regexp.MatchString(namePattern, name)
+	if err != nil {
+		return Method{}, err
+	}
 
-	for _, argType := range stringArgs {
-		_, err := abi.TypeOf(argType)
+	stringArgs := methodStr[openIdx+1 : closeIdx]
+	var argTypes []string
+	parenCnt = 0
+	prevPos := 0
+	for curPos, c := range stringArgs {
+		if c == '(' {
+			parenCnt++
+		} else if c == ')' {
+			parenCnt--
+		}
+
+		if parenCnt < 0 {
+			return Method{}, errors.New("Method Signature has invalid format")
+		} else if parenCnt > 0 {
+			continue
+		}
+
+		// parenCnt == 0 indicates top level comma
+		if c == ',' {
+			strArg := stringArgs[prevPos:curPos]
+			_, err := abi.TypeOf(strArg)
+			if err != nil {
+				return Method{}, err
+			}
+
+			argTypes = append(argTypes, strArg)
+			prevPos = curPos + 1
+		}
+	}
+
+	// must process final arg
+	strArg := stringArgs[prevPos:]
+	_, err = abi.TypeOf(strArg)
+	if err != nil {
+		return Method{}, err
+	}
+	argTypes = append(argTypes, strArg)
+
+	returnType := methodStr[closeIdx+1:]
+	if returnType != "void" {
+		_, err := abi.TypeOf(returnType)
 		if err != nil {
 			return Method{}, err
 		}
 	}
 
-	_, err := abi.TypeOf(returnType)
-	if err != nil {
-		return Method{}, err
-	}
-
-	args := make([]Arg, len(stringArgs))
-	for i, argType := range stringArgs {
+	args := make([]Arg, len(argTypes))
+	for i, argType := range argTypes {
 		args[i] = Arg{
 			Name:    strconv.Itoa(i),
 			AbiType: argType,
