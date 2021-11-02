@@ -151,6 +151,7 @@ func TestMain(m *testing.M) {
 		AlgodClientV2Context(s)
 		IndexerUnitTestContext(s)
 		IndexerIntegrationTestContext(s)
+		TransactionsUnitContext(s)
 		ApplicationsContext(s)
 		ApplicationsUnitContext(s)
 		ResponsesContext(s)
