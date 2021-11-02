@@ -82,11 +82,11 @@ var microalgos types.MicroAlgos
 var bytetxs [][]byte
 var votekey string
 var selkey string
+var stateProofPK string
 var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var stateProofPK types.Verifier
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
@@ -1394,7 +1394,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofPK = types.MerkleVerifier{}
+		stateProofPK = ""
 	} else if keyregType == "offline" {
 		nonpart = false
 		votekey = ""
@@ -1402,7 +1402,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofPK = types.MerkleVerifier{}
+		stateProofPK = ""
 	}
 
 	txn, err = future.MakeKeyRegTxnWithStateProofKey(accounts[0], note, params, votekey, selkey, stateProofPK, votefst, votelst, votekd, nonpart)
