@@ -120,19 +120,7 @@ func buildKeyregTransaction(sender, nonparticipation string,
 		return fmt.Errorf("Could not parse nonparticipation value: %v", err)
 	}
 
-	var stateProofPk types.Verifier
-	if len(stateProofPkB64) > 0 {
-		stateProofBytes, err := base64.StdEncoding.DecodeString(stateProofPkB64)
-		if err != nil {
-			return err
-		}
-		if len(stateProofBytes) != len(stateProofPk.Root) {
-			return fmt.Errorf("Invalid length for state proof key. Expected %d, got %d", len(stateProofPk.Root), len(stateProofBytes))
-		}
-		copy(stateProofPk.Root[:], stateProofBytes)
-	}
-
-	tx, err = future.MakeKeyRegTxnV2(sender, nil, txnSuggestedParams, votePkB64, selectionPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonpart, stateProofPk)
+	tx, err = future.MakeKeyRegTxnWithStateProofKey(sender, nil, txnSuggestedParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonpart)
 	return err
 }
 
