@@ -59,8 +59,8 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
 
-// Verifier is a state proof
-type Verifier [KeyStoreRootSize]byte
+// MerkleVerifier is a state proof
+type MerkleVerifier [KeyStoreRootSize]byte
 
 const microAlgoConversionFactor = 1e6
 

@@ -1386,7 +1386,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = uint64(0)
 		votelst = uint64(30001)
 		votekd = uint64(10000)
-		stateProofPK = [64]byte{1}
+		stateProofPK = "mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
 	} else if keyregType == "nonparticipation" {
 		nonpart = true
 		votekey = ""
@@ -1394,7 +1394,7 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofPK = types.Verifier{}
+		stateProofPK = types.MerkleVerifier{}
 	} else if keyregType == "offline" {
 		nonpart = false
 		votekey = ""
@@ -1402,10 +1402,10 @@ func createKeyregTxnV2(keyregType string) (err error) {
 		votefst = 0
 		votelst = 0
 		votekd = 0
-		stateProofPK = types.Verifier{}
+		stateProofPK = types.MerkleVerifier{}
 	}
 
-	txn, err = future.MakeKeyRegTxnV2(accounts[0], note, params, votekey, selkey, votefst, votelst, votekd, nonpart, stateProofPK)
+	txn, err = future.MakeKeyRegTxnWithStateProofKey(accounts[0], note, params, votekey, selkey, stateProofPK, votefst, votelst, votekd, nonpart)
 	if err != nil {
 		return err
 	}
