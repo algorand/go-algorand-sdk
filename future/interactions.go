@@ -28,42 +28,60 @@ type Method struct {
 	Returns Return `json:"returns"`
 }
 
+func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
+	// handle no args
+	if startIdx < len(strMethod)-1 && strMethod[startIdx+1] == ')' {
+		return []string{}, startIdx + 1, nil
+	}
+
+	var argTypes []string
+	parenCnt := 1
+	prevPos := startIdx + 1
+	closeIdx := -1
+	for curPos := prevPos; curPos < len(strMethod); curPos++ {
+		if strMethod[curPos] == '(' {
+			parenCnt++
+		} else if strMethod[curPos] == ')' {
+			parenCnt--
+		}
+
+		if parenCnt < 0 {
+			return nil, -1, errors.New("Method Signature has invalid format")
+		} else if parenCnt > 1 {
+			continue
+		}
+
+		if strMethod[curPos] == ',' || parenCnt == 0 {
+			strArg := strMethod[prevPos:curPos]
+			_, err := abi.TypeOf(strArg)
+			if err != nil {
+				return nil, -1, err
+			}
+
+			argTypes = append(argTypes, strArg)
+			prevPos = curPos + 1
+		}
+
+		if parenCnt == 0 {
+			closeIdx = curPos
+			break
+		}
+	}
+
+	if closeIdx == -1 {
+		return nil, -1, errors.New("Method Signature has invalid format")
+	}
+
+	return argTypes, closeIdx, nil
+}
+
 func MethodFromSignature(methodStr string) (Method, error) {
 	openCnt := strings.Count(methodStr, "(")
 	if openCnt == 0 {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
-	closeCnt := strings.Count(methodStr, ")")
-	if closeCnt != openCnt {
-		return Method{}, errors.New("Method signature has invalid format")
-	}
-
 	openIdx := strings.Index(methodStr, "(")
-	parenCnt := 0
-	closeIdx := -1
-	for pos := openIdx; pos < len(methodStr); pos++ {
-		if methodStr[pos] == '(' {
-			parenCnt++
-		} else if methodStr[pos] == ')' {
-			parenCnt--
-		}
-
-		if parenCnt == 0 {
-			closeIdx = pos
-			break
-		}
-	}
-
-	if closeIdx == -1 {
-		return Method{}, errors.New("Method signature has invalid format")
-	}
-
-	// signature must include method name
-	if openIdx == 0 {
-		return Method{}, errors.New("Method signature has invalid format")
-	}
-
 	name := methodStr[:openIdx]
 	match, err := regexp.MatchString(`[_a-zA-Z][_a-zA-Z0-9]+`, name)
 	if err != nil {
@@ -73,44 +91,9 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		return Method{}, errors.New("Method signature has invalid format")
 	}
 
-	stringArgs := methodStr[openIdx+1 : closeIdx]
-	var argTypes []string
-	parenCnt = 0
-	prevPos := 0
-	for curPos, c := range stringArgs {
-		if c == '(' {
-			parenCnt++
-		} else if c == ')' {
-			parenCnt--
-		}
-
-		if parenCnt < 0 {
-			return Method{}, errors.New("Method Signature has invalid format")
-		} else if parenCnt > 0 {
-			continue
-		}
-
-		// parenCnt == 0 indicates top level comma
-		if c == ',' {
-			strArg := stringArgs[prevPos:curPos]
-			_, err := abi.TypeOf(strArg)
-			if err != nil {
-				return Method{}, err
-			}
-
-			argTypes = append(argTypes, strArg)
-			prevPos = curPos + 1
-		}
-	}
-
-	if len(stringArgs) > 0 {
-		// must process final arg
-		strArg := stringArgs[prevPos:]
-		_, err = abi.TypeOf(strArg)
-		if err != nil {
-			return Method{}, err
-		}
-		argTypes = append(argTypes, strArg)
+	argTypes, closeIdx, err := parseMethodArgs(methodStr, openIdx)
+	if err != nil {
+		return Method{}, err
 	}
 
 	returnType := methodStr[closeIdx+1:]
