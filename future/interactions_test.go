@@ -45,6 +45,25 @@ func TestMethodFromSignatureWithTuple(t *testing.T) {
 	require.Equal(t, expected, result)
 }
 
+func TestMethodFromSignatureWithVoidReturn(t *testing.T) {
+	expectedArgs := []Arg{
+		{Name: "0", AbiType: "uint32", Desc: ""},
+		{Name: "1", AbiType: "uint32", Desc: ""},
+	}
+	expected := Method{
+		Name:    "add",
+		Desc:    "",
+		Args:    expectedArgs,
+		Returns: Return{AbiType: "void", Desc: ""},
+	}
+
+	methodSig := "add(uint32,uint32)void"
+	result, err := MethodFromSignature(methodSig)
+
+	require.NoError(t, err)
+	require.Equal(t, expected, result)
+}
+
 func TestMethodFromSignatureInvalidFormat(t *testing.T) {
 	methodSig := "add)uint32,uint32)uint32"
 	_, err := MethodFromSignature(methodSig)
@@ -59,6 +78,10 @@ func TestMethodFromSignatureInvalidFormat(t *testing.T) {
 	require.Error(t, err)
 
 	methodSig = "add((uint32, uint32)uint32"
+	_, err = MethodFromSignature(methodSig)
+	require.Error(t, err)
+
+	methodSig = "1(uint32)uint32"
 	_, err = MethodFromSignature(methodSig)
 	require.Error(t, err)
 }

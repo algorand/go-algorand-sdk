@@ -65,10 +65,12 @@ func MethodFromSignature(methodStr string) (Method, error) {
 	}
 
 	name := methodStr[:openIdx]
-	namePattern := "[_a-zA-Z][_a-zA-Z0-9]+"
-	_, err := regexp.MatchString(namePattern, name)
+	match, err := regexp.MatchString(`[_a-zA-Z][_a-zA-Z0-9]+`, name)
 	if err != nil {
 		return Method{}, err
+	}
+	if !match {
+		return Method{}, errors.New("Method signature has invalid format")
 	}
 
 	stringArgs := methodStr[openIdx+1 : closeIdx]
