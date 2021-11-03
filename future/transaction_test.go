@@ -188,7 +188,7 @@ func TestMakeKeyRegTxnWithStateProofKey(t *testing.T) {
 		GenesisHash:     ghAsArray[:],
 	}
 	// nonparticipation
-	tx, err := MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "", "", "", 0, 0, 0,true)
+	tx, err := MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "", "", "", 0, 0, 0, true)
 	require.NoError(t, err)
 	a, err := types.DecodeAddress(addr)
 	require.NoError(t, err)
@@ -211,7 +211,7 @@ func TestMakeKeyRegTxnWithStateProofKey(t *testing.T) {
 
 	// online
 	stateProof := "mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
-	tx, err = MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", stateProof,10000, 10111, 11, false)
+	tx, err = MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", stateProof, 10000, 10111, 11, false)
 	require.NoError(t, err)
 
 	a, err = types.DecodeAddress(addr)

@@ -35,12 +35,12 @@ type SignedTxn struct {
 type KeyregTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	VotePK           VotePK   `codec:"votekey"`
-	SelectionPK      VRFPK    `codec:"selkey"`
-	VoteFirst        Round    `codec:"votefst"`
-	VoteLast         Round    `codec:"votelst"`
-	VoteKeyDilution  uint64   `codec:"votekd"`
-	Nonparticipation bool     `codec:"nonpart"`
+	VotePK           VotePK         `codec:"votekey"`
+	SelectionPK      VRFPK          `codec:"selkey"`
+	VoteFirst        Round          `codec:"votefst"`
+	VoteLast         Round          `codec:"votelst"`
+	VoteKeyDilution  uint64         `codec:"votekd"`
+	Nonparticipation bool           `codec:"nonpart"`
 	StateProofPK     MerkleVerifier `codec:"sprfkey"`
 }
 

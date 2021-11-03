@@ -1,9 +1,9 @@
 package models
 
-// ErrorResponse an error response with optional data field.
+// ErrorResponse response for errors
 type ErrorResponse struct {
 	// Data
-	Data string `json:"data,omitempty"`
+	Data *map[string]interface{} `json:"data,omitempty"`
 
 	// Message
 	Message string `json:"message"`
