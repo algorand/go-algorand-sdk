@@ -263,7 +263,7 @@ func TestAddMethodCall(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
 	txSigner := MakeBasicAccountTransactionSigner(account)
-	methodSig := "add(uint32,uint32)uint32"
+	methodSig := "add()uint32"
 
 	method, err := MethodFromSignature(methodSig)
 	require.NoError(t, err)
@@ -277,6 +277,7 @@ func TestAddMethodCall(t *testing.T) {
 		[]MethodArgument{},
 		addr,
 		types.SuggestedParams{},
+		types.NoOpOC,
 		[]byte{},
 		[32]byte{},
 		addr,

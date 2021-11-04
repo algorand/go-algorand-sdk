@@ -218,11 +218,11 @@ func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
  */
 func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWithSigner) error {
 	if atc.status != BUILDING {
-		return errors.New("STATUS MUST BE BUILDING IN ORDER TO ADD TRANSACTION")
+		return errors.New("status must be BUILDING in order to add tranactions")
 	}
 
 	if atc.Count() == MAX_GROUP_SIZE {
-		return fmt.Errorf("REACHED MAX_GROUP_SIZE: %d", MAX_GROUP_SIZE)
+		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
 	}
 
 	atc.transactions = append(atc.transactions, txnAndSigner)
@@ -247,6 +247,8 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 	sender types.Address,
 	/** Transactions params to use for this application call */
 	suggestedParams types.SuggestedParams,
+	/** The OnComplete action to take for this application call. If omitted, OnApplicationComplete.NoOpOC will be used. */
+	onComplete types.OnCompletion,
 	/** The note value for this application call */
 	note []byte,
 	/** The lease value for this application call */
@@ -257,7 +259,15 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 	signer TransactionSigner) error {
 
 	if atc.status != BUILDING {
-		return errors.New("STATUS MUST BE BUILDING IN ORDER TO ADD TRANSACTION")
+		return errors.New("status must be BUILDING in order to add transactions")
+	}
+
+	if len(methodArgs) != len(method.Args) {
+		return fmt.Errorf("the incorrect number of arguments were provided")
+	}
+
+	if atc.Count()+GetTxCountFromMethod(method) > MAX_GROUP_SIZE {
+		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
 	}
 
 	selectorValue := method.GetSelector()
@@ -279,8 +289,28 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 		}
 	}
 
-	if atc.Count() == MAX_GROUP_SIZE {
-		return fmt.Errorf("REACHED MAX_GROUP_SIZE: %d", MAX_GROUP_SIZE)
+	// Up to 16 args can be passed to app call. First is reserved for method selector and last is
+	// reserved for remaining args packaged into one tuple.
+	if len(abiArgs) > 14 {
+		var tupleTypes []abi.Type
+		var tupleValues []interface{}
+		for _, abiValue := range abiArgs[14:] {
+			tupleTypes = append(tupleTypes, abiValue.AbiType)
+			tupleValues = append(tupleValues, abiValue.RawValue)
+		}
+
+		tupleType, err := abi.MakeTupleType(tupleTypes)
+		if err != nil {
+			return err
+		}
+
+		tupleValue := ABIValue{
+			AbiType:  tupleType,
+			RawValue: tupleValues,
+		}
+
+		abiArgs = abiArgs[:14]
+		abiArgs = append(abiArgs, tupleValue)
 	}
 
 	for _, abiArg := range abiArgs {
@@ -292,12 +322,17 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 		encodedAbiArgs = append(encodedAbiArgs, encodedArg)
 	}
 
-	tx, err := MakeApplicationNoOpTx(
+	tx, err := MakeApplicationCallTx(
 		appID,
 		encodedAbiArgs,
 		nil,
 		nil,
 		nil,
+		onComplete,
+		nil,
+		nil,
+		types.StateSchema{},
+		types.StateSchema{},
 		suggestedParams,
 		sender,
 		note,
@@ -402,7 +437,7 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
  */
 func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, error) {
 	if atc.status > SUBMITTED {
-		return nil, errors.New("STATUS MUST BE SUBMITTED OR LOWER")
+		return nil, errors.New("status must be SUBMITTED or lower in order to call Submit()")
 	}
 
 	if atc.status == SUBMITTED {
@@ -444,7 +479,7 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, er
  */
 func (atc *AtomicTransactionComposer) Execute(client *algod.Client) (int, []string, []ABIValue, error) {
 	if atc.status > SUBMITTED {
-		return 0, nil, nil, errors.New("STATUS IS ALREADY COMMITTED")
+		return 0, nil, nil, errors.New("status is already committed")
 	}
 
 	_, err := atc.Submit(client)
@@ -460,6 +495,11 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client) (int, []stri
 	var returnValues []ABIValue
 	for i, txid := range atc.txids {
 		if atc.transactions[i].Txn.Type != types.ApplicationCallTx {
+			continue
+		}
+
+		if atc.methodCalls[i].Returns.AbiType == "void" {
+			returnValues = append(returnValues, ABIValue{})
 			continue
 		}
 

@@ -8,7 +8,21 @@ import (
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/abi"
+	"github.com/algorand/go-algorand-sdk/types"
 )
+
+var TransactionArgTypes map[string]interface{}
+
+func init() {
+	TransactionArgTypes = map[string]interface{}{
+		string(types.PaymentTx):         nil,
+		string(types.KeyRegistrationTx): nil,
+		string(types.AssetConfigTx):     nil,
+		string(types.AssetTransferTx):   nil,
+		string(types.AssetFreezeTx):     nil,
+		string(types.ApplicationCallTx): nil,
+	}
+}
 
 type Arg struct {
 	Name    string `json:"name"`
@@ -26,6 +40,17 @@ type Method struct {
 	Desc    string `json:"desc,omitempty"`
 	Args    []Arg  `json:"args"`
 	Returns Return `json:"returns"`
+}
+
+func GetTxCountFromMethod(method Method) int {
+	cnt := 1
+	for _, arg := range method.Args {
+		if _, ok := TransactionArgTypes[arg.AbiType]; ok {
+			cnt++
+		}
+	}
+
+	return cnt
 }
 
 func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
@@ -46,16 +71,17 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 		}
 
 		if parenCnt < 0 {
-			return nil, -1, errors.New("Method Signature has invalid format")
+			return nil, -1, errors.New("method signature parentheses mismatch")
 		} else if parenCnt > 1 {
 			continue
 		}
 
 		if strMethod[curPos] == ',' || parenCnt == 0 {
 			strArg := strMethod[prevPos:curPos]
-			_, err := abi.TypeOf(strArg)
-			if err != nil {
-				return nil, -1, err
+			if _, ok := TransactionArgTypes[strArg]; !ok {
+				if _, err := abi.TypeOf(strArg); err != nil {
+					return nil, -1, err
+				}
 			}
 
 			argTypes = append(argTypes, strArg)
@@ -69,7 +95,7 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 	}
 
 	if closeIdx == -1 {
-		return nil, -1, errors.New("Method Signature has invalid format")
+		return nil, -1, errors.New("method signature parentheses mismatch")
 	}
 
 	return argTypes, closeIdx, nil
@@ -78,7 +104,7 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 func MethodFromSignature(methodStr string) (Method, error) {
 	openCnt := strings.Count(methodStr, "(")
 	if openCnt == 0 {
-		return Method{}, errors.New("Method signature has invalid format")
+		return Method{}, errors.New("method signature is missing an open parenthesis")
 	}
 
 	openIdx := strings.Index(methodStr, "(")
@@ -88,7 +114,7 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		return Method{}, err
 	}
 	if !match {
-		return Method{}, errors.New("Method signature has invalid format")
+		return Method{}, errors.New("invalid method name")
 	}
 
 	argTypes, closeIdx, err := parseMethodArgs(methodStr, openIdx)
