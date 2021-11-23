@@ -338,6 +338,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I build a payment transaction with sender "([^"]*)", receiver "([^"]*)", amount (\d+), close remainder to "([^"]*)"$`, iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo)
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
+	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2314,14 +2315,20 @@ func suggestedTransactionParameters(fee int, flatFee string, firstValid, LastVal
 		return fmt.Errorf("flatFee must be either 'true' or 'false'")
 	}
 
+	genHash, err := base64.StdEncoding.DecodeString(genesisHash)
+	if err != nil {
+		return err
+	}
+
 	sugParams = types.SuggestedParams{
 		Fee:             types.MicroAlgos(fee),
 		GenesisID:       genesisId,
-		GenesisHash:     []byte(genesisHash),
+		GenesisHash:     genHash,
 		FirstRoundValid: types.Round(firstValid),
 		LastRoundValid:  types.Round(LastValid),
 		FlatFee:         flatFee == "true",
 	}
+
 	return nil
 }
 
@@ -2336,7 +2343,6 @@ func anApplicationId(id int) error {
 
 func iMakeATransactionSignerForTheAccount(accountType string) error {
 	if accountType == "signing" {
-		account := crypto.GenerateAccount()
 		accountTxSigner = future.BasicAccountTransactionSigner{
 			Account: account,
 		}
@@ -2495,10 +2501,13 @@ func theBaseEncodedSignedTransactionsShouldEqual(encodedTxsStr string) error {
 	}
 
 	for i, encodedTx := range encodedTxs {
-		base64SigTx := base64.StdEncoding.EncodeToString(msgpack.Encode(sigTxs[i]))
-		//base64SigTx := base64.StdEncoding.EncodeToString(sigTxs[i])
-		if base64SigTx != encodedTx {
-			return fmt.Errorf("base64 encoded signed transactions don't match: %s != %s", base64SigTx, encodedTx)
+		gold, err := base64.StdEncoding.DecodeString(encodedTx)
+		if err != nil {
+			return err
+		}
+		stxStr := base64.StdEncoding.EncodeToString(sigTxs[i])
+		if !bytes.Equal(gold, sigTxs[i]) {
+			return fmt.Errorf("Application signed transaction does not match the golden: %s != %s", stxStr, encodedTx)
 		}
 	}
 
@@ -2534,5 +2543,16 @@ func iCreateATransactionWithSignerWithTheCurrentTransaction() error {
 
 func iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray() error {
 	methodArgs = append(methodArgs, accountTxAndSigner)
+	return nil
+}
+
+func theDecodedTransactionShouldEqualTheOriginal() error {
+	var decodedTx types.SignedTxn
+	err := msgpack.Decode(stx, &decodedTx)
+	if err != nil {
+		return err
+	}
+
+	// direct tx equality checking isn't fully implemented in go-sdk so this test is incomplete
 	return nil
 }

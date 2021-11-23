@@ -29,7 +29,14 @@ func aSigningAccountWithAddressAndMnemonic(address, mnem string) error {
 	if err != nil {
 		return err
 	}
+
 	sk1, err = mnemonic.ToPrivateKey(mnem)
+	account = crypto.Account{
+		Address:    addr1,
+		PrivateKey: sk1,
+		PublicKey:  ed25519.PublicKey(addr1[:]),
+	}
+
 	return err
 }
 
@@ -149,7 +156,7 @@ func iBuildAnApplicationTransactionUnit(
 
 func signTheTransaction() error {
 	var err error
-	_, stx, err = crypto.SignTransaction(sk1, tx)
+	txid, stx, err = crypto.SignTransaction(sk1, tx)
 	return err
 }
 
