@@ -44,13 +44,9 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 
 	transientAccount = crypto.GenerateAccount()
 
-	params := sugParams
+	params, err := algodV2client.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
-	}
-
-	if aclv2 == nil {
-		return fmt.Errorf("aclv2 is nil")
 	}
 
 	params.Fee = types.MicroAlgos(fee)
@@ -89,7 +85,8 @@ func iBuildAnApplicationTransaction(
 	var ghbytes [32]byte
 	copy(ghbytes[:], gh)
 
-	suggestedParams := sugParams
+	var suggestedParams types.SuggestedParams
+	suggestedParams, err = algodV2client.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
