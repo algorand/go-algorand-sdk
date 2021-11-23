@@ -9,8 +9,8 @@ import (
 
 func TestMethodFromSignature(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
@@ -28,8 +28,8 @@ func TestMethodFromSignature(t *testing.T) {
 
 func TestMethodFromSignatureWithTuple(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "0", AbiType: "(uint32,(uint32,uint32))", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "(uint32,(uint32,uint32))", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
@@ -47,8 +47,8 @@ func TestMethodFromSignatureWithTuple(t *testing.T) {
 
 func TestMethodFromSignatureWithVoidReturn(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
@@ -110,8 +110,8 @@ func TestMethodFromSignatureInvalidAbiType(t *testing.T) {
 
 func TestGetSignature(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
 	}
 
 	method := Method{
@@ -127,8 +127,8 @@ func TestGetSignature(t *testing.T) {
 
 func TestGetSelector(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", AbiType: "uint32", Desc: ""},
 	}
 
 	method := Method{

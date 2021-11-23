@@ -2,6 +2,7 @@ package future
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -19,93 +20,151 @@ import (
  *   array will be the same as the length of indexesToSign, and each index i in the array
  *   corresponds to the signed transaction from txnGroup[indexesToSign[i]]
  */
-type TransactionSigner = func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error)
+type TransactionSigner interface {
+	SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error)
+	Equals(other TransactionSigner) bool
+}
 
 /**
- * Create a TransactionSigner that can sign transactions for the provided basic Account.
+ * TransactionSigner that can sign transactions for the provided basic Account.
  */
-func MakeBasicAccountTransactionSigner(account crypto.Account) TransactionSigner {
+type BasicAccountTransactionSigner struct {
+	Account crypto.Account
+}
 
-	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
-		var stxs [][]byte
-		var txids []string
-		for _, pos := range indexesToSign {
-			txid, stxBytes, err := crypto.SignTransaction(account.PrivateKey, txGroup[pos])
+func (txSigner BasicAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	txids := make([]string, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		txid, stxBytes, err := crypto.SignTransaction(txSigner.Account.PrivateKey, txGroup[pos])
+		if err != nil {
+			return nil, nil, err
+		}
+
+		stxs[i] = stxBytes
+		txids[i] = txid
+	}
+
+	return stxs, txids, nil
+}
+
+func (txSigner BasicAccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(BasicAccountTransactionSigner); ok {
+		otherJson, err := json.Marshal(castedSigner)
+		if err != nil {
+			return false
+		}
+
+		selfJson, err := json.Marshal(txSigner)
+		if err != nil {
+			return false
+		}
+
+		return string(otherJson) == string(selfJson)
+	}
+	return false
+}
+
+/**
+ * TransactionSigner that can sign transactions for the provided LogicSigAccount.
+ */
+type LogicSigAccountTransactionSigner struct {
+	LogicSigAccount crypto.LogicSigAccount
+}
+
+func (txSigner LogicSigAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	txids := make([]string, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		txid, stxBytes, err := crypto.SignLogicSigAccountTransaction(txSigner.LogicSigAccount, txGroup[pos])
+		if err != nil {
+			return nil, nil, err
+		}
+
+		stxs[i] = stxBytes
+		txids[i] = txid
+	}
+
+	return stxs, txids, nil
+}
+
+func (txSigner LogicSigAccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(LogicSigAccountTransactionSigner); ok {
+		otherJson, err := json.Marshal(castedSigner)
+		if err != nil {
+			return false
+		}
+
+		selfJson, err := json.Marshal(txSigner)
+		if err != nil {
+			return false
+		}
+
+		return string(otherJson) == string(selfJson)
+	}
+	return false
+}
+
+/**
+ * TransactionSigner that can sign transactions for the provided MultiSig Account
+ */
+type MultiSigAccountTransactionSigner struct {
+	Msig crypto.MultisigAccount
+	Sks  [][]byte
+}
+
+func (txSigner MultiSigAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	txids := make([]string, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		var unmergedStxs [][]byte
+		var txid string
+		for _, sk := range txSigner.Sks {
+			tempTxid, unmergedStxBytes, err := crypto.SignMultisigTransaction(sk, txSigner.Msig, txGroup[pos])
+			txid = tempTxid
 			if err != nil {
 				return nil, nil, err
 			}
 
-			stxs = append(stxs, stxBytes)
-			txids = append(txids, txid)
+			unmergedStxs = append(unmergedStxs, unmergedStxBytes)
 		}
 
-		return stxs, txids, nil
-	}
-}
-
-/**
- * Create a TransactionSigner that can sign transactions for the provided LogicSigAccount.
- */
-func MakeLogicSigAccountTransactionSigner(logicSigAccount crypto.LogicSigAccount) TransactionSigner {
-
-	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
-		var stxs [][]byte
-		var txids []string
-		for _, pos := range indexesToSign {
-			txid, stxBytes, err := crypto.SignLogicSigAccountTransaction(logicSigAccount, txGroup[pos])
+		if len(txSigner.Sks) > 1 {
+			tempTxid, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
+			txid = tempTxid
 			if err != nil {
 				return nil, nil, err
 			}
 
-			stxs = append(stxs, stxBytes)
-			txids = append(txids, txid)
+			stxs[i] = stxBytes
+			txids[i] = txid
+		} else {
+			stxs[i] = unmergedStxs[0]
+			txids[i] = txid
 		}
-
-		return stxs, txids, nil
 	}
+
+	return stxs, txids, nil
 }
 
-/**
- * Create a TransactionSigner that can sign transactions for the provided Multisig account.
- * @param msig - The Multisig account metadata
- * @param sks - An array of private keys belonging to the msig which should sign the transactions.
- */
-func MakeMultiSigAccountTransactionSigner(msig crypto.MultisigAccount, sks [][]byte) TransactionSigner {
-
-	return func(txGroup []types.Transaction, indexesToSign []int) ([][]byte, []string, error) {
-		var stxs [][]byte
-		var txids []string
-		for _, pos := range indexesToSign {
-			var unmergedStxs [][]byte
-			var txid string
-			for _, sk := range sks {
-				tempTxid, unmergedStxBytes, err := crypto.SignMultisigTransaction(sk, msig, txGroup[pos])
-				txid = tempTxid
-				if err != nil {
-					return nil, nil, err
-				}
-
-				unmergedStxs = append(unmergedStxs, unmergedStxBytes)
-			}
-
-			if len(sks) > 1 {
-				tempTxid, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
-				txid = tempTxid
-				if err != nil {
-					return nil, nil, err
-				}
-
-				stxs = append(stxs, stxBytes)
-				txids = append(txids, txid)
-			} else {
-				stxs = append(stxs, unmergedStxs[0])
-				txids = append(txids, txid)
-			}
+func (txSigner MultiSigAccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(MultiSigAccountTransactionSigner); ok {
+		otherJson, err := json.Marshal(castedSigner)
+		if err != nil {
+			return false
 		}
 
-		return stxs, txids, nil
+		selfJson, err := json.Marshal(txSigner)
+		if err != nil {
+			return false
+		}
+
+		return string(otherJson) == string(selfJson)
 	}
+	return false
 }
+
+var ABI_RETURN_HASH = []byte{0x15, 0x1f, 0x7c, 0x75}
 
 /** Represents an unsigned transactions and a signer that can authorize that transaction. */
 type TransactionWithSigner struct {
@@ -115,14 +174,44 @@ type TransactionWithSigner struct {
 	Signer TransactionSigner
 }
 
-type MethodArgument interface {
-	IsMethodArgument()
+/** Represents the output from a successful ABI method call. */
+type ABIResult struct {
+	/** The TxID of the transaction that invoked the ABI method call. */
+	TxID string
+	/**
+	 * The raw bytes of the return value from the ABI method call. This will be empty if the method
+	 * does not return a value (return type "void").
+	 */
+	RawReturnValue []byte
+	/**
+	 * The return value from the ABI method call. This will be undefined if the method does not return
+	 * a value (return type "void"), or if the SDK was unable to decode the returned value.
+	 */
+	ReturnValue abi.Value
+	/** If the SDK was unable to decode a return value, the error will be here. */
+	DecodeError error
 }
 
-type ABIValue abi.Value
-
-func (abiValue ABIValue) IsMethodArgument()                 {}
-func (txAndSigner TransactionWithSigner) IsMethodArgument() {}
+type AddMethoCallParams struct {
+	/** The ID of the smart contract to call */
+	AppID uint64
+	/** The method to call on the smart contract */
+	AbiMethod Method
+	/** The arguments to include in the method call. If omitted, no arguments will be passed to the method. */
+	MethodArgs []interface{}
+	/** The address of the sender of this application call */
+	Sender types.Address
+	/** Transactions params to use for this application call */
+	SuggestedParams types.SuggestedParams
+	/** The OnComplete action to take for this application call. If omitted, OnApplicationComplete.NoOpOC will be used. */
+	OnComplete types.OnCompletion
+	/** The note value for this application call */
+	Note []byte
+	/** The lease value for this application call */
+	Lease [32]byte
+	/** If provided, the address that the sender will be rekeyed to at the conclusion of this application call */
+	RekeyTo types.Address
+}
 
 type AtomicTransactionComposerStatus = int
 
@@ -157,23 +246,23 @@ type AtomicTransactionComposer struct {
 
 	/** Method calls constructed from information passed into AddMethodCall(). Used in Execute() to extract
 	return values. */
-	methodCalls []Method
+	methodCalls map[int]Method
 
 	/** The raw signed transactions populated after invocation of GatherSignatures(). */
 	signedTxs [][]byte
 
 	/** Txids of the transactions in this group. Populated after invocation to GatherSignatures() and used
 	in Execute() to gather transaction information */
-	txids []string
+	txids map[int]string
 }
 
 func MakeAtomicTransactionComposer() AtomicTransactionComposer {
 	return AtomicTransactionComposer{
 		status:       BUILDING,
 		transactions: []TransactionWithSigner{},
-		methodCalls:  []Method{},
+		methodCalls:  map[int]Method{},
 		signedTxs:    [][]byte{},
-		txids:        []string{},
+		txids:        map[int]string{},
 	}
 }
 
@@ -196,18 +285,33 @@ func (atc *AtomicTransactionComposer) Count() int {
 * BUILDING, so additional transactions may be added to it.
  */
 func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
-	newTxs := atc.transactions
-	for _, txAndSigner := range newTxs {
-		txAndSigner.Txn.Group = types.Digest{}
+	newTxs := make([]TransactionWithSigner, len(atc.transactions))
+	copy(newTxs, atc.transactions)
+	for i := range newTxs {
+		newTxs[i].Txn.Group = types.Digest{}
+	}
+
+	newMethodCalls := make(map[int]Method, len(atc.methodCalls))
+	for k, v := range atc.methodCalls {
+		newMethodCalls[k] = v
 	}
 
 	return AtomicTransactionComposer{
 		status:       BUILDING,
 		transactions: newTxs,
-		methodCalls:  atc.methodCalls,
+		methodCalls:  newMethodCalls,
 		signedTxs:    [][]byte{},
-		txids:        []string{},
+		txids:        map[int]string{},
 	}
+}
+
+func (atc *AtomicTransactionComposer) validateTransaction(txn types.Transaction) error {
+	emtpyGroup := types.Digest{}
+	if txn.Group != emtpyGroup {
+		return fmt.Errorf("expected empty group id")
+	}
+
+	return nil
 }
 
 /**
@@ -225,6 +329,11 @@ func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWit
 		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
 	}
 
+	err := atc.validateTransaction(txnAndSigner.Txn)
+	if err != nil {
+		return err
+	}
+
 	atc.transactions = append(atc.transactions, txnAndSigner)
 	return nil
 }
@@ -237,24 +346,7 @@ func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWit
 * for the given method.
  */
 func (atc *AtomicTransactionComposer) AddMethodCall(
-	/** The ID of the smart contract to call */
-	appID uint64,
-	/** The method to call on the smart contract */
-	method Method,
-	/** The arguments to include in the method call. If omitted, no arguments will be passed to the method. */
-	methodArgs []MethodArgument,
-	/** The address of the sender of this application call */
-	sender types.Address,
-	/** Transactions params to use for this application call */
-	suggestedParams types.SuggestedParams,
-	/** The OnComplete action to take for this application call. If omitted, OnApplicationComplete.NoOpOC will be used. */
-	onComplete types.OnCompletion,
-	/** The note value for this application call */
-	note []byte,
-	/** The lease value for this application call */
-	lease [32]byte,
-	/** If provided, the address that the sender will be rekeyed to at the conclusion of this application call */
-	rekeyTo types.Address,
+	params AddMethoCallParams,
 	/** A transaction signer that can authorize this application call from sender */
 	signer TransactionSigner) error {
 
@@ -262,30 +354,37 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 		return errors.New("status must be BUILDING in order to add transactions")
 	}
 
-	if len(methodArgs) != len(method.Args) {
-		return fmt.Errorf("the incorrect number of arguments were provided")
+	if len(params.MethodArgs) != len(params.AbiMethod.Args) {
+		return fmt.Errorf("the incorrect number of arguments were provided: %d != %d", len(params.MethodArgs), len(params.AbiMethod.Args))
 	}
 
-	if atc.Count()+GetTxCountFromMethod(method) > MAX_GROUP_SIZE {
+	if atc.Count()+params.AbiMethod.GetTxCountFromMethod() > MAX_GROUP_SIZE {
 		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
 	}
 
-	selectorValue := method.GetSelector()
+	selectorValue := params.AbiMethod.GetSelector()
 	encodedAbiArgs := [][]byte{selectorValue}
+	var txsToAdd []TransactionWithSigner
+	var abiArgs []abi.Value
+	for i, arg := range params.AbiMethod.Args {
+		if _, ok := TransactionArgTypes[arg.AbiType]; ok {
+			txnAndSigner, ok := params.MethodArgs[i].(TransactionWithSigner)
+			if !ok {
+				return fmt.Errorf("invalid arg type, expected transaction")
+			}
 
-	// insert selector as first param
-	var abiArgs []ABIValue
-	for _, methodArg := range methodArgs {
-		switch v := methodArg.(type) {
-		case ABIValue:
-			abiArgs = append(abiArgs, v)
-		case TransactionWithSigner:
-			err := atc.AddTransaction(v)
+			err := atc.validateTransaction(txnAndSigner.Txn)
 			if err != nil {
 				return err
 			}
-		default:
-			return errors.New("MethodArg must be either ABIValue or TransactionSigner")
+			txsToAdd = append(txsToAdd, txnAndSigner)
+		} else {
+			abiType, err := abi.TypeOf(arg.AbiType)
+			if err != nil {
+				return err
+			}
+
+			abiArgs = append(abiArgs, abi.Value{AbiType: abiType, RawValue: params.MethodArgs[i]})
 		}
 	}
 
@@ -304,7 +403,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 			return err
 		}
 
-		tupleValue := ABIValue{
+		tupleValue := abi.Value{
 			AbiType:  tupleType,
 			RawValue: tupleValues,
 		}
@@ -323,22 +422,22 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 	}
 
 	tx, err := MakeApplicationCallTx(
-		appID,
+		params.AppID,
 		encodedAbiArgs,
 		nil,
 		nil,
 		nil,
-		onComplete,
+		params.OnComplete,
 		nil,
 		nil,
 		types.StateSchema{},
 		types.StateSchema{},
-		suggestedParams,
-		sender,
-		note,
+		params.SuggestedParams,
+		params.Sender,
+		params.Note,
 		types.Digest{},
-		lease,
-		rekeyTo)
+		params.Lease,
+		params.RekeyTo)
 
 	if err != nil {
 		return err
@@ -349,8 +448,9 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 		Signer: signer,
 	}
 
+	atc.transactions = append(atc.transactions, txsToAdd...)
+	atc.methodCalls[len(atc.transactions)] = params.AbiMethod
 	atc.transactions = append(atc.transactions, txAndSigner)
-	atc.methodCalls = append(atc.methodCalls, method)
 	return nil
 }
 
@@ -374,8 +474,8 @@ func (atc *AtomicTransactionComposer) BuildGroup() ([]TransactionWithSigner, err
 		return nil, err
 	}
 
-	for _, txAndSigner := range atc.transactions {
-		txAndSigner.Txn.Group = gid
+	for i := range atc.transactions {
+		atc.transactions[i].Txn.Group = gid
 	}
 
 	atc.status = BUILT
@@ -399,29 +499,49 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 	}
 
 	// retrieve built transactions and verify status is BUILT
-	txs, err := atc.BuildGroup()
+	txsWithSigners, err := atc.BuildGroup()
 	if err != nil {
 		return nil, err
 	}
 
-	var sigTxs [][]byte
-	var txids []string
-	for _, txAndSigner := range txs {
-		txGroup := []types.Transaction{txAndSigner.Txn}
-		indexesToSign := []int{0}
-		sigStx, txid, err := txAndSigner.Signer(txGroup, indexesToSign)
+	var txs []types.Transaction
+	for _, txWithSigner := range txsWithSigners {
+		txs = append(txs, txWithSigner.Txn)
+	}
+
+	visited := make([]bool, len(txs))
+	txids := make(map[int]string)
+	var signedTxs [][]byte
+	for i, txAndSigner := range txsWithSigners {
+		if visited[i] {
+			continue
+		}
+
+		var indexesToSign []int
+		for j, other := range txsWithSigners {
+			if !visited[j] && txAndSigner.Signer.Equals(other.Signer) {
+				indexesToSign = append(indexesToSign, j)
+				visited[j] = true
+			}
+		}
+
+		sigStxs, curTxids, err := txAndSigner.Signer.SignTransactions(txs, indexesToSign)
 		if err != nil {
 			return nil, err
 		}
 
-		sigTxs = append(sigTxs, sigStx[0])
-		txids = append(txids, txid[0])
+		signedTxs = append(signedTxs, sigStxs...)
+		for i, index := range indexesToSign {
+			txids[index] = curTxids[i]
+		}
 	}
 
-	atc.signedTxs = sigTxs
-	atc.txids = txids
+	atc.signedTxs = signedTxs
+	for index, txid := range txids {
+		atc.txids[index] = txid
+	}
 	atc.status = SIGNED
-	return sigTxs, nil
+	return atc.signedTxs, nil
 }
 
 /**
@@ -433,15 +553,11 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 *
 * Note: a group can only be submitted again if it fails.
 *
-* @returns A promise that, upon success, resolves to a list of TxIDs of the submitted transactions.
+* @returns a list of TxIDs of the submitted transactions.
  */
-func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, error) {
+func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) {
 	if atc.status > SUBMITTED {
 		return nil, errors.New("status must be SUBMITTED or lower in order to call Submit()")
-	}
-
-	if atc.status == SUBMITTED {
-		return atc.txids, nil
 	}
 
 	stxs, err := atc.GatherSignatures()
@@ -454,12 +570,18 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, er
 		serializedStxs = append(serializedStxs, stx...)
 	}
 
-	_, err = client.SendRawTransaction(serializedStxs).Do(context.Background())
+	_, err = client.SendRawTransaction(serializedStxs).Do(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return atc.txids, nil
+	txids := make([]string, len(atc.txids))
+	for _, v := range atc.txids {
+		txids = append(txids, v)
+	}
+
+	atc.status = SUBMITTED
+	return txids, nil
 }
 
 /**
@@ -472,69 +594,88 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client) ([]string, er
 *
 * Note: a group can only be submitted again if it fails.
 *
-* @returns A promise that, upon success, resolves to an object containing the confirmed round for
-*   this transaction, the txIDs of the submitted transactions, and an array of results containing
-*   one element for each method call transaction in this group. If a method has no return value
-*   (void), then the method results array will contain null for that method's return value.
+* @returns an object containing the confirmed round for this transaction, the txIDs of the submitted
+*   transactions, and an array of results containing one element for each method call transaction in
+*   this group. If a method has no return value (void), then the method results array will contain
+*   null for that method's return value.
  */
-func (atc *AtomicTransactionComposer) Execute(client *algod.Client) (int, []string, []ABIValue, error) {
-	if atc.status > SUBMITTED {
+func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (uint64, []string, []ABIResult, error) {
+	if atc.status == COMMITTED {
 		return 0, nil, nil, errors.New("status is already committed")
 	}
 
-	_, err := atc.Submit(client)
+	if atc.status < SUBMITTED {
+		_, err := atc.Submit(client, ctx)
+		if err != nil {
+			return 0, nil, nil, err
+		}
+	}
+
+	txinfo, err := WaitForConfirmation(client, atc.txids[0], waitRounds, context.Background())
 	if err != nil {
 		return 0, nil, nil, err
 	}
+	atc.status = COMMITTED
 
-	txinfo, err := WaitForConfirmation(client, atc.txids[0], 0, context.Background())
-	if err != nil {
-		return 0, nil, nil, err
-	}
-
-	var returnValues []ABIValue
+	var returnValues []ABIResult
+	var txids []string
 	for i, txid := range atc.txids {
 		if atc.transactions[i].Txn.Type != types.ApplicationCallTx {
 			continue
 		}
 
-		if atc.methodCalls[i].Returns.AbiType == "void" {
-			returnValues = append(returnValues, ABIValue{})
+		// Verify method call is available. This may not be the case if the App Call Tx wasn't created
+		// by AddMethodCall().
+		if _, ok := atc.methodCalls[i]; !ok {
 			continue
 		}
 
+		txids = append(txids, txid)
 		txinfo, _, err := client.PendingTransactionInformation(txid).Do(context.Background())
 		if err != nil {
 			return 0, nil, nil, err
 		}
 
-		for _, log := range txinfo.Logs {
-			isReturnValue := true
-			for _, b := range log[:4] {
-				isReturnValue = isReturnValue && (b == 0)
-			}
+		if atc.methodCalls[i].Returns.AbiType == "void" {
+			returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: []byte{}, ReturnValue: abi.Value{}, DecodeError: nil})
+			continue
+		}
 
-			if isReturnValue {
+		failedToFindResult := true
+		for j := len(txinfo.Logs) - 1; j >= 0; j-- {
+			log := txinfo.Logs[j]
+			if string(log[:4]) == string(ABI_RETURN_HASH) {
+				failedToFindResult = false
 				abiType, err := abi.TypeOf(atc.methodCalls[i].Returns.AbiType)
 				if err != nil {
-					return 0, nil, nil, err
+					returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: abi.Value{}, DecodeError: err})
+					break
 				}
 
 				rawAbiValue, err := abiType.Decode(log[4:])
 				if err != nil {
-					return 0, nil, nil, err
+					returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: abi.Value{}, DecodeError: err})
+					break
 				}
 
-				abiValue := ABIValue{
+				abiValue := abi.Value{
 					AbiType:  abiType,
 					RawValue: rawAbiValue,
 				}
-				returnValues = append(returnValues, abiValue)
-
+				returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: abiValue, DecodeError: nil})
 				break
 			}
 		}
+
+		if failedToFindResult {
+			returnValues = append(returnValues, ABIResult{
+				TxID:           txid,
+				RawReturnValue: nil,
+				ReturnValue:    abi.Value{},
+				DecodeError:    fmt.Errorf("no return value found when one was expected"),
+			})
+		}
 	}
 
-	return int(txinfo.ConfirmedRound), atc.txids, returnValues, err
+	return txinfo.ConfirmedRound, txids, returnValues, err
 }

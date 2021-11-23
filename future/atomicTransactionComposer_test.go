@@ -12,7 +12,7 @@ import (
 
 func TestMakeBasicAccountTransactionSigner(t *testing.T) {
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -32,7 +32,7 @@ func TestMakeBasicAccountTransactionSigner(t *testing.T) {
 		},
 	}
 
-	sigs, _, err := txSigner([]types.Transaction{tx}, []int{0})
+	sigs, _, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
 	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
@@ -54,7 +54,7 @@ func TestMakeLogicSigAccountTransactionSigner(t *testing.T) {
 	programAddr, err := types.DecodeAddress(programHash)
 	require.NoError(t, err)
 
-	txSigner := MakeLogicSigAccountTransactionSigner(lsig)
+	txSigner := LogicSigAccountTransactionSigner{LogicSigAccount: lsig}
 
 	require.NoError(t, err)
 	tx := types.Transaction{
@@ -73,7 +73,7 @@ func TestMakeLogicSigAccountTransactionSigner(t *testing.T) {
 		},
 	}
 
-	sigs, _, err := txSigner([]types.Transaction{tx}, []int{0})
+	sigs, _, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
 	_, expectedSig, err := crypto.SignLogicSigAccountTransaction(lsig, tx)
@@ -112,7 +112,7 @@ func TestMakeMultiSigAccountTransactionSigner(t *testing.T) {
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
-	txSigner := MakeMultiSigAccountTransactionSigner(ma, [][]byte{sk1})
+	txSigner := MultiSigAccountTransactionSigner{Msig: ma, Sks: [][]byte{sk1}}
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
@@ -129,7 +129,7 @@ func TestMakeMultiSigAccountTransactionSigner(t *testing.T) {
 		},
 	}
 
-	sigs, _, err := txSigner([]types.Transaction{tx}, []int{0})
+	sigs, _, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
 	_, expectedSig, err := crypto.SignMultisigTransaction(sk1, ma, tx)
@@ -148,7 +148,7 @@ func TestMakeAtomicTransactionComposer(t *testing.T) {
 func TestAddTransaction(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -184,7 +184,7 @@ func TestAddTransaction(t *testing.T) {
 func TestAddTransactionWhenNotBuilding(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -221,7 +221,7 @@ func TestAddTransactionWhenNotBuilding(t *testing.T) {
 func TestAddTransactionWithMaxTransactions(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -262,7 +262,7 @@ func TestAddTransactionWithMaxTransactions(t *testing.T) {
 func TestAddMethodCall(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 	methodSig := "add()uint32"
 
 	method, err := MethodFromSignature(methodSig)
@@ -272,15 +272,17 @@ func TestAddMethodCall(t *testing.T) {
 	require.NoError(t, err)
 
 	err = atc.AddMethodCall(
-		0,
-		method,
-		[]MethodArgument{},
-		addr,
-		types.SuggestedParams{},
-		types.NoOpOC,
-		[]byte{},
-		[32]byte{},
-		addr,
+		AddMethoCallParams{
+			0,
+			method,
+			nil,
+			addr,
+			types.SuggestedParams{},
+			types.NoOpOC,
+			[]byte{},
+			[32]byte{},
+			addr,
+		},
 		txSigner,
 	)
 	require.NoError(t, err)
@@ -291,7 +293,7 @@ func TestAddMethodCall(t *testing.T) {
 func TestGatherSignatures(t *testing.T) {
 	atc := MakeAtomicTransactionComposer()
 	account := crypto.GenerateAccount()
-	txSigner := MakeBasicAccountTransactionSigner(account)
+	txSigner := BasicAccountTransactionSigner{Account: account}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -326,6 +328,7 @@ func TestGatherSignatures(t *testing.T) {
 	sigs, err := atc.GatherSignatures()
 	require.NoError(t, err)
 	require.Equal(t, atc.GetStatus(), SIGNED)
+	tx.Group, _ = crypto.ComputeGroupID([]types.Transaction{tx})
 	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)

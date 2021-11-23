@@ -182,8 +182,9 @@ func theBaseEncodedSignedTransactionShouldEqual(base int, golden string) error {
 	if err != nil {
 		return err
 	}
+	stxStr := base64.StdEncoding.EncodeToString(stx)
 	if !bytes.Equal(gold, stx) {
-		return fmt.Errorf("Application signed transaction does not match the golden.")
+		return fmt.Errorf("Application signed transaction does not match the golden: %s != %s", stxStr, golden)
 	}
 	return nil
 }

@@ -4,28 +4,23 @@ import (
 	"crypto/sha512"
 	"errors"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-var TransactionArgTypes map[string]interface{}
-
-func init() {
-	TransactionArgTypes = map[string]interface{}{
-		string(types.PaymentTx):         nil,
-		string(types.KeyRegistrationTx): nil,
-		string(types.AssetConfigTx):     nil,
-		string(types.AssetTransferTx):   nil,
-		string(types.AssetFreezeTx):     nil,
-		string(types.ApplicationCallTx): nil,
-	}
+var TransactionArgTypes = map[string]interface{}{
+	string(types.PaymentTx):         nil,
+	string(types.KeyRegistrationTx): nil,
+	string(types.AssetConfigTx):     nil,
+	string(types.AssetTransferTx):   nil,
+	string(types.AssetFreezeTx):     nil,
+	string(types.ApplicationCallTx): nil,
 }
 
 type Arg struct {
-	Name    string `json:"name"`
+	Name    string `json:"name,omitempty"`
 	AbiType string `json:"type"`
 	Desc    string `json:"desc,omitempty"`
 }
@@ -42,7 +37,7 @@ type Method struct {
 	Returns Return `json:"returns"`
 }
 
-func GetTxCountFromMethod(method Method) int {
+func (method *Method) GetTxCountFromMethod() int {
 	cnt := 1
 	for _, arg := range method.Args {
 		if _, ok := TransactionArgTypes[arg.AbiType]; ok {
@@ -102,14 +97,13 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 }
 
 func MethodFromSignature(methodStr string) (Method, error) {
-	openCnt := strings.Count(methodStr, "(")
-	if openCnt == 0 {
+	openIdx := strings.Index(methodStr, "(")
+	if openIdx == -1 {
 		return Method{}, errors.New("method signature is missing an open parenthesis")
 	}
 
-	openIdx := strings.Index(methodStr, "(")
 	name := methodStr[:openIdx]
-	match, err := regexp.MatchString(`[_a-zA-Z][_a-zA-Z0-9]+`, name)
+	match, err := regexp.MatchString(`[a-zA-Z][_a-zA-Z0-9]*`, name)
 	if err != nil {
 		return Method{}, err
 	}
@@ -133,7 +127,7 @@ func MethodFromSignature(methodStr string) (Method, error) {
 	args := make([]Arg, len(argTypes))
 	for i, argType := range argTypes {
 		args[i] = Arg{
-			Name:    strconv.Itoa(i),
+			Name:    "",
 			AbiType: argType,
 		}
 	}
@@ -145,7 +139,7 @@ func MethodFromSignature(methodStr string) (Method, error) {
 	}, nil
 }
 
-func (method Method) GetSignature() string {
+func (method *Method) GetSignature() string {
 	var methodSignature string
 	methodSignature += method.Name + "("
 
@@ -161,7 +155,7 @@ func (method Method) GetSignature() string {
 	return methodSignature
 }
 
-func (method Method) GetSelector() []byte {
+func (method *Method) GetSelector() []byte {
 	sig := method.GetSignature()
 	sigHash := sha512.Sum512_256([]byte(sig))
 	return sigHash[:4]
