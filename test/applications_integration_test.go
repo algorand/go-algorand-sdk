@@ -561,7 +561,7 @@ func theAppShouldHaveReturned(expectedResults string) error {
 			return fmt.Errorf("the expected raw bytes for the result don't match the actual result")
 		}
 
-		if expectedValue != actualResult.ReturnValue.RawValue {
+		if expectedValue != actualResult.ReturnValue {
 			return fmt.Errorf("the decoded expected value doesn't match the actual result")
 		}
 	}

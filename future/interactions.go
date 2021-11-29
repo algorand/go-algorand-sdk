@@ -2,8 +2,7 @@ package future
 
 import (
 	"crypto/sha512"
-	"errors"
-	"regexp"
+	"fmt"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/abi"
@@ -11,6 +10,7 @@ import (
 )
 
 var TransactionArgTypes = map[string]interface{}{
+	"txn":                           nil, // denotes a placeholder for any of the size types below
 	string(types.PaymentTx):         nil,
 	string(types.KeyRegistrationTx): nil,
 	string(types.AssetConfigTx):     nil,
@@ -66,7 +66,7 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 		}
 
 		if parenCnt < 0 {
-			return nil, -1, errors.New("method signature parentheses mismatch")
+			return nil, -1, fmt.Errorf("method signature parentheses mismatch")
 		} else if parenCnt > 1 {
 			continue
 		}
@@ -90,7 +90,7 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 	}
 
 	if closeIdx == -1 {
-		return nil, -1, errors.New("method signature parentheses mismatch")
+		return nil, -1, fmt.Errorf("method signature parentheses mismatch")
 	}
 
 	return argTypes, closeIdx, nil
@@ -99,16 +99,12 @@ func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
 func MethodFromSignature(methodStr string) (Method, error) {
 	openIdx := strings.Index(methodStr, "(")
 	if openIdx == -1 {
-		return Method{}, errors.New("method signature is missing an open parenthesis")
+		return Method{}, fmt.Errorf("method signature is missing an open parenthesis")
 	}
 
 	name := methodStr[:openIdx]
-	match, err := regexp.MatchString(`[a-zA-Z][_a-zA-Z0-9]*`, name)
-	if err != nil {
-		return Method{}, err
-	}
-	if !match {
-		return Method{}, errors.New("invalid method name")
+	if name == "" {
+		return Method{}, fmt.Errorf("method must have a non empty name")
 	}
 
 	argTypes, closeIdx, err := parseMethodArgs(methodStr, openIdx)

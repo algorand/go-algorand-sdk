@@ -96,10 +96,6 @@ func TestMethodFromSignatureInvalidFormat(t *testing.T) {
 	methodSig = "add((uint32, uint32)uint32"
 	_, err = MethodFromSignature(methodSig)
 	require.Error(t, err)
-
-	methodSig = "1(uint32)uint32"
-	_, err = MethodFromSignature(methodSig)
-	require.Error(t, err)
 }
 
 func TestMethodFromSignatureInvalidAbiType(t *testing.T) {

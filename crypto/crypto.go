@@ -58,6 +58,11 @@ func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 	return a, nil
 }
 
+func GetTxID(tx types.Transaction) string {
+	rawTx := rawTransactionBytesToSign(tx)
+	return txIDFromRawTxnBytesToSign(rawTx)
+}
+
 // SignTransaction accepts a private key and a transaction, and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
 // If the SK's corresponding address is different than the txn sender's, the SK's

@@ -2435,9 +2435,9 @@ func addMethodCall(accountType, strOnComplete string) error {
 		useAccount = transientAccount
 	}
 
-	methodCallParams := future.AddMethoCallParams{
+	methodCallParams := future.AddMethodCallParams{
 		AppID:           appId,
-		AbiMethod:       abiMethod,
+		Method:          abiMethod,
 		MethodArgs:      methodArgs,
 		Sender:          useAccount.Address,
 		SuggestedParams: sugParams,
