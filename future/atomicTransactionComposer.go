@@ -527,7 +527,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 
 		// Verify method call is available. This may not be the case if the App Call Tx wasn't created
 		// by AddMethodCall().
-		if txContext.isMethodCallTx() {
+		if !txContext.isMethodCallTx() {
 			continue
 		}
 
