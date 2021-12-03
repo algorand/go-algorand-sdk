@@ -7,6 +7,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/gob"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -93,10 +94,10 @@ var backupTxnSender string
 var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
-var abiMethod future.Method
+var abiMethod abi.Method
 var abiJsonString string
-var abiInterface future.Interface
-var abiContract future.Contract
+var abiInterface abi.Interface
+var abiContract abi.Contract
 var txComposer future.AtomicTransactionComposer
 var appId uint64
 var accountTxSigner future.BasicAccountTransactionSigner
@@ -2104,7 +2105,7 @@ func tealCheckDryrun(result string) error {
 }
 
 func createMethodObjectFromSignature(methodSig string) error {
-	abiMethodLocal, err := future.MethodFromSignature(methodSig)
+	abiMethodLocal, err := abi.MethodFromSignature(methodSig)
 	abiMethod = abiMethodLocal
 	return err
 }
@@ -2134,43 +2135,43 @@ func checkSerializedMethodObject(jsonFile, loadedFrom string) error {
 }
 
 func createMethodObjectFromProperties(name, firstArgType, secondArgType, returnType string) error {
-	args := []future.Arg{
+	args := []abi.Arg{
 		{Name: "", AbiType: firstArgType, Desc: ""},
 		{Name: "", AbiType: secondArgType, Desc: ""},
 	}
-	abiMethod = future.Method{
+	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    "",
 		Args:    args,
-		Returns: future.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{AbiType: returnType, Desc: ""},
 	}
 	return nil
 }
 
 func createMethodObjectWithArgNames(name, firstArgName, firstArgType, secondArgName, secondArgType, returnType string) error {
-	args := []future.Arg{
+	args := []abi.Arg{
 		{Name: firstArgName, AbiType: firstArgType, Desc: ""},
 		{Name: secondArgName, AbiType: secondArgType, Desc: ""},
 	}
-	abiMethod = future.Method{
+	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    "",
 		Args:    args,
-		Returns: future.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{AbiType: returnType, Desc: ""},
 	}
 	return nil
 }
 
 func createMethodObjectWithDescription(name, nameDesc, firstArgType, firstDesc, secondArgType, secondDesc, returnType string) error {
-	args := []future.Arg{
+	args := []abi.Arg{
 		{Name: "", AbiType: firstArgType, Desc: firstDesc},
 		{Name: "", AbiType: secondArgType, Desc: secondDesc},
 	}
-	abiMethod = future.Method{
+	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    nameDesc,
 		Args:    args,
-		Returns: future.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{AbiType: returnType, Desc: ""},
 	}
 	return nil
 }
@@ -2184,7 +2185,7 @@ func checkTxnCount(givenTxnCount int) error {
 }
 
 func checkMethodSelector(givenMethodSelector string) error {
-	correctMethodSelector := fmt.Sprintf("%x", abiMethod.GetSelector())
+	correctMethodSelector := hex.EncodeToString(abiMethod.GetSelector())
 	if correctMethodSelector != givenMethodSelector {
 		return fmt.Errorf("method selector %s != %s", givenMethodSelector, correctMethodSelector)
 	}
@@ -2192,9 +2193,9 @@ func checkMethodSelector(givenMethodSelector string) error {
 }
 
 func createInterfaceObject(name string) error {
-	abiInterface = future.Interface{
+	abiInterface = abi.Interface{
 		Name:    name,
-		Methods: []future.Method{abiMethod},
+		Methods: []abi.Method{abiMethod},
 	}
 	return nil
 }
@@ -2210,10 +2211,10 @@ func serializeInterfaceObjectIntoJson() error {
 }
 
 func createContractObject(name string, appId int) error {
-	abiContract = future.Contract{
+	abiContract = abi.Contract{
 		Name:    name,
 		AppId:   uint64(appId),
-		Methods: []future.Method{abiMethod},
+		Methods: []abi.Method{abiMethod},
 	}
 	return nil
 }
@@ -2229,7 +2230,7 @@ func serializeContractObjectIntoJson() error {
 }
 
 // equality helper methods
-func checkEqualMethods(method1, method2 future.Method) bool {
+func checkEqualMethods(method1, method2 abi.Method) bool {
 	if method1.Name != method2.Name || method1.Desc != method2.Desc {
 		return false
 	}
@@ -2242,8 +2243,12 @@ func checkEqualMethods(method1, method2 future.Method) bool {
 	return true
 }
 
-func checkEqualInterfaces(interface1, interface2 future.Interface) bool {
+func checkEqualInterfaces(interface1, interface2 abi.Interface) bool {
 	if interface1.Name != interface2.Name {
+		return false
+	}
+
+	if len(interface1.Methods) != len(interface2.Methods) {
 		return false
 	}
 
@@ -2255,8 +2260,12 @@ func checkEqualInterfaces(interface1, interface2 future.Interface) bool {
 	return true
 }
 
-func checkEqualContracts(contract1, contract2 future.Contract) bool {
+func checkEqualContracts(contract1, contract2 abi.Contract) bool {
 	if contract1.Name != contract2.Name || contract1.AppId != contract2.AppId {
+		return false
+	}
+
+	if len(contract1.Methods) != len(contract2.Methods) {
 		return false
 	}
 
@@ -2269,7 +2278,7 @@ func checkEqualContracts(contract1, contract2 future.Contract) bool {
 }
 
 func deserializeMethodJson() error {
-	var deserializedMethod future.Method
+	var deserializedMethod abi.Method
 	err := json.Unmarshal([]byte(abiJsonString), &deserializedMethod)
 	if err != nil {
 		return err
@@ -2282,7 +2291,7 @@ func deserializeMethodJson() error {
 }
 
 func deserializeInterfaceJson() error {
-	var deserializedInterface future.Interface
+	var deserializedInterface abi.Interface
 	err := json.Unmarshal([]byte(abiJsonString), &deserializedInterface)
 	if err != nil {
 		return err
@@ -2294,7 +2303,7 @@ func deserializeInterfaceJson() error {
 }
 
 func deserializeContractJson() error {
-	var deserializedContract future.Contract
+	var deserializedContract abi.Contract
 	err := json.Unmarshal([]byte(abiJsonString), &deserializedContract)
 	if err != nil {
 		return err
@@ -2306,7 +2315,8 @@ func deserializeContractJson() error {
 }
 
 func aNewAtomicTransactionComposer() error {
-	txComposer = future.MakeAtomicTransactionComposer()
+	var newTxComposer future.AtomicTransactionComposer
+	txComposer = newTxComposer
 	return nil
 }
 
@@ -2376,7 +2386,7 @@ func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(args string) error {
 
 	var abiTypes []abi.Type
 	for _, arg := range abiMethod.Args {
-		if _, ok := future.TransactionArgTypes[arg.AbiType]; ok {
+		if _, ok := abi.TransactionArgTypes[arg.AbiType]; ok {
 			continue
 		}
 
@@ -2445,9 +2455,10 @@ func addMethodCall(accountType, strOnComplete string) error {
 		Note:            []byte{},
 		Lease:           [32]byte{},
 		RekeyTo:         types.Address{},
+		Signer:          accountTxSigner,
 	}
 
-	err := txComposer.AddMethodCall(methodCallParams, accountTxSigner)
+	err := txComposer.AddMethodCall(methodCallParams)
 	if err != nil {
 		return err
 	}

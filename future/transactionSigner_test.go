@@ -37,6 +37,7 @@ func TestMakeBasicAccountTransactionSigner(t *testing.T) {
 
 	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
 	require.NoError(t, err)
+	require.Len(t, sigs, 1)
 	require.Equal(t, sigs[0], expectedSig)
 }
 

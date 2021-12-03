@@ -1,12 +1,12 @@
-package future
+package abi
 
 import (
 	"crypto/sha512"
 	"fmt"
 	"strings"
 
-	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand/data/abi"
 )
 
 var TransactionArgTypes = map[string]interface{}{

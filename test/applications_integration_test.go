@@ -538,13 +538,16 @@ func theAppShouldHaveReturned(expectedResults string) error {
 			return actualResult.DecodeError
 		}
 
+		if abiMethod.Returns.AbiType == "void" {
+			if expectedResult != "" {
+				return fmt.Errorf("found unexpected return value from void method")
+			}
+			continue
+		}
+
 		expectedBytes, err := base64.StdEncoding.DecodeString(expectedResult)
 		if err != nil {
 			return err
-		}
-
-		if abiMethod.Returns.AbiType == "void" {
-			continue
 		}
 
 		abiReturnType, err := abi.TypeOf(abiMethod.Returns.AbiType)

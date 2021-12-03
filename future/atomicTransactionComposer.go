@@ -44,7 +44,7 @@ type AddMethodCallParams struct {
 	/** The ID of the smart contract to call */
 	AppID uint64
 	/** The method to call on the smart contract */
-	Method Method
+	Method abi.Method
 	/** The arguments to include in the method call. If omitted, no arguments will be passed to the method. */
 	MethodArgs []interface{}
 	/** The address of the sender of this application call */
@@ -59,6 +59,8 @@ type AddMethodCallParams struct {
 	Lease [32]byte
 	/** If provided, the address that the sender will be rekeyed to at the conclusion of this application call */
 	RekeyTo types.Address
+	/** A transaction Signer that can authorize this application call from sender */
+	Signer TransactionSigner
 }
 
 type AtomicTransactionComposerStatus = int
@@ -88,14 +90,20 @@ type transactionContext struct {
 	signer TransactionSigner
 
 	// The corresponding Method constructed from information passed into atc.AddMethodCall().
-	method *Method
+	method *abi.Method
 
 	// The raw signed transaction populated after invocation of atc.GatherSignatures().
 	stxBytes []byte
+
+	// The txid of the transaction, empty until populated by a call to txContext.txID()
+	txid string
 }
 
 func (txContext *transactionContext) txID() string {
-	return crypto.GetTxID(txContext.txn)
+	if txContext.txid == "" {
+		txContext.txid = crypto.GetTxID(txContext.txn)
+	}
+	return txContext.txid
 }
 
 func (txContext *transactionContext) isMethodCallTx() bool {
@@ -114,21 +122,6 @@ type AtomicTransactionComposer struct {
 	 *  BUILDING then this slice cannot change.
 	 */
 	txContexts []transactionContext
-
-	// caches that will be populated when respective contents are calculated
-	cachedTxWithSigners []TransactionWithSigner
-	cachedStxs          [][]byte
-	cachedTxIDs         []string
-}
-
-func MakeAtomicTransactionComposer() AtomicTransactionComposer {
-	return AtomicTransactionComposer{
-		status:              BUILDING,
-		txContexts:          []transactionContext{},
-		cachedTxWithSigners: nil,
-		cachedStxs:          nil,
-		cachedTxIDs:         nil,
-	}
 }
 
 /**
@@ -154,6 +147,10 @@ func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
 	copy(newTxContexts, atc.txContexts)
 	for i := range newTxContexts {
 		newTxContexts[i].txn.Group = types.Digest{}
+	}
+
+	if len(newTxContexts) == 0 {
+		newTxContexts = nil
 	}
 
 	return AtomicTransactionComposer{
@@ -206,11 +203,7 @@ func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWit
 * causes the current group to exceed MAX_GROUP_SIZE, or if the provided arguments are invalid
 * for the given method.
  */
-func (atc *AtomicTransactionComposer) AddMethodCall(
-	params AddMethodCallParams,
-	/** A transaction signer that can authorize this application call from sender */
-	signer TransactionSigner) error {
-
+func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) error {
 	if atc.status != BUILDING {
 		return errors.New("status must be BUILDING in order to add transactions")
 	}
@@ -229,7 +222,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 	var abiArgs []interface{}
 	var abiTypes []abi.Type
 	for i, arg := range params.Method.Args {
-		if _, ok := TransactionArgTypes[arg.AbiType]; ok {
+		if _, ok := abi.TransactionArgTypes[arg.AbiType]; ok {
 			txnAndSigner, ok := params.MethodArgs[i].(TransactionWithSigner)
 			if !ok {
 				return fmt.Errorf("invalid arg type, expected transaction")
@@ -254,13 +247,8 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 	// Up to 16 args can be passed to app call. First is reserved for method selector and last is
 	// reserved for remaining args packaged into one tuple.
 	if len(abiArgs) > 14 {
-		var tupleTypes []abi.Type
-		var tupleValues []interface{}
-		for i, abiValue := range abiArgs[14:] {
-			tupleTypes = append(tupleTypes, abiTypes[i])
-			tupleValues = append(tupleValues, abiValue)
-		}
-
+		tupleTypes := abiTypes[14:]
+		tupleValues := abiArgs[14:]
 		tupleType, err := abi.MakeTupleType(tupleTypes)
 		if err != nil {
 			return err
@@ -305,7 +293,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 
 	txAndSigner := TransactionWithSigner{
 		Txn:    tx,
-		Signer: signer,
+		Signer: params.Signer,
 	}
 
 	for _, txAndSigner := range txsToAdd {
@@ -326,18 +314,14 @@ func (atc *AtomicTransactionComposer) AddMethodCall(
 }
 
 func (atc *AtomicTransactionComposer) getFinalizedTxWithSigners() []TransactionWithSigner {
-	if atc.cachedTxWithSigners != nil {
-		return atc.cachedTxWithSigners
-	}
-
-	atc.cachedTxWithSigners = make([]TransactionWithSigner, len(atc.txContexts))
+	txWithSigners := make([]TransactionWithSigner, len(atc.txContexts))
 	for i, txContext := range atc.txContexts {
-		atc.cachedTxWithSigners[i] = TransactionWithSigner{
+		txWithSigners[i] = TransactionWithSigner{
 			Txn:    txContext.txn,
 			Signer: txContext.signer,
 		}
 	}
-	return atc.cachedTxWithSigners
+	return txWithSigners
 }
 
 /**
@@ -373,15 +357,11 @@ func (atc *AtomicTransactionComposer) BuildGroup() ([]TransactionWithSigner, err
 }
 
 func (atc *AtomicTransactionComposer) getRawSignedTxs() [][]byte {
-	if atc.cachedStxs != nil {
-		return atc.cachedStxs
-	}
-
-	atc.cachedStxs = make([][]byte, len(atc.txContexts))
+	stxs := make([][]byte, len(atc.txContexts))
 	for i, txContext := range atc.txContexts {
-		atc.cachedStxs[i] = txContext.stxBytes
+		stxs[i] = txContext.stxBytes
 	}
-	return atc.cachedStxs
+	return stxs
 }
 
 /**
@@ -426,6 +406,10 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 			}
 		}
 
+		if len(indexesToSign) == 0 {
+			return nil, fmt.Errorf("invalid tx signer provided, isn't equal to self")
+		}
+
 		sigStxs, err := txWithSigner.Signer.SignTransactions(txs, indexesToSign)
 		if err != nil {
 			return nil, err
@@ -444,15 +428,11 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 }
 
 func (atc *AtomicTransactionComposer) getTxIDs() []string {
-	if atc.cachedTxIDs != nil {
-		return atc.cachedTxIDs
-	}
-
-	atc.cachedTxIDs = make([]string, len(atc.txContexts))
+	txIDs := make([]string, len(atc.txContexts))
 	for i, txContext := range atc.txContexts {
-		atc.cachedTxIDs[i] = txContext.txID()
+		txIDs[i] = txContext.txID()
 	}
-	return atc.cachedTxIDs
+	return txIDs
 }
 
 /**

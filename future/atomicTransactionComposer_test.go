@@ -3,13 +3,14 @@ package future
 import (
 	"testing"
 
+	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMakeAtomicTransactionComposer(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	require.Equal(t, atc.GetStatus(), BUILDING)
 	require.Equal(t, atc.Count(), 0)
 	copyAtc := atc.Clone()
@@ -17,7 +18,7 @@ func TestMakeAtomicTransactionComposer(t *testing.T) {
 }
 
 func TestAddTransaction(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
 	txSigner := BasicAccountTransactionSigner{Account: account}
 
@@ -53,7 +54,7 @@ func TestAddTransaction(t *testing.T) {
 }
 
 func TestAddTransactionWhenNotBuilding(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
 	txSigner := BasicAccountTransactionSigner{Account: account}
 
@@ -93,7 +94,7 @@ func TestAddTransactionWhenNotBuilding(t *testing.T) {
 }
 
 func TestAddTransactionWithMaxTransactions(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
 	txSigner := BasicAccountTransactionSigner{Account: account}
 
@@ -134,12 +135,12 @@ func TestAddTransactionWithMaxTransactions(t *testing.T) {
 }
 
 func TestAddMethodCall(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
 	txSigner := BasicAccountTransactionSigner{Account: account}
 	methodSig := "add()uint32"
 
-	method, err := MethodFromSignature(methodSig)
+	method, err := abi.MethodFromSignature(methodSig)
 	require.NoError(t, err)
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
@@ -156,16 +157,15 @@ func TestAddMethodCall(t *testing.T) {
 			[]byte{},
 			[32]byte{},
 			addr,
-		},
-		txSigner,
-	)
+			txSigner,
+		})
 	require.NoError(t, err)
 	require.Equal(t, atc.GetStatus(), BUILDING)
 	require.Equal(t, atc.Count(), 1)
 }
 
 func TestGatherSignatures(t *testing.T) {
-	atc := MakeAtomicTransactionComposer()
+	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
 	txSigner := BasicAccountTransactionSigner{Account: account}
 
