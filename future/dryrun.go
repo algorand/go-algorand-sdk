@@ -61,35 +61,48 @@ func CreateDryrun(client algod.Client, txns []types.SignedTxn, dr *models.Dryrun
 		}
 	}
 
+	seenAssets := map[types.AssetIndex]bool{}
 	for _, assetId := range assets {
+		if _, ok := seenAssets[assetId]; ok {
+			continue
+		}
+
 		assetInfo, err := client.GetAssetByID(uint64(assetId)).Do(context.Background())
 		if err != nil {
 			return drr, fmt.Errorf("failed to get asset %d: %+v", assetId, err)
 		}
-
 		addr, err := types.DecodeAddress(assetInfo.Params.Creator)
 		if err != nil {
 			return drr, fmt.Errorf("failed to decode creator adddress %s: %+v", assetInfo.Params.Creator, err)
 		}
 		accts = append(accts, addr)
+		seenAssets[assetId] = true
 	}
 
+	seenApps := map[types.AppIndex]bool{}
 	for _, appId := range apps {
+		if _, ok := seenApps[appId]; ok {
+			continue
+		}
 		appInfo, err := client.GetApplicationByID(uint64(appId)).Do(context.Background())
 		if err != nil {
 			return drr, fmt.Errorf("failed to get application %d: %+v", appId, err)
 		}
-
 		drr.Apps = append(drr.Apps, appInfo)
+		seenApps[appId] = true
 	}
 
+	seenAccts := map[types.Address]bool{}
 	for _, acct := range accts {
+		if _, ok := seenAccts[acct]; ok {
+			continue
+		}
 		acctInfo, err := client.AccountInformation(acct.String()).Do(context.Background())
 		if err != nil {
 			return drr, fmt.Errorf("failed to get application %s: %+v", acct, err)
 		}
-
 		drr.Accounts = append(drr.Accounts, acctInfo)
+		seenAccts[acct] = true
 	}
 
 	return
