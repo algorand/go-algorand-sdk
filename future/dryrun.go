@@ -9,6 +9,10 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+const (
+	defaultAppId uint64 = 1380011588
+)
+
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
 // Passed in as a pointer to a DryrunRequest object to use for extra parameters
 func CreateDryrun(client algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest) (drr models.DryrunRequest, err error) {
@@ -39,9 +43,8 @@ func CreateDryrun(client algod.Client, txns []types.SignedTxn, dr *models.Dryrun
 		assets = append(assets, t.Txn.ForeignAssets...)
 
 		if t.Txn.ApplicationID == 0 {
-			appId := 1 //TODO: make the magic number?
 			drr.Apps = append(drr.Apps, models.Application{
-				Id: uint64(appId),
+				Id: defaultAppId,
 				Params: models.ApplicationParams{
 					Creator:           t.Txn.Sender.String(),
 					ApprovalProgram:   t.Txn.ApprovalProgram,
