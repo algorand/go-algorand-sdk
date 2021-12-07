@@ -1,3 +1,10 @@
+# 1.12.0-beta.1
+# Added
+- EncodeAddress
+- ABI Interaction
+- WaitForConfirmation function
+# Changed
+- ABI Interface
 # 1.11.0
 # Added
 - add TealVerify function (#242)
