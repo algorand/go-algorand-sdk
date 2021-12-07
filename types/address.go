@@ -67,3 +67,18 @@ func DecodeAddress(addr string) (a Address, err error) {
 	copy(a[:], addressBytes)
 	return a, nil
 }
+
+// EncodeAddress turns a byte slice into the human readable representation of the address.
+// This representation includes a 4-byte checksum
+func EncodeAddress(addr []byte) (a string, err error) {
+	if len(addr) != hashLenBytes {
+		err = errWrongAddressByteLen
+		return
+	}
+
+	var address Address
+	copy(address[:], addr)
+	a = address.String()
+
+	return
+}

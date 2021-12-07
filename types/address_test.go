@@ -18,9 +18,13 @@ func TestEncodeDecode(t *testing.T) {
 	a := Address{}
 	for i := 0; i < 1000; i++ {
 		randomBytes(a[:])
-		addr := a.String()
+
+		addr, err := EncodeAddress(a[:])
+		require.NoError(t, err)
+
 		b, err := DecodeAddress(addr)
 		require.NoError(t, err)
+
 		require.Equal(t, a, b)
 	}
 }

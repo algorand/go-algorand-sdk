@@ -29,7 +29,14 @@ func aSigningAccountWithAddressAndMnemonic(address, mnem string) error {
 	if err != nil {
 		return err
 	}
+
 	sk1, err = mnemonic.ToPrivateKey(mnem)
+	account = crypto.Account{
+		Address:    addr1,
+		PrivateKey: sk1,
+		PublicKey:  ed25519.PublicKey(addr1[:]),
+	}
+
 	return err
 }
 
@@ -149,7 +156,7 @@ func iBuildAnApplicationTransactionUnit(
 
 func signTheTransaction() error {
 	var err error
-	_, stx, err = crypto.SignTransaction(sk1, tx)
+	txid, stx, err = crypto.SignTransaction(sk1, tx)
 	return err
 }
 
@@ -182,8 +189,9 @@ func theBaseEncodedSignedTransactionShouldEqual(base int, golden string) error {
 	if err != nil {
 		return err
 	}
+	stxStr := base64.StdEncoding.EncodeToString(stx)
 	if !bytes.Equal(gold, stx) {
-		return fmt.Errorf("Application signed transaction does not match the golden.")
+		return fmt.Errorf("Application signed transaction does not match the golden: %s != %s", stxStr, golden)
 	}
 	return nil
 }
