@@ -355,11 +355,11 @@ import (
 
 // CHANGE ME
 var (
-algodAddress = "http://localhost:4001"
-algodToken = strings.Repeat("a", 64)
+	algodAddress = "http://localhost:4001"
+	algodToken = strings.Repeat("a", 64)
 
-kmdAddress = "http://localhost:4002"
-kmdToken = strings.Repeat("a", 64)
+	kmdAddress = "http://localhost:4002"
+	kmdToken = strings.Repeat("a", 64)
 )
 
 func main() {
@@ -752,7 +752,7 @@ func submitGroup() {
 	var signedGroup []byte
 	signedGroup = append(signedGroup, stx1...)
 	signedGroup = append(signedGroup, stx2...)
-	_, err = algodClient.SendRawTransaction(signedGroup)
+	_, err = algodClient.SendRawTransaction(signedGroup).Do(context.Background())
 	if err != nil {
 		fmt.Printf("Failed to create payment transaction: %v\n", err)
 		return
@@ -839,7 +839,7 @@ func main() {
 
 	algodClient, _ := algod.MakeClient(algodAddress, algodToken)
 
-	_, err = algodClient.SendRawTransaction(stx)
+	_, err = algodClient.SendRawTransaction(stx).Do(context.Background())
 	if err != nil {
 		fmt.Printf("Sending failed with %v\n", err)
 	}
