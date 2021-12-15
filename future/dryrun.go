@@ -6,6 +6,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -61,6 +62,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 			})
 		} else {
 			apps = append(apps, t.Txn.ApplicationID)
+			accts = append(accts, crypto.GetApplicationAddress(uint64(t.Txn.ApplicationID)))
 		}
 	}
 
