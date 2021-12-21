@@ -9,14 +9,14 @@ import (
 
 func TestMethodFromSignature(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "", AbiType: "uint32", Desc: ""},
-		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
 
 	methodSig := "add(uint32,uint32)uint32"
@@ -28,14 +28,14 @@ func TestMethodFromSignature(t *testing.T) {
 
 func TestMethodFromSignatureWithTuple(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "", AbiType: "(uint32,(uint32,uint32))", Desc: ""},
-		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", Type: "(uint32,(uint32,uint32))", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{AbiType: "(uint32,uint32)", Desc: ""},
+		Returns: Return{Type: "(uint32,uint32)", Desc: ""},
 	}
 
 	methodSig := "add((uint32,(uint32,uint32)),uint32)(uint32,uint32)"
@@ -47,14 +47,14 @@ func TestMethodFromSignatureWithTuple(t *testing.T) {
 
 func TestMethodFromSignatureWithVoidReturn(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "", AbiType: "uint32", Desc: ""},
-		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{AbiType: "void", Desc: ""},
+		Returns: Return{Type: "void", Desc: ""},
 	}
 
 	methodSig := "add(uint32,uint32)void"
@@ -70,7 +70,7 @@ func TestMethodFromSignatureWithNoArgs(t *testing.T) {
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{AbiType: "void", Desc: ""},
+		Returns: Return{Type: "void", Desc: ""},
 	}
 
 	methodSig := "add()void"
@@ -106,15 +106,15 @@ func TestMethodFromSignatureInvalidAbiType(t *testing.T) {
 
 func TestGetSignature(t *testing.T) {
 	expectedArgs := []Arg{
-		{Name: "", AbiType: "uint32", Desc: ""},
-		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
 
 	expected := "add(uint32,uint32)uint32"
@@ -123,15 +123,15 @@ func TestGetSignature(t *testing.T) {
 
 func TestGetSelector(t *testing.T) {
 	args := []Arg{
-		{Name: "", AbiType: "uint32", Desc: ""},
-		{Name: "", AbiType: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", Desc: ""},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
 
 	expected := []byte{0x3e, 0x1e, 0x52, 0xbd}
@@ -140,15 +140,15 @@ func TestGetSelector(t *testing.T) {
 
 func TestEncodeJsonMethod(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "0", Type: "uint32", Desc: ""},
+		{Name: "1", Type: "uint32", Desc: ""},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
 
 	expected := `{"name":"add","args":[{"name":"0","type":"uint32"},{"name":"1","type":"uint32"}],"returns":{"type":"uint32"}}`
@@ -160,15 +160,15 @@ func TestEncodeJsonMethod(t *testing.T) {
 
 func TestEncodeJsonMethodWithDescription(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: "description"},
-		{Name: "1", AbiType: "uint32", Desc: "description"},
+		{Name: "0", Type: "uint32", Desc: "description"},
+		{Name: "1", Type: "uint32", Desc: "description"},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "description",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: "description"},
+		Returns: Return{Type: "uint32", Desc: "description"},
 	}
 
 	expected := `{"name":"add","desc":"description","args":[{"name":"0","type":"uint32","desc":"description"},{"name":"1","type":"uint32","desc":"description"}],"returns":{"type":"uint32","desc":"description"}}`
@@ -180,15 +180,15 @@ func TestEncodeJsonMethodWithDescription(t *testing.T) {
 
 func TestEncodeJsonInterface(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "0", Type: "uint32", Desc: ""},
+		{Name: "1", Type: "uint32", Desc: ""},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
 
 	interfaceObject := Interface{
@@ -205,15 +205,15 @@ func TestEncodeJsonInterface(t *testing.T) {
 
 func TestEncodeJsonInterfaceWithDescription(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: "description"},
-		{Name: "1", AbiType: "uint32", Desc: "description"},
+		{Name: "0", Type: "uint32", Desc: "description"},
+		{Name: "1", Type: "uint32", Desc: "description"},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "description",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: "description"},
+		Returns: Return{Type: "uint32", Desc: "description"},
 	}
 
 	interfaceObject := Interface{
@@ -230,24 +230,26 @@ func TestEncodeJsonInterfaceWithDescription(t *testing.T) {
 
 func TestEncodeJsonContract(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: ""},
-		{Name: "1", AbiType: "uint32", Desc: ""},
+		{Name: "0", Type: "uint32", Desc: ""},
+		{Name: "1", Type: "uint32", Desc: ""},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", Desc: ""},
 	}
+
+	network := ContractNetworkInfo{AppID: 123}
 
 	contract := Contract{
-		Name:    "contract",
-		AppId:   123,
-		Methods: []Method{method},
+		Name:     "contract",
+		Networks: map[string]ContractNetworkInfo{"genesis hash": network},
+		Methods:  []Method{method},
 	}
 
-	expected := `{"name":"contract","appId":123,"methods":[{"name":"add","args":[{"name":"0","type":"uint32"},{"name":"1","type":"uint32"}],"returns":{"type":"uint32"}}]}`
+	expected := `{"name":"contract","networks":{"genesis hash":{"appID":123}},"methods":[{"name":"add","args":[{"name":"0","type":"uint32"},{"name":"1","type":"uint32"}],"returns":{"type":"uint32"}}]}`
 
 	jsonContract, err := json.Marshal(contract)
 	require.NoError(t, err)
@@ -256,24 +258,27 @@ func TestEncodeJsonContract(t *testing.T) {
 
 func TestEncodeJsonContractWithDescription(t *testing.T) {
 	args := []Arg{
-		{Name: "0", AbiType: "uint32", Desc: "description"},
-		{Name: "1", AbiType: "uint32", Desc: "description"},
+		{Name: "0", Type: "uint32", Desc: "description"},
+		{Name: "1", Type: "uint32", Desc: "description"},
 	}
 
 	method := Method{
 		Name:    "add",
 		Desc:    "description",
 		Args:    args,
-		Returns: Return{AbiType: "uint32", Desc: "description"},
+		Returns: Return{Type: "uint32", Desc: "description"},
 	}
+
+	network := ContractNetworkInfo{AppID: 123}
 
 	contract := Contract{
-		Name:    "contract",
-		AppId:   123,
-		Methods: []Method{method},
+		Name:     "contract",
+		Desc:     "description for contract",
+		Networks: map[string]ContractNetworkInfo{"genesis hash": network},
+		Methods:  []Method{method},
 	}
 
-	expected := `{"name":"contract","appId":123,"methods":[{"name":"add","desc":"description","args":[{"name":"0","type":"uint32","desc":"description"},{"name":"1","type":"uint32","desc":"description"}],"returns":{"type":"uint32","desc":"description"}}]}`
+	expected := `{"name":"contract","desc":"description for contract","networks":{"genesis hash":{"appID":123}},"methods":[{"name":"add","desc":"description","args":[{"name":"0","type":"uint32","desc":"description"},{"name":"1","type":"uint32","desc":"description"}],"returns":{"type":"uint32","desc":"description"}}]}`
 
 	jsonContract, err := json.Marshal(contract)
 	require.NoError(t, err)

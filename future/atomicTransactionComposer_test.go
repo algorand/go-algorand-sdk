@@ -148,16 +148,10 @@ func TestAddMethodCall(t *testing.T) {
 
 	err = atc.AddMethodCall(
 		AddMethodCallParams{
-			0,
-			method,
-			nil,
-			addr,
-			types.SuggestedParams{},
-			types.NoOpOC,
-			[]byte{},
-			[32]byte{},
-			addr,
-			txSigner,
+			AppID:  4,
+			Method: method,
+			Sender: addr,
+			Signer: txSigner,
 		})
 	require.NoError(t, err)
 	require.Equal(t, atc.GetStatus(), BUILDING)
@@ -203,10 +197,8 @@ func TestGatherSignatures(t *testing.T) {
 	require.Equal(t, atc.GetStatus(), SIGNED)
 	require.Equal(t, len(sigs), 1)
 
-	tx.Group, err = crypto.ComputeGroupID([]types.Transaction{tx})
-	require.NoError(t, err)
 	txWithSigners, _ := atc.BuildGroup()
-	require.Equal(t, tx.Group, txWithSigners[0].Txn.Group)
+	require.Equal(t, types.Digest{}, txWithSigners[0].Txn.Group)
 
 	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
 	require.NoError(t, err)

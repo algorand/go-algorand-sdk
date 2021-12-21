@@ -8,77 +8,93 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-var ABI_RETURN_HASH = []byte{0x15, 0x1f, 0x7c, 0x75}
+// abiReturnHash is the 4-byte prefix for logged return values
+var abiReturnHash = []byte{0x15, 0x1f, 0x7c, 0x75}
 
-/** Represents an unsigned transactions and a signer that can authorize that transaction. */
+// TransactionWithSigner represents an unsigned transactions and a signer that can authorize that
+// transaction.
 type TransactionWithSigner struct {
-	/** An unsigned transaction */
+	// An unsigned transaction
 	Txn types.Transaction
-	/** A transaction signer that can authorize txn */
+	// A transaction signer that can authorize the transaction
 	Signer TransactionSigner
 }
 
-/** Represents the output from a successful ABI method call. */
+// Represents the output from a successful ABI method call.
 type ABIResult struct {
-	/** The TxID of the transaction that invoked the ABI method call. */
+	// The TxID of the transaction that invoked the ABI method call.
 	TxID string
-	/**
-	 * The raw bytes of the return value from the ABI method call. This will be empty if the method
-	 * does not return a value (return type "void").
-	 */
+	// The raw bytes of the return value from the ABI method call. This will be empty if the method
+	// does not return a value (return type "void").
 	RawReturnValue []byte
-	/**
-	 * The return value from the ABI method call. This will be undefined if the method does not return
-	 * a value (return type "void"), or if the SDK was unable to decode the returned value.
-	 */
+	// The return value from the ABI method call. This will be nil if the method does not return
+	// a value (return type "void"), or if the SDK was unable to decode the returned value.
 	ReturnValue interface{}
-	/** If the SDK was unable to decode a return value, the error will be here. */
+	// If the SDK was unable to decode a return value, the error will be here. Make sure to check
+	// this before examinging ReturnValue
 	DecodeError error
 }
 
+// AddMethodCallParams contains the parameters for the method AtomicTransactionComposer.AddMethodCall
 type AddMethodCallParams struct {
-	/** The ID of the smart contract to call */
+	// The ID of the smart contract to call. Set this to 0 to indicate an application creation call.
 	AppID uint64
-	/** The method to call on the smart contract */
+	// The method to call on the smart contract
 	Method abi.Method
-	/** The arguments to include in the method call. If omitted, no arguments will be passed to the method. */
+	// The arguments to include in the method call. If omitted, no arguments will be passed to the
+	// method.
 	MethodArgs []interface{}
-	/** The address of the sender of this application call */
+	// The address of the sender of this application call
 	Sender types.Address
-	/** Transactions params to use for this application call */
+	// Transactions params to use for this application call
 	SuggestedParams types.SuggestedParams
-	/** The OnComplete action to take for this application call. If omitted, OnApplicationComplete.NoOpOC will be used. */
+	// The OnComplete action to take for this application call
 	OnComplete types.OnCompletion
-	/** The note value for this application call */
+	// The approval program for this application call. Only set this if this is an application
+	// creation call, or if onComplete is UpdateApplicationOC.
+	ApprovalProgram []byte
+	// The clear program for this application call. Only set this if this is an application creation
+	// call, or if onComplete is UpdateApplicationOC.
+	ClearProgram []byte
+	// The global schema sizes. Only set this if this is an application creation call.
+	GlobalSchema types.StateSchema
+	// The local schema sizes. Only set this if this is an application creation call.
+	LocalSchema types.StateSchema
+	// The number of extra pages to allocate for the application's programs. Only set this if this
+	// is an application creation call.
+	ExtraPages uint32
+	// The note value for this application call
 	Note []byte
-	/** The lease value for this application call */
+	// The lease value for this application call
 	Lease [32]byte
-	/** If provided, the address that the sender will be rekeyed to at the conclusion of this application call */
+	// If provided, the address that the sender will be rekeyed to at the conclusion of this application call
 	RekeyTo types.Address
-	/** A transaction Signer that can authorize this application call from sender */
+	// A transaction Signer that can authorize this application call from sender
 	Signer TransactionSigner
 }
 
+// AtomicTransactionComposerStatus represents the status of an AtomicTransactionComposer
 type AtomicTransactionComposerStatus = int
 
 const (
-	/** The atomic group is still under construction. */
+	// The atomic group is still under construction.
 	BUILDING AtomicTransactionComposerStatus = iota
 
-	/** The atomic group has been finalized, but not yet signed. */
+	// The atomic group has been finalized, but not yet signed.
 	BUILT
 
-	/** The atomic group has been finalized and signed, but not yet submitted to the network. */
+	// The atomic group has been finalized and signed, but not yet submitted to the network.
 	SIGNED
 
-	/** The atomic gorup has been finalized, signed, and submitted to the network. */
+	// The atomic group has been finalized, signed, and submitted to the network.
 	SUBMITTED
 
-	/** The atomic group has been finalized, signed, submitted, and successfully committed to a block. */
+	// The atomic group has been finalized, signed, submitted, and successfully committed to a block.
 	COMMITTED
 )
 
@@ -110,38 +126,31 @@ func (txContext *transactionContext) isMethodCallTx() bool {
 	return txContext.method != nil
 }
 
-/** The maximum size of an atomic transaction group. */
-const MAX_GROUP_SIZE = 16
+// The maximum size of an atomic transaction group.
+const MaxAtomicGroupSize = 16
 
-/** A class used to construct and execute atomic transaction groups */
+// AtomicTransactionComposer is a helper class used to construct and execute atomic transaction groups
 type AtomicTransactionComposer struct {
-	/** The current status of the composer. The status increases monotonically. */
+	// The current status of the composer. The status increases monotonically.
 	status AtomicTransactionComposerStatus
 
-	/** The transaction contexts in the group with their respective signers. If status is greater then
-	 *  BUILDING then this slice cannot change.
-	 */
+	// The transaction contexts in the group with their respective signers. If status is greater then
+	// BUILDING then this slice cannot change.
 	txContexts []transactionContext
 }
 
-/**
-* Get the status of this composer's transaction group.
- */
+// GetStatus returns the status of this composer's transaction group.
 func (atc *AtomicTransactionComposer) GetStatus() AtomicTransactionComposerStatus {
 	return atc.status
 }
 
-/**
-* Get the number of transactions currently in this atomic group.
- */
+// Count returns the number of transactions currently in this atomic group.
 func (atc *AtomicTransactionComposer) Count() int {
 	return len(atc.txContexts)
 }
 
-/**
-* Create a new composer with the same underlying transactions. The new composer's status will be
-* BUILDING, so additional transactions may be added to it.
- */
+// Clone creates a new composer with the same underlying transactions. The new composer's status
+// will be BUILDING, so additional transactions may be added to it.
 func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
 	newTxContexts := make([]transactionContext, len(atc.txContexts))
 	copy(newTxContexts, atc.txContexts)
@@ -159,31 +168,33 @@ func (atc *AtomicTransactionComposer) Clone() AtomicTransactionComposer {
 	}
 }
 
-func (atc *AtomicTransactionComposer) validateTransaction(txn types.Transaction) error {
+func (atc *AtomicTransactionComposer) validateTransaction(txn types.Transaction, expectedType string) error {
 	emtpyGroup := types.Digest{}
 	if txn.Group != emtpyGroup {
 		return fmt.Errorf("expected empty group id")
 	}
 
+	if expectedType != abi.AnyTransactionType && expectedType != string(txn.Type) {
+		return fmt.Errorf("expected transaction with type %s, but got type %s", expectedType, string(txn.Type))
+	}
+
 	return nil
 }
 
-/**
-* Add a transaction to this atomic group.
-*
-* An error will be thrown if the composer's status is not BUILDING, or if adding this transaction
-* causes the current group to exceed MAX_GROUP_SIZE.
- */
+// AddTransaction adds a transaction to this atomic group.
+//
+// An error will be thrown if the composer's status is not BUILDING, or if adding this transaction
+// causes the current group to exceed MaxAtomicGroupSize.
 func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWithSigner) error {
 	if atc.status != BUILDING {
 		return errors.New("status must be BUILDING in order to add tranactions")
 	}
 
-	if atc.Count() == MAX_GROUP_SIZE {
-		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
+	if atc.Count() == MaxAtomicGroupSize {
+		return fmt.Errorf("reached max group size: %d", MaxAtomicGroupSize)
 	}
 
-	err := atc.validateTransaction(txnAndSigner.Txn)
+	err := atc.validateTransaction(txnAndSigner.Txn, abi.AnyTransactionType)
 	if err != nil {
 		return err
 	}
@@ -196,13 +207,11 @@ func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWit
 	return nil
 }
 
-/**
-* Add a smart contract method call to this atomic group.
-*
-* An error will be thrown if the composer's status is not BUILDING, if adding this transaction
-* causes the current group to exceed MAX_GROUP_SIZE, or if the provided arguments are invalid
-* for the given method.
- */
+// AddMethodCall adds a smart contract method call to this atomic group.
+//
+// An error will be thrown if the composer's status is not BUILDING, if adding this transaction
+// causes the current group to exceed MaxAtomicGroupSize, or if the provided arguments are invalid
+// for the given method.
 func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) error {
 	if atc.status != BUILDING {
 		return errors.New("status must be BUILDING in order to add transactions")
@@ -212,56 +221,104 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		return fmt.Errorf("the incorrect number of arguments were provided: %d != %d", len(params.MethodArgs), len(params.Method.Args))
 	}
 
-	if atc.Count()+params.Method.GetTxCountFromMethod() > MAX_GROUP_SIZE {
-		return fmt.Errorf("reached max group size: %d", MAX_GROUP_SIZE)
+	if atc.Count()+params.Method.GetTxCount() > MaxAtomicGroupSize {
+		return fmt.Errorf("reached max group size: %d", MaxAtomicGroupSize)
 	}
 
-	selectorValue := params.Method.GetSelector()
-	encodedAbiArgs := [][]byte{selectorValue}
+	if params.AppID == 0 {
+		if len(params.ApprovalProgram) == 0 || len(params.ClearProgram) == 0 {
+			return fmt.Errorf("ApprovalProgram and ClearProgram must be provided for an application creation call")
+		}
+	} else if params.OnComplete == types.UpdateApplicationOC {
+		if len(params.ApprovalProgram) == 0 || len(params.ClearProgram) == 0 {
+			return fmt.Errorf("ApprovalProgram and ClearProgram must be provided for an application update call")
+		}
+		if (params.GlobalSchema != types.StateSchema{}) || (params.LocalSchema != types.StateSchema{}) {
+			return fmt.Errorf("GlobalSchema and LocalSchema must not be provided for an application update call")
+		}
+	} else if len(params.ApprovalProgram) != 0 || len(params.ClearProgram) != 0 || (params.GlobalSchema != types.StateSchema{}) || (params.LocalSchema != types.StateSchema{}) {
+		return fmt.Errorf("ApprovalProgram, ClearProgram, GlobalSchema, and LocalSchema must not be provided for a non-creation call")
+	}
+
 	var txsToAdd []TransactionWithSigner
-	var abiArgs []interface{}
-	var abiTypes []abi.Type
+	var basicArgValues []interface{}
+	var basicArgTypes []abi.Type
+	var refArgValues []interface{}
+	var refArgTypes []string
+	refArgIndexToBasicArgIndex := make(map[int]int)
 	for i, arg := range params.Method.Args {
-		if _, ok := abi.TransactionArgTypes[arg.AbiType]; ok {
-			txnAndSigner, ok := params.MethodArgs[i].(TransactionWithSigner)
+		argValue := params.MethodArgs[i]
+
+		if arg.IsTransactionArg() {
+			txnAndSigner, ok := argValue.(TransactionWithSigner)
 			if !ok {
 				return fmt.Errorf("invalid arg type, expected transaction")
 			}
 
-			err := atc.validateTransaction(txnAndSigner.Txn)
+			err := atc.validateTransaction(txnAndSigner.Txn, arg.Type)
 			if err != nil {
 				return err
 			}
 			txsToAdd = append(txsToAdd, txnAndSigner)
 		} else {
-			abiType, err := abi.TypeOf(arg.AbiType)
+			var abiType abi.Type
+			var err error
+
+			if arg.IsReferenceArg() {
+				refArgIndexToBasicArgIndex[len(refArgTypes)] = len(basicArgTypes)
+				refArgValues = append(refArgValues, argValue)
+				refArgTypes = append(refArgTypes, arg.Type)
+
+				// treat the reference as a uint8 for encoding purposes
+				abiType, err = abi.TypeOf("uint8")
+			} else {
+				abiType, err = arg.GetTypeObject()
+			}
 			if err != nil {
 				return err
 			}
 
-			abiArgs = append(abiArgs, params.MethodArgs[i])
-			abiTypes = append(abiTypes, abiType)
+			basicArgValues = append(basicArgValues, argValue)
+			basicArgTypes = append(basicArgTypes, abiType)
 		}
 	}
 
-	// Up to 16 args can be passed to app call. First is reserved for method selector and last is
-	// reserved for remaining args packaged into one tuple.
-	if len(abiArgs) > 14 {
-		tupleTypes := abiTypes[14:]
-		tupleValues := abiArgs[14:]
-		tupleType, err := abi.MakeTupleType(tupleTypes)
+	var foreignAccounts []string
+	var foreignApps []uint64
+	var foreignAssets []uint64
+	refArgsResolved, err := populateMethodCallReferenceArgs(params.Sender.String(), params.AppID, refArgTypes, refArgValues, &foreignAccounts, &foreignApps, &foreignAssets)
+	if err != nil {
+		return err
+	}
+	for i, resolved := range refArgsResolved {
+		basicArgIndex := refArgIndexToBasicArgIndex[i]
+		// use the foreign array index as the encoded argument value
+		basicArgValues[basicArgIndex] = resolved
+	}
+
+	// Up to 16 app arguments can be passed to app call. First is reserved for method selector,
+	// and the rest are for method call arguments. But if more than 15 method call arguments
+	// are present, then the 14th+ are placed in a tuple in the last app argument slot
+	if len(basicArgValues) > 15 {
+		typesForTuple := make([]abi.Type, len(basicArgTypes)-14)
+		copy(typesForTuple, basicArgTypes[14:])
+
+		valueForTuple := make([]interface{}, len(basicArgValues)-14)
+		copy(valueForTuple, basicArgValues[14:])
+
+		tupleType, err := abi.MakeTupleType(typesForTuple)
 		if err != nil {
 			return err
 		}
 
-		abiArgs = abiArgs[:14]
-		abiArgs = append(abiArgs, tupleValues)
-		abiTypes = abiTypes[:14]
-		abiTypes = append(abiTypes, tupleType)
+		basicArgValues = append(basicArgValues[:14], valueForTuple)
+		basicArgTypes = append(basicArgTypes[:14], tupleType)
 	}
 
-	for i, abiArg := range abiArgs {
-		encodedArg, err := abiTypes[i].Encode(abiArg)
+	encodedAbiArgs := [][]byte{params.Method.GetSelector()}
+
+	for i, abiArg := range basicArgValues {
+		encodedArg, err := basicArgTypes[i].Encode(abiArg)
 		if err != nil {
 			return err
 		}
@@ -272,23 +329,29 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 	tx, err := MakeApplicationCallTx(
 		params.AppID,
 		encodedAbiArgs,
-		nil,
-		nil,
-		nil,
+		foreignAccounts,
+		foreignApps,
+		foreignAssets,
 		params.OnComplete,
-		nil,
-		nil,
-		types.StateSchema{},
-		types.StateSchema{},
+		params.ApprovalProgram,
+		params.ClearProgram,
+		params.GlobalSchema,
+		params.LocalSchema,
 		params.SuggestedParams,
 		params.Sender,
 		params.Note,
 		types.Digest{},
 		params.Lease,
 		params.RekeyTo)
-
 	if err != nil {
 		return err
+	}
+
+	if params.ExtraPages != 0 {
+		tx, err = MakeApplicationCallTxWithExtraPages(tx, params.ExtraPages)
+		if err != nil {
+			return err
+		}
 	}
 
 	txAndSigner := TransactionWithSigner{
@@ -324,11 +387,9 @@ func (atc *AtomicTransactionComposer) getFinalizedTxWithSigners() []TransactionW
 	return txWithSigners
 }
 
-/**
-* Finalize the transaction group and returned the finalized transactions.
-*
-* The composer's status will be at least BUILT after executing this method.
- */
+// BuildGroup finalizes the transaction group and returned the finalized transactions.
+//
+// The composer's status will be at least BUILT after executing this method.
 func (atc *AtomicTransactionComposer) BuildGroup() ([]TransactionWithSigner, error) {
 	if atc.status > BUILDING {
 		return atc.getFinalizedTxWithSigners(), nil
@@ -343,13 +404,15 @@ func (atc *AtomicTransactionComposer) BuildGroup() ([]TransactionWithSigner, err
 		txns = append(txns, txContext.txn)
 	}
 
-	gid, err := crypto.ComputeGroupID(txns)
-	if err != nil {
-		return nil, err
-	}
+	if len(txns) > 1 {
+		gid, err := crypto.ComputeGroupID(txns)
+		if err != nil {
+			return nil, err
+		}
 
-	for i := range atc.txContexts {
-		atc.txContexts[i].txn.Group = gid
+		for i := range atc.txContexts {
+			atc.txContexts[i].txn.Group = gid
+		}
 	}
 
 	atc.status = BUILT
@@ -364,16 +427,13 @@ func (atc *AtomicTransactionComposer) getRawSignedTxs() [][]byte {
 	return stxs
 }
 
-/**
-* Obtain signatures for each transaction in this group. If signatures have already been obtained,
-* this method will return cached versions of the signatures.
-*
-* The composer's status will be at least SIGNED after executing this method.
-*
-* An error will be thrown if signing any of the transactions fails.
-*
-* @returns An array of signed transactions.
- */
+// GatherSignatures obtains signatures for each transaction in this group. If signatures have
+// already been obtained, this method will return cached versions of the signatures.
+//
+// The composer's status will be at least SIGNED after executing this method.
+//
+// An error will be thrown if signing any of the transactions fails. Otherwise, this will return an
+// array of signed transactions.
 func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 	// if status is at least signed then return cached signed transactions
 	if atc.status >= SIGNED {
@@ -435,17 +495,15 @@ func (atc *AtomicTransactionComposer) getTxIDs() []string {
 	return txIDs
 }
 
-/**
-* Send the transaction group to the network, but don't wait for it to be committed to a block. An
-* error will be thrown if submission fails.
-*
-* The composer's status must be SUBMITTED or lower before calling this method. If submission is
-* successful, this composer's status will update to SUBMITTED.
-*
-* Note: a group can only be submitted again if it fails.
-*
-* @returns a list of TxIDs of the submitted transactions.
- */
+// Submit sends the transaction group to the network, but doesn't wait for it to be committed to a
+// block. An error will be thrown if submission fails.
+//
+// The composer's status must be SUBMITTED or lower before calling this method. If submission is
+// successful, this composer's status will update to SUBMITTED.
+//
+// Note: a group can only be submitted again if it fails.
+//
+// Returns a list of TxIDs of the submitted transactions.
 func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) {
 	if atc.status > SUBMITTED {
 		return nil, errors.New("status must be SUBMITTED or lower in order to call Submit()")
@@ -470,21 +528,17 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 	return atc.getTxIDs(), nil
 }
 
-/**
-* Send the transaction group to the network and wait until it's committed to a block. An error
-* will be thrown if submission or execution fails.
-*
-* The composer's status must be SUBMITTED or lower before calling this method, since execution is
-* only allowed once. If submission is successful, this composer's status will update to SUBMITTED.
-* If the execution is also successful, this composer's status will update to COMMITTED.
-*
-* Note: a group can only be submitted again if it fails.
-*
-* @returns an object containing the confirmed round for this transaction, the txIDs of the submitted
-*   transactions, and an array of results containing one element for each method call transaction in
-*   this group. If a method has no return value (void), then the method results array will contain
-*   null for that method's return value.
- */
+// Execute sends the transaction group to the network and waits until it's committed to a block. An
+// error will be thrown if submission or execution fails.
+//
+// The composer's status must be SUBMITTED or lower before calling this method, since execution is
+// only allowed once. If submission is successful, this composer's status will update to SUBMITTED.
+// If the execution is also successful, this composer's status will update to COMMITTED.
+//
+// Note: a group can only be submitted again if it fails.
+//
+// Returns the confirmed round for this transaction, the txIDs of the submitted transactions, and an
+// ABIResult for each method call in this group.
 func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (uint64, []string, []ABIResult, error) {
 	if atc.status == COMMITTED {
 		return 0, nil, nil, errors.New("status is already committed")
@@ -494,65 +548,204 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 	if err != nil {
 		return 0, nil, nil, err
 	}
+	atc.status = SUBMITTED
 
-	txinfo, err := WaitForConfirmation(client, atc.txContexts[0].txID(), waitRounds, ctx)
+	indexToWaitFor := 0
+	for i, txContext := range atc.txContexts {
+		if txContext.isMethodCallTx() {
+			// if there is a method call in the group, we need to query the
+			// pending tranaction endpoint for it anyway, so as an optimization
+			// we should wait for its TxID
+			indexToWaitFor = i
+			break
+		}
+	}
+
+	txinfo, err := WaitForConfirmation(client, atc.txContexts[indexToWaitFor].txID(), waitRounds, ctx)
 	if err != nil {
 		return 0, nil, nil, err
 	}
 	atc.status = COMMITTED
 
 	var returnValues []ABIResult
-	for _, txContext := range atc.txContexts {
-		txid := txContext.txID()
-
+	for i, txContext := range atc.txContexts {
 		// Verify method call is available. This may not be the case if the App Call Tx wasn't created
 		// by AddMethodCall().
 		if !txContext.isMethodCallTx() {
 			continue
 		}
 
-		txinfo, _, err := client.PendingTransactionInformation(txid).Do(ctx)
-		if err != nil {
-			returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: []byte{}, ReturnValue: nil, DecodeError: err})
-			continue
-		}
+		result := ABIResult{TxID: txContext.txID()}
 
-		if txContext.method.Returns.AbiType == "void" {
-			returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: []byte{}, ReturnValue: nil, DecodeError: nil})
-			continue
-		}
-
-		failedToFindResult := true
-		for j := len(txinfo.Logs) - 1; j >= 0; j-- {
-			log := txinfo.Logs[j]
-			if len(log) >= 4 && bytes.Equal(log[:4], ABI_RETURN_HASH) {
-				failedToFindResult = false
-				abiType, err := abi.TypeOf(txContext.method.Returns.AbiType)
-				if err != nil {
-					returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: nil, DecodeError: err})
-					break
-				}
-
-				abiValue, err := abiType.Decode(log[4:])
-				if err != nil {
-					returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: nil, DecodeError: err})
-					break
-				}
-
-				returnValues = append(returnValues, ABIResult{TxID: txid, RawReturnValue: log[4:], ReturnValue: abiValue, DecodeError: nil})
-				break
+		var methodCallInfo models.PendingTransactionInfoResponse
+		if i == indexToWaitFor {
+			methodCallInfo = txinfo
+		} else {
+			methodCallInfo, _, err = client.PendingTransactionInformation(result.TxID).Do(ctx)
+			if err != nil {
+				result.DecodeError = err
+				returnValues = append(returnValues, result)
+				continue
 			}
 		}
 
-		if failedToFindResult {
-			returnValues = append(returnValues, ABIResult{
-				TxID:           txid,
-				RawReturnValue: nil,
-				ReturnValue:    nil,
-				DecodeError:    fmt.Errorf("no return value found when one was expected"),
-			})
+		if txContext.method.Returns.IsVoid() {
+			result.RawReturnValue = []byte{}
+			returnValues = append(returnValues, result)
+			continue
 		}
+
+		if len(methodCallInfo.Logs) == 0 {
+			result.DecodeError = errors.New("method call did not log a return value")
+			returnValues = append(returnValues, result)
+			continue
+		}
+
+		lastLog := methodCallInfo.Logs[len(methodCallInfo.Logs)-1]
+		if !bytes.HasPrefix(lastLog, abiReturnHash) {
+			result.DecodeError = errors.New("method call did not log a return value")
+			returnValues = append(returnValues, result)
+			continue
+		}
+
+		result.RawReturnValue = lastLog[len(abiReturnHash):]
+
+		abiType, err := txContext.method.Returns.GetTypeObject()
+		if err != nil {
+			result.DecodeError = err
+			returnValues = append(returnValues, result)
+			break
+		}
+
+		result.ReturnValue, result.DecodeError = abiType.Decode(result.RawReturnValue)
+		returnValues = append(returnValues, result)
 	}
 
-	return txinfo.ConfirmedRound, atc.getTxIDs(), returnValues, err
+	return txinfo.ConfirmedRound, atc.getTxIDs(), returnValues, nil
+}
+
+// marshallAbiUint64 converts any value used to represent an ABI "uint64" into
+// a golang uint64
+func marshallAbiUint64(value interface{}) (uint64, error) {
+	abiType, err := abi.TypeOf("uint64")
+	if err != nil {
+		return 0, err
+	}
+	encoded, err := abiType.Encode(value)
+	if err != nil {
+		return 0, err
+	}
+	decoded, err := abiType.Decode(encoded)
+	if err != nil {
+		return 0, err
+	}
+	marshalledValue, ok := decoded.(uint64)
+	if !ok {
+		err = fmt.Errorf("Decoded value is not a uint64")
+	}
+	return marshalledValue, err
+}
+
+// marshallAbiAddress converts any value used to represent an ABI "address" into
+// a golang address string
+func marshallAbiAddress(value interface{}) (string, error) {
+	abiType, err := abi.TypeOf("address")
+	if err != nil {
+		return "", err
+	}
+	encoded, err := abiType.Encode(value)
+	if err != nil {
+		return "", err
+	}
+	decoded, err := abiType.Decode(encoded)
+	if err != nil {
+		return "", err
+	}
+	marshalledValue, ok := decoded.([]byte)
+	if !ok || len(marshalledValue) != len(types.ZeroAddress) {
+		err = fmt.Errorf("Decoded value is not a 32 length byte slice")
+	}
+	var addressValue types.Address
+	copy(addressValue[:], marshalledValue)
+	return addressValue.String(), err
+}
+
+// populateMethodCallReferenceArgs parses reference argument types and resolves them to an index
+// into the appropriate foreign array. Their placement will be as compact as possible, which means
+// values will be deduplicated and any value that is the sender or the current app will not be added
+// to the foreign array.
+func populateMethodCallReferenceArgs(sender string, currentApp uint64, types []string, values []interface{}, accounts *[]string, apps *[]uint64, assets *[]uint64) ([]int, error) {
+	resolvedIndexes := make([]int, len(types))
+
+	for i, value := range values {
+		var resolved int
+
+		switch types[i] {
+		case abi.AccountReferenceType:
+			address, err := marshallAbiAddress(value)
+			if err != nil {
+				return nil, err
+			}
+			if address == sender {
+				resolved = 0
+			} else {
+				duplicate := false
+				for j, account := range *accounts {
+					if address == account {
+						resolved = j + 1 // + 1 because 0 is the sender
+						duplicate = true
+						break
+					}
+				}
+				if !duplicate {
+					resolved = len(*accounts) + 1
+					*accounts = append(*accounts, address)
+				}
+			}
+		case abi.ApplicationReferenceType:
+			appID, err := marshallAbiUint64(value)
+			if err != nil {
+				return nil, err
+			}
+			if appID == currentApp {
+				resolved = 0
+			} else {
+				duplicate := false
+				for j, app := range *apps {
+					if appID == app {
+						resolved = j + 1 // + 1 because 0 is the current app
+						duplicate = true
+						break
+					}
+				}
+				if !duplicate {
+					resolved = len(*apps) + 1
+					*apps = append(*apps, appID)
+				}
+			}
+		case abi.AssetReferenceType:
+			assetID, err := marshallAbiUint64(value)
+			if err != nil {
+				return nil, err
+			}
+			duplicate := false
+			for j, asset := range *assets {
+				if assetID == asset {
+					resolved = j
+					duplicate = true
+					break
+				}
+			}
+			if !duplicate {
+				resolved = len(*assets)
+				*assets = append(*assets, assetID)
+			}
+		default:
+			return nil, fmt.Errorf("Unknown reference type: %s", types[i])
+		}
+
+		resolvedIndexes[i] = resolved
+	}
+
+	return resolvedIndexes, nil
 }
