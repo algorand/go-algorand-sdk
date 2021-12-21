@@ -56,13 +56,13 @@ func IsReferenceType(typeStr string) bool {
 type Arg struct {
 	// Optional, user-friendly name for the argument
 	Name string `json:"name,omitempty"`
-	// Optional, user-friendly description for the argument
-	Desc string `json:"desc,omitempty"`
 	// The type of the argument as a string. See the method GetTypeObject to
 	// obtain the ABI type object
 	Type string `json:"type"`
 	// A hidden type object cache that holds the parsed type object
 	typeObject *Type `json:"-"`
+	// Optional, user-friendly description for the argument
+	Desc string `json:"desc,omitempty"`
 }
 
 // IsTransactionArg checks if this argument's type is a transaction type
@@ -101,13 +101,13 @@ const VoidReturnType = "void"
 
 // Return represents an ABI method return value
 type Return struct {
-	// Optional, user-friendly description for the return value
-	Desc string `json:"desc,omitempty"`
 	// The type of the return value as a string. See the method GetTypeObject to
 	// obtain the ABI type object
 	Type string `json:"type"`
 	// A hidden type object cache that holds the parsed type object
 	typeObject *Type `json:"-"`
+	// Optional, user-friendly description for the return value
+	Desc string `json:"desc,omitempty"`
 }
 
 // IsVoid checks if this return type is void, meaning the method does not have

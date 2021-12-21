@@ -8,15 +8,18 @@ import (
 )
 
 func TestMethodFromSignature(t *testing.T) {
+	Uint32, err := TypeOf("uint32")
+	require.NoError(t, err)
+
 	expectedArgs := []Arg{
-		{Name: "", Type: "uint32", Desc: ""},
-		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", typeObject: &Uint32, Desc: ""},
+		{Name: "", Type: "uint32", typeObject: &Uint32, Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{Type: "uint32", Desc: ""},
+		Returns: Return{Type: "uint32", typeObject: &Uint32, Desc: ""},
 	}
 
 	methodSig := "add(uint32,uint32)uint32"
@@ -27,15 +30,24 @@ func TestMethodFromSignature(t *testing.T) {
 }
 
 func TestMethodFromSignatureWithTuple(t *testing.T) {
+	Uint32, err := TypeOf("uint32")
+	require.NoError(t, err)
+
+	Uint32Tuple, err := TypeOf("(uint32,uint32)")
+	require.NoError(t, err)
+
+	Uint32TupleTuple, err := TypeOf("(uint32,(uint32,uint32))")
+	require.NoError(t, err)
+
 	expectedArgs := []Arg{
-		{Name: "", Type: "(uint32,(uint32,uint32))", Desc: ""},
-		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "(uint32,(uint32,uint32))", typeObject: &Uint32TupleTuple, Desc: ""},
+		{Name: "", Type: "uint32", typeObject: &Uint32, Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
 		Desc:    "",
 		Args:    expectedArgs,
-		Returns: Return{Type: "(uint32,uint32)", Desc: ""},
+		Returns: Return{Type: "(uint32,uint32)", typeObject: &Uint32Tuple, Desc: ""},
 	}
 
 	methodSig := "add((uint32,(uint32,uint32)),uint32)(uint32,uint32)"
@@ -46,9 +58,12 @@ func TestMethodFromSignatureWithTuple(t *testing.T) {
 }
 
 func TestMethodFromSignatureWithVoidReturn(t *testing.T) {
+	Uint32, err := TypeOf("uint32")
+	require.NoError(t, err)
+
 	expectedArgs := []Arg{
-		{Name: "", Type: "uint32", Desc: ""},
-		{Name: "", Type: "uint32", Desc: ""},
+		{Name: "", Type: "uint32", typeObject: &Uint32, Desc: ""},
+		{Name: "", Type: "uint32", typeObject: &Uint32, Desc: ""},
 	}
 	expected := Method{
 		Name:    "add",
