@@ -16,6 +16,13 @@ import (
 // abiReturnHash is the 4-byte prefix for logged return values
 var abiReturnHash = []byte{0x15, 0x1f, 0x7c, 0x75}
 
+// maxAppArgs is the maximum number of arguments for an application call transaction
+const maxAppArgs = 16
+
+// The tuple threshold is maxAppArgs, minus 1 for the method selector in the first app arg,
+// minus 1 for the final app argument becoming a tuple of the remaining method args
+const methodArgsTupleThreshold = maxAppArgs - 2
+
 // TransactionWithSigner represents an unsigned transactions and a signer that can authorize that
 // transaction.
 type TransactionWithSigner struct {
@@ -299,20 +306,20 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 	// Up to 16 app arguments can be passed to app call. First is reserved for method selector,
 	// and the rest are for method call arguments. But if more than 15 method call arguments
 	// are present, then the 14th+ are placed in a tuple in the last app argument slot
-	if len(basicArgValues) > 15 {
-		typesForTuple := make([]abi.Type, len(basicArgTypes)-14)
-		copy(typesForTuple, basicArgTypes[14:])
+	if len(basicArgValues) > maxAppArgs-1 {
+		typesForTuple := make([]abi.Type, len(basicArgTypes)-methodArgsTupleThreshold)
+		copy(typesForTuple, basicArgTypes[methodArgsTupleThreshold:])
 
-		valueForTuple := make([]interface{}, len(basicArgValues)-14)
-		copy(valueForTuple, basicArgValues[14:])
+		valueForTuple := make([]interface{}, len(basicArgValues)-methodArgsTupleThreshold)
+		copy(valueForTuple, basicArgValues[methodArgsTupleThreshold:])
 
 		tupleType, err := abi.MakeTupleType(typesForTuple)
 		if err != nil {
 			return err
 		}
 
-		basicArgValues = append(basicArgValues[:14], valueForTuple)
-		basicArgTypes = append(basicArgTypes[:14], tupleType)
+		basicArgValues = append(basicArgValues[:methodArgsTupleThreshold], valueForTuple)
+		basicArgTypes = append(basicArgTypes[:methodArgsTupleThreshold], tupleType)
 	}
 
 	encodedAbiArgs := [][]byte{params.Method.GetSelector()}
