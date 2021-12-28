@@ -13,10 +13,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-// abiReturnHash is the 4-byte prefix for logged return values
+// abiReturnHash is the 4-byte prefix for logged return values, from https://github.com/algorandfoundation/ARCs/blob/main/ARCs/arc-0004.md#standard-format
 var abiReturnHash = []byte{0x15, 0x1f, 0x7c, 0x75}
 
-// maxAppArgs is the maximum number of arguments for an application call transaction
+// maxAppArgs is the maximum number of arguments for an application call transaction at the time
+// ARC-4 was created
 const maxAppArgs = 16
 
 // The tuple threshold is maxAppArgs, minus 1 for the method selector in the first app arg,
@@ -305,7 +306,8 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 
 	// Up to 16 app arguments can be passed to app call. First is reserved for method selector,
 	// and the rest are for method call arguments. But if more than 15 method call arguments
-	// are present, then the 14th+ are placed in a tuple in the last app argument slot
+	// are present, then the method arguments after the 14th are placed in a tuple in the last app
+	// argument slot
 	if len(basicArgValues) > maxAppArgs-1 {
 		typesForTuple := make([]abi.Type, len(basicArgTypes)-methodArgsTupleThreshold)
 		copy(typesForTuple, basicArgTypes[methodArgsTupleThreshold:])
