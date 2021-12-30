@@ -7,13 +7,13 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cucumber/godog"
 
-	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
@@ -66,7 +66,7 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	_, err = future.WaitForConfirmation(algodV2client, ltxid, 0, context.Background())
+	_, err = future.WaitForConfirmation(algodV2client, ltxid, 5, context.Background())
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) e
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	_, err := future.WaitForConfirmation(algodV2client, txid, 0, context.Background())
+	_, err := future.WaitForConfirmation(algodV2client, txid, 5, context.Background())
 	if err != nil {
 		return err
 	}
@@ -520,51 +520,52 @@ func iExecuteTheCurrentTransactionGroupWithTheComposer() error {
 	return err
 }
 
-func theAppShouldHaveReturned(expectedResults string) error {
-	var expected []string
-	if expectedResults == "" {
-		expected = append(expected, "")
-	} else {
-		expected = strings.Split(expectedResults, ",")
+func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
+	b64ExpectedResults := strings.Split(commaSeparatedB64Results, ",")
+
+	if len(b64ExpectedResults) != len(results) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(results))
 	}
 
-	if len(expected) != len(results) {
-		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(expected), len(results))
+	if len(txComposerMethods) != len(results) {
+		return fmt.Errorf("length of composer's methods doesn't match results: %d != %d", len(txComposerMethods), len(results))
 	}
 
-	for i, expectedResult := range expected {
+	for i, b64ExpectedResult := range b64ExpectedResults {
+		expectedResult, err := base64.StdEncoding.DecodeString(b64ExpectedResult)
+		if err != nil {
+			return err
+		}
+
 		actualResult := results[i]
+		method := txComposerMethods[i]
+
 		if actualResult.DecodeError != nil {
 			return actualResult.DecodeError
 		}
 
-		if abiMethod.Returns.AbiType == "void" {
-			if expectedResult != "" {
-				return fmt.Errorf("found unexpected return value from void method")
+		if !bytes.Equal(actualResult.RawReturnValue, expectedResult) {
+			return fmt.Errorf("Actual result does not match expected result. Actual: %s\n", base64.RawStdEncoding.EncodeToString(actualResult.RawReturnValue))
+		}
+
+		if method.Returns.IsVoid() {
+			if len(expectedResult) > 0 {
+				return fmt.Errorf("Expected result should be empty")
 			}
 			continue
 		}
 
-		expectedBytes, err := base64.StdEncoding.DecodeString(expectedResult)
+		abiReturnType, err := method.Returns.GetTypeObject()
 		if err != nil {
 			return err
 		}
 
-		abiReturnType, err := abi.TypeOf(abiMethod.Returns.AbiType)
+		expectedValue, err := abiReturnType.Decode(expectedResult)
 		if err != nil {
 			return err
 		}
 
-		expectedValue, err := abiReturnType.Decode(expectedBytes)
-		if err != nil {
-			return err
-		}
-
-		if string(expectedBytes) != string(actualResult.RawReturnValue) {
-			return fmt.Errorf("the expected raw bytes for the result don't match the actual result")
-		}
-
-		if expectedValue != actualResult.ReturnValue {
+		if !reflect.DeepEqual(expectedValue, actualResult.ReturnValue) {
 			return fmt.Errorf("the decoded expected value doesn't match the actual result")
 		}
 	}

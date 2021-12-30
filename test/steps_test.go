@@ -99,6 +99,7 @@ var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
 var txComposer future.AtomicTransactionComposer
+var txComposerMethods []abi.Method
 var appId uint64
 var accountTxSigner future.BasicAccountTransactionSigner
 var methodArgs []interface{}
@@ -318,9 +319,10 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I create the Method object with name "([^"]*)" method description "([^"]*)" first argument type "([^"]*)" first argument description "([^"]*)" second argument type "([^"]*)" second argument description "([^"]*)" and return type "([^"]*)"$`, createMethodObjectWithDescription)
 	s.Step(`^the txn count should be (\d+)$`, checkTxnCount)
 	s.Step(`^the method selector should be "([^"]*)"$`, checkMethodSelector)
-	s.Step(`^I create an Interface object from the Method object with name "([^"]*)"$`, createInterfaceObject)
+	s.Step(`^I create an Interface object from the Method object with name "([^"]*)" and description "([^"]*)"$`, createInterfaceObject)
 	s.Step(`^I serialize the Interface object into json$`, serializeInterfaceObjectIntoJson)
-	s.Step(`^I create a Contract object from the Method object with name "([^"]*)" and appId (\d+)$`, createContractObject)
+	s.Step(`^I create a Contract object from the Method object with name "([^"]*)" and description "([^"]*)"$`, createContractObject)
+	s.Step(`^I set the Contract\'s appID to (\d+) for the network "([^"]*)"$`, iSetTheContractsAppIDToForTheNetwork)
 	s.Step(`^I serialize the Contract object into json$`, serializeContractObjectIntoJson)
 	s.Step(`^the deserialized json should equal the original Method object`, deserializeMethodJson)
 	s.Step(`^the deserialized json should equal the original Interface object`, deserializeInterfaceJson)
@@ -332,6 +334,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I create a new method arguments array\.$`, iCreateANewMethodArgumentsArray)
 	s.Step(`^I append the encoded arguments "([^"]*)" to the method arguments array\.$`, iAppendTheEncodedArgumentsToTheMethodArgumentsArray)
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCall)
+	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)"\.$`, addMethodCallForUpdate)
+	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), extra-pages (\d+)\.$`, addMethodCallForCreate)
 	s.Step(`^I build the transaction group with the composer\. If there is an error it is "([^"]*)"\.$`, buildTheTransactionGroupWithTheComposer)
 	s.Step(`^The composer should have a status of "([^"]*)"\.$`, theComposerShouldHaveAStatusOf)
 	s.Step(`^I gather signatures with the composer\.$`, iGatherSignaturesWithTheComposer)
@@ -2126,58 +2130,71 @@ func checkSerializedMethodObject(jsonFile, loadedFrom string) error {
 	if err != nil {
 		return err
 	}
-
 	correctJson := string(jsons[0])
-	if correctJson != abiJsonString {
+
+	var actualJson interface{}
+	err = json.Unmarshal([]byte(abiJsonString), &actualJson)
+	if err != nil {
+		return err
+	}
+
+	var expectedJson interface{}
+	err = json.Unmarshal([]byte(correctJson), &expectedJson)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(actualJson, expectedJson) {
 		return fmt.Errorf("json strings %s != %s", correctJson, abiJsonString)
 	}
+
 	return nil
 }
 
 func createMethodObjectFromProperties(name, firstArgType, secondArgType, returnType string) error {
 	args := []abi.Arg{
-		{Name: "", AbiType: firstArgType, Desc: ""},
-		{Name: "", AbiType: secondArgType, Desc: ""},
+		{Name: "", Type: firstArgType, Desc: ""},
+		{Name: "", Type: secondArgType, Desc: ""},
 	}
 	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    "",
 		Args:    args,
-		Returns: abi.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{Type: returnType, Desc: ""},
 	}
 	return nil
 }
 
 func createMethodObjectWithArgNames(name, firstArgName, firstArgType, secondArgName, secondArgType, returnType string) error {
 	args := []abi.Arg{
-		{Name: firstArgName, AbiType: firstArgType, Desc: ""},
-		{Name: secondArgName, AbiType: secondArgType, Desc: ""},
+		{Name: firstArgName, Type: firstArgType, Desc: ""},
+		{Name: secondArgName, Type: secondArgType, Desc: ""},
 	}
 	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    "",
 		Args:    args,
-		Returns: abi.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{Type: returnType, Desc: ""},
 	}
 	return nil
 }
 
 func createMethodObjectWithDescription(name, nameDesc, firstArgType, firstDesc, secondArgType, secondDesc, returnType string) error {
 	args := []abi.Arg{
-		{Name: "", AbiType: firstArgType, Desc: firstDesc},
-		{Name: "", AbiType: secondArgType, Desc: secondDesc},
+		{Name: "", Type: firstArgType, Desc: firstDesc},
+		{Name: "", Type: secondArgType, Desc: secondDesc},
 	}
 	abiMethod = abi.Method{
 		Name:    name,
 		Desc:    nameDesc,
 		Args:    args,
-		Returns: abi.Return{AbiType: returnType, Desc: ""},
+		Returns: abi.Return{Type: returnType, Desc: ""},
 	}
 	return nil
 }
 
 func checkTxnCount(givenTxnCount int) error {
-	correctTxnCount := abiMethod.GetTxCountFromMethod()
+	correctTxnCount := abiMethod.GetTxCount()
 	if correctTxnCount != givenTxnCount {
 		return fmt.Errorf("txn count %d != %d", givenTxnCount, correctTxnCount)
 	}
@@ -2192,9 +2209,10 @@ func checkMethodSelector(givenMethodSelector string) error {
 	return nil
 }
 
-func createInterfaceObject(name string) error {
+func createInterfaceObject(name string, desc string) error {
 	abiInterface = abi.Interface{
 		Name:    name,
+		Desc:    desc,
 		Methods: []abi.Method{abiMethod},
 	}
 	return nil
@@ -2210,12 +2228,21 @@ func serializeInterfaceObjectIntoJson() error {
 	return nil
 }
 
-func createContractObject(name string, appId int) error {
+func createContractObject(name string, desc string) error {
 	abiContract = abi.Contract{
-		Name:    name,
-		AppId:   uint64(appId),
-		Methods: []abi.Method{abiMethod},
+		Name:     name,
+		Desc:     desc,
+		Networks: make(map[string]abi.ContractNetworkInfo),
+		Methods:  []abi.Method{abiMethod},
 	}
+	return nil
+}
+
+func iSetTheContractsAppIDToForTheNetwork(appID int, network string) error {
+	if appID < 0 {
+		return fmt.Errorf("App ID must not be negative. Got: %d", appID)
+	}
+	abiContract.Networks[network] = abi.ContractNetworkInfo{AppID: uint64(appID)}
 	return nil
 }
 
@@ -2235,8 +2262,17 @@ func checkEqualMethods(method1, method2 abi.Method) bool {
 		return false
 	}
 
-	for i, arg := range method1.Args {
-		if arg != method2.Args[i] {
+	if method1.Returns.Type != method2.Returns.Type || method1.Returns.Desc != method2.Returns.Desc {
+		return false
+	}
+
+	if len(method1.Args) != len(method2.Args) {
+		return false
+	}
+
+	for i, arg1 := range method1.Args {
+		arg2 := method2.Args[i]
+		if arg1.Name != arg2.Name || arg1.Type != arg2.Type || arg1.Desc != arg2.Desc {
 			return false
 		}
 	}
@@ -2244,7 +2280,7 @@ func checkEqualMethods(method1, method2 abi.Method) bool {
 }
 
 func checkEqualInterfaces(interface1, interface2 abi.Interface) bool {
-	if interface1.Name != interface2.Name {
+	if interface1.Name != interface2.Name || interface1.Desc != interface2.Desc {
 		return false
 	}
 
@@ -2261,8 +2297,19 @@ func checkEqualInterfaces(interface1, interface2 abi.Interface) bool {
 }
 
 func checkEqualContracts(contract1, contract2 abi.Contract) bool {
-	if contract1.Name != contract2.Name || contract1.AppId != contract2.AppId {
+	if contract1.Name != contract2.Name || contract1.Desc != contract2.Desc {
 		return false
+	}
+
+	if len(contract1.Networks) != len(contract2.Networks) {
+		return false
+	}
+
+	for network, info1 := range contract1.Networks {
+		info2, ok := contract2.Networks[network]
+		if !ok || info1 != info2 {
+			return false
+		}
 	}
 
 	if len(contract1.Methods) != len(contract2.Methods) {
@@ -2315,8 +2362,8 @@ func deserializeContractJson() error {
 }
 
 func aNewAtomicTransactionComposer() error {
-	var newTxComposer future.AtomicTransactionComposer
-	txComposer = newTxComposer
+	txComposer = future.AtomicTransactionComposer{}
+	txComposerMethods = nil
 	return nil
 }
 
@@ -2370,52 +2417,36 @@ func iCreateANewMethodArgumentsArray() error {
 	return nil
 }
 
-func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(args string) error {
-	if len(args) == 0 {
-		if len(abiMethod.Args) != len(methodArgs) {
-			return fmt.Errorf("provided arg list length doesn't match method signature")
-		}
-
+func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args string) error {
+	if len(commaSeparatedB64Args) == 0 {
 		return nil
 	}
 
-	stringArgs := strings.Split(args, ",")
-	if len(stringArgs)+len(methodArgs) != len(abiMethod.Args) {
-		return fmt.Errorf("provided arg list length doesn't match method signature")
-	}
-
-	var abiTypes []abi.Type
-	for _, arg := range abiMethod.Args {
-		if _, ok := abi.TransactionArgTypes[arg.AbiType]; ok {
-			continue
-		}
-
-		abiType, err := abi.TypeOf(arg.AbiType)
+	b64Args := strings.Split(commaSeparatedB64Args, ",")
+	for _, b64Arg := range b64Args {
+		decodedArg, err := base64.StdEncoding.DecodeString(b64Arg)
 		if err != nil {
 			return err
 		}
-
-		abiTypes = append(abiTypes, abiType)
-	}
-
-	for i, abiType := range abiTypes {
-		encodedArg, err := base64.StdEncoding.DecodeString(stringArgs[i])
-		if err != nil {
-			return err
-		}
-
-		argValue, err := abiType.Decode(encodedArg)
-		if err != nil {
-			return err
-		}
-
-		methodArgs = append(methodArgs, argValue)
+		methodArgs = append(methodArgs, decodedArg)
 	}
 
 	return nil
 }
 
 func addMethodCall(accountType, strOnComplete string) error {
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0)
+}
+
+func addMethodCallForUpdate(accountType, strOnComplete, approvalProgram, clearProgram string) error {
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0)
+}
+
+func addMethodCallForCreate(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages)
+}
+
+func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
 	var onComplete types.OnCompletion
 	switch strOnComplete {
 	case "create":
@@ -2445,34 +2476,113 @@ func addMethodCall(accountType, strOnComplete string) error {
 		useAccount = transientAccount
 	}
 
+	var approvalProgramBytes []byte
+	var clearProgramBytes []byte
+	var err error
+
+	if approvalProgram != "" {
+		approvalProgramBytes, err = ioutil.ReadFile("features/resources/" + approvalProgram)
+		if err != nil {
+			return err
+		}
+	}
+
+	if clearProgram != "" {
+		clearProgramBytes, err = ioutil.ReadFile("features/resources/" + clearProgram)
+		if err != nil {
+			return err
+		}
+	}
+
+	if globalInts < 0 || globalBytes < 0 || localInts < 0 || localBytes < 0 || extraPages < 0 {
+		return fmt.Errorf("Values for globalInts, globalBytes, localInts, localBytes, and extraPages cannot be negative")
+	}
+
+	// populate args from methodArgs
+	if len(methodArgs) != len(abiMethod.Args) {
+		return fmt.Errorf("Provided argument count is incorrect. Expected %d, got %d", len(abiMethod.Args), len(methodArgs))
+	}
+
+	var preparedArgs []interface{}
+	for i, argSpec := range abiMethod.Args {
+		if argSpec.IsTransactionArg() {
+			// encodedArg is already a TransactionWithSigner
+			preparedArgs = append(preparedArgs, methodArgs[i])
+			continue
+		}
+
+		encodedArg, ok := methodArgs[i].([]byte)
+		if !ok {
+			return fmt.Errorf("Argument should be a byte slice")
+		}
+
+		var typeToDecode abi.Type
+		var err error
+
+		if argSpec.IsReferenceArg() {
+			switch argSpec.Type {
+			case abi.AccountReferenceType:
+				typeToDecode, err = abi.TypeOf("address")
+			case abi.ApplicationReferenceType, abi.AssetReferenceType:
+				typeToDecode, err = abi.TypeOf("uint64")
+			default:
+				return fmt.Errorf("Unknown reference type: %s", argSpec.Type)
+			}
+		} else {
+			typeToDecode, err = argSpec.GetTypeObject()
+		}
+		if err != nil {
+			return err
+		}
+
+		decodedArg, err := typeToDecode.Decode(encodedArg)
+		if err != nil {
+			return err
+		}
+
+		preparedArgs = append(preparedArgs, decodedArg)
+	}
+
 	methodCallParams := future.AddMethodCallParams{
 		AppID:           appId,
 		Method:          abiMethod,
-		MethodArgs:      methodArgs,
+		MethodArgs:      preparedArgs,
 		Sender:          useAccount.Address,
 		SuggestedParams: sugParams,
 		OnComplete:      onComplete,
-		Note:            []byte{},
-		Lease:           [32]byte{},
-		RekeyTo:         types.Address{},
-		Signer:          accountTxSigner,
+		ApprovalProgram: approvalProgramBytes,
+		ClearProgram:    clearProgramBytes,
+		GlobalSchema: types.StateSchema{
+			NumUint:      uint64(globalInts),
+			NumByteSlice: uint64(globalBytes),
+		},
+		LocalSchema: types.StateSchema{
+			NumUint:      uint64(localInts),
+			NumByteSlice: uint64(localBytes),
+		},
+		ExtraPages: uint32(extraPages),
+		Signer:     accountTxSigner,
 	}
 
-	err := txComposer.AddMethodCall(methodCallParams)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	txComposerMethods = append(txComposerMethods, abiMethod)
+	return txComposer.AddMethodCall(methodCallParams)
 }
 
-func buildTheTransactionGroupWithTheComposer(strError string) error {
+func buildTheTransactionGroupWithTheComposer(errorType string) error {
 	_, err := txComposer.BuildGroup()
-	if err != nil && err.Error() != strError {
-		return err
-	}
 
-	return nil
+	switch errorType {
+	case "":
+		// no error expected
+		return err
+	case "zero group size error":
+		if err == nil || err.Error() != "attempting to build group with zero transactions" {
+			return fmt.Errorf("Expected error, but got: %v", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("Unknown error type: %s", errorType)
+	}
 }
 
 func theComposerShouldHaveAStatusOf(strStatus string) error {
