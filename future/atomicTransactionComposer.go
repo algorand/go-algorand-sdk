@@ -89,7 +89,7 @@ type AddMethodCallParams struct {
 // ExecuteResult contains the results of successfully calling the Execute method on an
 // AtomicTransactionComposer object.
 type ExecuteResult struct {
-	// The round in which the executed transaction group with confirmed on chain
+	// The round in which the executed transaction group was confirmed on chain
 	ConfirmedRound uint64
 	// A list of the TxIDs for each transaction in the executed group
 	TxIDs []string
@@ -572,13 +572,16 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 	atc.status = SUBMITTED
 
 	indexToWaitFor := 0
+	numMethodCalls := 0
 	for i, txContext := range atc.txContexts {
 		if txContext.isMethodCallTx() {
 			// if there is a method call in the group, we need to query the
 			// pending tranaction endpoint for it anyway, so as an optimization
 			// we should wait for its TxID
-			indexToWaitFor = i
-			break
+			if numMethodCalls == 0 {
+				indexToWaitFor = i
+			}
+			numMethodCalls += 1
 		}
 	}
 
@@ -591,6 +594,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 	executeResponse := ExecuteResult{
 		ConfirmedRound: txinfo.ConfirmedRound,
 		TxIDs:          atc.getTxIDs(),
+		MethodResults:  make([]ABIMethodResult, 0, numMethodCalls),
 	}
 
 	for i, txContext := range atc.txContexts {
