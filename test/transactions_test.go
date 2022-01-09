@@ -5,71 +5,56 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
+
+	"golang.org/x/crypto/ed25519"
 )
 
 var signingAccount crypto.Account
-var txnSuggestedParams types.SuggestedParams
+var sk1 ed25519.PrivateKey
+var addr1 types.Address
 
 func aSigningAccountWithAddressAndMnemonic(address, mnem string) error {
-	sk, err := mnemonic.ToPrivateKey(mnem)
+	var err error
+	addr1, err = types.DecodeAddress(address)
 	if err != nil {
 		return err
 	}
 
-	signingAccount, err = crypto.AccountFromPrivateKey(sk)
-	if err != nil {
-		return err
-	}
-
-	addr, err := types.DecodeAddress(address)
-	if err != nil {
-		return err
-	}
-
-	if addr != signingAccount.Address {
-		return fmt.Errorf("Supplied address does not match private key: %s != %s", addr.String(), signingAccount.Address.String())
+	sk1, err = mnemonic.ToPrivateKey(mnem)
+	account = crypto.Account{
+		Address:    addr1,
+		PrivateKey: sk1,
+		PublicKey:  ed25519.PublicKey(addr1[:]),
 	}
 
 	return err
 }
 
-func suggestedTransactionParameters(fee int, flatFee string, firstValid, lastValid int, genesisHash, genesisId string) error {
-	if fee < 0 {
-		return fmt.Errorf("Fee is negative: %d", fee)
-	}
-	if firstValid < 0 {
-		return fmt.Errorf("First valid is negative: %d", firstValid)
-	}
-	if lastValid < 0 {
-		return fmt.Errorf("Last valid is negative: %d", lastValid)
-	}
-	flatFeeBool, err := strconv.ParseBool(flatFee)
-	if err != nil {
-		return fmt.Errorf("Could not parse flatFee boolean value: %v", err)
+func suggestedTransactionParametersTxn(fee int, flatFee string, firstValid, LastValid int, genesisHash, genesisId string) error {
+	if flatFee != "true" && flatFee != "false" {
+		return fmt.Errorf("flatFee must be either 'true' or 'false'")
 	}
 
-	genesisHashBytes, err := base64.StdEncoding.DecodeString(genesisHash)
+	genHash, err := base64.StdEncoding.DecodeString(genesisHash)
 	if err != nil {
 		return err
 	}
 
-	txnSuggestedParams = types.SuggestedParams{
+	sugParams = types.SuggestedParams{
 		Fee:             types.MicroAlgos(fee),
-		FlatFee:         flatFeeBool,
-		FirstRoundValid: types.Round(firstValid),
-		LastRoundValid:  types.Round(lastValid),
-		GenesisHash:     genesisHashBytes,
 		GenesisID:       genesisId,
+		GenesisHash:     genHash,
+		FirstRoundValid: types.Round(firstValid),
+		LastRoundValid:  types.Round(LastValid),
+		FlatFee:         flatFee == "true",
 	}
 
 	return nil
@@ -77,7 +62,7 @@ func suggestedTransactionParameters(fee int, flatFee string, firstValid, lastVal
 
 func signTheTransaction() error {
 	var err error
-	_, stx, err = crypto.SignTransaction(signingAccount.PrivateKey, tx)
+	txid, stx, err = crypto.SignTransaction(sk1, tx)
 	return err
 }
 
@@ -93,20 +78,6 @@ func theBase64EncodedSignedTransactionShouldEqual(golden string) error {
 	return nil
 }
 
-func theDecodedTransactionShouldEqualTheOriginal() error {
-	var signedTxn types.SignedTxn
-	err := msgpack.Decode(stx, &signedTxn)
-	if err != nil {
-		return fmt.Errorf("Could not decode signed transaction: %v", err)
-	}
-
-	if !reflect.DeepEqual(signedTxn.Txn, tx) {
-		return fmt.Errorf("Decoded signed transaction does not equal the original")
-	}
-
-	return nil
-}
-
 func buildKeyregTransaction(sender, nonparticipation string,
 	voteFirst, voteLast, keyDilution int,
 	votePkB64, selectionPkB64, stateProofPkB64 string) error {
@@ -115,12 +86,13 @@ func buildKeyregTransaction(sender, nonparticipation string,
 		return fmt.Errorf("Integer arguments cannot be negative")
 	}
 
-	nonpart, err := strconv.ParseBool(nonparticipation)
+	nonPartValue, err := strconv.ParseBool(nonparticipation)
 	if err != nil {
 		return fmt.Errorf("Could not parse nonparticipation value: %v", err)
 	}
 
-	tx, err = future.MakeKeyRegTxnWithStateProofKey(sender, nil, txnSuggestedParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonpart)
+
+	tx, err = future.MakeKeyRegTxnWithStateProofKey(sender, nil, sugParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonPartValue)
 	return err
 }
 
@@ -190,7 +162,7 @@ func buildLegacyAppCallTransaction(
 
 	// this is only kept to keep compatability with old features
 	// going forward, use txnSuggestedParams
-	suggestedParams := types.SuggestedParams{
+	sugParams = types.SuggestedParams{
 		Fee:             types.MicroAlgos(uint64(fee)),
 		GenesisID:       "",
 		GenesisHash:     gh,
@@ -203,27 +175,27 @@ func buildLegacyAppCallTransaction(
 	case "create":
 		tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
 			gSchema, lSchema, args, accs, fApp, fAssets,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 	case "update":
 		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets,
 			approvalP, clearP,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
 		tx, err = future.MakeApplicationCallTx(uint64(applicationId), args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
 		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
 		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
 		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets,
-			suggestedParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)
 	}
@@ -234,13 +206,11 @@ func buildLegacyAppCallTransaction(
 func TransactionsUnitContext(s *godog.Suite) {
 	// @unit.transactions
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
-	s.Step(`^suggested transaction parameters fee (\d+), flat-fee "([^"]*)", first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", genesis-id "([^"]*)"$`, suggestedTransactionParameters)
 	s.Step(`^sign the transaction$`, signTheTransaction)
 	s.Step(`^the base64 encoded signed transaction should equal "([^"]*)"$`, theBase64EncodedSignedTransactionShouldEqual)
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 
 	// @unit.transactions.keyreg
 	s.Step(`^I build a keyreg transaction with sender "([^"]*)", nonparticipation "([^"]*)", vote first (\d+), vote last (\d+), key dilution (\d+), vote public key "([^"]*)", selection public key "([^"]*)", and state proof public key "([^"]*)"$`, buildKeyregTransaction)
-
 	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, buildLegacyAppCallTransaction)
 }

@@ -3,9 +3,11 @@ package test
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +25,9 @@ var algodV2client *algod.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
+var txids []string
+var confirmedRound uint64
+var results []future.ABIResult
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -61,36 +66,9 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	err = waitForTransaction(ltxid)
+	_, err = future.WaitForConfirmation(algodV2client, ltxid, 5, context.Background())
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func waitForTransaction(transactionId string) error {
-	status, err := algodV2client.Status().Do(context.Background())
-	if err != nil {
-		return err
-	}
-	stopRound := status.LastRound + 10
-
-	for {
-		lstatus, _, err := algodV2client.PendingTransactionInformation(transactionId).Do(context.Background())
-		if err != nil {
-			return err
-		}
-		if lstatus.ConfirmedRound > 0 {
-			break // end the waiting
-		}
-		status, err := algodV2client.Status().Do(context.Background())
-		if err != nil {
-			return err
-		}
-		if status.LastRound > stopRound { // last round sent tx is valid
-			return fmt.Errorf("Transaction not accepted.")
-		}
-		time.Sleep(100 * time.Millisecond)
 	}
 	return nil
 }
@@ -240,7 +218,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) e
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	err := waitForTransaction(txid)
+	_, err := future.WaitForConfirmation(algodV2client, txid, 5, context.Background())
 	if err != nil {
 		return err
 	}
@@ -250,6 +228,7 @@ func iWaitForTheTransactionToBeConfirmed() error {
 func iRememberTheNewApplicationID() error {
 	response, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
 	applicationId = response.ApplicationIndex
+	appId = applicationId
 	return err
 }
 
@@ -519,6 +498,81 @@ func theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldA
 	return nil
 }
 
+func suggestedParamsAlgodV2() error {
+	var err error
+	sugParams, err = aclv2.SuggestedParams().Do(context.Background())
+	return err
+}
+
+func iAddTheCurrentTransactionWithSignerToTheComposer() error {
+	err := txComposer.AddTransaction(accountTxAndSigner)
+	return err
+}
+
+func iCloneTheComposer() error {
+	txComposer = txComposer.Clone()
+	return nil
+}
+
+func iExecuteTheCurrentTransactionGroupWithTheComposer() error {
+	var err error
+	confirmedRound, txids, results, err = txComposer.Execute(algodV2client, context.Background(), 10)
+	return err
+}
+
+func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
+	b64ExpectedResults := strings.Split(commaSeparatedB64Results, ",")
+
+	if len(b64ExpectedResults) != len(results) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(results))
+	}
+
+	if len(txComposerMethods) != len(results) {
+		return fmt.Errorf("length of composer's methods doesn't match results: %d != %d", len(txComposerMethods), len(results))
+	}
+
+	for i, b64ExpectedResult := range b64ExpectedResults {
+		expectedResult, err := base64.StdEncoding.DecodeString(b64ExpectedResult)
+		if err != nil {
+			return err
+		}
+
+		actualResult := results[i]
+		method := txComposerMethods[i]
+
+		if actualResult.DecodeError != nil {
+			return actualResult.DecodeError
+		}
+
+		if !bytes.Equal(actualResult.RawReturnValue, expectedResult) {
+			return fmt.Errorf("Actual result does not match expected result. Actual: %s\n", base64.RawStdEncoding.EncodeToString(actualResult.RawReturnValue))
+		}
+
+		if method.Returns.IsVoid() {
+			if len(expectedResult) > 0 {
+				return fmt.Errorf("Expected result should be empty")
+			}
+			continue
+		}
+
+		abiReturnType, err := method.Returns.GetTypeObject()
+		if err != nil {
+			return err
+		}
+
+		expectedValue, err := abiReturnType.Decode(expectedResult)
+		if err != nil {
+			return err
+		}
+
+		if !reflect.DeepEqual(expectedValue, actualResult.ReturnValue) {
+			return fmt.Errorf("the decoded expected value doesn't match the actual result")
+		}
+	}
+
+	return nil
+}
+
 //@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
@@ -531,4 +585,9 @@ func ApplicationsContext(s *godog.Suite) {
 		theTransientAccountShouldHave)
 	s.Step(`^the unconfirmed pending transaction by ID should have no apply data fields\.$`, theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields)
 	s.Step(`^the confirmed pending transaction by ID should have a "([^"]*)" state change for "([^"]*)" to "([^"]*)", indexer (\d+) should also confirm this\.$`, theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldAlsoConfirmThis)
+	s.Step(`^suggested transaction parameters from the algod v2 client$`, suggestedParamsAlgodV2)
+	s.Step(`^I add the current transaction with signer to the composer\.$`, iAddTheCurrentTransactionWithSignerToTheComposer)
+	s.Step(`^I clone the composer\.$`, iCloneTheComposer)
+	s.Step(`^I execute the current transaction group with the composer\.$`, iExecuteTheCurrentTransactionGroupWithTheComposer)
+	s.Step(`^The app should have returned "([^"]*)"\.$`, theAppShouldHaveReturned)
 }

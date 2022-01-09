@@ -7,10 +7,13 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/gob"
+	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -20,6 +23,7 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/auction"
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
@@ -92,6 +96,17 @@ var backupTxnSender string
 var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
+var abiMethod abi.Method
+var abiJsonString string
+var abiInterface abi.Interface
+var abiContract abi.Contract
+var txComposer future.AtomicTransactionComposer
+var txComposerMethods []abi.Method
+var appId uint64
+var accountTxSigner future.BasicAccountTransactionSigner
+var methodArgs []interface{}
+var sigTxs [][]byte
+var accountTxAndSigner future.TransactionWithSigner
 
 var assetTestFixture struct {
 	Creator               string
@@ -300,6 +315,39 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
 	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
 	s.Step(`^I get execution result "([^"]*)"$`, tealCheckDryrun)
+	s.Step(`^I create the Method object from method signature "([^"]*)"$`, createMethodObjectFromSignature)
+	s.Step(`^I serialize the Method object into json$`, serializeMethodObjectIntoJson)
+	s.Step(`^the produced json should equal "([^"]*)" loaded from "([^"]*)"$`, checkSerializedMethodObject)
+	s.Step(`^I create the Method object with name "([^"]*)" first argument type "([^"]*)" second argument type "([^"]*)" and return type "([^"]*)"$`, createMethodObjectFromProperties)
+	s.Step(`^I create the Method object with name "([^"]*)" first argument name "([^"]*)" first argument type "([^"]*)" second argument name "([^"]*)" second argument type "([^"]*)" and return type "([^"]*)"$`, createMethodObjectWithArgNames)
+	s.Step(`^I create the Method object with name "([^"]*)" method description "([^"]*)" first argument type "([^"]*)" first argument description "([^"]*)" second argument type "([^"]*)" second argument description "([^"]*)" and return type "([^"]*)"$`, createMethodObjectWithDescription)
+	s.Step(`^the txn count should be (\d+)$`, checkTxnCount)
+	s.Step(`^the method selector should be "([^"]*)"$`, checkMethodSelector)
+	s.Step(`^I create an Interface object from the Method object with name "([^"]*)" and description "([^"]*)"$`, createInterfaceObject)
+	s.Step(`^I serialize the Interface object into json$`, serializeInterfaceObjectIntoJson)
+	s.Step(`^I create a Contract object from the Method object with name "([^"]*)" and description "([^"]*)"$`, createContractObject)
+	s.Step(`^I set the Contract\'s appID to (\d+) for the network "([^"]*)"$`, iSetTheContractsAppIDToForTheNetwork)
+	s.Step(`^I serialize the Contract object into json$`, serializeContractObjectIntoJson)
+	s.Step(`^the deserialized json should equal the original Method object`, deserializeMethodJson)
+	s.Step(`^the deserialized json should equal the original Interface object`, deserializeInterfaceJson)
+	s.Step(`^the deserialized json should equal the original Contract object`, deserializeContractJson)
+	s.Step(`^a new AtomicTransactionComposer$`, aNewAtomicTransactionComposer)
+	s.Step(`^suggested transaction parameters fee (\d+), flat-fee "([^"]*)", first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", genesis-id "([^"]*)"$`, suggestedTransactionParameters)
+	s.Step(`^an application id (\d+)$`, anApplicationId)
+	s.Step(`^I make a transaction signer for the ([^"]*) account\.$`, iMakeATransactionSignerForTheAccount)
+	s.Step(`^I create a new method arguments array\.$`, iCreateANewMethodArgumentsArray)
+	s.Step(`^I append the encoded arguments "([^"]*)" to the method arguments array\.$`, iAppendTheEncodedArgumentsToTheMethodArgumentsArray)
+	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCall)
+	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)"\.$`, addMethodCallForUpdate)
+	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), extra-pages (\d+)\.$`, addMethodCallForCreate)
+	s.Step(`^I build the transaction group with the composer\. If there is an error it is "([^"]*)"\.$`, buildTheTransactionGroupWithTheComposer)
+	s.Step(`^The composer should have a status of "([^"]*)"\.$`, theComposerShouldHaveAStatusOf)
+	s.Step(`^I gather signatures with the composer\.$`, iGatherSignaturesWithTheComposer)
+	s.Step(`^the base64 encoded signed transactions should equal "([^"]*)"$`, theBaseEncodedSignedTransactionsShouldEqual)
+	s.Step(`^I build a payment transaction with sender "([^"]*)", receiver "([^"]*)", amount (\d+), close remainder to "([^"]*)"$`, iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo)
+	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
+	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
+	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -807,6 +855,7 @@ func algodClientV2() error {
 	algodAddress := "http://localhost:" + "60000"
 	var err error
 	aclv2, err = algodV2.MakeClient(algodAddress, algodToken)
+	algodV2client = aclv2
 	if err != nil {
 		return err
 	}
@@ -2101,5 +2150,575 @@ func tealCheckDryrun(result string) error {
 	if msgs[len(msgs)-1] != result {
 		return fmt.Errorf("dryrun status %s != %s", result, msgs[len(msgs)-1])
 	}
+	return nil
+}
+
+func createMethodObjectFromSignature(methodSig string) error {
+	abiMethodLocal, err := abi.MethodFromSignature(methodSig)
+	abiMethod = abiMethodLocal
+	return err
+}
+
+func serializeMethodObjectIntoJson() error {
+	abiMethodJson, err := json.Marshal(abiMethod)
+	if err != nil {
+		return err
+	}
+
+	abiJsonString = string(abiMethodJson)
+	return nil
+}
+
+func checkSerializedMethodObject(jsonFile, loadedFrom string) error {
+	directory := path.Join("./features/unit/", loadedFrom)
+	jsons, err := loadMockJsons(jsonFile, directory)
+	if err != nil {
+		return err
+	}
+	correctJson := string(jsons[0])
+
+	var actualJson interface{}
+	err = json.Unmarshal([]byte(abiJsonString), &actualJson)
+	if err != nil {
+		return err
+	}
+
+	var expectedJson interface{}
+	err = json.Unmarshal([]byte(correctJson), &expectedJson)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(actualJson, expectedJson) {
+		return fmt.Errorf("json strings %s != %s", correctJson, abiJsonString)
+	}
+
+	return nil
+}
+
+func createMethodObjectFromProperties(name, firstArgType, secondArgType, returnType string) error {
+	args := []abi.Arg{
+		{Name: "", Type: firstArgType, Desc: ""},
+		{Name: "", Type: secondArgType, Desc: ""},
+	}
+	abiMethod = abi.Method{
+		Name:    name,
+		Desc:    "",
+		Args:    args,
+		Returns: abi.Return{Type: returnType, Desc: ""},
+	}
+	return nil
+}
+
+func createMethodObjectWithArgNames(name, firstArgName, firstArgType, secondArgName, secondArgType, returnType string) error {
+	args := []abi.Arg{
+		{Name: firstArgName, Type: firstArgType, Desc: ""},
+		{Name: secondArgName, Type: secondArgType, Desc: ""},
+	}
+	abiMethod = abi.Method{
+		Name:    name,
+		Desc:    "",
+		Args:    args,
+		Returns: abi.Return{Type: returnType, Desc: ""},
+	}
+	return nil
+}
+
+func createMethodObjectWithDescription(name, nameDesc, firstArgType, firstDesc, secondArgType, secondDesc, returnType string) error {
+	args := []abi.Arg{
+		{Name: "", Type: firstArgType, Desc: firstDesc},
+		{Name: "", Type: secondArgType, Desc: secondDesc},
+	}
+	abiMethod = abi.Method{
+		Name:    name,
+		Desc:    nameDesc,
+		Args:    args,
+		Returns: abi.Return{Type: returnType, Desc: ""},
+	}
+	return nil
+}
+
+func checkTxnCount(givenTxnCount int) error {
+	correctTxnCount := abiMethod.GetTxCount()
+	if correctTxnCount != givenTxnCount {
+		return fmt.Errorf("txn count %d != %d", givenTxnCount, correctTxnCount)
+	}
+	return nil
+}
+
+func checkMethodSelector(givenMethodSelector string) error {
+	correctMethodSelector := hex.EncodeToString(abiMethod.GetSelector())
+	if correctMethodSelector != givenMethodSelector {
+		return fmt.Errorf("method selector %s != %s", givenMethodSelector, correctMethodSelector)
+	}
+	return nil
+}
+
+func createInterfaceObject(name string, desc string) error {
+	abiInterface = abi.Interface{
+		Name:    name,
+		Desc:    desc,
+		Methods: []abi.Method{abiMethod},
+	}
+	return nil
+}
+
+func serializeInterfaceObjectIntoJson() error {
+	abiInterfaceJson, err := json.Marshal(abiInterface)
+	if err != nil {
+		return err
+	}
+
+	abiJsonString = string(abiInterfaceJson)
+	return nil
+}
+
+func createContractObject(name string, desc string) error {
+	abiContract = abi.Contract{
+		Name:     name,
+		Desc:     desc,
+		Networks: make(map[string]abi.ContractNetworkInfo),
+		Methods:  []abi.Method{abiMethod},
+	}
+	return nil
+}
+
+func iSetTheContractsAppIDToForTheNetwork(appID int, network string) error {
+	if appID < 0 {
+		return fmt.Errorf("App ID must not be negative. Got: %d", appID)
+	}
+	abiContract.Networks[network] = abi.ContractNetworkInfo{AppID: uint64(appID)}
+	return nil
+}
+
+func serializeContractObjectIntoJson() error {
+	abiContractJson, err := json.Marshal(abiContract)
+	if err != nil {
+		return err
+	}
+
+	abiJsonString = string(abiContractJson)
+	return nil
+}
+
+// equality helper methods
+func checkEqualMethods(method1, method2 abi.Method) bool {
+	if method1.Name != method2.Name || method1.Desc != method2.Desc {
+		return false
+	}
+
+	if method1.Returns.Type != method2.Returns.Type || method1.Returns.Desc != method2.Returns.Desc {
+		return false
+	}
+
+	if len(method1.Args) != len(method2.Args) {
+		return false
+	}
+
+	for i, arg1 := range method1.Args {
+		arg2 := method2.Args[i]
+		if arg1.Name != arg2.Name || arg1.Type != arg2.Type || arg1.Desc != arg2.Desc {
+			return false
+		}
+	}
+	return true
+}
+
+func checkEqualInterfaces(interface1, interface2 abi.Interface) bool {
+	if interface1.Name != interface2.Name || interface1.Desc != interface2.Desc {
+		return false
+	}
+
+	if len(interface1.Methods) != len(interface2.Methods) {
+		return false
+	}
+
+	for i, method := range interface1.Methods {
+		if !checkEqualMethods(method, interface2.Methods[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkEqualContracts(contract1, contract2 abi.Contract) bool {
+	if contract1.Name != contract2.Name || contract1.Desc != contract2.Desc {
+		return false
+	}
+
+	if len(contract1.Networks) != len(contract2.Networks) {
+		return false
+	}
+
+	for network, info1 := range contract1.Networks {
+		info2, ok := contract2.Networks[network]
+		if !ok || info1 != info2 {
+			return false
+		}
+	}
+
+	if len(contract1.Methods) != len(contract2.Methods) {
+		return false
+	}
+
+	for i, method := range contract1.Methods {
+		if !checkEqualMethods(method, contract2.Methods[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func deserializeMethodJson() error {
+	var deserializedMethod abi.Method
+	err := json.Unmarshal([]byte(abiJsonString), &deserializedMethod)
+	if err != nil {
+		return err
+	}
+
+	if !checkEqualMethods(deserializedMethod, abiMethod) {
+		return fmt.Errorf("Deserialized method does not match original method")
+	}
+	return nil
+}
+
+func deserializeInterfaceJson() error {
+	var deserializedInterface abi.Interface
+	err := json.Unmarshal([]byte(abiJsonString), &deserializedInterface)
+	if err != nil {
+		return err
+	}
+	if !checkEqualInterfaces(deserializedInterface, abiInterface) {
+		return fmt.Errorf("Deserialized interface does not match original interface")
+	}
+	return nil
+}
+
+func deserializeContractJson() error {
+	var deserializedContract abi.Contract
+	err := json.Unmarshal([]byte(abiJsonString), &deserializedContract)
+	if err != nil {
+		return err
+	}
+	if !checkEqualContracts(deserializedContract, abiContract) {
+		return fmt.Errorf("Deserialized contract does not match original contract")
+	}
+	return nil
+}
+
+func aNewAtomicTransactionComposer() error {
+	txComposer = future.AtomicTransactionComposer{}
+	txComposerMethods = nil
+	return nil
+}
+
+func suggestedTransactionParameters(fee int, flatFee string, firstValid, LastValid int, genesisHash, genesisId string) error {
+	if flatFee != "true" && flatFee != "false" {
+		return fmt.Errorf("flatFee must be either 'true' or 'false'")
+	}
+
+	genHash, err := base64.StdEncoding.DecodeString(genesisHash)
+	if err != nil {
+		return err
+	}
+
+	sugParams = types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       genesisId,
+		GenesisHash:     genHash,
+		FirstRoundValid: types.Round(firstValid),
+		LastRoundValid:  types.Round(LastValid),
+		FlatFee:         flatFee == "true",
+	}
+
+	return nil
+}
+
+func anApplicationId(id int) error {
+	if id < 0 {
+		return fmt.Errorf("app id must be positive integer")
+	}
+
+	appId = uint64(id)
+	return nil
+}
+
+func iMakeATransactionSignerForTheAccount(accountType string) error {
+	if accountType == "signing" {
+		accountTxSigner = future.BasicAccountTransactionSigner{
+			Account: account,
+		}
+	} else if accountType == "transient" {
+		accountTxSigner = future.BasicAccountTransactionSigner{
+			Account: transientAccount,
+		}
+	}
+
+	return nil
+}
+
+func iCreateANewMethodArgumentsArray() error {
+	methodArgs = make([]interface{}, 0)
+	return nil
+}
+
+func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args string) error {
+	if len(commaSeparatedB64Args) == 0 {
+		return nil
+	}
+
+	b64Args := strings.Split(commaSeparatedB64Args, ",")
+	for _, b64Arg := range b64Args {
+		decodedArg, err := base64.StdEncoding.DecodeString(b64Arg)
+		if err != nil {
+			return err
+		}
+		methodArgs = append(methodArgs, decodedArg)
+	}
+
+	return nil
+}
+
+func addMethodCall(accountType, strOnComplete string) error {
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0)
+}
+
+func addMethodCallForUpdate(accountType, strOnComplete, approvalProgram, clearProgram string) error {
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0)
+}
+
+func addMethodCallForCreate(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages)
+}
+
+func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
+	var onComplete types.OnCompletion
+	switch strOnComplete {
+	case "create":
+		onComplete = types.NoOpOC
+	case "noop":
+		onComplete = types.NoOpOC
+	case "update":
+		onComplete = types.UpdateApplicationOC
+	case "call":
+		onComplete = types.NoOpOC
+	case "optin":
+		onComplete = types.OptInOC
+	case "clear":
+		onComplete = types.ClearStateOC
+	case "closeout":
+		onComplete = types.CloseOutOC
+	case "delete":
+		onComplete = types.DeleteApplicationOC
+	default:
+		return fmt.Errorf("invalid onComplete value")
+	}
+
+	var useAccount crypto.Account
+	if accountType == "signing" {
+		useAccount = account
+	} else if accountType == "transient" {
+		useAccount = transientAccount
+	}
+
+	var approvalProgramBytes []byte
+	var clearProgramBytes []byte
+	var err error
+
+	if approvalProgram != "" {
+		approvalProgramBytes, err = ioutil.ReadFile("features/resources/" + approvalProgram)
+		if err != nil {
+			return err
+		}
+	}
+
+	if clearProgram != "" {
+		clearProgramBytes, err = ioutil.ReadFile("features/resources/" + clearProgram)
+		if err != nil {
+			return err
+		}
+	}
+
+	if globalInts < 0 || globalBytes < 0 || localInts < 0 || localBytes < 0 || extraPages < 0 {
+		return fmt.Errorf("Values for globalInts, globalBytes, localInts, localBytes, and extraPages cannot be negative")
+	}
+
+	// populate args from methodArgs
+	if len(methodArgs) != len(abiMethod.Args) {
+		return fmt.Errorf("Provided argument count is incorrect. Expected %d, got %d", len(abiMethod.Args), len(methodArgs))
+	}
+
+	var preparedArgs []interface{}
+	for i, argSpec := range abiMethod.Args {
+		if argSpec.IsTransactionArg() {
+			// encodedArg is already a TransactionWithSigner
+			preparedArgs = append(preparedArgs, methodArgs[i])
+			continue
+		}
+
+		encodedArg, ok := methodArgs[i].([]byte)
+		if !ok {
+			return fmt.Errorf("Argument should be a byte slice")
+		}
+
+		var typeToDecode abi.Type
+		var err error
+
+		if argSpec.IsReferenceArg() {
+			switch argSpec.Type {
+			case abi.AccountReferenceType:
+				typeToDecode, err = abi.TypeOf("address")
+			case abi.ApplicationReferenceType, abi.AssetReferenceType:
+				typeToDecode, err = abi.TypeOf("uint64")
+			default:
+				return fmt.Errorf("Unknown reference type: %s", argSpec.Type)
+			}
+		} else {
+			typeToDecode, err = argSpec.GetTypeObject()
+		}
+		if err != nil {
+			return err
+		}
+
+		decodedArg, err := typeToDecode.Decode(encodedArg)
+		if err != nil {
+			return err
+		}
+
+		preparedArgs = append(preparedArgs, decodedArg)
+	}
+
+	methodCallParams := future.AddMethodCallParams{
+		AppID:           appId,
+		Method:          abiMethod,
+		MethodArgs:      preparedArgs,
+		Sender:          useAccount.Address,
+		SuggestedParams: sugParams,
+		OnComplete:      onComplete,
+		ApprovalProgram: approvalProgramBytes,
+		ClearProgram:    clearProgramBytes,
+		GlobalSchema: types.StateSchema{
+			NumUint:      uint64(globalInts),
+			NumByteSlice: uint64(globalBytes),
+		},
+		LocalSchema: types.StateSchema{
+			NumUint:      uint64(localInts),
+			NumByteSlice: uint64(localBytes),
+		},
+		ExtraPages: uint32(extraPages),
+		Signer:     accountTxSigner,
+	}
+
+	txComposerMethods = append(txComposerMethods, abiMethod)
+	return txComposer.AddMethodCall(methodCallParams)
+}
+
+func buildTheTransactionGroupWithTheComposer(errorType string) error {
+	_, err := txComposer.BuildGroup()
+
+	switch errorType {
+	case "":
+		// no error expected
+		return err
+	case "zero group size error":
+		if err == nil || err.Error() != "attempting to build group with zero transactions" {
+			return fmt.Errorf("Expected error, but got: %v", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("Unknown error type: %s", errorType)
+	}
+}
+
+func theComposerShouldHaveAStatusOf(strStatus string) error {
+	var status future.AtomicTransactionComposerStatus
+	switch strStatus {
+	case "BUILDING":
+		status = future.BUILDING
+	case "BUILT":
+		status = future.BUILT
+	case "SIGNED":
+		status = future.SIGNED
+	case "SUBMITTED":
+		status = future.SUBMITTED
+	case "COMMITTED":
+		status = future.COMMITTED
+	default:
+		return fmt.Errorf("invalid status provided")
+	}
+
+	if status != txComposer.GetStatus() {
+		return fmt.Errorf("status does not match")
+	}
+
+	return nil
+}
+
+func iGatherSignaturesWithTheComposer() error {
+	signedTxs, err := txComposer.GatherSignatures()
+	sigTxs = signedTxs
+	return err
+}
+
+func theBaseEncodedSignedTransactionsShouldEqual(encodedTxsStr string) error {
+	encodedTxs := strings.Split(encodedTxsStr, ",")
+	if len(encodedTxs) != len(sigTxs) {
+		return fmt.Errorf("Actual and expected number of signed transactions don't match")
+	}
+
+	for i, encodedTx := range encodedTxs {
+		gold, err := base64.StdEncoding.DecodeString(encodedTx)
+		if err != nil {
+			return err
+		}
+		stxStr := base64.StdEncoding.EncodeToString(sigTxs[i])
+		if !bytes.Equal(gold, sigTxs[i]) {
+			return fmt.Errorf("Application signed transaction does not match the golden: %s != %s", stxStr, encodedTx)
+		}
+	}
+
+	return nil
+}
+
+func iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo(sender, receiver string, amount int, closeTo string) error {
+	if amount < 0 {
+		return fmt.Errorf("amount must be a positive integer")
+	}
+
+	if sender == "transient" {
+		sender = transientAccount.Address.String()
+	}
+
+	if receiver == "transient" {
+		receiver = transientAccount.Address.String()
+	}
+
+	var err error
+	txn, err = future.MakePaymentTxn(sender, receiver, uint64(amount), nil, closeTo, sugParams)
+	tx = txn
+	return err
+}
+
+func iCreateATransactionWithSignerWithTheCurrentTransaction() error {
+	accountTxAndSigner = future.TransactionWithSigner{
+		Signer: accountTxSigner,
+		Txn:    txn,
+	}
+	return nil
+}
+
+func iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray() error {
+	methodArgs = append(methodArgs, accountTxAndSigner)
+	return nil
+}
+
+func theDecodedTransactionShouldEqualTheOriginal() error {
+	var decodedTx types.SignedTxn
+	err := msgpack.Decode(stx, &decodedTx)
+	if err != nil {
+		return err
+	}
+
+	// direct tx equality checking isn't fully implemented in go-sdk so this test is incomplete
 	return nil
 }
