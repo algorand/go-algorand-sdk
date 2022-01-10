@@ -2,9 +2,6 @@ package models
 
 // ProofResponse proof of transaction in a block.
 type ProofResponse struct {
-	// Hashtype the type of hash function used to create the proof
-	Hashtype string `json:"hashtype,omitempty"`
-
 	// Idx index of the transaction in the block's payset.
 	Idx uint64 `json:"idx"`
 
