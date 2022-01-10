@@ -16,7 +16,7 @@ const (
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
 // Passed in as a pointer to a DryrunRequest object to use for extra parameters
-func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest) (drr models.DryrunRequest, err error) {
+func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest, ctx context.Context) (drr models.DryrunRequest, err error) {
 	var (
 		apps   []types.AppIndex
 		assets []types.AssetIndex
@@ -72,7 +72,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 			continue
 		}
 
-		assetInfo, err := client.GetAssetByID(uint64(assetId)).Do(context.Background())
+		assetInfo, err := client.GetAssetByID(uint64(assetId)).Do(ctx)
 		if err != nil {
 			return drr, fmt.Errorf("failed to get asset %d: %+v", assetId, err)
 		}
@@ -89,7 +89,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		if _, ok := seenApps[appId]; ok {
 			continue
 		}
-		appInfo, err := client.GetApplicationByID(uint64(appId)).Do(context.Background())
+		appInfo, err := client.GetApplicationByID(uint64(appId)).Do(ctx)
 		if err != nil {
 			return drr, fmt.Errorf("failed to get application %d: %+v", appId, err)
 		}
@@ -102,7 +102,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		if _, ok := seenAccts[acct]; ok {
 			continue
 		}
-		acctInfo, err := client.AccountInformation(acct.String()).Do(context.Background())
+		acctInfo, err := client.AccountInformation(acct.String()).Do(ctx)
 		if err != nil {
 			return drr, fmt.Errorf("failed to get application %s: %+v", acct, err)
 		}
