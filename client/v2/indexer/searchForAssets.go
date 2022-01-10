@@ -21,8 +21,7 @@ type SearchForAssetsParams struct {
 	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Limit maximum number of results to return. There could be additional pages even
-	// if the limit is not reached.
+	// Limit maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// Name filter just assets with the given name.
@@ -63,8 +62,7 @@ func (s *SearchForAssets) IncludeAll(IncludeAll bool) *SearchForAssets {
 	return s
 }
 
-// Limit maximum number of results to return. There could be additional pages even
-// if the limit is not reached.
+// Limit maximum number of results to return.
 func (s *SearchForAssets) Limit(Limit uint64) *SearchForAssets {
 	s.p.Limit = Limit
 	return s

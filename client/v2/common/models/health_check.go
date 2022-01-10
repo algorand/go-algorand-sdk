@@ -19,7 +19,4 @@ type HealthCheck struct {
 
 	// Round
 	Round uint64 `json:"round"`
-
-	// Version current version.
-	Version string `json:"version"`
 }

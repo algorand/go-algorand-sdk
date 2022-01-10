@@ -77,7 +77,6 @@ type Account struct {
 	// * sig
 	// * msig
 	// * lsig
-	// * or null if unknown
 	SigType string `json:"sig-type,omitempty"`
 
 	// Status (onl) delegation status of the account's MicroAlgos

@@ -49,8 +49,7 @@ type SearchForTransactionsParams struct {
 	// receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 
-	// Limit maximum number of results to return. There could be additional pages even
-	// if the limit is not reached.
+	// Limit maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// MaxRound include results at or before the specified max-round.
@@ -172,8 +171,7 @@ func (s *SearchForTransactions) ExcludeCloseTo(ExcludeCloseTo bool) *SearchForTr
 	return s
 }
 
-// Limit maximum number of results to return. There could be additional pages even
-// if the limit is not reached.
+// Limit maximum number of results to return.
 func (s *SearchForTransactions) Limit(Limit uint64) *SearchForTransactions {
 	s.p.Limit = Limit
 	return s

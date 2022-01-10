@@ -34,8 +34,7 @@ type LookupAccountTransactionsParams struct {
 	// will be used.
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 
-	// Limit maximum number of results to return. There could be additional pages even
-	// if the limit is not reached.
+	// Limit maximum number of results to return.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// MaxRound include results at or before the specified max-round.
@@ -131,8 +130,7 @@ func (s *LookupAccountTransactions) CurrencyLessThan(CurrencyLessThan uint64) *L
 	return s
 }
 
-// Limit maximum number of results to return. There could be additional pages even
-// if the limit is not reached.
+// Limit maximum number of results to return.
 func (s *LookupAccountTransactions) Limit(Limit uint64) *LookupAccountTransactions {
 	s.p.Limit = Limit
 	return s
