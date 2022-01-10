@@ -23,7 +23,7 @@ unit:
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@template,@indexer,@rekey,@dryrun,@compile,@applications.verified,@send.keyregtxn,@indexer.applications,@indexer.231,@abi" --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@template,@indexer,@rekey,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231,@abi" --test.v .
 
 docker-test:
 	./test/docker/run_docker.sh
