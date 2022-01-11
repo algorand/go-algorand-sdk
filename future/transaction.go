@@ -139,6 +139,81 @@ func MakeKeyRegTxn(account string, note []byte, params types.SuggestedParams, vo
 	return setFee(tx, params)
 }
 
+// MakeKeyRegTxnWithStateProofKey constructs a keyreg transaction using the passed parameters.
+// - account is a checksummed, human-readable address for which we register the given participation key.
+// - note is a byte array
+// - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
+// KeyReg parameters:
+// - votePK is a base64-encoded string corresponding to the root participation public key
+// - selectionKey is a base64-encoded string corresponding to the vrf public key
+// - stateProofPK is a base64-encoded string corresponding to the block proof public key
+// - voteFirst is the first round this participation key is valid
+// - voteLast is the last round this participation key is valid
+// - voteKeyDilution is the dilution for the 2-level participation key
+// - nonpart is an indicator marking a key registration participating or nonparticipating
+func MakeKeyRegTxnWithStateProofKey(account string, note []byte, params types.SuggestedParams, voteKey, selectionKey, stateProofPK string, voteFirst, voteLast, voteKeyDilution uint64, nonpart bool) (types.Transaction, error) {
+	// Decode account address
+	accountAddr, err := types.DecodeAddress(account)
+	if err != nil {
+		return types.Transaction{}, err
+	}
+
+	if len(params.GenesisHash) == 0 {
+		return types.Transaction{}, fmt.Errorf("key registration transaction must contain a genesisHash")
+	}
+
+	var gh types.Digest
+	copy(gh[:], params.GenesisHash)
+	var votePKBytes [32]byte
+	var selectionPKBytes [32]byte
+	var statePKBytes [64]byte
+
+	if len(voteKey) > 0 {
+		votePKBytes, err = byte32FromBase64(voteKey)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+	}
+
+	if len(selectionKey) > 0 {
+		selectionPKBytes, err = byte32FromBase64(selectionKey)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+	}
+
+	if len(stateProofPK) > 0 {
+		statePKBytes, err = byte64FromBase64(stateProofPK)
+		if err != nil {
+			return types.Transaction{}, err
+		}
+	}
+
+	tx := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      accountAddr,
+			Fee:         params.Fee,
+			FirstValid:  params.FirstRoundValid,
+			LastValid:   params.LastRoundValid,
+			Note:        note,
+			GenesisHash: gh,
+			GenesisID:   params.GenesisID,
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:           types.VotePK(votePKBytes),
+			SelectionPK:      types.VRFPK(selectionPKBytes),
+			VoteFirst:        types.Round(voteFirst),
+			VoteLast:         types.Round(voteLast),
+			VoteKeyDilution:  voteKeyDilution,
+			Nonparticipation: nonpart,
+			StateProofPK:     types.MerkleVerifier(statePKBytes),
+		},
+	}
+
+	return setFee(tx, params)
+}
+
 // MakeAssetCreateTxn constructs an asset creation transaction using the passed parameters.
 // - account is a checksummed, human-readable address which will send the transaction.
 // - note is a byte array
@@ -470,6 +545,20 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	}
 	if len(slice) != 32 {
 		return out, fmt.Errorf("Input is not 32 bytes")
+	}
+	copy(out[:], slice)
+	return
+}
+
+// byte32FromBase64 decodes the input base64 string and outputs a
+// 64 byte array, erroring if the input is the wrong length.
+func byte64FromBase64(in string) (out [64]byte, err error) {
+	slice, err := base64.StdEncoding.DecodeString(in)
+	if err != nil {
+		return
+	}
+	if len(slice) != 64 {
+		return out, fmt.Errorf("input is not 64 bytes")
 	}
 	copy(out[:], slice)
 	return
