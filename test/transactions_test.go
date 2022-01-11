@@ -91,7 +91,6 @@ func buildKeyregTransaction(sender, nonparticipation string,
 		return fmt.Errorf("Could not parse nonparticipation value: %v", err)
 	}
 
-
 	tx, err = future.MakeKeyRegTxnWithStateProofKey(sender, nil, sugParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonPartValue)
 	return err
 }
