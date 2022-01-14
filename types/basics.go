@@ -2,8 +2,9 @@ package types
 
 import (
 	"encoding/base64"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"math"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -37,6 +38,9 @@ const LogicSigMaxSize = 1000
 // LogicSigMaxCost is a max execution const of a TEAL program
 const LogicSigMaxCost = 20000
 
+// KeyStoreRootSize is the size, in bytes, of keyreg verifier
+const KeyStoreRootSize = 64
+
 // MicroAlgos are the base unit of currency in Algorand
 type MicroAlgos uint64
 
@@ -54,6 +58,9 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
+
+// MerkleVerifier is a state proof
+type MerkleVerifier [KeyStoreRootSize]byte
 
 const microAlgoConversionFactor = 1e6
 

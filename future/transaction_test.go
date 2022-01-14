@@ -26,6 +26,15 @@ func byte32ArrayFromBase64(s string) (out [32]byte) {
 	return
 }
 
+func byte64ArrayFromBase64(s string) (out [64]byte) {
+	slice := byteFromBase64(s)
+	if len(slice) != 64 {
+		panic("wrong length: input slice not 64 bytes")
+	}
+	copy(out[:], slice)
+	return
+}
+
 func TestMakePaymentTxn(t *testing.T) {
 	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
@@ -164,6 +173,68 @@ func TestMakeKeyRegTxn(t *testing.T) {
 			VoteFirst:       10000,
 			VoteLast:        10111,
 			VoteKeyDilution: 11,
+		},
+	}
+	require.Equal(t, expKeyRegTxn, tx)
+}
+
+func TestMakeKeyRegTxnWithStateProofKey(t *testing.T) {
+	const addr = "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"
+	ghAsArray := byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=")
+	params := types.SuggestedParams{
+		Fee:             10,
+		FirstRoundValid: 322575,
+		LastRoundValid:  323575,
+		GenesisHash:     ghAsArray[:],
+	}
+	// nonparticipation
+	tx, err := MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "", "", "", 0, 0, 0, true)
+	require.NoError(t, err)
+	a, err := types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expKeyRegTxn := types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         2020,
+			FirstValid:  322575,
+			LastValid:   323575,
+			Note:        []byte{45, 67},
+			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+			GenesisID:   "",
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			Nonparticipation: true,
+		},
+	}
+	require.Equal(t, expKeyRegTxn, tx)
+
+	// online
+	stateProof := "mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
+	tx, err = MakeKeyRegTxnWithStateProofKey(addr, []byte{45, 67}, params, "Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo=", "bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc=", stateProof, 10000, 10111, 11, false)
+	require.NoError(t, err)
+
+	a, err = types.DecodeAddress(addr)
+	require.NoError(t, err)
+	expKeyRegTxn = types.Transaction{
+		Type: types.KeyRegistrationTx,
+		Header: types.Header{
+			Sender:      a,
+			Fee:         3800,
+			FirstValid:  322575,
+			LastValid:   323575,
+			Note:        []byte{45, 67},
+			GenesisHash: byte32ArrayFromBase64("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+			GenesisID:   "",
+		},
+		KeyregTxnFields: types.KeyregTxnFields{
+			VotePK:           byte32ArrayFromBase64("Kv7QI7chi1y6axoy+t7wzAVpePqRq/rkjzWh/RMYyLo="),
+			SelectionPK:      byte32ArrayFromBase64("bPgrv4YogPcdaUAxrt1QysYZTVyRAuUMD4zQmCu9llc="),
+			VoteFirst:        10000,
+			VoteLast:         10111,
+			VoteKeyDilution:  11,
+			Nonparticipation: false,
+			StateProofPK:     byte64ArrayFromBase64(stateProof),
 		},
 	}
 	require.Equal(t, expKeyRegTxn, tx)

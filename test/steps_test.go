@@ -86,9 +86,11 @@ var microalgos types.MicroAlgos
 var bytetxs [][]byte
 var votekey string
 var selkey string
+var stateProofPK string
 var votefst uint64
 var votelst uint64
 var votekd uint64
+var nonpart bool
 var num string
 var backupTxnSender string
 var groupTxnBytes []byte
@@ -164,6 +166,7 @@ func TestMain(m *testing.M) {
 		AlgodClientV2Context(s)
 		IndexerUnitTestContext(s)
 		IndexerIntegrationTestContext(s)
+		TransactionsUnitContext(s)
 		ApplicationsContext(s)
 		ApplicationsUnitContext(s)
 		ResponsesContext(s)
@@ -268,6 +271,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I get transactions by address and date", txnsByAddrDate)
 	s.Step(`key registration transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)`, keyregTxnParams)
 	s.Step("I create the key registration transaction", createKeyregTxn)
+	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
 	s.Step(`^I get recent transactions, limited by (\d+) transactions$`, getTxnsByCount)
 	s.Step(`^I can get account information`, newAccInfo)
 	s.Step(`^I can get the transaction by ID$`, txnbyID)
@@ -1415,6 +1419,47 @@ func createKeyregTxn() (err error) {
 	if err != nil {
 		return err
 	}
+	return err
+}
+
+func createKeyregWithStateProof(keyregType string) (err error) {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+	lastRound = uint64(params.LastRoundValid)
+	pk = accounts[0]
+	if keyregType == "online" {
+		nonpart = false
+		votekey = "9mr13Ri8rFepxN3ghIUrZNui6LqqM5hEzB45Rri5lkU="
+		selkey = "dx717L3uOIIb/jr9OIyls1l5Ei00NFgRa380w7TnPr4="
+		votefst = uint64(0)
+		votelst = uint64(30001)
+		votekd = uint64(10000)
+		stateProofPK = "mYR0GVEObMTSNdsKM6RwYywHYPqVDqg3E4JFzxZOreH9NU8B+tKzUanyY8AQ144hETgSMX7fXWwjBdHz6AWk9w=="
+	} else if keyregType == "nonparticipation" {
+		nonpart = true
+		votekey = ""
+		selkey = ""
+		votefst = 0
+		votelst = 0
+		votekd = 0
+		stateProofPK = ""
+	} else if keyregType == "offline" {
+		nonpart = false
+		votekey = ""
+		selkey = ""
+		votefst = 0
+		votelst = 0
+		votekd = 0
+		stateProofPK = ""
+	}
+
+	txn, err = future.MakeKeyRegTxnWithStateProofKey(accounts[0], note, params, votekey, selkey, stateProofPK, votefst, votelst, votekd, nonpart)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
