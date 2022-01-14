@@ -4,7 +4,7 @@
 - Create response object for "AtomicTransactionComposer.Execute" (#276)
 - Support ABI reference types and other improvements (#273)
 - Add CreateDryrun function (#265)
-- Add EncodeAddress (264)
+- Add EncodeAddress (#264)
 - ABI Interaction (#258)
 - Add ABI-encoding feature (#247)
 - Implemented WaitForConfirmation function (#232)
