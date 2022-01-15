@@ -76,10 +76,12 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		if err != nil {
 			return drr, fmt.Errorf("failed to get asset %d: %+v", assetId, err)
 		}
+
 		addr, err := types.DecodeAddress(assetInfo.Params.Creator)
 		if err != nil {
 			return drr, fmt.Errorf("failed to decode creator adddress %s: %+v", assetInfo.Params.Creator, err)
 		}
+
 		accts = append(accts, addr)
 		seenAssets[assetId] = true
 	}
@@ -89,11 +91,19 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		if _, ok := seenApps[appId]; ok {
 			continue
 		}
+
 		appInfo, err := client.GetApplicationByID(uint64(appId)).Do(ctx)
 		if err != nil {
 			return drr, fmt.Errorf("failed to get application %d: %+v", appId, err)
 		}
 		drr.Apps = append(drr.Apps, appInfo)
+
+		creator, err := types.DecodeAddress(appInfo.Params.Creator)
+		if err != nil {
+			return drr, fmt.Errorf("faiiled to decode creator address %s: %+v", appInfo.Params.Creator, err)
+		}
+		accts = append(accts, creator)
+
 		seenApps[appId] = true
 	}
 
