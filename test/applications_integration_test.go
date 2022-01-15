@@ -3,20 +3,24 @@ package test
 import (
 	"bytes"
 	"context"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cucumber/godog"
 
+	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	sdkJson "github.com/algorand/go-algorand-sdk/encoding/json"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -25,6 +29,7 @@ var algodV2client *algod.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
+var applicationIds []uint64
 var txComposerResult future.ExecuteResult
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
@@ -71,6 +76,51 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	return nil
 }
 
+func iFundTheCurrentApplicationsAddress(microalgos int) error {
+	address := crypto.GetApplicationAddress(applicationId)
+
+	params, err := algodV2client.SuggestedParams().Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	txn, err := future.MakePaymentTxn(accounts[0], address.String(), uint64(microalgos), nil, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	txid, err = algodV2client.SendRawTransaction(res.SignedTransaction).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	_, err = future.WaitForConfirmation(algodV2client, txid, 5, context.Background())
+	return err
+}
+
+func readTealProgram(fileName string) ([]byte, error) {
+	fileContents, err := loadResource(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.HasSuffix(fileName, ".teal") {
+		// need to compile TEAL source file
+		response, err := algodV2client.TealCompile(fileContents).Do(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		return base64.RawStdEncoding.DecodeString(response.Result)
+	}
+
+	return fileContents, nil
+}
+
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
@@ -90,17 +140,11 @@ func iBuildAnApplicationTransaction(
 	}
 
 	if approvalProgram != "" {
-		approvalP, err = ioutil.ReadFile("features/resources/" + approvalProgram)
-		if err != nil {
-			return err
-		}
+		approvalP, err = readTealProgram(approvalProgram)
 	}
 
 	if clearProgram != "" {
-		clearP, err = ioutil.ReadFile("features/resources/" + clearProgram)
-		if err != nil {
-			return err
-		}
+		clearP, err = readTealProgram(clearProgram)
 	}
 	args, err := parseAppArgs(appArgs)
 	if err != nil {
@@ -198,21 +242,21 @@ func iBuildAnApplicationTransaction(
 	return nil
 }
 
-func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(err string) error {
-	var e error
+func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr string) error {
+	var err error
 	var lstx []byte
 
-	txid, lstx, e = crypto.SignTransaction(transientAccount.PrivateKey, tx)
-	if e != nil {
-		return e
+	txid, lstx, err = crypto.SignTransaction(transientAccount.PrivateKey, tx)
+	if err != nil {
+		return err
 	}
-	txid, e = algodV2client.SendRawTransaction(lstx).Do(context.Background())
-	if e != nil {
-		if strings.Contains(e.Error(), err) {
+	txid, err = algodV2client.SendRawTransaction(lstx).Do(context.Background())
+	if err != nil && len(expectedErr) != 0 {
+		if strings.Contains(err.Error(), expectedErr) {
 			return nil
 		}
 	}
-	return e
+	return err
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
@@ -226,8 +270,24 @@ func iWaitForTheTransactionToBeConfirmed() error {
 func iRememberTheNewApplicationID() error {
 	response, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
 	applicationId = response.ApplicationIndex
-	appId = applicationId
+	applicationIds = append(applicationIds, applicationId)
 	return err
+}
+
+func iGetTheAccountAddressForTheCurrentApp() error {
+	actual := crypto.GetApplicationAddress(applicationId)
+
+	prefix := []byte("appID")
+	preimage := make([]byte, len(prefix)+8) // 8 = number of bytes in a uint64
+	copy(preimage, prefix)
+	binary.BigEndian.PutUint64(preimage[len(prefix):], applicationId)
+
+	expected := types.Address(sha512.Sum512_256(preimage))
+
+	if expected != actual {
+		return fmt.Errorf("Addresses do not match. Expected %s, got %s", expected.String(), actual.String())
+	}
+	return nil
 }
 
 func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
@@ -571,6 +631,239 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 	return nil
 }
 
+func theAppShouldHaveReturnedABITypes(colonSeparatedExpectedTypeStrings string) error {
+	expectedTypeStrings := strings.Split(colonSeparatedExpectedTypeStrings, ":")
+
+	if len(expectedTypeStrings) != len(txComposerResult.MethodResults) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(expectedTypeStrings), len(txComposerResult.MethodResults))
+	}
+
+	for i, expectedTypeString := range expectedTypeStrings {
+		actualResult := txComposerResult.MethodResults[i]
+
+		if actualResult.DecodeError != nil {
+			return actualResult.DecodeError
+		}
+
+		if len(expectedTypeString) == 0 {
+			if len(actualResult.RawReturnValue) != 0 {
+				return fmt.Errorf("No return bytes were expected, but some are present")
+			}
+			continue
+		}
+
+		expectedType, err := abi.TypeOf(expectedTypeString)
+		if err != nil {
+			return err
+		}
+
+		decoded, err := expectedType.Decode(actualResult.RawReturnValue)
+		if err != nil {
+			return err
+		}
+		reencoded, err := expectedType.Encode(decoded)
+		if err != nil {
+			return err
+		}
+
+		if !bytes.Equal(reencoded, actualResult.RawReturnValue) {
+			return fmt.Errorf("The round trip result does not match the original result")
+		}
+	}
+
+	return nil
+}
+
+func checkAtomicResultAgainstValue(resultIndex int, path, expectedValue string) error {
+	keys := strings.Split(path, ".")
+	info := txComposerResult.MethodResults[resultIndex].TransactionInfo
+
+	jsonBytes := sdkJson.Encode(&info)
+
+	var genericJson interface{}
+	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+	decoder.UseNumber()
+	err := decoder.Decode(&genericJson)
+	if err != nil {
+		return err
+	}
+
+	for i, key := range keys {
+		var value interface{}
+
+		intKey, err := strconv.Atoi(key)
+		if err == nil {
+			// key is an array index
+			genericArray, ok := genericJson.([]interface{})
+			if !ok {
+				return fmt.Errorf("Path component %d is an array index (%d), but the partent is not an array. Parent type: %s", i, intKey, reflect.TypeOf(genericJson))
+			}
+			if intKey < 0 || intKey >= len(genericArray) {
+				return fmt.Errorf("Path component %d is an array index (%d) outside of the parent array's range. Parent length: %d", i, intKey, len(genericArray))
+			}
+			value = genericArray[intKey]
+		} else {
+			// key is an object field
+			genericObject, ok := genericJson.(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("Path component %d is an object field ('%s'), but the partent is not an object. Parent type: %s", i, key, reflect.TypeOf(genericJson))
+			}
+			value, ok = genericObject[key]
+			if !ok {
+				var parentFields []string
+				for field := range genericObject {
+					parentFields = append(parentFields, "'"+field+"'")
+				}
+				return fmt.Errorf("Path component %d is an object field ('%s'), but the partent does not contain the field. Partent fields are: %s", i, key, strings.Join(parentFields, ","))
+			}
+		}
+
+		genericJson = value
+	}
+
+	// we have arrived at the target object
+	switch actual := genericJson.(type) {
+	case string:
+		if actual != expectedValue {
+			return fmt.Errorf("String values not equal. Expected '%s', got '%s'", expectedValue, actual)
+		}
+	case json.Number:
+		actualParsed, err := strconv.ParseUint(actual.String(), 10, 64)
+		if err != nil {
+			return err
+		}
+		expectedParsed, err := strconv.ParseUint(expectedValue, 10, 64)
+		if err != nil {
+			return err
+		}
+		if actualParsed != expectedParsed {
+			return fmt.Errorf("Int values not equal. Expected %d, got %d", expectedParsed, actualParsed)
+		}
+	default:
+		return fmt.Errorf("The final path element does not resolve to a support type. Type is %s", reflect.TypeOf(genericJson))
+	}
+
+	return nil
+}
+
+func checkInnerTxnGroupIDs(colonSeparatedPathsString string) error {
+	paths := [][]int{}
+
+	commaSeparatedPathStrings := strings.Split(colonSeparatedPathsString, ":")
+	for _, commaSeparatedPathString := range commaSeparatedPathStrings {
+		pathOfStrings := strings.Split(commaSeparatedPathString, ",")
+		path := make([]int, len(pathOfStrings))
+		for i, stringComponent := range pathOfStrings {
+			intComponent, err := strconv.Atoi(stringComponent)
+			if err != nil {
+				return err
+			}
+			path[i] = intComponent
+		}
+		paths = append(paths, path)
+	}
+
+	var txInfosToCheck []models.PendingTransactionResponse
+
+	for _, path := range paths {
+		var current models.PendingTransactionResponse
+		for pathIndex, innerTxnIndex := range path {
+			if pathIndex == 0 {
+				current = models.PendingTransactionResponse(txComposerResult.MethodResults[innerTxnIndex].TransactionInfo)
+			} else {
+				current = current.InnerTxns[innerTxnIndex]
+			}
+		}
+		txInfosToCheck = append(txInfosToCheck, current)
+	}
+
+	var group types.Digest
+	for i, txInfo := range txInfosToCheck {
+		if i == 0 {
+			group = txInfo.Transaction.Txn.Group
+		}
+
+		if group != txInfo.Transaction.Txn.Group {
+			return fmt.Errorf("Group hashes differ: %s != %s", group, txInfo.Transaction.Txn.Group)
+		}
+	}
+
+	return nil
+}
+
+func checkSpinResult(resultIndex int, method, r string) error {
+	if method != "spin()" {
+		return fmt.Errorf("Incorrect method name, expected 'spin()', got '%s'", method)
+	}
+
+	result := txComposerResult.MethodResults[resultIndex]
+	decodedResult := result.ReturnValue.([]interface{})
+
+	spin := decodedResult[0].([]interface{})
+	spinBytes := make([]byte, len(spin))
+	for i, value := range spin {
+		spinBytes[i] = value.(byte)
+	}
+
+	matched, err := regexp.Match(r, spinBytes)
+	if err != nil {
+		return err
+	}
+
+	if !matched {
+		return fmt.Errorf("Result did not match regex. Spin result: %s", string(spinBytes))
+	}
+
+	return nil
+}
+
+func sha512_256AsUint64(preimage []byte) uint64 {
+	hashed := sha512.Sum512_256(preimage)
+	return binary.BigEndian.Uint64(hashed[:8])
+}
+
+func checkRandomIntResult(resultIndex, input int) error {
+	result := txComposerResult.MethodResults[resultIndex]
+	decodedResult := result.ReturnValue.([]interface{})
+
+	randInt := decodedResult[0].(uint64)
+
+	witness := decodedResult[1].([]interface{})
+	witnessBytes := make([]byte, len(witness))
+	for i, value := range witness {
+		witnessBytes[i] = value.(byte)
+	}
+
+	x := sha512_256AsUint64(witnessBytes)
+	quotient := x % uint64(input)
+	if quotient != randInt {
+		return fmt.Errorf("Unexpected result: quotient is %d and randInt is %d", quotient, randInt)
+	}
+
+	return nil
+}
+
+func checkRandomElementResult(resultIndex int, input string) error {
+	result := txComposerResult.MethodResults[resultIndex]
+	decodedResult := result.ReturnValue.([]interface{})
+
+	randElt := decodedResult[0].(byte)
+
+	witness := decodedResult[1].([]interface{})
+	witnessBytes := make([]byte, len(witness))
+	for i, value := range witness {
+		witnessBytes[i] = value.(byte)
+	}
+
+	x := sha512_256AsUint64(witnessBytes)
+	quotient := x % uint64(len(input))
+	if input[quotient] != randElt {
+		return fmt.Errorf("Unexpected result: input[quotient] is %d and randElt is %d", input[quotient], randElt)
+	}
+
+	return nil
+}
+
 //@applications.verified
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
@@ -579,6 +872,7 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
+	s.Step(`^I get the account address for the current application and see that it matches the app id\'s hash$`, iGetTheAccountAddressForTheCurrentApp)
 	s.Step(`^The transient account should have the created app "([^"]*)" and total schema byte-slices (\d+) and uints (\d+), the application "([^"]*)" state contains key "([^"]*)" with value "([^"]*)"$`,
 		theTransientAccountShouldHave)
 	s.Step(`^the unconfirmed pending transaction by ID should have no apply data fields\.$`, theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields)
@@ -588,4 +882,14 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I clone the composer\.$`, iCloneTheComposer)
 	s.Step(`^I execute the current transaction group with the composer\.$`, iExecuteTheCurrentTransactionGroupWithTheComposer)
 	s.Step(`^The app should have returned "([^"]*)"\.$`, theAppShouldHaveReturned)
+	s.Step(`^The app should have returned ABI types "([^"]*)"\.$`, theAppShouldHaveReturnedABITypes)
+
+	s.Step(`^I fund the current application\'s address with (\d+) microalgos\.$`, iFundTheCurrentApplicationsAddress)
+
+	s.Step(`^I can dig the (\d+)th atomic result with path "([^"]*)" and see the value "([^"]*)"$`, checkAtomicResultAgainstValue)
+	s.Step(`^I dig into the paths "([^"]*)" of the resulting atomic transaction tree I see group ids and they are all the same$`, checkInnerTxnGroupIDs)
+	s.Step(`^The (\d+)th atomic result for "([^"]*)" satisfies the regex "([^"]*)"$`, checkSpinResult)
+
+	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
+	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 }

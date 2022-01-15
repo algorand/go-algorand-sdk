@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -102,7 +103,6 @@ var abiInterface abi.Interface
 var abiContract abi.Contract
 var txComposer future.AtomicTransactionComposer
 var txComposerMethods []abi.Method
-var appId uint64
 var accountTxSigner future.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
@@ -340,6 +340,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCall)
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)"\.$`, addMethodCallForUpdate)
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), extra-pages (\d+)\.$`, addMethodCallForCreate)
+	s.Step(`^I add a nonced method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCallWithNonce)
+	s.Step(`^I add the nonce "([^"]*)"$`, iAddTheNonce)
 	s.Step(`^I build the transaction group with the composer\. If there is an error it is "([^"]*)"\.$`, buildTheTransactionGroupWithTheComposer)
 	s.Step(`^The composer should have a status of "([^"]*)"\.$`, theComposerShouldHaveAStatusOf)
 	s.Step(`^I gather signatures with the composer\.$`, iGatherSignaturesWithTheComposer)
@@ -2439,7 +2441,7 @@ func anApplicationId(id int) error {
 		return fmt.Errorf("app id must be positive integer")
 	}
 
-	appId = uint64(id)
+	applicationId = uint64(id)
 	return nil
 }
 
@@ -2469,6 +2471,30 @@ func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args s
 
 	b64Args := strings.Split(commaSeparatedB64Args, ",")
 	for _, b64Arg := range b64Args {
+		if strings.Contains(b64Arg, ":") {
+			// special case for inserting existing application ID
+			parts := strings.Split(b64Arg, ":")
+			if len(parts) != 2 || parts[0] != "ctxAppIdx" {
+				return fmt.Errorf("Cannot process argument: %s", b64Arg)
+			}
+			parsedIndex, err := strconv.ParseUint(parts[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			if parsedIndex >= uint64(len(applicationIds)) {
+				return fmt.Errorf("Application index out of bounds: %d, number of app IDs is %d", parsedIndex, len(applicationIds))
+			}
+			abiUint64, err := abi.TypeOf("uint64")
+			if err != nil {
+				return err
+			}
+			encodedUint64, err := abiUint64.Encode(applicationIds[parsedIndex])
+			if err != nil {
+				return err
+			}
+			methodArgs = append(methodArgs, encodedUint64)
+			continue
+		}
 		decodedArg, err := base64.StdEncoding.DecodeString(b64Arg)
 		if err != nil {
 			return err
@@ -2480,18 +2506,22 @@ func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args s
 }
 
 func addMethodCall(accountType, strOnComplete string) error {
-	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0)
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0, false)
 }
 
 func addMethodCallForUpdate(accountType, strOnComplete, approvalProgram, clearProgram string) error {
-	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0)
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0, false)
 }
 
 func addMethodCallForCreate(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
-	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages)
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages, false)
 }
 
-func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
+func addMethodCallWithNonce(accountType, strOnComplete string) error {
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0, true)
+}
+
+func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int, useNonce bool) error {
 	var onComplete types.OnCompletion
 	switch strOnComplete {
 	case "create":
@@ -2526,14 +2556,14 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 	var err error
 
 	if approvalProgram != "" {
-		approvalProgramBytes, err = ioutil.ReadFile("features/resources/" + approvalProgram)
+		approvalProgramBytes, err = readTealProgram(approvalProgram)
 		if err != nil {
 			return err
 		}
 	}
 
 	if clearProgram != "" {
-		clearProgramBytes, err = ioutil.ReadFile("features/resources/" + clearProgram)
+		clearProgramBytes, err = readTealProgram(clearProgram)
 		if err != nil {
 			return err
 		}
@@ -2589,7 +2619,7 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 	}
 
 	methodCallParams := future.AddMethodCallParams{
-		AppID:           appId,
+		AppID:           applicationId,
 		Method:          abiMethod,
 		MethodArgs:      preparedArgs,
 		Sender:          useAccount.Address,
@@ -2609,8 +2639,17 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 		Signer:     accountTxSigner,
 	}
 
+	if useNonce {
+		methodCallParams.Note = note
+	}
+
 	txComposerMethods = append(txComposerMethods, abiMethod)
 	return txComposer.AddMethodCall(methodCallParams)
+}
+
+func iAddTheNonce(nonce string) error {
+	note = []byte("I should be unique thanks to this nonce: " + nonce)
+	return nil
 }
 
 func buildTheTransactionGroupWithTheComposer(errorType string) error {
