@@ -313,6 +313,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("an algod v2 client$", algodClientV2)
 	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
+	s.Step(`^base64 decoding the response is the same as the binary "([^"]*)"$`, tealCheckCompileAgainstFile)
 	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
 	s.Step(`^I get execution result "([^"]*)"$`, tealCheckDryrun)
 	s.Step(`^I create the Method object from method signature "([^"]*)"$`, createMethodObjectFromSignature)
@@ -2096,6 +2097,28 @@ func tealCheckCompile(status int, result string, hash string) error {
 	if hash != tealCompleResult.response.Hash {
 		return fmt.Errorf("hash: %s != %s", hash, tealCompleResult.response.Hash)
 	}
+	return nil
+}
+
+func tealCheckCompileAgainstFile(expectedFile string) error {
+	if len(expectedFile) == 0 {
+		return fmt.Errorf("empty teal program file name")
+	}
+
+	expectedTeal, err := loadResource(expectedFile)
+	if err != nil {
+		return err
+	}
+
+	actualTeal, err := base64.StdEncoding.DecodeString(tealCompleResult.response.Result)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(actualTeal, expectedTeal) {
+		return fmt.Errorf("Actual program does not match expected")
+	}
+
 	return nil
 }
 
