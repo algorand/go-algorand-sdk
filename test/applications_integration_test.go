@@ -115,7 +115,7 @@ func readTealProgram(fileName string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		return base64.RawStdEncoding.DecodeString(response.Result)
+		return base64.StdEncoding.DecodeString(response.Result)
 	}
 
 	return fileContents, nil
@@ -603,7 +603,7 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 		}
 
 		if !bytes.Equal(actualResult.RawReturnValue, expectedResult) {
-			return fmt.Errorf("Actual result does not match expected result. Actual: %s\n", base64.RawStdEncoding.EncodeToString(actualResult.RawReturnValue))
+			return fmt.Errorf("Actual result does not match expected result. Actual: %s\n", base64.StdEncoding.EncodeToString(actualResult.RawReturnValue))
 		}
 
 		if method.Returns.IsVoid() {
