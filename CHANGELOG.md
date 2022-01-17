@@ -1,3 +1,15 @@
+# 1.12.0-beta.2
+# Added
+- Support ABI reference types and other improvements (#273)
+# Changed
+- Fix wait for confirmation function (#267)
+# 1.12.0-beta.1
+# Added
+- EncodeAddress
+- ABI Interaction
+- WaitForConfirmation function
+# Changed
+- ABI Interface
 # 1.11.0
 # Added
 - add TealVerify function (#242)
