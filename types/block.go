@@ -208,7 +208,7 @@ type EvalDelta struct {
 	// When decoding EvalDeltas, the integer key represents an offset into
 	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
 	LocalDeltas map[uint64]StateDelta `codec:"ld,allocbound=config.MaxEvalDeltaAccounts"`
-	
+
 	Logs []string `codec:"lg"`
 
 	InnerTxns []SignedTxnWithAD `codec:"itx"`

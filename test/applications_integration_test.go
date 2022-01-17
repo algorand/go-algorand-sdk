@@ -25,9 +25,7 @@ var algodV2client *algod.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
-var txids []string
-var confirmedRound uint64
-var results []future.ABIResult
+var txComposerResult future.ExecuteResult
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -516,19 +514,19 @@ func iCloneTheComposer() error {
 
 func iExecuteTheCurrentTransactionGroupWithTheComposer() error {
 	var err error
-	confirmedRound, txids, results, err = txComposer.Execute(algodV2client, context.Background(), 10)
+	txComposerResult, err = txComposer.Execute(algodV2client, context.Background(), 10)
 	return err
 }
 
 func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 	b64ExpectedResults := strings.Split(commaSeparatedB64Results, ",")
 
-	if len(b64ExpectedResults) != len(results) {
-		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(results))
+	if len(b64ExpectedResults) != len(txComposerResult.MethodResults) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(txComposerResult.MethodResults))
 	}
 
-	if len(txComposerMethods) != len(results) {
-		return fmt.Errorf("length of composer's methods doesn't match results: %d != %d", len(txComposerMethods), len(results))
+	if len(txComposerMethods) != len(txComposerResult.MethodResults) {
+		return fmt.Errorf("length of composer's methods doesn't match results: %d != %d", len(txComposerMethods), len(txComposerResult.MethodResults))
 	}
 
 	for i, b64ExpectedResult := range b64ExpectedResults {
@@ -537,7 +535,7 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 			return err
 		}
 
-		actualResult := results[i]
+		actualResult := txComposerResult.MethodResults[i]
 		method := txComposerMethods[i]
 
 		if actualResult.DecodeError != nil {

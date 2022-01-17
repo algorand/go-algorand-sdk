@@ -19,7 +19,7 @@ test:
 
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest,@unit.indexer.logs,@unit.abijson,@unit.transactions.payment,@unit.atomic_transaction_composer" --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@unit.offline,@unit.algod,@unit.indexer,@unit.transactions.keyreg,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest,@unit.indexer.logs,@unit.abijson,@unit.transactions.payment,@unit.atomic_transaction_composer" --test.v .
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)

@@ -33,8 +33,8 @@ type TransactionWithSigner struct {
 	Signer TransactionSigner
 }
 
-// Represents the output from a successful ABI method call.
-type ABIResult struct {
+// ABIMethodResult represents the output from a successful ABI method call.
+type ABIMethodResult struct {
 	// The TxID of the transaction that invoked the ABI method call.
 	TxID string
 	// The raw bytes of the return value from the ABI method call. This will be empty if the method
@@ -84,6 +84,18 @@ type AddMethodCallParams struct {
 	RekeyTo types.Address
 	// A transaction Signer that can authorize this application call from sender
 	Signer TransactionSigner
+}
+
+// ExecuteResult contains the results of successfully calling the Execute method on an
+// AtomicTransactionComposer object.
+type ExecuteResult struct {
+	// The round in which the executed transaction group was confirmed on chain
+	ConfirmedRound uint64
+	// A list of the TxIDs for each transaction in the executed group
+	TxIDs []string
+	// For each ABI method call in the executed group (created by the AddMethodCall method), this
+	// slice contains information about the method call's return value
+	MethodResults []ABIMethodResult
 }
 
 // AtomicTransactionComposerStatus represents the status of an AtomicTransactionComposer
@@ -548,35 +560,43 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 //
 // Returns the confirmed round for this transaction, the txIDs of the submitted transactions, and an
 // ABIResult for each method call in this group.
-func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (uint64, []string, []ABIResult, error) {
+func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (ExecuteResult, error) {
 	if atc.status == COMMITTED {
-		return 0, nil, nil, errors.New("status is already committed")
+		return ExecuteResult{}, errors.New("status is already committed")
 	}
 
 	_, err := atc.Submit(client, ctx)
 	if err != nil {
-		return 0, nil, nil, err
+		return ExecuteResult{}, err
 	}
 	atc.status = SUBMITTED
 
 	indexToWaitFor := 0
+	numMethodCalls := 0
 	for i, txContext := range atc.txContexts {
 		if txContext.isMethodCallTx() {
 			// if there is a method call in the group, we need to query the
 			// pending tranaction endpoint for it anyway, so as an optimization
 			// we should wait for its TxID
-			indexToWaitFor = i
-			break
+			if numMethodCalls == 0 {
+				indexToWaitFor = i
+			}
+			numMethodCalls += 1
 		}
 	}
 
 	txinfo, err := WaitForConfirmation(client, atc.txContexts[indexToWaitFor].txID(), waitRounds, ctx)
 	if err != nil {
-		return 0, nil, nil, err
+		return ExecuteResult{}, err
 	}
 	atc.status = COMMITTED
 
-	var returnValues []ABIResult
+	executeResponse := ExecuteResult{
+		ConfirmedRound: txinfo.ConfirmedRound,
+		TxIDs:          atc.getTxIDs(),
+		MethodResults:  make([]ABIMethodResult, 0, numMethodCalls),
+	}
+
 	for i, txContext := range atc.txContexts {
 		// Verify method call is available. This may not be the case if the App Call Tx wasn't created
 		// by AddMethodCall().
@@ -584,7 +604,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			continue
 		}
 
-		result := ABIResult{TxID: txContext.txID()}
+		result := ABIMethodResult{TxID: txContext.txID()}
 
 		var methodCallInfo models.PendingTransactionInfoResponse
 		if i == indexToWaitFor {
@@ -593,27 +613,27 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			methodCallInfo, _, err = client.PendingTransactionInformation(result.TxID).Do(ctx)
 			if err != nil {
 				result.DecodeError = err
-				returnValues = append(returnValues, result)
+				executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 				continue
 			}
 		}
 
 		if txContext.method.Returns.IsVoid() {
 			result.RawReturnValue = []byte{}
-			returnValues = append(returnValues, result)
+			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 			continue
 		}
 
 		if len(methodCallInfo.Logs) == 0 {
 			result.DecodeError = errors.New("method call did not log a return value")
-			returnValues = append(returnValues, result)
+			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 			continue
 		}
 
 		lastLog := methodCallInfo.Logs[len(methodCallInfo.Logs)-1]
 		if !bytes.HasPrefix(lastLog, abiReturnHash) {
 			result.DecodeError = errors.New("method call did not log a return value")
-			returnValues = append(returnValues, result)
+			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 			continue
 		}
 
@@ -622,15 +642,15 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 		abiType, err := txContext.method.Returns.GetTypeObject()
 		if err != nil {
 			result.DecodeError = err
-			returnValues = append(returnValues, result)
+			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 			break
 		}
 
 		result.ReturnValue, result.DecodeError = abiType.Decode(result.RawReturnValue)
-		returnValues = append(returnValues, result)
+		executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 	}
 
-	return txinfo.ConfirmedRound, atc.getTxIDs(), returnValues, nil
+	return executeResponse, nil
 }
 
 // marshallAbiUint64 converts any value used to represent an ABI "uint64" into
