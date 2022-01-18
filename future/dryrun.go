@@ -100,7 +100,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 
 		creator, err := types.DecodeAddress(appInfo.Params.Creator)
 		if err != nil {
-			return drr, fmt.Errorf("faiiled to decode creator address %s: %+v", appInfo.Params.Creator, err)
+			return drr, fmt.Errorf("failed to decode creator address %s: %+v", appInfo.Params.Creator, err)
 		}
 		accts = append(accts, creator)
 
