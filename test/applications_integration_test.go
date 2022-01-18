@@ -274,6 +274,11 @@ func iRememberTheNewApplicationID() error {
 	return err
 }
 
+func iResetTheArrayOfApplicationIDsToRemember() error {
+	applicationIds = nil
+	return nil
+}
+
 func iGetTheAccountAddressForTheCurrentApp() error {
 	actual := crypto.GetApplicationAddress(applicationId)
 
@@ -872,6 +877,7 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
+	s.Step(`^I reset the array of application IDs to remember\.$`, iResetTheArrayOfApplicationIDsToRemember)
 	s.Step(`^I get the account address for the current application and see that it matches the app id\'s hash$`, iGetTheAccountAddressForTheCurrentApp)
 	s.Step(`^The transient account should have the created app "([^"]*)" and total schema byte-slices (\d+) and uints (\d+), the application "([^"]*)" state contains key "([^"]*)" with value "([^"]*)"$`,
 		theTransientAccountShouldHave)
