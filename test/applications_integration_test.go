@@ -645,7 +645,7 @@ func theAppShouldHaveReturnedABITypes(colonSeparatedExpectedTypeStrings string) 
 			return actualResult.DecodeError
 		}
 
-		if len(expectedTypeString) == 0 {
+		if expectedTypeString == abi.VoidReturnType {
 			if len(actualResult.RawReturnValue) != 0 {
 				return fmt.Errorf("No return bytes were expected, but some are present")
 			}
