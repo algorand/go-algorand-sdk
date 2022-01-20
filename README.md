@@ -1005,6 +1005,7 @@ params := types.SuggestedParams {
 
 // signing and sending "txn" will send "amount" assets from "sender" to "recipient"
 txn, err = MakeAssetTransferTxn(sender, recipient, amount, note, params, closeRemainderTo, assetIndex);
+
 ```
 
 Revoke an asset: This allows an asset's revocation manager to transfer assets on behalf of another user. It will only work when
