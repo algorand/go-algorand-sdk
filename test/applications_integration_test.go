@@ -141,10 +141,16 @@ func iBuildAnApplicationTransaction(
 
 	if approvalProgram != "" {
 		approvalP, err = readTealProgram(approvalProgram)
+		if err != nil {
+			return err
+		}
 	}
 
 	if clearProgram != "" {
 		clearP, err = readTealProgram(clearProgram)
+		if err != nil {
+			return err
+		}
 	}
 	args, err := parseAppArgs(appArgs)
 	if err != nil {
@@ -701,7 +707,7 @@ func checkAtomicResultAgainstValue(resultIndex int, path, expectedValue string) 
 			// key is an array index
 			genericArray, ok := genericJson.([]interface{})
 			if !ok {
-				return fmt.Errorf("Path component %d is an array index (%d), but the partent is not an array. Parent type: %s", i, intKey, reflect.TypeOf(genericJson))
+				return fmt.Errorf("Path component %d is an array index (%d), but the parent is not an array. Parent type: %s", i, intKey, reflect.TypeOf(genericJson))
 			}
 			if intKey < 0 || intKey >= len(genericArray) {
 				return fmt.Errorf("Path component %d is an array index (%d) outside of the parent array's range. Parent length: %d", i, intKey, len(genericArray))
@@ -711,7 +717,7 @@ func checkAtomicResultAgainstValue(resultIndex int, path, expectedValue string) 
 			// key is an object field
 			genericObject, ok := genericJson.(map[string]interface{})
 			if !ok {
-				return fmt.Errorf("Path component %d is an object field ('%s'), but the partent is not an object. Parent type: %s", i, key, reflect.TypeOf(genericJson))
+				return fmt.Errorf("Path component %d is an object field ('%s'), but the parent is not an object. Parent type: %s", i, key, reflect.TypeOf(genericJson))
 			}
 			value, ok = genericObject[key]
 			if !ok {
@@ -719,7 +725,7 @@ func checkAtomicResultAgainstValue(resultIndex int, path, expectedValue string) 
 				for field := range genericObject {
 					parentFields = append(parentFields, "'"+field+"'")
 				}
-				return fmt.Errorf("Path component %d is an object field ('%s'), but the partent does not contain the field. Partent fields are: %s", i, key, strings.Join(parentFields, ","))
+				return fmt.Errorf("Path component %d is an object field ('%s'), but the parent does not contain the field. Parent fields are: %s", i, key, strings.Join(parentFields, ","))
 			}
 		}
 
