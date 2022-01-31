@@ -221,16 +221,13 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		errmsg := map[string]interface{}{}
-		b, err := ioutil.ReadAll(resp.Body)
+		var bodyBytes []byte
+		bodyBytes, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("failed to read error response: %+v", err)
+			return fmt.Errorf("failed to read response body: %+v", err)
 		}
-		err = json.Unmarshal(b, &errmsg)
-		if err != nil {
-			return fmt.Errorf("failed to parse error response: %+v", err)
-		}
-		return fmt.Errorf("failed to get msgpack: %s", errmsg["message"])
+
+		return extractError(resp.StatusCode, bodyBytes)
 	}
 
 	dec := msgpack.NewDecoder(resp.Body)
