@@ -1,0 +1,13 @@
+version: 2.1
+jobs:
+  test:
+    machine:
+     image: "ubuntu-2004:202104-01"
+    steps:
+      - checkout
+      - run: make docker-test
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
