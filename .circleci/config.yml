@@ -25,5 +25,6 @@ jobs:
       - go/install:
           version: << parameters.go_version >>
       - run: |
+          go version
           go get -u golang.org/x/lint/golint
           make docker-test
