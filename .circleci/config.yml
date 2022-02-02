@@ -1,13 +1,29 @@
 version: 2.1
+
+orbs:
+  go: circleci/go@1.7.0
+
+workflows:
+  version: 2
+  test_workflow:
+    jobs:
+      - test:
+          name: 'test_go_<< matrix.go_version >>'
+          matrix:
+            parameters:
+              go_version: ['1.13', '1.14', '1.15', '1.16', '1.17']
+
 jobs:
   test:
     machine:
-     image: "ubuntu-2004:202104-01"
+      image: "ubuntu-2004:202104-01"
+    parameters:
+      go_version:
+        type: string
     steps:
       - checkout
-      - run: make docker-test
-workflows:
-  version: 2
-  test:
-    jobs:
-      - test
+      - go/install:
+          version: << parameters.go_version >>
+      - run: |
+          go get -u golang.org/x/lint/golint
+          make docker-test
