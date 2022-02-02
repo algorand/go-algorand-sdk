@@ -4,7 +4,6 @@ orbs:
   go: circleci/go@1.7.0
 
 workflows:
-  version: 2
   circleci_build_and_test:
     jobs:
       - test:
