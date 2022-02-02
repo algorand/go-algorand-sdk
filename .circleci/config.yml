@@ -5,7 +5,7 @@ orbs:
 
 workflows:
   version: 2
-  test_workflow:
+  circleci_build_and_test:
     jobs:
       - test:
           name: 'test_go_<< matrix.go_version >>'
