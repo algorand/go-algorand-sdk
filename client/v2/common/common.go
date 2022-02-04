@@ -220,7 +220,7 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		var bodyBytes []byte
 		bodyBytes, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
