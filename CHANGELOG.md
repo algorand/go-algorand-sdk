@@ -1,3 +1,16 @@
+# 1.12.0
+# Added
+- Add stateproof to keyreg transaction (#278)
+- Create response object for "AtomicTransactionComposer.Execute" (#276)
+- Support ABI reference types and other improvements (#273)
+- Add CreateDryrun function (#265)
+- Add EncodeAddress (#264)
+- ABI Interaction (#258)
+- Add ABI-encoding feature (#247)
+- Implemented WaitForConfirmation function (#232)
+# Changed
+- Update abi exported interface (#255)
+- Update ApplyData and EvalDelta (#249)
 # 1.12.0-beta.2
 # Added
 - Support ABI reference types and other improvements (#273)

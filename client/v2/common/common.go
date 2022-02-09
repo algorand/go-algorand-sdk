@@ -220,6 +220,16 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		var bodyBytes []byte
+		bodyBytes, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %+v", err)
+		}
+
+		return extractError(resp.StatusCode, bodyBytes)
+	}
+
 	dec := msgpack.NewDecoder(resp.Body)
 	return dec.Decode(&response)
 }
