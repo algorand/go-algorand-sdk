@@ -2,7 +2,11 @@ package future
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -121,4 +125,97 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 	}
 
 	return
+}
+
+type DryrunResponse struct {
+	Error           string            `json:"error"`
+	ProtocolVersion string            `json:"protocol-version"`
+	Txns            []DryrunTxnResult `json:"txns"`
+}
+
+func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
+	dr := DryrunResponse{}
+	err := json.Unmarshal(js, &dr)
+	return dr, err
+}
+
+type DryrunTxnResult struct {
+	models.DryrunTxnResult
+}
+
+func (d *DryrunTxnResult) AppCallRejected() bool {
+	for _, m := range d.AppCallMessages {
+		if m == "REJECT" {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *DryrunTxnResult) LogicSigRejected() bool {
+	for _, m := range d.LogicSigMessages {
+		if m == "REJECT" {
+			return true
+		}
+	}
+	return false
+}
+
+func stackToString(stack []models.TealValue) string {
+	svs := []string{}
+	for _, s := range stack {
+		if s.Type == 1 {
+			decoded, _ := base64.StdEncoding.DecodeString(s.Bytes)
+			svs = append(svs, fmt.Sprintf("0x%x", decoded))
+		} else {
+			svs = append(svs, fmt.Sprintf("%d", s.Uint))
+		}
+	}
+	return fmt.Sprintf("[%s]", strings.Join(svs, ", "))
+}
+
+func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []string, spaces ...int) string {
+
+	var padSpacing int
+	if len(spaces) == 0 {
+		padSpacing = 20
+	} else {
+		padSpacing = spaces[0]
+	}
+
+	if padSpacing == 0 {
+		for _, l := range disassemmbly {
+			if len(l) > padSpacing {
+				padSpacing = len(l)
+			}
+		}
+		//  4 for line number + 1 for space between number and line, *2 for pc
+		padSpacing += 10
+	}
+
+	traceLines := []string{"pc# line# source" + strings.Repeat(" ", padSpacing-16) + "stack"}
+
+	for _, s := range state {
+		lineNumberPadding := strings.Repeat(" ", 4-len(strconv.Itoa(int(s.Line))))
+		pcNumberPadding := strings.Repeat(" ", 4-len(strconv.Itoa(int(s.Pc))))
+
+		srcLine := fmt.Sprintf("%s%d %s%d %s", pcNumberPadding, s.Pc, lineNumberPadding, s.Line, disassemmbly[s.Line])
+
+		stack := stackToString(s.Stack)
+		padding := ""
+		if repeat := padSpacing - len(srcLine); repeat > 0 {
+			padding = strings.Repeat(" ", repeat)
+		}
+		traceLines = append(traceLines, fmt.Sprintf("%s%s%s", srcLine, padding, stack))
+	}
+
+	return strings.Join(traceLines, "\n")
+}
+
+func (d *DryrunTxnResult) GetAppCallTrace(spaces ...int) string {
+	return d.trace(d.AppCallTrace, d.Disassembly, spaces...)
+}
+
+func (d *DryrunTxnResult) GetLogicSigTrace(spaces ...int) string {
+	return d.trace(d.LogicSigTrace, d.Disassembly, spaces...)
 }
