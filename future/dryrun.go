@@ -136,6 +136,9 @@ type DryrunResponse struct {
 	Txns            []DryrunTxnResult `json:"txns"`
 }
 
+// TODO: how will people actually use this? surely not parse the json, maybe read
+// from a models.DryrunResult?
+
 func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
 	dr := DryrunResponse{}
 	err := json.Unmarshal(js, &dr)
