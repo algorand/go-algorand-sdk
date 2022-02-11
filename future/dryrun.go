@@ -16,6 +16,9 @@ import (
 
 const (
 	defaultAppId uint64 = 1380011588
+
+	rejectMsg      = "REJECT"
+	defaultSpacing = 20
 )
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
@@ -143,18 +146,22 @@ type DryrunTxnResult struct {
 	models.DryrunTxnResult
 }
 
+// AppCallRejected returns true if the Application Call was rejected
+// for this transaction
 func (d *DryrunTxnResult) AppCallRejected() bool {
 	for _, m := range d.AppCallMessages {
-		if m == "REJECT" {
+		if m == rejectMsg {
 			return true
 		}
 	}
 	return false
 }
 
+// LogicSigRejected returns true if the LogicSig was rejected
+// for this transaction
 func (d *DryrunTxnResult) LogicSigRejected() bool {
 	for _, m := range d.LogicSigMessages {
-		if m == "REJECT" {
+		if m == rejectMsg {
 			return true
 		}
 	}
@@ -165,6 +172,7 @@ func stackToString(stack []models.TealValue) string {
 	svs := []string{}
 	for _, s := range stack {
 		if s.Type == 1 {
+			// Just returns empty string if there is an error, use it
 			decoded, _ := base64.StdEncoding.DecodeString(s.Bytes)
 			svs = append(svs, fmt.Sprintf("0x%x", decoded))
 		} else {
@@ -178,7 +186,7 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 
 	var padSpacing int
 	if len(spaces) == 0 {
-		padSpacing = 20
+		padSpacing = defaultSpacing
 	} else {
 		padSpacing = spaces[0]
 	}
@@ -212,10 +220,15 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 	return strings.Join(traceLines, "\n")
 }
 
+// GetAppCallTrace returns a string representing a stack trace for this transactions
+// application logic evaluation
 func (d *DryrunTxnResult) GetAppCallTrace(spaces ...int) string {
 	return d.trace(d.AppCallTrace, d.Disassembly, spaces...)
 }
 
+// GetLogicSigTrace returns a string representing a stack trace for this transactions
+// logic signature evaluation
 func (d *DryrunTxnResult) GetLogicSigTrace(spaces ...int) string {
+	// TODO: regen structs with LsigDisassembly
 	return d.trace(d.LogicSigTrace, d.Disassembly, spaces...)
 }

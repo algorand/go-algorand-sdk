@@ -2526,19 +2526,15 @@ func aDryrunResponseFileAndATransactionId(arg1, arg2 string) error {
 	if err != nil {
 		return err
 	}
-
 	dr, err := future.NewDryrunResponseFromJson(data)
 	if err != nil {
 		return err
 	}
-
 	idx, err := strconv.Atoi(arg2)
 	if err != nil {
 		return err
 	}
-
 	txTrace = dr.Txns[idx]
-
 	return nil
 }
 
@@ -2552,9 +2548,8 @@ func theOutputShouldEqual(arg1 string) error {
 	if err != nil {
 		return err
 	}
-
 	if string(data) != trace {
-		return fmt.Errorf("No matching trace: %s %+v", string(data), trace)
+		return fmt.Errorf("No matching trace: \n %s \nvs\n %s \n", string(data), trace)
 	}
 	return nil
 }
