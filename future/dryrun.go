@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
@@ -138,7 +137,6 @@ type DryrunResponse struct {
 
 // TODO: how will people actually use this? surely not parse the json, maybe read
 // from a models.DryrunResult?
-
 func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
 	dr := DryrunResponse{}
 	err := json.Unmarshal(js, &dr)
@@ -177,7 +175,7 @@ func stackToString(stack []models.TealValue) string {
 		if s.Type == 1 {
 			// Just returns empty string if there is an error, use it
 			decoded, _ := base64.StdEncoding.DecodeString(s.Bytes)
-			svs = append(svs, fmt.Sprintf("0x%x", decoded))
+			svs = append(svs, fmt.Sprintf("%#x", decoded))
 		} else {
 			svs = append(svs, fmt.Sprintf("%d", s.Uint))
 		}
@@ -207,16 +205,14 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 	traceLines := []string{"pc# line# source" + strings.Repeat(" ", padSpacing-16) + "stack"}
 
 	for _, s := range state {
-		lineNumberPadding := strings.Repeat(" ", 4-len(strconv.Itoa(int(s.Line))))
-		pcNumberPadding := strings.Repeat(" ", 4-len(strconv.Itoa(int(s.Pc))))
-
-		srcLine := fmt.Sprintf("%s%d %s%d %s", pcNumberPadding, s.Pc, lineNumberPadding, s.Line, disassemmbly[s.Line])
-
+		srcLine := fmt.Sprintf("%4d %4d %s", s.Pc, s.Line, disassemmbly[s.Line])
 		stack := stackToString(s.Stack)
+
 		padding := ""
 		if repeat := padSpacing - len(srcLine); repeat > 0 {
 			padding = strings.Repeat(" ", repeat)
 		}
+
 		traceLines = append(traceLines, fmt.Sprintf("%s%s%s", srcLine, padding, stack))
 	}
 
