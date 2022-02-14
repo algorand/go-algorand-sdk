@@ -16,7 +16,7 @@ type PendingTransactionInformationParams struct {
 	Format string `url:"format,omitempty"`
 }
 
-// PendingTransactionInformation given a transaction id of a recently submitted
+// PendingTransactionInformation given a transaction ID of a recently submitted
 // transaction, it returns information about it. There are several cases when this
 // might succeed:
 // - transaction committed (committed round > 0)

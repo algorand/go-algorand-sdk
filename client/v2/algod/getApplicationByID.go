@@ -8,7 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// GetApplicationByID given a application id, it returns application information
+// GetApplicationByID given a application ID, it returns application information
 // including creator, approval and clear programs, global and local schemas, and
 // global state.
 type GetApplicationByID struct {
