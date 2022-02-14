@@ -8,7 +8,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// GetAssetByID given a asset id, it returns asset information including creator,
+// GetAssetByID given a asset ID, it returns asset information including creator,
 // name, total supply and special addresses.
 type GetAssetByID struct {
 	c *Client

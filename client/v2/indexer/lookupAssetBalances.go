@@ -26,7 +26,8 @@ type LookupAssetBalancesParams struct {
 	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Limit maximum number of results to return.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// NextToken the next page of results. Use the next token provided by the previous
@@ -70,7 +71,8 @@ func (s *LookupAssetBalances) IncludeAll(IncludeAll bool) *LookupAssetBalances {
 	return s
 }
 
-// Limit maximum number of results to return.
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
 func (s *LookupAssetBalances) Limit(Limit uint64) *LookupAssetBalances {
 	s.p.Limit = Limit
 	return s

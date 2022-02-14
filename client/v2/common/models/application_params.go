@@ -18,7 +18,7 @@ type ApplicationParams struct {
 	// GlobalState [\gs) global schema
 	GlobalState []TealKeyValue `json:"global-state,omitempty"`
 
-	// GlobalStateSchema [\lsch) global schema
+	// GlobalStateSchema [\gsch) global schema
 	GlobalStateSchema ApplicationStateSchema `json:"global-state-schema,omitempty"`
 
 	// LocalStateSchema [\lsch) local schema
