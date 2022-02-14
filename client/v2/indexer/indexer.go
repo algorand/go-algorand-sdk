@@ -102,3 +102,19 @@ func (c *Client) LookupTransaction(txid string) *LookupTransaction {
 func (c *Client) SearchForTransactions() *SearchForTransactions {
 	return &SearchForTransactions{c: c}
 }
+
+func (c *Client) LookupAccountAssets(accountID string) *LookupAccountAssets {
+	return &LookupAccountAssets{c: c, accountID: accountID}
+}
+
+func (c *Client) LookupAccountCreatedAssets(accountID string) *LookupAccountCreatedAssets {
+	return &LookupAccountCreatedAssets{c: c, accountID: accountID}
+}
+
+func (c *Client) LookupAccountAppLocalStates(accountID string) *LookupAccountAppLocalStates {
+	return &LookupAccountAppLocalStates{c: c, accountID: accountID}
+}
+
+func (c *Client) LookupAccountCreatedApplications(accountID string) *LookupAccountCreatedApplications {
+	return &LookupAccountCreatedApplications{c: c, accountID: accountID}
+}

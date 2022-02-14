@@ -123,3 +123,12 @@ func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 func (c *Client) BlockRaw(round uint64) *BlockRaw {
 	return &BlockRaw{c: c, round: round}
 }
+
+func (c *Client) AccountAssetInformation(address string, assetID uint64) *AccountAssetInformation {
+	return &AccountAssetInformation{c: c, address: address, assetID: assetID}
+}
+
+func (c *Client) AccountApplicationInformation(address string, applicationID uint64) *AccountApplicationInformation {
+	return &AccountApplicationInformation{
+		c: c, address: address, applicationID: applicationID}
+}

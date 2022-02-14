@@ -9,7 +9,6 @@ import (
 
 // SearchAccountsParams contains all of the query parameters for url serialization.
 type SearchAccountsParams struct {
-
 	// ApplicationId application ID
 	ApplicationId uint64 `url:"application-id,omitempty"`
 
@@ -45,6 +44,9 @@ type SearchAccountsParams struct {
 	// Round include results for the specified round. For performance reasons, this
 	// parameter may be disabled on some configurations.
 	Round uint64 `url:"round,omitempty"`
+
+	// Exclude additional items such as asset holdings, application local data stored for this account, asset parameters created by this account, and application parameters created by this account.
+	Exclude []string `url:"exclude,omitempty,comma"`
 }
 
 // SearchAccounts search for accounts.
@@ -88,9 +90,7 @@ func (s *SearchAccounts) CurrencyLessThan(CurrencyLessThan uint64) *SearchAccoun
 	return s
 }
 
-// IncludeAll include all items including closed accounts, deleted applications,
-// destroyed assets, opted-out asset holdings, and closed-out application
-// localstates.
+// IncludeAll sets whether deleted accounts and creatables will be requested.
 func (s *SearchAccounts) IncludeAll(IncludeAll bool) *SearchAccounts {
 	s.p.IncludeAll = IncludeAll
 	return s
@@ -114,6 +114,26 @@ func (s *SearchAccounts) NextToken(NextToken string) *SearchAccounts {
 // parameter may be disabled on some configurations.
 func (s *SearchAccounts) Round(Round uint64) *SearchAccounts {
 	s.p.Round = Round
+	return s
+}
+
+// Exclude sets which creatable types must be excluded from the result. `assets` is true
+// if and only if asset holdings must be excluded. Similar logic applies to the other
+// creatable types.
+func (s *SearchAccounts) Exclude(assets, createdAssets, appsLocalState, createdApps bool) *SearchAccounts {
+	if assets {
+		s.p.Exclude = append(s.p.Exclude, "assets")
+	}
+	if createdAssets {
+		s.p.Exclude = append(s.p.Exclude, "created-assets")
+	}
+	if appsLocalState {
+		s.p.Exclude = append(s.p.Exclude, "apps-local-state")
+	}
+	if createdApps {
+		s.p.Exclude = append(s.p.Exclude, "created-apps")
+	}
+
 	return s
 }
 

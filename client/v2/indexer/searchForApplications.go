@@ -9,9 +9,11 @@ import (
 
 // SearchForApplicationsParams contains all of the query parameters for url serialization.
 type SearchForApplicationsParams struct {
-
 	// ApplicationId application ID
 	ApplicationId uint64 `url:"application-id,omitempty"`
+
+	// Filter just applications with the given creator address.
+	Creator string `json:"creator,omitempty"`
 
 	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
@@ -40,9 +42,12 @@ func (s *SearchForApplications) ApplicationId(ApplicationId uint64) *SearchForAp
 	return s
 }
 
-// IncludeAll include all items including closed accounts, deleted applications,
-// destroyed assets, opted-out asset holdings, and closed-out application
-// localstates.
+func (s *SearchForApplications) Creator(creator string) *SearchForApplications {
+	s.p.Creator = creator
+	return s
+}
+
+// IncludeAll sets whether deleted applications will be requested.
 func (s *SearchForApplications) IncludeAll(IncludeAll bool) *SearchForApplications {
 	s.p.IncludeAll = IncludeAll
 	return s

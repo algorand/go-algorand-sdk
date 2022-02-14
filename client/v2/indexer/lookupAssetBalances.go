@@ -63,9 +63,7 @@ func (s *LookupAssetBalances) CurrencyLessThan(CurrencyLessThan uint64) *LookupA
 	return s
 }
 
-// IncludeAll include all items including closed accounts, deleted applications,
-// destroyed assets, opted-out asset holdings, and closed-out application
-// localstates.
+// IncludeAll sets whether deleted assets will be requested.
 func (s *LookupAssetBalances) IncludeAll(IncludeAll bool) *LookupAssetBalances {
 	s.p.IncludeAll = IncludeAll
 	return s

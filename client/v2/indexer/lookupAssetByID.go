@@ -26,9 +26,7 @@ type LookupAssetByID struct {
 	p LookupAssetByIDParams
 }
 
-// IncludeAll include all items including closed accounts, deleted applications,
-// destroyed assets, opted-out asset holdings, and closed-out application
-// localstates.
+// IncludeAll sets whether the asset should be returned even if it is deleted.
 func (s *LookupAssetByID) IncludeAll(IncludeAll bool) *LookupAssetByID {
 	s.p.IncludeAll = IncludeAll
 	return s
