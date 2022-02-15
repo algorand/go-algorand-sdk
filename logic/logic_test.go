@@ -189,3 +189,31 @@ func TestCheckProgramV5(t *testing.T) {
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
 }
+
+func TestCheckProgramV6(t *testing.T) {
+	// check TEAL v6 opcodes
+	require.True(t, spec.EvalMaxVersion >= 6)
+
+	args := make([][]byte, 0)
+
+	// bsqrt
+	program, err := hex.DecodeString("068001909680010c12")
+	// byte 0x90; bsqrt; byte 0x0c; ==
+	require.NoError(t, err)
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// divw
+	program, err = hex.DecodeString("06810981ecffffffffffffffff01810a9781feffffffffffffffff0112")
+	// int 9; int 18446744073709551596; int 10; divw; int 18446744073709551614; ==
+	require.NoError(t, err)
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+
+	// txn fields
+	program, err = hex.DecodeString("06313f1581401233003e15810a1210")
+	// txn StateProofPK; len; int 64; ==; gtxn 0 LastLog; len; int 10; ==; &&
+	require.NoError(t, err)
+	err = CheckProgram(program, args)
+	require.NoError(t, err)
+}
