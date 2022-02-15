@@ -197,8 +197,8 @@ func TestCheckProgramV6(t *testing.T) {
 	args := make([][]byte, 0)
 
 	// bsqrt
-	program, err := hex.DecodeString("068001909680010c12")
-	// byte 0x90; bsqrt; byte 0x0c; ==
+	program, err := hex.DecodeString("068001909680010ca8")
+	// byte 0x90; bsqrt; byte 0x0c; b==
 	require.NoError(t, err)
 	err = CheckProgram(program, args)
 	require.NoError(t, err)
