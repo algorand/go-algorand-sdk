@@ -21,6 +21,9 @@ type DryrunTxnResult struct {
 	// LocalDeltas
 	LocalDeltas []AccountStateDelta `json:"local-deltas,omitempty"`
 
+	// LogicSigDisassembly disassembled lsig program line by line.
+	LogicSigDisassembly []string `json:"logic-sig-disassembly,omitempty"`
+
 	// LogicSigMessages
 	LogicSigMessages []string `json:"logic-sig-messages,omitempty"`
 

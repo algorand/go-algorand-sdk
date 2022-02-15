@@ -37,6 +37,8 @@ type TransactionWithSigner struct {
 type ABIMethodResult struct {
 	// The TxID of the transaction that invoked the ABI method call.
 	TxID string
+	// Information about the confirmed transaction that invoked the ABI method call.
+	TransactionInfo models.PendingTransactionInfoResponse
 	// The raw bytes of the return value from the ABI method call. This will be empty if the method
 	// does not return a value (return type "void").
 	RawReturnValue []byte
@@ -585,14 +587,14 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 		}
 	}
 
-	txinfo, err := WaitForConfirmation(client, atc.txContexts[indexToWaitFor].txID(), waitRounds, ctx)
+	groupInfo, err := WaitForConfirmation(client, atc.txContexts[indexToWaitFor].txID(), waitRounds, ctx)
 	if err != nil {
 		return ExecuteResult{}, err
 	}
 	atc.status = COMMITTED
 
 	executeResponse := ExecuteResult{
-		ConfirmedRound: txinfo.ConfirmedRound,
+		ConfirmedRound: groupInfo.ConfirmedRound,
 		TxIDs:          atc.getTxIDs(),
 		MethodResults:  make([]ABIMethodResult, 0, numMethodCalls),
 	}
@@ -606,16 +608,16 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 
 		result := ABIMethodResult{TxID: txContext.txID()}
 
-		var methodCallInfo models.PendingTransactionInfoResponse
 		if i == indexToWaitFor {
-			methodCallInfo = txinfo
+			result.TransactionInfo = groupInfo
 		} else {
-			methodCallInfo, _, err = client.PendingTransactionInformation(result.TxID).Do(ctx)
+			methodCallInfo, _, err := client.PendingTransactionInformation(result.TxID).Do(ctx)
 			if err != nil {
 				result.DecodeError = err
 				executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 				continue
 			}
+			result.TransactionInfo = methodCallInfo
 		}
 
 		if txContext.method.Returns.IsVoid() {
@@ -624,13 +626,13 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			continue
 		}
 
-		if len(methodCallInfo.Logs) == 0 {
+		if len(result.TransactionInfo.Logs) == 0 {
 			result.DecodeError = errors.New("method call did not log a return value")
 			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 			continue
 		}
 
-		lastLog := methodCallInfo.Logs[len(methodCallInfo.Logs)-1]
+		lastLog := result.TransactionInfo.Logs[len(result.TransactionInfo.Logs)-1]
 		if !bytes.HasPrefix(lastLog, abiReturnHash) {
 			result.DecodeError = errors.New("method call did not log a return value")
 			executeResponse.MethodResults = append(executeResponse.MethodResults, result)

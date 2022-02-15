@@ -34,7 +34,8 @@ type SearchAccountsParams struct {
 	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Limit maximum number of results to return.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// NextToken the next page of results. Use the next token provided by the previous
@@ -95,7 +96,8 @@ func (s *SearchAccounts) IncludeAll(IncludeAll bool) *SearchAccounts {
 	return s
 }
 
-// Limit maximum number of results to return.
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
 func (s *SearchAccounts) Limit(Limit uint64) *SearchAccounts {
 	s.p.Limit = Limit
 	return s

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -117,7 +116,7 @@ func buildLegacyAppCallTransaction(
 
 	var approvalP []byte
 	if approvalProgram != "" {
-		approvalP, err = ioutil.ReadFile("features/resources/" + approvalProgram)
+		approvalP, err = readTealProgram(approvalProgram)
 		if err != nil {
 			return err
 		}
@@ -125,7 +124,7 @@ func buildLegacyAppCallTransaction(
 
 	var clearP []byte
 	if clearProgram != "" {
-		clearP, err = ioutil.ReadFile("features/resources/" + clearProgram)
+		clearP, err = readTealProgram(clearProgram)
 		if err != nil {
 			return err
 		}

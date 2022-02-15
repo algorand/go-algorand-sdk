@@ -12,6 +12,9 @@ type TransactionKeyreg struct {
 	// Function (VRF) result during committee selection.
 	SelectionParticipationKey []byte `json:"selection-participation-key,omitempty"`
 
+	// StateProofKey (sprfkey) State proof key used in key registration transactions.
+	StateProofKey []byte `json:"state-proof-key,omitempty"`
+
 	// VoteFirstValid (votefst) First round this participation key is valid.
 	VoteFirstValid uint64 `json:"vote-first-valid,omitempty"`
 

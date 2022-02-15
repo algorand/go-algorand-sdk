@@ -11,7 +11,8 @@ import (
 // LookupApplicationLogsByIDParams contains all of the query parameters for url serialization.
 type LookupApplicationLogsByIDParams struct {
 
-	// Limit maximum number of results to return.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// MaxRound include results at or before the specified max-round.
@@ -40,7 +41,8 @@ type LookupApplicationLogsByID struct {
 	p LookupApplicationLogsByIDParams
 }
 
-// Limit maximum number of results to return.
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
 func (s *LookupApplicationLogsByID) Limit(Limit uint64) *LookupApplicationLogsByID {
 	s.p.Limit = Limit
 	return s

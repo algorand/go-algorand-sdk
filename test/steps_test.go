@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/gob"
@@ -15,6 +14,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -35,7 +35,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/templates"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
@@ -102,7 +101,6 @@ var abiInterface abi.Interface
 var abiContract abi.Contract
 var txComposer future.AtomicTransactionComposer
 var txComposerMethods []abi.Method
-var appId uint64
 var accountTxSigner future.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
@@ -118,24 +116,6 @@ var assetTestFixture struct {
 	ExpectedParams        models.AssetParams
 	QueriedParams         models.AssetParams
 	LastTransactionIssued types.Transaction
-}
-
-var contractTestFixture struct {
-	activeAddress      string
-	contractFundAmount uint64
-	split              templates.Split
-	splitN             uint64
-	splitD             uint64
-	splitMin           uint64
-	htlc               templates.HTLC
-	htlcPreImage       string
-	periodicPay        templates.PeriodicPayment
-	periodicPayPeriod  uint64
-	limitOrder         templates.LimitOrder
-	limitOrderN        uint64
-	limitOrderD        uint64
-	limitOrderMin      uint64
-	dynamicFee         templates.DynamicFee
 }
 
 var tealCompleResult struct {
@@ -291,18 +271,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I create an un-freeze transaction targeting the second account$`, createUnfreezeTransactionTargetingSecondAccount)
 	s.Step(`^default-frozen asset creation transaction with total issuance (\d+)$`, defaultAssetCreateTxnWithDefaultFrozen)
 	s.Step(`^I create a transaction revoking (\d+) assets from a second account to creator$`, createRevocationTransaction)
-	s.Step(`^a split contract with ratio (\d+) to (\d+) and minimum payment (\d+)$`, aSplitContractWithRatioToAndMinimumPayment)
-	s.Step(`^I send the split transactions$`, iSendTheSplitTransactions)
-	s.Step(`^an HTLC contract with hash preimage "([^"]*)"$`, anHTLCContractWithHashPreimage)
-	s.Step(`^I fund the contract account$`, iFundTheContractAccount)
-	s.Step(`^I claim the algos$`, iClaimTheAlgosHTLC)
-	s.Step(`^a periodic payment contract with withdrawing window (\d+) and period (\d+)$`, aPeriodicPaymentContractWithWithdrawingWindowAndPeriod)
-	s.Step(`^I claim the periodic payment$`, iClaimThePeriodicPayment)
-	s.Step(`^a limit order contract with parameters (\d+) (\d+) (\d+)$`, aLimitOrderContractWithParameters)
-	s.Step(`^I swap assets for algos$`, iSwapAssetsForAlgos)
-	s.Step(`^a dynamic fee contract with amount (\d+)$`, aDynamicFeeContractWithAmount)
-	s.Step(`^I send the dynamic fee transactions$`, iSendTheDynamicFeeTransaction)
-	s.Step("contract test fixture", createContractTestFixture)
 	s.Step(`^I create a transaction transferring <amount> assets from creator to a second account$`, iCreateATransactionTransferringAmountAssetsFromCreatorToASecondAccount) // provide handler for when godog misreads
 	s.Step(`^base64 encoded data to sign "([^"]*)"$`, baseEncodedDataToSign)
 	s.Step(`^program hash "([^"]*)"$`, programHash)
@@ -313,6 +281,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("an algod v2 client$", algodClientV2)
 	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
+	s.Step(`^base64 decoding the response is the same as the binary "([^"]*)"$`, tealCheckCompileAgainstFile)
 	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
 	s.Step(`^I get execution result "([^"]*)"$`, tealCheckDryrun)
 	s.Step(`^I create the Method object from method signature "([^"]*)"$`, createMethodObjectFromSignature)
@@ -340,6 +309,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCall)
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)"\.$`, addMethodCallForUpdate)
 	s.Step(`^I add a method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments, approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), extra-pages (\d+)\.$`, addMethodCallForCreate)
+	s.Step(`^I add a nonced method call with the ([^"]*) account, the current application, suggested params, on complete "([^"]*)", current transaction signer, current method arguments\.$`, addMethodCallWithNonce)
+	s.Step(`^I add the nonce "([^"]*)"$`, iAddTheNonce)
 	s.Step(`^I build the transaction group with the composer\. If there is an error it is "([^"]*)"\.$`, buildTheTransactionGroupWithTheComposer)
 	s.Step(`^The composer should have a status of "([^"]*)"\.$`, theComposerShouldHaveAStatusOf)
 	s.Step(`^I gather signatures with the composer\.$`, iGatherSignaturesWithTheComposer)
@@ -1773,246 +1744,9 @@ func createRevocationTransaction(amount int) error {
 	return err
 }
 
-func createContractTestFixture() error {
-	contractTestFixture.split = templates.Split{}
-	contractTestFixture.htlc = templates.HTLC{}
-	contractTestFixture.periodicPay = templates.PeriodicPayment{}
-	contractTestFixture.limitOrder = templates.LimitOrder{}
-	contractTestFixture.dynamicFee = templates.DynamicFee{}
-	contractTestFixture.activeAddress = ""
-	contractTestFixture.htlcPreImage = ""
-	contractTestFixture.limitOrderN = 0
-	contractTestFixture.limitOrderD = 0
-	contractTestFixture.limitOrderMin = 0
-	contractTestFixture.splitN = 0
-	contractTestFixture.splitD = 0
-	contractTestFixture.splitMin = 0
-	contractTestFixture.contractFundAmount = 0
-	contractTestFixture.periodicPayPeriod = 0
-	return nil
-}
-
-func aSplitContractWithRatioToAndMinimumPayment(ratn, ratd, minPay int) error {
-	owner := accounts[0]
-	receivers := [2]string{accounts[0], accounts[1]}
-	expiryRound := uint64(100)
-	maxFee := uint64(5000000)
-	contractTestFixture.splitN = uint64(ratn)
-	contractTestFixture.splitD = uint64(ratd)
-	contractTestFixture.splitMin = uint64(minPay)
-	c, err := templates.MakeSplit(owner, receivers[0], receivers[1], uint64(ratn), uint64(ratd), expiryRound, uint64(minPay), maxFee)
-	contractTestFixture.split = c
-	contractTestFixture.activeAddress = c.GetAddress()
-	// add much more than enough to evenly split
-	contractTestFixture.contractFundAmount = uint64(minPay*(ratd+ratn)) * 10
-	return err
-}
-
-func iSendTheSplitTransactions() error {
-	amount := contractTestFixture.splitMin * (contractTestFixture.splitN + contractTestFixture.splitD)
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	txnBytes, err := templates.GetSplitFundsTransaction(contractTestFixture.split.GetProgram(), amount, params)
-	if err != nil {
-		return err
-	}
-	txIdResponse, err := acl.SendRawTransaction(txnBytes)
-	txid = txIdResponse.TxID
-	// hack to make checkTxn work
-	backupTxnSender = contractTestFixture.split.GetAddress()
-	return err
-}
-
-func anHTLCContractWithHashPreimage(preImage string) error {
-	hashImage := sha256.Sum256([]byte(preImage))
-	owner := accounts[0]
-	receiver := accounts[1]
-	hashFn := "sha256"
-	expiryRound := uint64(100)
-	maxFee := uint64(1000000)
-	hashB64 := base64.StdEncoding.EncodeToString(hashImage[:])
-	c, err := templates.MakeHTLC(owner, receiver, hashFn, hashB64, expiryRound, maxFee)
-	contractTestFixture.htlc = c
-	contractTestFixture.htlcPreImage = preImage
-	contractTestFixture.activeAddress = c.GetAddress()
-	contractTestFixture.contractFundAmount = 100000000
-	return err
-}
-
-func iFundTheContractAccount() error {
-	// send the requested money to c.address
-	amount := contractTestFixture.contractFundAmount
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(accounts[0], contractTestFixture.activeAddress, amount, nil, "", params)
-	if err != nil {
-		return err
-	}
-	err = signKmd()
-	if err != nil {
-		return err
-	}
-	err = sendTxnKmd()
-	if err != nil {
-		return err
-	}
-	return checkTxn()
-}
-
-// used in HTLC
-func iClaimTheAlgosHTLC() error {
-	preImage := contractTestFixture.htlcPreImage
-	preImageAsArgument := []byte(preImage)
-	args := make([][]byte, 1)
-	args[0] = preImageAsArgument
-	receiver := accounts[1] // was set as receiver in setup step
-	var blankMultisig crypto.MultisigAccount
-	lsig, err := crypto.MakeLogicSig(contractTestFixture.htlc.GetProgram(), args, nil, blankMultisig)
-	if err != nil {
-		return err
-	}
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(contractTestFixture.activeAddress, receiver, 0, nil, receiver, params)
-	if err != nil {
-		return err
-	}
-	txn.Receiver = types.Address{} //txn must have no receiver but MakePayment disallows this.
-	txid, stx, err = crypto.SignLogicsigTransaction(lsig, txn)
-	if err != nil {
-		return err
-	}
-	return sendTxn()
-}
-
-func aPeriodicPaymentContractWithWithdrawingWindowAndPeriod(withdrawWindow, period int) error {
-	receiver := accounts[0]
-	amount := uint64(10000000)
-	// add far more than enough to withdraw
-	contractTestFixture.contractFundAmount = amount * 10
-	expiryRound := uint64(100)
-	maxFee := uint64(1000000000000)
-	contract, err := templates.MakePeriodicPayment(receiver, amount, uint64(withdrawWindow), uint64(period), expiryRound, maxFee)
-	contractTestFixture.activeAddress = contract.GetAddress()
-	contractTestFixture.periodicPay = contract
-	contractTestFixture.periodicPayPeriod = uint64(period)
-	return err
-}
-
-func iClaimThePeriodicPayment() error {
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	txnFirstValid := uint64(params.FirstRoundValid)
-	remainder := txnFirstValid % contractTestFixture.periodicPayPeriod
-	txnFirstValid += remainder
-	stx, err = templates.GetPeriodicPaymentWithdrawalTransaction(contractTestFixture.periodicPay.GetProgram(), txnFirstValid, uint64(params.Fee), params.GenesisHash)
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid) // used in send/checkTxn
-	return sendTxn()
-}
-
-func aLimitOrderContractWithParameters(ratn, ratd, minTrade int) error {
-	maxFee := uint64(100000)
-	expiryRound := uint64(100)
-	contractTestFixture.limitOrderN = uint64(ratn)
-	contractTestFixture.limitOrderD = uint64(ratd)
-	contractTestFixture.limitOrderMin = uint64(minTrade)
-	contractTestFixture.contractFundAmount = 2 * uint64(minTrade)
-	if contractTestFixture.contractFundAmount < 1000000 {
-		contractTestFixture.contractFundAmount = 1000000
-	}
-	contract, err := templates.MakeLimitOrder(accounts[0], assetTestFixture.AssetIndex, uint64(ratn), uint64(ratd), expiryRound, uint64(minTrade), maxFee)
-	contractTestFixture.activeAddress = contract.GetAddress()
-	contractTestFixture.limitOrder = contract
-	return err
-}
-
 // godog misreads the step for this function, so provide a handler for when it does so
 func iCreateATransactionTransferringAmountAssetsFromCreatorToASecondAccount() error {
 	return createAssetTransferTransactionToSecondAccount(500000)
-}
-
-func iSwapAssetsForAlgos() error {
-	exp, err := kcl.ExportKey(handle, walletPswd, accounts[1])
-	if err != nil {
-		return err
-	}
-	secretKey := exp.PrivateKey
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	contract := contractTestFixture.limitOrder.GetProgram()
-	microAlgoAmount := contractTestFixture.limitOrderMin + 1 // just over the minimum
-	assetAmount := microAlgoAmount * contractTestFixture.limitOrderN / contractTestFixture.limitOrderD
-	assetAmount += 1 // assetAmount initialized to absolute minimum, will fail greater-than check, so increment by one for a better deal
-	stx, err = contractTestFixture.limitOrder.GetSwapAssetsTransaction(assetAmount, microAlgoAmount, contract, secretKey, params)
-	if err != nil {
-		return err
-	}
-	// hack to make checktxn work
-	txn = types.Transaction{}
-	backupTxnSender = contractTestFixture.limitOrder.GetAddress() // used in checktxn
-	return sendTxn()
-}
-
-func aDynamicFeeContractWithAmount(amount int) error {
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	txnFirstValid := lastRound
-	txnLastValid := txnFirstValid + 10
-	contractTestFixture.contractFundAmount = uint64(10 * amount)
-	contract, err := templates.MakeDynamicFee(accounts[1], "", uint64(amount), txnFirstValid, txnLastValid)
-
-	contractTestFixture.dynamicFee = contract
-	contractTestFixture.activeAddress = contract.GetAddress()
-	return err
-}
-
-func iSendTheDynamicFeeTransaction() error {
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	exp, err := kcl.ExportKey(handle, walletPswd, accounts[0])
-	if err != nil {
-		return err
-	}
-	secretKeyOne := exp.PrivateKey
-	initialTxn, lsig, err := templates.SignDynamicFee(contractTestFixture.dynamicFee.GetProgram(), secretKeyOne, params.GenesisHash)
-	if err != nil {
-		return err
-	}
-	exp, err = kcl.ExportKey(handle, walletPswd, accounts[1])
-	if err != nil {
-		return err
-	}
-	secretKeyTwo := exp.PrivateKey
-	groupTxnBytes, err := templates.GetDynamicFeeTransactions(initialTxn, lsig, secretKeyTwo, uint64(params.Fee))
-	// hack to make checkTxn work
-	txn = initialTxn
-	// end hack to make checkTxn work
-	response, err := acl.SendRawTransaction(groupTxnBytes)
-	txid = response.TxID
-	return err
 }
 
 func baseEncodedDataToSign(dataEnc string) (err error) {
@@ -2094,6 +1828,28 @@ func tealCheckCompile(status int, result string, hash string) error {
 	if hash != tealCompleResult.response.Hash {
 		return fmt.Errorf("hash: %s != %s", hash, tealCompleResult.response.Hash)
 	}
+	return nil
+}
+
+func tealCheckCompileAgainstFile(expectedFile string) error {
+	if len(expectedFile) == 0 {
+		return fmt.Errorf("empty teal program file name")
+	}
+
+	expectedTeal, err := loadResource(expectedFile)
+	if err != nil {
+		return err
+	}
+
+	actualTeal, err := base64.StdEncoding.DecodeString(tealCompleResult.response.Result)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(actualTeal, expectedTeal) {
+		return fmt.Errorf("Actual program does not match expected")
+	}
+
 	return nil
 }
 
@@ -2439,7 +2195,7 @@ func anApplicationId(id int) error {
 		return fmt.Errorf("app id must be positive integer")
 	}
 
-	appId = uint64(id)
+	applicationId = uint64(id)
 	return nil
 }
 
@@ -2469,6 +2225,30 @@ func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args s
 
 	b64Args := strings.Split(commaSeparatedB64Args, ",")
 	for _, b64Arg := range b64Args {
+		if strings.Contains(b64Arg, ":") {
+			// special case for inserting existing application ID
+			parts := strings.Split(b64Arg, ":")
+			if len(parts) != 2 || parts[0] != "ctxAppIdx" {
+				return fmt.Errorf("Cannot process argument: %s", b64Arg)
+			}
+			parsedIndex, err := strconv.ParseUint(parts[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			if parsedIndex >= uint64(len(applicationIds)) {
+				return fmt.Errorf("Application index out of bounds: %d, number of app IDs is %d", parsedIndex, len(applicationIds))
+			}
+			abiUint64, err := abi.TypeOf("uint64")
+			if err != nil {
+				return err
+			}
+			encodedUint64, err := abiUint64.Encode(applicationIds[parsedIndex])
+			if err != nil {
+				return err
+			}
+			methodArgs = append(methodArgs, encodedUint64)
+			continue
+		}
 		decodedArg, err := base64.StdEncoding.DecodeString(b64Arg)
 		if err != nil {
 			return err
@@ -2480,18 +2260,22 @@ func iAppendTheEncodedArgumentsToTheMethodArgumentsArray(commaSeparatedB64Args s
 }
 
 func addMethodCall(accountType, strOnComplete string) error {
-	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0)
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0, false)
 }
 
 func addMethodCallForUpdate(accountType, strOnComplete, approvalProgram, clearProgram string) error {
-	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0)
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, 0, 0, 0, 0, 0, false)
 }
 
 func addMethodCallForCreate(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
-	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages)
+	return addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram, globalBytes, globalInts, localBytes, localInts, extraPages, false)
 }
 
-func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int) error {
+func addMethodCallWithNonce(accountType, strOnComplete string) error {
+	return addMethodCallHelper(accountType, strOnComplete, "", "", 0, 0, 0, 0, 0, true)
+}
+
+func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgram string, globalBytes, globalInts, localBytes, localInts, extraPages int, useNonce bool) error {
 	var onComplete types.OnCompletion
 	switch strOnComplete {
 	case "create":
@@ -2526,14 +2310,14 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 	var err error
 
 	if approvalProgram != "" {
-		approvalProgramBytes, err = ioutil.ReadFile("features/resources/" + approvalProgram)
+		approvalProgramBytes, err = readTealProgram(approvalProgram)
 		if err != nil {
 			return err
 		}
 	}
 
 	if clearProgram != "" {
-		clearProgramBytes, err = ioutil.ReadFile("features/resources/" + clearProgram)
+		clearProgramBytes, err = readTealProgram(clearProgram)
 		if err != nil {
 			return err
 		}
@@ -2589,7 +2373,7 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 	}
 
 	methodCallParams := future.AddMethodCallParams{
-		AppID:           appId,
+		AppID:           applicationId,
 		Method:          abiMethod,
 		MethodArgs:      preparedArgs,
 		Sender:          useAccount.Address,
@@ -2609,8 +2393,17 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 		Signer:     accountTxSigner,
 	}
 
+	if useNonce {
+		methodCallParams.Note = note
+	}
+
 	txComposerMethods = append(txComposerMethods, abiMethod)
 	return txComposer.AddMethodCall(methodCallParams)
+}
+
+func iAddTheNonce(nonce string) error {
+	note = []byte("I should be unique thanks to this nonce: " + nonce)
+	return nil
 }
 
 func buildTheTransactionGroupWithTheComposer(errorType string) error {
