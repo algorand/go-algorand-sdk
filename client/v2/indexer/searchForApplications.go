@@ -13,7 +13,7 @@ type SearchForApplicationsParams struct {
 	ApplicationId uint64 `url:"application-id,omitempty"`
 
 	// Filter just applications with the given creator address.
-	Creator string `json:"creator,omitempty"`
+	Creator string `url:"creator,omitempty"`
 
 	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application

@@ -26,7 +26,7 @@ type LookupApplicationByID struct {
 	p LookupApplicationByIDParams
 }
 
-// IncludeAll sets whether deleted asset and apps will be requested.
+// IncludeAll sets whether the application should be returned even if it is deleted.
 func (s *LookupApplicationByID) IncludeAll(IncludeAll bool) *LookupApplicationByID {
 	s.p.IncludeAll = IncludeAll
 	return s
