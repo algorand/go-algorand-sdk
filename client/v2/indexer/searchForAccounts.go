@@ -32,7 +32,7 @@ type SearchAccountsParams struct {
 	// Exclude exclude additional items such as asset holdings, application local data
 	// stored for this account, asset parameters created by this account, and
 	// application parameters created by this account.
-	Exclude []string `url:"exclude,omitempty"`
+	Exclude []string `url:"exclude,omitempty,comma"`
 
 	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
