@@ -8,58 +8,66 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// LookupAccountCreatedAssetsParams defines parameters for LookupAccountCreatedAssets.
+// LookupAccountCreatedAssetsParams contains all of the query parameters for url serialization.
 type LookupAccountCreatedAssetsParams struct {
-	// Asset ID
+
+	// AssetID asset ID
 	AssetID uint64 `url:"asset-id,omitempty"`
 
-	// Include all items including closed accounts, deleted applications, destroyed assets, opted-out asset holdings, and closed-out application localstates.
+	// IncludeAll include all items including closed accounts, deleted applications,
+	// destroyed assets, opted-out asset holdings, and closed-out application
+	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Maximum number of results to return. There could be additional pages even if the limit is not reached.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
-	// The next page of results. Use the next token provided by the previous results.
+	// Next the next page of results. Use the next token provided by the previous
+	// results.
 	Next string `url:"next,omitempty"`
 }
 
+// LookupAccountCreatedAssets lookup an account's created asset parameters,
+// optionally for a specific ID.
 type LookupAccountCreatedAssets struct {
 	c *Client
 
-	accountID string
+	accountId string
 
 	p LookupAccountCreatedAssetsParams
 }
 
-// AssetID sets the asset ID filter.
-func (s *LookupAccountCreatedAssets) AssetID(assetID uint64) *LookupAccountCreatedAssets {
-	s.p.AssetID = assetID
+// AssetID asset ID
+func (s *LookupAccountCreatedAssets) AssetID(AssetID uint64) *LookupAccountCreatedAssets {
+	s.p.AssetID = AssetID
 	return s
 }
 
-// IncludeAll sets whether deleted assets will be requested.
-func (s *LookupAccountCreatedAssets) IncludeAll(includeAll bool) *LookupAccountCreatedAssets {
-	s.p.IncludeAll = includeAll
+// IncludeAll include all items including closed accounts, deleted applications,
+// destroyed assets, opted-out asset holdings, and closed-out application
+// localstates.
+func (s *LookupAccountCreatedAssets) IncludeAll(IncludeAll bool) *LookupAccountCreatedAssets {
+	s.p.IncludeAll = IncludeAll
 	return s
 }
 
-// Limit sets the limit for the number of returned assets.
-func (s *LookupAccountCreatedAssets) Limit(limit uint64) *LookupAccountCreatedAssets {
-	s.p.Limit = limit
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
+func (s *LookupAccountCreatedAssets) Limit(Limit uint64) *LookupAccountCreatedAssets {
+	s.p.Limit = Limit
 	return s
 }
 
-// Next sets the next token for pagination. Use the next token provided by the previous
+// Next the next page of results. Use the next token provided by the previous
 // results.
-func (s *LookupAccountCreatedAssets) Next(next string) *LookupAccountCreatedAssets {
-	s.p.Next = next
+func (s *LookupAccountCreatedAssets) Next(Next string) *LookupAccountCreatedAssets {
+	s.p.Next = Next
 	return s
 }
 
-// Do performs the HTTP request.
+// Do performs the HTTP request
 func (s *LookupAccountCreatedAssets) Do(ctx context.Context, headers ...*common.Header) (response models.AssetsResponse, err error) {
-	err = s.c.get(
-		ctx, &response, fmt.Sprintf("/v2/accounts/%s/created-assets", s.accountID),
-		s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/created-assets", s.accountId), s.p, headers)
 	return
 }

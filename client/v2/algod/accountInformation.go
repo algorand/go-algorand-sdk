@@ -10,11 +10,14 @@ import (
 
 // AccountInformationParams contains all of the query parameters for url serialization.
 type AccountInformationParams struct {
-	// Configures whether the response object is JSON or MessagePack encoded.
-	Format string `url:"format,omitempty"`
 
-	// When set to `all` will exclude asset holdings, application local state, created asset parameters, any created application parameters. Defaults to `none`.
+	// Exclude when set to `all` will exclude asset holdings, application local state,
+	// created asset parameters, any created application parameters. Defaults to
+	// `none`.
 	Exclude string `url:"exclude,omitempty"`
+
+	// Format configures whether the response object is JSON or MessagePack encoded.
+	Format string `url:"format,omitempty"`
 }
 
 // AccountInformation given a specific account public key, this call returns the
@@ -27,12 +30,11 @@ type AccountInformation struct {
 	p AccountInformationParams
 }
 
-func (s *AccountInformation) Exclude(exclude bool) *AccountInformation {
-	if exclude {
-		s.p.Exclude = "all"
-	} else {
-		s.p.Exclude = ""
-	}
+// Exclude when set to `all` will exclude asset holdings, application local state,
+// created asset parameters, any created application parameters. Defaults to
+// `none`.
+func (s *AccountInformation) Exclude(Exclude string) *AccountInformation {
+	s.p.Exclude = Exclude
 	return s
 }
 

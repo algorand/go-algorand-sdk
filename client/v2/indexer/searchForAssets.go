@@ -55,7 +55,9 @@ func (s *SearchForAssets) Creator(Creator string) *SearchForAssets {
 	return s
 }
 
-// IncludeAll sets whether deleted assets will be requested.
+// IncludeAll include all items including closed accounts, deleted applications,
+// destroyed assets, opted-out asset holdings, and closed-out application
+// localstates.
 func (s *SearchForAssets) IncludeAll(IncludeAll bool) *SearchForAssets {
 	s.p.IncludeAll = IncludeAll
 	return s

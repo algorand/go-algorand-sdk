@@ -1,12 +1,14 @@
 package models
 
-// AssetHoldingsResponse defines model for AssetHoldingsResponse.
+// AssetHoldingsResponse
 type AssetHoldingsResponse struct {
+	// Assets
 	Assets []AssetHolding `json:"assets"`
 
-	// Round at which the results were computed.
+	// CurrentRound round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
 
-	// Used for pagination, when making another request provide this token with the next parameter.
+	// NextToken used for pagination, when making another request provide this token
+	// with the next parameter.
 	NextToken string `json:"next-token,omitempty"`
 }

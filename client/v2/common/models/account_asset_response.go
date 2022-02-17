@@ -1,21 +1,16 @@
 package models
 
-// AccountAssetResponse defines model for AccountAssetResponse.
+// AccountAssetResponse accountAssetResponse describes the asset data for a
+// specific account and asset ID.
 type AccountAssetResponse struct {
-	// Describes an asset held by an account.
-	//
-	// Definition:
-	// data/basics/userBalance.go : AssetHolding
-	AssetHolding *AssetHolding `json:"asset-holding,omitempty"`
+	// AssetHolding (asset) Details about the asset held by this account.
+	// The raw account uses `AssetHolding` for this type.
+	AssetHolding AssetHolding `json:"asset-holding,omitempty"`
 
-	// AssetParams specifies the parameters for an asset.
-	//
-	// \[apar\] when part of an AssetConfig transaction.
-	//
-	// Definition:
-	// data/transactions/asset.go : AssetParams
-	CreatedAsset *AssetParams `json:"created-asset,omitempty"`
+	// CreatedAsset (apar) parameters of the asset created by this account.
+	// The raw account uses `AssetParams` for this type.
+	CreatedAsset AssetParams `json:"created-asset,omitempty"`
 
-	// The round for which this information is relevant.
+	// Round the round for which this information is relevant.
 	Round uint64 `json:"round"`
 }

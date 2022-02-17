@@ -8,58 +8,66 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 )
 
-// LookupAccountAppLocalStatesParams defines parameters for LookupAccountAppLocalStates.
+// LookupAccountAppLocalStatesParams contains all of the query parameters for url serialization.
 type LookupAccountAppLocalStatesParams struct {
-	// Application ID
+
+	// ApplicationID application ID
 	ApplicationID uint64 `url:"application-id,omitempty"`
 
-	// Include all items including closed accounts, deleted applications, destroyed assets, opted-out asset holdings, and closed-out application localstates.
+	// IncludeAll include all items including closed accounts, deleted applications,
+	// destroyed assets, opted-out asset holdings, and closed-out application
+	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Maximum number of results to return. There could be additional pages even if the limit is not reached.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
-	// The next page of results. Use the next token provided by the previous results.
+	// Next the next page of results. Use the next token provided by the previous
+	// results.
 	Next string `url:"next,omitempty"`
 }
 
+// LookupAccountAppLocalStates lookup an account's asset holdings, optionally for a
+// specific ID.
 type LookupAccountAppLocalStates struct {
 	c *Client
 
-	accountID string
+	accountId string
 
 	p LookupAccountAppLocalStatesParams
 }
 
-// AssetID sets the application ID filter.
-func (s *LookupAccountAppLocalStates) ApplicationID(applicationID uint64) *LookupAccountAppLocalStates {
-	s.p.ApplicationID = applicationID
+// ApplicationID application ID
+func (s *LookupAccountAppLocalStates) ApplicationID(ApplicationID uint64) *LookupAccountAppLocalStates {
+	s.p.ApplicationID = ApplicationID
 	return s
 }
 
-// IncludeAll sets whether deleted applications will be requested.
-func (s *LookupAccountAppLocalStates) IncludeAll(includeAll bool) *LookupAccountAppLocalStates {
-	s.p.IncludeAll = includeAll
+// IncludeAll include all items including closed accounts, deleted applications,
+// destroyed assets, opted-out asset holdings, and closed-out application
+// localstates.
+func (s *LookupAccountAppLocalStates) IncludeAll(IncludeAll bool) *LookupAccountAppLocalStates {
+	s.p.IncludeAll = IncludeAll
 	return s
 }
 
-// Limit sets the limit for the number of returned assets.
-func (s *LookupAccountAppLocalStates) Limit(limit uint64) *LookupAccountAppLocalStates {
-	s.p.Limit = limit
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
+func (s *LookupAccountAppLocalStates) Limit(Limit uint64) *LookupAccountAppLocalStates {
+	s.p.Limit = Limit
 	return s
 }
 
-// Next sets the next token for pagination. Use the next token provided by the previous
+// Next the next page of results. Use the next token provided by the previous
 // results.
-func (s *LookupAccountAppLocalStates) Next(next string) *LookupAccountAppLocalStates {
-	s.p.Next = next
+func (s *LookupAccountAppLocalStates) Next(Next string) *LookupAccountAppLocalStates {
+	s.p.Next = Next
 	return s
 }
 
-// Do performs the HTTP request.
+// Do performs the HTTP request
 func (s *LookupAccountAppLocalStates) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationLocalStatesResponse, err error) {
-	err = s.c.get(
-		ctx, &response, fmt.Sprintf("/v2/accounts/%s/apps-local-state", s.accountID),
-		s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/apps-local-state", s.accountId), s.p, headers)
 	return
 }

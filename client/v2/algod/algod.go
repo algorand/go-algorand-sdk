@@ -64,6 +64,14 @@ func (c *Client) AccountInformation(address string) *AccountInformation {
 	return &AccountInformation{c: c, address: address}
 }
 
+func (c *Client) AccountAssetInformation(address string, assetId uint64) *AccountAssetInformation {
+	return &AccountAssetInformation{c: c, address: address, assetId: assetId}
+}
+
+func (c *Client) AccountApplicationInformation(address string, applicationId uint64) *AccountApplicationInformation {
+	return &AccountApplicationInformation{c: c, address: address, applicationId: applicationId}
+}
+
 func (c *Client) PendingTransactionsByAddress(address string) *PendingTransactionsByAddress {
 	return &PendingTransactionsByAddress{c: c, address: address}
 }
@@ -122,13 +130,4 @@ func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 
 func (c *Client) BlockRaw(round uint64) *BlockRaw {
 	return &BlockRaw{c: c, round: round}
-}
-
-func (c *Client) AccountAssetInformation(address string, assetID uint64) *AccountAssetInformation {
-	return &AccountAssetInformation{c: c, address: address, assetID: assetID}
-}
-
-func (c *Client) AccountApplicationInformation(address string, applicationID uint64) *AccountApplicationInformation {
-	return &AccountApplicationInformation{
-		c: c, address: address, applicationID: applicationID}
 }

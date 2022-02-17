@@ -1,13 +1,17 @@
 package models
 
-// AccountApplicationResponse defines model for AccountApplicationResponse.
+// AccountApplicationResponse accountApplicationResponse describes the application
+// data for a specific account and application ID.
 type AccountApplicationResponse struct {
-	// Stores local state associated with an application.
-	AppLocalState *ApplicationLocalState `json:"app-local-state,omitempty"`
+	// AppLocalState (appl) the application local data stored in this account.
+	// The raw account uses `AppLocalState` for this type.
+	AppLocalState ApplicationLocalState `json:"app-local-state,omitempty"`
 
-	// Stores the global information associated with an application.
-	CreatedApp *ApplicationParams `json:"created-app,omitempty"`
+	// CreatedApp (appp) parameters of the application created by this account
+	// including app global data.
+	// The raw account uses `AppParams` for this type.
+	CreatedApp ApplicationParams `json:"created-app,omitempty"`
 
-	// The round for which this information is relevant.
+	// Round the round for which this information is relevant.
 	Round uint64 `json:"round"`
 }

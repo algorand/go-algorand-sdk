@@ -59,6 +59,22 @@ func (c *Client) LookupAccountByID(accountId string) *LookupAccountByID {
 	return &LookupAccountByID{c: c, accountId: accountId}
 }
 
+func (c *Client) LookupAccountAssets(accountId string) *LookupAccountAssets {
+	return &LookupAccountAssets{c: c, accountId: accountId}
+}
+
+func (c *Client) LookupAccountCreatedAssets(accountId string) *LookupAccountCreatedAssets {
+	return &LookupAccountCreatedAssets{c: c, accountId: accountId}
+}
+
+func (c *Client) LookupAccountAppLocalStates(accountId string) *LookupAccountAppLocalStates {
+	return &LookupAccountAppLocalStates{c: c, accountId: accountId}
+}
+
+func (c *Client) LookupAccountCreatedApplications(accountId string) *LookupAccountCreatedApplications {
+	return &LookupAccountCreatedApplications{c: c, accountId: accountId}
+}
+
 func (c *Client) LookupAccountTransactions(accountId string) *LookupAccountTransactions {
 	return &LookupAccountTransactions{c: c, accountId: accountId}
 }
@@ -101,20 +117,4 @@ func (c *Client) LookupTransaction(txid string) *LookupTransaction {
 
 func (c *Client) SearchForTransactions() *SearchForTransactions {
 	return &SearchForTransactions{c: c}
-}
-
-func (c *Client) LookupAccountAssets(accountID string) *LookupAccountAssets {
-	return &LookupAccountAssets{c: c, accountID: accountID}
-}
-
-func (c *Client) LookupAccountCreatedAssets(accountID string) *LookupAccountCreatedAssets {
-	return &LookupAccountCreatedAssets{c: c, accountID: accountID}
-}
-
-func (c *Client) LookupAccountAppLocalStates(accountID string) *LookupAccountAppLocalStates {
-	return &LookupAccountAppLocalStates{c: c, accountID: accountID}
-}
-
-func (c *Client) LookupAccountCreatedApplications(accountID string) *LookupAccountCreatedApplications {
-	return &LookupAccountCreatedApplications{c: c, accountID: accountID}
 }

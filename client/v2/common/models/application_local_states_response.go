@@ -1,12 +1,14 @@
 package models
 
-// ApplicationLocalStatesResponse defines model for ApplicationLocalStatesResponse.
+// ApplicationLocalStatesResponse
 type ApplicationLocalStatesResponse struct {
+	// AppsLocalStates
 	AppsLocalStates []ApplicationLocalState `json:"apps-local-states"`
 
-	// Round at which the results were computed.
+	// CurrentRound round at which the results were computed.
 	CurrentRound uint64 `json:"current-round"`
 
-	// Used for pagination, when making another request provide this token with the next parameter.
+	// NextToken used for pagination, when making another request provide this token
+	// with the next parameter.
 	NextToken string `json:"next-token,omitempty"`
 }
