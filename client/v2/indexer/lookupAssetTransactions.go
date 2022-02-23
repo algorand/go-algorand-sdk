@@ -44,7 +44,8 @@ type LookupAssetTransactionsParams struct {
 	// receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 
-	// Limit maximum number of results to return.
+	// Limit maximum number of results to return. There could be additional pages even
+	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
 
 	// MaxRound include results at or before the specified max-round.
@@ -156,7 +157,8 @@ func (s *LookupAssetTransactions) ExcludeCloseTo(ExcludeCloseTo bool) *LookupAss
 	return s
 }
 
-// Limit maximum number of results to return.
+// Limit maximum number of results to return. There could be additional pages even
+// if the limit is not reached.
 func (s *LookupAssetTransactions) Limit(Limit uint64) *LookupAssetTransactions {
 	s.p.Limit = Limit
 	return s

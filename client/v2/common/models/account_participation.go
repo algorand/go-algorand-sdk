@@ -7,6 +7,9 @@ type AccountParticipation struct {
 	// registered for this round.
 	SelectionParticipationKey []byte `json:"selection-participation-key"`
 
+	// StateProofKey (stprf) Root of the state proof key (if any)
+	StateProofKey []byte `json:"state-proof-key,omitempty"`
+
 	// VoteFirstValid (voteFst) First round for which this participation is valid.
 	VoteFirstValid uint64 `json:"vote-first-valid"`
 
