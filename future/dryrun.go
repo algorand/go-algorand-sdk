@@ -129,14 +129,24 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 	return
 }
 
+// TODO: This has the exact same name as the struct in models package, maybe confusing?
 type DryrunResponse struct {
 	Error           string            `json:"error"`
 	ProtocolVersion string            `json:"protocol-version"`
 	Txns            []DryrunTxnResult `json:"txns"`
 }
 
-// TODO: how will people actually use this? surely not parse the json, maybe read
-// from a models.DryrunResult?
+func NewDryrunResponse(d models.DryrunResponse) (DryrunResponse, error) {
+	// TODO:  this is lazy but also works?
+	dr := DryrunResponse{}
+	b, err := json.Marshal(dr)
+	if err != nil {
+		return dr, err
+	}
+	err = json.Unmarshal(b, &dr)
+	return dr, err
+}
+
 func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
 	dr := DryrunResponse{}
 	err := json.Unmarshal(js, &dr)
