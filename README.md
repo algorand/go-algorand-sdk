@@ -346,20 +346,22 @@ The following example shows how to to use both KMD and Algod when signing and su
 package main
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/future"
 )
 
 // CHANGE ME
 var (
 	algodAddress = "http://localhost:4001"
-	algodToken = strings.Repeat("a", 64)
+	algodToken   = strings.Repeat("a", 64)
 
 	kmdAddress = "http://localhost:4002"
-	kmdToken = strings.Repeat("a", 64)
+	kmdToken   = strings.Repeat("a", 64)
 )
 
 func main() {
@@ -426,14 +428,14 @@ func main() {
 	toAddr := gen2Response.Address
 
 	// Get the suggested transaction parameters
-	txParams, err := algodClient.SuggestedParams().Do(context.Background())
+	params, err := algodClient.SuggestedParams().Do(context.Background())
 	if err != nil {
-			fmt.Printf("error getting suggested tx params: %s\n", err)
-			return
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
 	}
 
 	// Make transaction
-	tx, err := future.MakePaymentTxn(fromAddr, toAddr, 1000, nil, "", txParams)
+	tx, err := future.MakePaymentTxn(fromAddr, toAddr, 1000, nil, "", params)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
@@ -450,13 +452,13 @@ func main() {
 
 	// Broadcast the transaction to the network
 	// Note that this transaction will get rejected because the accounts do not have any tokens
-	sendResponse, err := algodClient.SendRawTransaction(signResponse.SignedTransaction).Do(context.Background())
+	txid, err := algodClient.SendRawTransaction(signResponse.SignedTransaction).Do(context.Background())
 	if err != nil {
 		fmt.Printf("failed to send transaction: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Transaction ID: %s\n", sendResponse.TxID)
+	fmt.Printf("Transaction ID: %s\n", txid)
 }
 ```
 
@@ -472,8 +474,8 @@ import (
 	"io/ioutil"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -485,22 +487,14 @@ func main() {
 	m, err := mnemonic.FromPrivateKey(account.PrivateKey)
 	fmt.Printf("backup phrase = %s\n", m)
 
-	// Create and sign a sample transaction using this library, *not* kmd
-	// This transaction will not be valid as the example parameters will most likely not be valid
-	// You can use the algod client to get suggested values for the fee, first and last rounds, and genesisID
-	const fee = 1000
-	const amount = 20000
-	const firstRound = 642715
-	const lastRound = firstRound + 1000
-	params := types.SuggestedParams {
-		Fee: types.MicroAlgos(fee),
-		FirstRoundValid: firstRound,
-		LastRoundValid: lastRound,
-		GenesisHash: []byte("JgsgCaCTqIaLeVhyL6XlRu3n7Rfk2FxMeK+wRSaQ7dI="),
+	params, err := algodClient.SuggestedParams().Do(context.Background())
+	if err != nil {
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
 	}
 	tx, err := future.MakePaymentTxn(
 		account.Address.String(), "4MYUHDWHWXAKA5KA7U5PEN646VYUANBFXVJNONBK3TIMHEMWMD4UBOJBI4",
-		amount, nil, "", params
+		amount, nil, "", params,
 	)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
@@ -526,6 +520,7 @@ func main() {
 	}
 	fmt.Printf("Saved signed transaction to file: %s\n", filename)
 }
+
 ```
 
 ## Submit the transaction from a file
@@ -592,12 +587,11 @@ if err != nil {
 	panic("invalid multisig parameters")
 }
 fromAddr, _ := ma.Address()
-params := types.SuggestedParams {
-	Fee: types.MicroAlgos(fee), // fee per byte, unless FlatFee is true
-	FlatFee: false,
-	FirstRoundValid: types.Round(100000),
-	LastRoundValid: types.Round(101000),
-	GenesisHash: []byte, // cannot be empty in practice
+
+params, err := algodClient.SuggestedParams().Do(context.Background())
+if err != nil {
+	fmt.Printf("error getting suggested tx params: %s\n", err)
+	return
 }
 txn, err := future.MakePaymentTxn(
 	fromAddr.String(),
@@ -605,7 +599,7 @@ txn, err := future.MakePaymentTxn(
 	10000,  // amount
 	nil,	// note
 	"",	 // closeRemainderTo
-	params
+	params,
 )
 txid, txBytes, err := crypto.SignMultisigTransaction(secretKey, ma, txn)
 if err != nil {
@@ -666,62 +660,59 @@ Example below demonstrates how to create a transactions group and send it to net
 package main
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // CHANGE ME
 var (
-    algodAddress = "http://localhost:4001"
-    algodToken = strings.Repeat("a", 64)
+	algodAddress = "http://localhost:4001"
+	algodToken   = strings.Repeat("a", 64)
 )
 
 func submitGroup() {
+
+	algodClient, err := algod.MakeClient(algodAddress, algodToken)
+	if err != nil {
+		fmt.Printf("failed to make algod client: %v\n", err)
+		return
+	}
+
+	params, err := algodClient.SuggestedParams().Do(context.Background())
+	if err != nil {
+		fmt.Printf("error getting suggested tx params: %s\n", err)
+		return
+	}
+
 	account1 := crypto.GenerateAccount()
 	fmt.Printf("account address: %s\n", account1.Address)
 
 	account2 := crypto.GenerateAccount()
 	fmt.Printf("account address: %s\n", account2.Address)
 
-	address1 := account1.Address.String()
-	address2 := account2.Address.String()
-	const address3 = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
-	const fee = 1000
-	const amount1 = 2000
-	var note []byte
-	const genesisID = "XYZ"	  // replace me
-	genesisHash := []byte("ABC") // replace me
+	var (
+		address1 = account1.Address.String()
+		address2 = account2.Address.String()
+		address3 = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 
-	const firstRound1 = 710399
-	params := types.SuggestedParams {
-		Fee: types.MicroAlgos(fee),
-		FlatFee: true,
-		FirstRoundValid: types.Round(firstRound1),
-		LastRoundValid: types.Round(firstRound1+1000),
-		GenesisHash: genesisHash,
-		GenesisID: genesisID,
-	}
-	tx1, err := future.MakePaymentTxn(
-		address1, address2, amount1,
-		note, "", params
+		amount2 = 1500
+		amount1 = 2000
+		note []byte
 	)
+
+	tx1, err := future.MakePaymentTxn(address1, address2, amount1, note, "", params)
 	if err != nil {
 		fmt.Printf("Failed to create payment transaction: %v\n", err)
 		return
 	}
 
-	const firstRound2 = 710515
-	params.FirstRoundValid = types.Round(firstRound2)
-	params.LastRoundValid = types.Round(firstRound2 + 1000)
-	const amount2 = 1500
-	tx2, err := future.MakePaymentTxn(
-		address2, address3, amount2,
-		note, "", params
-	)
+	tx2, err := future.MakePaymentTxn(address2, address3, amount2, note, "", params)
 	if err != nil {
 		fmt.Printf("Failed to create payment transaction: %v\n", err)
 		return
@@ -731,12 +722,6 @@ func submitGroup() {
 	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
 	tx1.Group = gid
 	tx2.Group = gid
-
-	algodClient, err := algod.MakeClient(algodAddress, algodToken)
-	if err != nil {
-		fmt.Printf("failed to make algod client: %v\n", err)
-		return
-	}
 
 	_, stx1, err := crypto.SignTransaction(account1.PrivateKey, tx1)
 	if err != nil {
@@ -758,6 +743,7 @@ func submitGroup() {
 		return
 	}
 }
+
 ```
 
 ## Working with LogicSig
@@ -769,23 +755,26 @@ A program is "int 0" that is evaluates to `FALSE` and does not actually permits 
 package main
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // CHANGE ME
 var (
-    algodAddress = "http://localhost:4001"
-    algodToken = strings.Repeat("a", 64)
+	algodAddress = "http://localhost:4001"
+	algodToken   = strings.Repeat("a", 64)
 )
 
 func main() {
 	// ignore error checking for readability
+	algodClient, _ := algod.MakeClient(algodAddress, algodToken)
 
 	addr1, _ := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	addr2, _ := types.DecodeAddress("BFRTECKTOOE7A5LHCF3TTEOH2A7BW46IYT2SX5VP6ANKEXHZYJY77SJTVM")
@@ -809,26 +798,16 @@ func main() {
 	sender, _ := ma.Address()
 	_ = crypto.VerifyLogicSig(lsig, sender)
 
-	const receiver = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
-	const fee = 1000
-	const amount = 2000
-	var note []byte
-	const genesisID = "XYZ"	  // replace me
-	genesisHash := []byte("ABC") // replace me
+	var (
+	 	receiver = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	 	amount 	 = 2000
 
-	const firstRound = 710399
-	params := types.SuggestedParams {
-		Fee: types.MicroAlgos(fee),
-		FlatFee: true,
-		FirstRoundValid: types.Round(firstRound),
-		LastRoundValid: types.Round(firstRound+1000),
-		GenesisHash: genesisHash,
-		GenesisID: genesisID,
-	}
-	tx, _ := future.MakePaymentTxn(
-		sender.String(), receiver, amount,
-		note, "", params
+		note []byte
 	)
+	// Get the suggested transaction parameters
+	params, _ := algodClient.SuggestedParams().Do(context.Background())
+
+	tx, _ := future.MakePaymentTxn(sender.String(), receiver, amount, note, "", params)
 
 	txid, stx, err := crypto.SignLogicsigTransaction(lsig, tx)
 	if err != nil {
@@ -837,7 +816,6 @@ func main() {
 	}
 	fmt.Printf("Signed tx: %v\n", txid)
 
-	algodClient, _ := algod.MakeClient(algodAddress, algodToken)
 
 	_, err = algodClient.SendRawTransaction(stx).Do(context.Background())
 	if err != nil {
@@ -876,16 +854,11 @@ note := nil // arbitrary data to be stored in the transaction; here, none is sto
 assetURL := "http://someurl" // optional string pointing to a URL relating to the asset
 assetMetadataHash := "thisIsSomeLength32HashCommitment" // optional hash commitment of some sort relating to the asset. 32 character length.
 
-params := types.SuggestedParams {
-	Fee: fee,
-	FirstRoundValid: firstRound,
-	LastRoundValid: lastRound,
-	GenesisHash: genesisHash,
-	GenesisID: genesisID,
-}
+// Get the suggested transaction parameters
+params, _ := algodClient.SuggestedParams().Do(context.Background())
 
 // signing and sending "txn" allows "addr" to create an asset
-txn, err = MakeAssetCreateTxn(addr, note, params,
+txn, err = future.MakeAssetCreateTxn(addr, note, params,
 	totalIssuance, decimals, defaultFrozen, manager, reserve, freeze, clawback,
 	unitName, assetName, assetURL, assetMetadataHash)
 ```
@@ -913,17 +886,12 @@ clawback := addr
 manager := addr
 strictEmptyAddressChecking := true
 
-params := types.SuggestedParams {
-	Fee: fee,
-	FirstRoundValid: firstRound,
-	LastRoundValid: lastRound,
-	GenesisHash: genesisHash,
-	GenesisID: genesisID,
-}
+// Get the suggested transaction parameters
+params, _ := algodClient.SuggestedParams().Do(context.Background())
 
 // signing and sending "txn" will allow the asset manager to change:
 // asset manager, asset reserve, asset freeze manager, asset revocation manager
-txn, err = MakeAssetConfigTxn(addr, note, params,
+txn, err = future.MakeAssetConfigTxn(addr, note, params,
 	assetIndex, manager, reserve, freeze, clawback, strictEmptyAddressChecking)
 ```
 
