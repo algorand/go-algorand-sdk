@@ -50,6 +50,9 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
 	s.Step(`^we make any Dryrun call$`, weMakeAnyDryrunCall)
 	s.Step(`^the parsed Dryrun Response should have global delta "([^"]*)" with (\d+)$`, parsedDryrunResponseShouldHave)
+	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
+	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
+	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -225,4 +228,31 @@ func parsedDryrunResponseShouldHave(key string, action int) error {
 
 func mockHttpResponsesInLoadedFrom(jsonfiles, directory string) error {
 	return mockHttpResponsesInLoadedFromWithStatus(jsonfiles, directory, 200)
+}
+
+func weMakeAnAccountInformationCallAgainstAccountWithExclude(account, exclude string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  algodClient.AccountInformation(account).Exclude(exclude).Do(context.Background())
+  return nil
+}
+
+func weMakeAnAccountAssetInformationCallAgainstAccountAssetID(account string, assetID int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  algodClient.AccountAssetInformation(account, uint64(assetID)).Do(context.Background())
+  return nil
+}
+
+func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(account string, appID int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  algodClient.AccountApplicationInformation(account, uint64(appID)).Do(context.Background())
+  return nil
 }

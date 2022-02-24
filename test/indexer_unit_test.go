@@ -3,6 +3,8 @@ package test
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
+	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/cucumber/godog"
@@ -46,6 +48,13 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have rekey-to "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" RekeyTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo)
 	s.Step(`^we make a LookupApplicationLogsByID call with applicationID (\d+) limit (\d+) minRound (\d+) maxRound (\d+) nextToken "([^"]*)" sender "([^"]*)" and txID "([^"]*)"$`, weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundNextTokenSenderAndTxID)
+	s.Step(`^we make a LookupAccountAssets call with accountID "([^"]*)" assetID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext)
+  s.Step(`^we make a LookupAccountCreatedAssets call with accountID "([^"]*)" assetID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNext)
+	s.Step(`^we make a LookupAccountAppLocalStates call with accountID "([^"]*)" applicationID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountAppLocalStatesCallWithAccountIDApplicationIDIncludeAllLimitNext)
+	s.Step(`^we make a LookupAccountCreatedApplications call with accountID "([^"]*)" applicationID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountCreatedApplicationsCallWithAccountIDApplicationIDIncludeAllLimitNext)
+	s.Step(`^we make a Search Accounts call with exclude "([^"]*)"$`, weMakeASearchAccountsCallWithExclude)
+	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeALookupAccountByIDCallAgainstAccountWithExclude)
+	s.Step(`^we make a SearchForApplications call with creator "([^"]*)"$`, weMakeASearchForApplicationsCallWithCreator)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -260,4 +269,93 @@ func weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundN
 	}
 	indexerClient.LookupApplicationLogsByID(uint64(appID)).Limit(uint64(limit)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Next(nextToken).SenderAddress(sender).Txid(txID).Do(context.Background())
 	return nil
+}
+
+func parseIncludeAll(s string) (bool, error) {
+  if s == "true" {
+    return true, nil
+  }
+  if s == "false" {
+    return false, nil
+  }
+  return false, fmt.Errorf("parseIncludeAll() cannot parse \"%s\"", s)
+}
+
+func weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accountID string, assetID int, includeAll string, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  includeAllBool, err := parseIncludeAll(includeAll)
+	if err != nil {
+		return err
+	}
+  indexerClient.LookupAccountAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accountID string, assetID int, includeAll string, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  includeAllBool, err := parseIncludeAll(includeAll)
+	if err != nil {
+		return err
+	}
+  indexerClient.LookupAccountCreatedAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupAccountAppLocalStatesCallWithAccountIDApplicationIDIncludeAllLimitNext(accountID string, appID int, includeAll string, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  includeAllBool, err := parseIncludeAll(includeAll)
+	if err != nil {
+		return err
+	}
+  indexerClient.LookupAccountAppLocalStates(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupAccountCreatedApplicationsCallWithAccountIDApplicationIDIncludeAllLimitNext(accountID string, appID int, includeAll string, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  includeAllBool, err := parseIncludeAll(includeAll)
+	if err != nil {
+		return err
+	}
+  indexerClient.LookupAccountCreatedApplications(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func weMakeASearchAccountsCallWithExclude(exclude string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  indexerClient.SearchAccounts().Exclude(strings.Split(exclude, ",")).Do(context.Background())
+  return nil
+}
+
+func weMakeALookupAccountByIDCallAgainstAccountWithExclude(account, exclude string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  indexerClient.LookupAccountByID(account).Exclude(strings.Split(exclude, ",")).Do(context.Background())
+  return nil
+}
+
+func weMakeASearchForApplicationsCallWithCreator(creator string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+  indexerClient.SearchForApplications().Creator(creator).Do(context.Background())
+  return nil
 }
