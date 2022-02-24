@@ -88,12 +88,13 @@ type Account struct {
 	// delegator nor a delegate.
 	Status string `json:"status"`
 
-	// TotalAppsLocalState the count of all application local data (AppLocalState
-	// objects) stored in this account.
-	TotalAppsLocalState uint64 `json:"total-apps-local-state"`
+	// TotalAppsOptedIn the count of all application local data (AppLocalState objects)
+	// stored in this account.
+	TotalAppsOptedIn uint64 `json:"total-apps-opted-in"`
 
-	// TotalAssets the count of all assets (AssetHolding objects) held by this account.
-	TotalAssets uint64 `json:"total-assets"`
+	// TotalAssetsOptedIn the count of all assets (AssetHolding objects) held by this
+	// account.
+	TotalAssetsOptedIn uint64 `json:"total-assets-opted-in"`
 
 	// TotalCreatedApps the count of all apps (AppParams objects) created by this
 	// account.
