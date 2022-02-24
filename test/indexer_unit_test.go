@@ -49,7 +49,7 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Lookup Asset Transactions call against asset index (\d+) with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) address "([^"]*)" addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" RekeyTo "([^"]*)"$`, weMakeALookupAssetTransactionsCallAgainstAssetIndexWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAddressAddressRoleExcluseCloseToRekeyTo)
 	s.Step(`^we make a LookupApplicationLogsByID call with applicationID (\d+) limit (\d+) minRound (\d+) maxRound (\d+) nextToken "([^"]*)" sender "([^"]*)" and txID "([^"]*)"$`, weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundNextTokenSenderAndTxID)
 	s.Step(`^we make a LookupAccountAssets call with accountID "([^"]*)" assetID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext)
-  s.Step(`^we make a LookupAccountCreatedAssets call with accountID "([^"]*)" assetID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNext)
+	s.Step(`^we make a LookupAccountCreatedAssets call with accountID "([^"]*)" assetID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNext)
 	s.Step(`^we make a LookupAccountAppLocalStates call with accountID "([^"]*)" applicationID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountAppLocalStatesCallWithAccountIDApplicationIDIncludeAllLimitNext)
 	s.Step(`^we make a LookupAccountCreatedApplications call with accountID "([^"]*)" applicationID (\d+) includeAll "([^"]*)" limit (\d+) next "([^"]*)"$`, weMakeALookupAccountCreatedApplicationsCallWithAccountIDApplicationIDIncludeAllLimitNext)
 	s.Step(`^we make a Search Accounts call with exclude "([^"]*)"$`, weMakeASearchAccountsCallWithExclude)
@@ -272,13 +272,13 @@ func weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundN
 }
 
 func parseIncludeAll(s string) (bool, error) {
-  if s == "true" {
-    return true, nil
-  }
-  if s == "false" {
-    return false, nil
-  }
-  return false, fmt.Errorf("parseIncludeAll() cannot parse \"%s\"", s)
+	if s == "true" {
+		return true, nil
+	}
+	if s == "false" {
+		return false, nil
+	}
+	return false, fmt.Errorf("parseIncludeAll() cannot parse \"%s\"", s)
 }
 
 func weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accountID string, assetID int, includeAll string, limit int, next string) error {
@@ -286,11 +286,11 @@ func weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accou
 	if err != nil {
 		return err
 	}
-  includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseIncludeAll(includeAll)
 	if err != nil {
 		return err
 	}
-  indexerClient.LookupAccountAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	indexerClient.LookupAccountAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }
 
@@ -299,11 +299,11 @@ func weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNex
 	if err != nil {
 		return err
 	}
-  includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseIncludeAll(includeAll)
 	if err != nil {
 		return err
 	}
-  indexerClient.LookupAccountCreatedAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	indexerClient.LookupAccountCreatedAssets(accountID).AssetID(uint64(assetID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }
 
@@ -312,11 +312,11 @@ func weMakeALookupAccountAppLocalStatesCallWithAccountIDApplicationIDIncludeAllL
 	if err != nil {
 		return err
 	}
-  includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseIncludeAll(includeAll)
 	if err != nil {
 		return err
 	}
-  indexerClient.LookupAccountAppLocalStates(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	indexerClient.LookupAccountAppLocalStates(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }
 
@@ -325,11 +325,11 @@ func weMakeALookupAccountCreatedApplicationsCallWithAccountIDApplicationIDInclud
 	if err != nil {
 		return err
 	}
-  includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseIncludeAll(includeAll)
 	if err != nil {
 		return err
 	}
-  indexerClient.LookupAccountCreatedApplications(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
+	indexerClient.LookupAccountCreatedApplications(accountID).ApplicationID(uint64(appID)).IncludeAll(includeAllBool).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }
 
@@ -338,8 +338,8 @@ func weMakeASearchAccountsCallWithExclude(exclude string) error {
 	if err != nil {
 		return err
 	}
-  indexerClient.SearchAccounts().Exclude(strings.Split(exclude, ",")).Do(context.Background())
-  return nil
+	indexerClient.SearchAccounts().Exclude(strings.Split(exclude, ",")).Do(context.Background())
+	return nil
 }
 
 func weMakeALookupAccountByIDCallAgainstAccountWithExclude(account, exclude string) error {
@@ -347,8 +347,8 @@ func weMakeALookupAccountByIDCallAgainstAccountWithExclude(account, exclude stri
 	if err != nil {
 		return err
 	}
-  indexerClient.LookupAccountByID(account).Exclude(strings.Split(exclude, ",")).Do(context.Background())
-  return nil
+	indexerClient.LookupAccountByID(account).Exclude(strings.Split(exclude, ",")).Do(context.Background())
+	return nil
 }
 
 func weMakeASearchForApplicationsCallWithCreator(creator string) error {
@@ -356,6 +356,6 @@ func weMakeASearchForApplicationsCallWithCreator(creator string) error {
 	if err != nil {
 		return err
 	}
-  indexerClient.SearchForApplications().Creator(creator).Do(context.Background())
-  return nil
+	indexerClient.SearchForApplications().Creator(creator).Do(context.Background())
+	return nil
 }

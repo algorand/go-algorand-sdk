@@ -235,8 +235,8 @@ func weMakeAnAccountInformationCallAgainstAccountWithExclude(account, exclude st
 	if err != nil {
 		return err
 	}
-  algodClient.AccountInformation(account).Exclude(exclude).Do(context.Background())
-  return nil
+	algodClient.AccountInformation(account).Exclude(exclude).Do(context.Background())
+	return nil
 }
 
 func weMakeAnAccountAssetInformationCallAgainstAccountAssetID(account string, assetID int) error {
@@ -244,8 +244,8 @@ func weMakeAnAccountAssetInformationCallAgainstAccountAssetID(account string, as
 	if err != nil {
 		return err
 	}
-  algodClient.AccountAssetInformation(account, uint64(assetID)).Do(context.Background())
-  return nil
+	algodClient.AccountAssetInformation(account, uint64(assetID)).Do(context.Background())
+	return nil
 }
 
 func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(account string, appID int) error {
@@ -253,6 +253,6 @@ func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(accoun
 	if err != nil {
 		return err
 	}
-  algodClient.AccountApplicationInformation(account, uint64(appID)).Do(context.Background())
-  return nil
+	algodClient.AccountApplicationInformation(account, uint64(appID)).Do(context.Background())
+	return nil
 }
