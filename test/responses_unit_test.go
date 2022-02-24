@@ -78,6 +78,19 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
 		case "lookupBlock":
 			response, err = indexerC.LookupBlock(10).Do(context.Background())
+    case "lookupTransaction":
+      response, err = indexerC.LookupTransaction("").Do(context.Background())
+    case "lookupAccountAppLocalStates":
+      response, err = indexerC.LookupAccountAppLocalStates("").Do(context.Background())
+    case "lookupAccountCreatedApplications":
+      response, err =
+        indexerC.LookupAccountCreatedApplications("").Do(context.Background())
+    case "lookupAccountAssets":
+      response, err = indexerC.LookupAccountAssets("").Do(context.Background())
+    case "lookupAccountCreatedAssets":
+      response, err = indexerC.LookupAccountCreatedAssets("").Do(context.Background())
+    case "lookupApplicationLogsByID":
+      response, err = indexerC.LookupApplicationLogsByID(10).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
