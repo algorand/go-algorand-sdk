@@ -1,7 +1,8 @@
 package models
 
-// AccountAssetResponse accountAssetResponse describes the asset data for a
-// specific account and asset ID.
+// AccountAssetResponse accountAssetResponse describes the account's asset holding
+// and asset parameters (if either exist) for a specific asset ID. Asset parameters
+// will only be returned if the provided address is the asset's creator.
 type AccountAssetResponse struct {
 	// AssetHolding (asset) Details about the asset held by this account.
 	// The raw account uses `AssetHolding` for this type.

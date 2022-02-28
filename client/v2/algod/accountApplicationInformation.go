@@ -15,9 +15,10 @@ type AccountApplicationInformationParams struct {
 	Format string `url:"format,omitempty"`
 }
 
-// AccountApplicationInformation given a specific account public key, this call
-// returns the account's application local state and application params (if they
-// exist) about a given application ID
+// AccountApplicationInformation given a specific account public key and
+// application ID, this call returns the account's application local state and
+// global state (AppLocalState and AppParams, if either exists). Global state will
+// only be returned if the provided address is the application's creator.
 type AccountApplicationInformation struct {
 	c *Client
 

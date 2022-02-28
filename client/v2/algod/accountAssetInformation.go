@@ -15,9 +15,10 @@ type AccountAssetInformationParams struct {
 	Format string `url:"format,omitempty"`
 }
 
-// AccountAssetInformation given a specific account public key, this call returns
-// the account's asset holding and asset params (if they exist) about a given asset
-// ID
+// AccountAssetInformation given a specific account public key and asset ID, this
+// call returns the account's asset holding and asset parameters (if either exist).
+// Asset parameters will only be returned if the provided address is the asset's
+// creator.
 type AccountAssetInformation struct {
 	c *Client
 

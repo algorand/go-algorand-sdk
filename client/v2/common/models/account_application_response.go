@@ -1,7 +1,9 @@
 package models
 
-// AccountApplicationResponse accountApplicationResponse describes the application
-// data for a specific account and application ID.
+// AccountApplicationResponse accountApplicationResponse describes the account's
+// application local state and global state (AppLocalState and AppParams, if either
+// exists) for a specific application ID. Global state will only be returned if the
+// provided address is the application's creator.
 type AccountApplicationResponse struct {
 	// AppLocalState (appl) the application local data stored in this account.
 	// The raw account uses `AppLocalState` for this type.
