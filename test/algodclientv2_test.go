@@ -87,7 +87,7 @@ func weMakeAnyStatusAfterBlockCall() error {
 }
 
 func weMakeAnyAccountInformationCall() error {
-	return weMakeAnyCallTo("algod", "GetAccountInformation")
+	return weMakeAnyCallTo("algod", "AccountInformation")
 }
 
 var blockResponse types.Block
