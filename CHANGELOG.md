@@ -1,4 +1,4 @@
-# 1.13.0-beta.1
+# 1.13.0
 ## Added
 - Add app creator to dryrun request (#283)
 - Stateproof keys APIs changes (#284)
