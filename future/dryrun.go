@@ -1,11 +1,13 @@
 package future
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -179,6 +181,43 @@ func (d *DryrunTxnResult) LogicSigRejected() bool {
 	return false
 }
 
+type indexedScratchValue struct {
+	Idx int
+	Val models.TealValue
+}
+
+func scratchToString(prevScratch, currScratch []models.TealValue) string {
+	prevScratchMap := map[indexedScratchValue]bool{}
+	for idx, psv := range prevScratch {
+		if psv.Type == 0 {
+			continue
+		}
+		isv := indexedScratchValue{Idx: idx, Val: psv}
+		prevScratchMap[isv] = true
+	}
+
+	newScratchVal := indexedScratchValue{}
+	for idx, csv := range currScratch {
+		if csv.Type == 0 {
+			continue
+		}
+		isv := indexedScratchValue{Idx: idx, Val: csv}
+		if _, ok := prevScratchMap[isv]; !ok {
+			newScratchVal = isv
+		}
+	}
+
+	switch newScratchVal.Val.Type {
+	case 1:
+		decoded, _ := base64.StdEncoding.DecodeString(newScratchVal.Val.Bytes)
+		return fmt.Sprintf("%d = %#x", newScratchVal.Idx, decoded)
+	case 2:
+		return fmt.Sprintf("%d = %d", newScratchVal.Idx, newScratchVal.Val.Uint)
+	default:
+		return ""
+	}
+}
+
 func stackToString(stack []models.TealValue) string {
 	svs := []string{}
 	for _, s := range stack {
@@ -194,39 +233,27 @@ func stackToString(stack []models.TealValue) string {
 }
 
 func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []string, spaces ...int) string {
+	buff := bytes.NewBuffer(nil)
+	w := tabwriter.NewWriter(buff, 0, 0, 3, ' ', tabwriter.TabIndent|tabwriter.Debug)
 
-	var padSpacing int
-	if len(spaces) == 0 {
-		padSpacing = defaultSpacing
-	} else {
-		padSpacing = spaces[0]
-	}
+	fmt.Fprintln(w, "\tpc#\tline#\tsource\tscratch\tstack")
+	for idx, s := range state {
 
-	if padSpacing == 0 {
-		for _, l := range disassemmbly {
-			if len(l) > padSpacing {
-				padSpacing = len(l)
-			}
-		}
-		//  4 for line number + 1 for space between number and line, *2 for pc
-		padSpacing += 10
-	}
-
-	traceLines := []string{"pc# line# source" + strings.Repeat(" ", padSpacing-16) + "stack"}
-
-	for _, s := range state {
-		srcLine := fmt.Sprintf("%4d %4d %s", s.Pc, s.Line, disassemmbly[s.Line])
-		stack := stackToString(s.Stack)
-
-		padding := ""
-		if repeat := padSpacing - len(srcLine); repeat > 0 {
-			padding = strings.Repeat(" ", repeat)
+		prevScratch := []models.TealValue{}
+		if idx > 0 {
+			prevScratch = state[idx-1].Scratch
 		}
 
-		traceLines = append(traceLines, fmt.Sprintf("%s%s%s", srcLine, padding, stack))
-	}
+		srcLine := fmt.Sprintf("\t%4d\t%4d\t%s\t%s\t%s",
+			s.Pc, s.Line, disassemmbly[s.Line],
+			scratchToString(prevScratch, s.Scratch),
+			stackToString(s.Stack))
 
-	return strings.Join(traceLines, "\n")
+		fmt.Fprintln(w, srcLine)
+	}
+	w.Flush()
+
+	return buff.String()
 }
 
 // GetAppCallTrace returns a string representing a stack trace for this transactions
@@ -238,6 +265,5 @@ func (d *DryrunTxnResult) GetAppCallTrace(spaces ...int) string {
 // GetLogicSigTrace returns a string representing a stack trace for this transactions
 // logic signature evaluation
 func (d *DryrunTxnResult) GetLogicSigTrace(spaces ...int) string {
-	// TODO: regen structs with LsigDisassembly
-	return d.trace(d.LogicSigTrace, d.Disassembly, spaces...)
+	return d.trace(d.LogicSigTrace, d.LogicSigDisassembly, spaces...)
 }
