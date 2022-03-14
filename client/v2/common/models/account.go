@@ -87,4 +87,21 @@ type Account struct {
 	// * NotParticipating - indicates that the associated account is neither a
 	// delegator nor a delegate.
 	Status string `json:"status"`
+
+	// TotalAppsOptedIn the count of all applications that have been opted in,
+	// equivalent to the count of application local data (AppLocalState objects) stored
+	// in this account.
+	TotalAppsOptedIn uint64 `json:"total-apps-opted-in"`
+
+	// TotalAssetsOptedIn the count of all assets that have been opted in, equivalent
+	// to the count of AssetHolding objects held by this account.
+	TotalAssetsOptedIn uint64 `json:"total-assets-opted-in"`
+
+	// TotalCreatedApps the count of all apps (AppParams objects) created by this
+	// account.
+	TotalCreatedApps uint64 `json:"total-created-apps"`
+
+	// TotalCreatedAssets the count of all assets (AssetParams objects) created by this
+	// account.
+	TotalCreatedAssets uint64 `json:"total-created-assets"`
 }
