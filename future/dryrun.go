@@ -18,8 +18,8 @@ import (
 const (
 	defaultAppId uint64 = 1380011588
 
-	rejectMsg      = "REJECT"
-	defaultSpacing = 20
+	rejectMsg       = "REJECT"
+	defaultMaxWidth = 30
 )
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
@@ -131,7 +131,17 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 	return
 }
 
-// TODO: This has the exact same name as the struct in models package, maybe confusing?
+// StackPrinterConfig holds some configuration parameters for how to print a DryrunResponse stack trace
+type StackPrinterConfig struct {
+	MaxWidth        int  // Set the max width of the column, 0 is no max
+	TopOfStackFirst bool // Set the order of the stack values printed, true is top of stack (last pushed) first
+}
+
+// DefaultStackPrinterConfig returns a new StackPrinterConfig with reasonable defaults
+func DefaultStackPrinterConfig() StackPrinterConfig {
+	return StackPrinterConfig{MaxWidth: defaultMaxWidth, TopOfStackFirst: true}
+}
+
 type DryrunResponse struct {
 	Error           string            `json:"error"`
 	ProtocolVersion string            `json:"protocol-version"`
@@ -218,25 +228,33 @@ func scratchToString(prevScratch, currScratch []models.TealValue) string {
 	}
 }
 
-func stackToString(stack []models.TealValue) string {
-	svs := []string{}
-	for _, s := range stack {
+func stackToString(reverse bool, stack []models.TealValue) string {
+	elems := len(stack)
+	svs := make([]string, elems)
+	for idx, s := range stack {
+
+		svidx := idx
+		if reverse {
+			svidx = (elems - 1) - idx
+		}
+
 		if s.Type == 1 {
 			// Just returns empty string if there is an error, use it
 			decoded, _ := base64.StdEncoding.DecodeString(s.Bytes)
-			svs = append(svs, fmt.Sprintf("%#x", decoded))
+			svs[svidx] = fmt.Sprintf("%#x", decoded)
 		} else {
-			svs = append(svs, fmt.Sprintf("%d", s.Uint))
+			svs[svidx] = fmt.Sprintf("%d", s.Uint)
 		}
 	}
+
 	return fmt.Sprintf("[%s]", strings.Join(svs, ", "))
 }
 
-func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []string, spaces ...int) string {
+func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []string, spc StackPrinterConfig) string {
 	buff := bytes.NewBuffer(nil)
-	w := tabwriter.NewWriter(buff, 0, 0, 3, ' ', tabwriter.TabIndent|tabwriter.Debug)
+	w := tabwriter.NewWriter(buff, 0, 0, 1, ' ', tabwriter.Debug)
 
-	fmt.Fprintln(w, "\tpc#\tline#\tsource\tscratch\tstack")
+	fmt.Fprintln(w, "pc#\tln#\tsource\tscratch\tstack")
 	for idx, s := range state {
 
 		prevScratch := []models.TealValue{}
@@ -244,10 +262,11 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 			prevScratch = state[idx-1].Scratch
 		}
 
-		srcLine := fmt.Sprintf("\t%4d\t%4d\t%s\t%s\t%s",
-			s.Pc, s.Line, disassemmbly[s.Line],
-			scratchToString(prevScratch, s.Scratch),
-			stackToString(s.Stack))
+		srcLine := fmt.Sprintf("%d\t%d\t%s\t%s\t%s",
+			s.Pc, s.Line,
+			truncate(disassemmbly[s.Line], spc.MaxWidth),
+			truncate(scratchToString(prevScratch, s.Scratch), spc.MaxWidth),
+			truncate(stackToString(spc.TopOfStackFirst, s.Stack), spc.MaxWidth))
 
 		fmt.Fprintln(w, srcLine)
 	}
@@ -258,12 +277,19 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 
 // GetAppCallTrace returns a string representing a stack trace for this transactions
 // application logic evaluation
-func (d *DryrunTxnResult) GetAppCallTrace(spaces ...int) string {
-	return d.trace(d.AppCallTrace, d.Disassembly, spaces...)
+func (d *DryrunTxnResult) GetAppCallTrace(spc StackPrinterConfig) string {
+	return d.trace(d.AppCallTrace, d.Disassembly, spc)
 }
 
 // GetLogicSigTrace returns a string representing a stack trace for this transactions
 // logic signature evaluation
-func (d *DryrunTxnResult) GetLogicSigTrace(spaces ...int) string {
-	return d.trace(d.LogicSigTrace, d.LogicSigDisassembly, spaces...)
+func (d *DryrunTxnResult) GetLogicSigTrace(spc StackPrinterConfig) string {
+	return d.trace(d.LogicSigTrace, d.LogicSigDisassembly, spc)
+}
+
+func truncate(str string, width int) string {
+	if len(str) > width && width > 0 {
+		return str[:width] + "..."
+	}
+	return str
 }

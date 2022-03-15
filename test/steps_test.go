@@ -321,8 +321,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
-	s.Step(`^a dryrun response file "([^"]*)" and a transaction id "([^"]*)"$`, aDryrunResponseFileAndATransactionId)
-	s.Step(`^I call app trace$`, iCallAppTrace)
+	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
+	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 	s.Step(`^the output should equal "([^"]*)"$`, theOutputShouldEqual)
 
 	s.BeforeScenario(func(interface{}) {
@@ -2521,7 +2521,7 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 	return nil
 }
 
-func aDryrunResponseFileAndATransactionId(arg1, arg2 string) error {
+func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
 	data, err := loadResource(arg1)
 	if err != nil {
 		return err
@@ -2538,8 +2538,9 @@ func aDryrunResponseFileAndATransactionId(arg1, arg2 string) error {
 	return nil
 }
 
-func iCallAppTrace() error {
-	trace = txTrace.GetAppCallTrace()
+func callingAppTraceProduces(arg1 string) error {
+	cfg := future.DefaultStackPrinterConfig()
+	trace = txTrace.GetAppCallTrace(cfg)
 	return nil
 }
 
@@ -2549,7 +2550,7 @@ func theOutputShouldEqual(arg1 string) error {
 		return err
 	}
 	if string(data) != trace {
-		return fmt.Errorf("No matching trace: \n %s \nvs\n %s \n", string(data), trace)
+		return fmt.Errorf("No matching trace: \n'%s'\nvs\n'%s'\n", string(data), trace)
 	}
 	return nil
 }
