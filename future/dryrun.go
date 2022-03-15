@@ -262,9 +262,14 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 			prevScratch = state[idx-1].Scratch
 		}
 
+		src := disassemmbly[s.Line]
+		if s.Error != "" {
+			src = fmt.Sprintf("!! %s !!", s.Error)
+		}
+
 		srcLine := fmt.Sprintf("%d\t%d\t%s\t%s\t%s",
 			s.Pc, s.Line,
-			truncate(disassemmbly[s.Line], spc.MaxWidth),
+			truncate(src, spc.MaxWidth),
 			truncate(scratchToString(prevScratch, s.Scratch), spc.MaxWidth),
 			truncate(stackToString(spc.TopOfStackFirst, s.Stack), spc.MaxWidth))
 
