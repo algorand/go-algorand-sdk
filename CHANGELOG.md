@@ -1,12 +1,12 @@
 # 1.14.0-beta.1
-## Added:
+## Added
 - Unlimited assets changes (#294)
 # 1.13.0
 ## Added
 - Add app creator to dryrun request (#283)
 - Stateproof keys APIs changes (#284)
 - adding status code checker to msgpack decode (#286)
-## Changed:
+## Changed
 - Update to use v2 client (#270)
 - Implement C2C tests (#282)
 - Add circleci job (#287)
