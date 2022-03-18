@@ -10,11 +10,6 @@ type AssetHolding struct {
 	// AssetId asset ID of the holding.
 	AssetId uint64 `json:"asset-id"`
 
-	// Creator address that created this asset. This is the address where the
-	// parameters for this asset can be found, and also the address where unwanted
-	// asset units can be sent in the worst case.
-	Creator string `json:"creator"`
-
 	// Deleted whether or not the asset holding is currently deleted from its account.
 	Deleted bool `json:"deleted,omitempty"`
 
