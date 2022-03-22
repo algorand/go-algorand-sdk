@@ -197,35 +197,35 @@ type indexedScratchValue struct {
 }
 
 func scratchToString(prevScratch, currScratch []models.TealValue) string {
+	if len(currScratch) == 0 {
+		return ""
+	}
+
+	var newScratchVal *indexedScratchValue
+
 	prevScratchMap := map[indexedScratchValue]bool{}
 	for idx, psv := range prevScratch {
-		if psv.Type == 0 {
-			continue
-		}
 		isv := indexedScratchValue{Idx: idx, Val: psv}
 		prevScratchMap[isv] = true
 	}
 
-	newScratchVal := indexedScratchValue{}
 	for idx, csv := range currScratch {
-		if csv.Type == 0 {
-			continue
-		}
 		isv := indexedScratchValue{Idx: idx, Val: csv}
 		if _, ok := prevScratchMap[isv]; !ok {
-			newScratchVal = isv
+			newScratchVal = &isv
 		}
 	}
 
-	switch newScratchVal.Val.Type {
-	case 1:
-		decoded, _ := base64.StdEncoding.DecodeString(newScratchVal.Val.Bytes)
-		return fmt.Sprintf("%d = %#x", newScratchVal.Idx, decoded)
-	case 2:
-		return fmt.Sprintf("%d = %d", newScratchVal.Idx, newScratchVal.Val.Uint)
-	default:
+	if newScratchVal == nil {
 		return ""
 	}
+
+	if len(newScratchVal.Val.Bytes) > 0 {
+		decoded, _ := base64.StdEncoding.DecodeString(newScratchVal.Val.Bytes)
+		return fmt.Sprintf("%d = %#x", newScratchVal.Idx, decoded)
+	}
+
+	return fmt.Sprintf("%d = %d", newScratchVal.Idx, newScratchVal.Val.Uint)
 }
 
 func stackToString(reverse bool, stack []models.TealValue) string {
