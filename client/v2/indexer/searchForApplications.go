@@ -13,6 +13,9 @@ type SearchForApplicationsParams struct {
 	// ApplicationId application ID
 	ApplicationId uint64 `url:"application-id,omitempty"`
 
+	// Creator filter just applications with the given creator address.
+	Creator string `url:"creator,omitempty"`
+
 	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
@@ -37,6 +40,12 @@ type SearchForApplications struct {
 // ApplicationId application ID
 func (s *SearchForApplications) ApplicationId(ApplicationId uint64) *SearchForApplications {
 	s.p.ApplicationId = ApplicationId
+	return s
+}
+
+// Creator filter just applications with the given creator address.
+func (s *SearchForApplications) Creator(Creator string) *SearchForApplications {
+	s.p.Creator = Creator
 	return s
 }
 

@@ -29,6 +29,11 @@ type SearchAccountsParams struct {
 	// will be used.
 	CurrencyLessThan uint64 `url:"currency-less-than,omitempty"`
 
+	// Exclude exclude additional items such as asset holdings, application local data
+	// stored for this account, asset parameters created by this account, and
+	// application parameters created by this account.
+	Exclude []string `url:"exclude,omitempty,comma"`
+
 	// IncludeAll include all items including closed accounts, deleted applications,
 	// destroyed assets, opted-out asset holdings, and closed-out application
 	// localstates.
@@ -85,6 +90,14 @@ func (s *SearchAccounts) CurrencyGreaterThan(CurrencyGreaterThan uint64) *Search
 // will be used.
 func (s *SearchAccounts) CurrencyLessThan(CurrencyLessThan uint64) *SearchAccounts {
 	s.p.CurrencyLessThan = CurrencyLessThan
+	return s
+}
+
+// Exclude exclude additional items such as asset holdings, application local data
+// stored for this account, asset parameters created by this account, and
+// application parameters created by this account.
+func (s *SearchAccounts) Exclude(Exclude []string) *SearchAccounts {
+	s.p.Exclude = Exclude
 	return s
 }
 
