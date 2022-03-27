@@ -1,11 +1,5 @@
 package types
 
-import (
-	"github.com/algorand/go-algorand/crypto"
-	"github.com/algorand/go-algorand/data/basics"
-	"github.com/algorand/go-algorand/protocol"
-)
-
 type (
 	// BlockHash represents the hash of a block
 	BlockHash Digest
@@ -102,7 +96,7 @@ type (
 		// CompactCert tracks the state of compact certs, potentially
 		// for multiple types of certs.
 		//msgp:sort protocol.CompactCertType protocol.SortCompactCertType
-		CompactCert map[protocol.CompactCertType]CompactCertState `codec:"cc,allocbound=protocol.NumCompactCertTypes"`
+		//CompactCert map[protocol.CompactCertType]CompactCertState `codec:"cc"`
 
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
@@ -117,7 +111,7 @@ type (
 		// ExpiredParticipationAccounts contains a list of online accounts
 		// that needs to be converted to offline since their
 		// participation key expired.
-		ExpiredParticipationAccounts []basics.Address `codec:"partupdrmv,allocbound=config.MaxProposedExpiredOnlineAccounts"`
+		ExpiredParticipationAccounts []Address `codec:"partupdrmv"`
 	}
 
 	// RewardsState represents the global parameters controlling the rate
@@ -188,17 +182,17 @@ type (
 		// are a multiple of ConsensusParams.CompactCertRounds.  For blocks
 		// that are not a multiple of ConsensusParams.CompactCertRounds,
 		// this value is zero.
-		CompactCertVoters crypto.GenericDigest `codec:"v"`
+		CompactCertVoters []byte `codec:"v"`
 
 		// CompactCertVotersTotal is the total number of microalgos held by
 		// the accounts in CompactCertVoters (or zero, if the merkle root is
 		// zero).  This is intended for computing the threshold of votes to
 		// expect from CompactCertVoters.
-		CompactCertVotersTotal basics.MicroAlgos `codec:"t"`
+		CompactCertVotersTotal MicroAlgos `codec:"t"`
 
 		// CompactCertNextRound is the next round for which we will accept
 		// a CompactCert transaction.
-		CompactCertNextRound basics.Round `codec:"n"`
+		CompactCertNextRound Round `codec:"n"`
 	}
 
 	// A Block contains the Payset and metadata corresponding to a given Round.
