@@ -93,11 +93,6 @@ type (
 		// started being supported).
 		TxnCounter uint64 `codec:"tc"`
 
-		// CompactCert tracks the state of compact certs, potentially
-		// for multiple types of certs.
-		//msgp:sort protocol.CompactCertType protocol.SortCompactCertType
-		//CompactCert map[protocol.CompactCertType]CompactCertState `codec:"cc"`
-
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
 		ParticipationUpdates
@@ -170,29 +165,6 @@ type (
 		NextProtocolApprovals  uint64 `codec:"nextyes"`
 		NextProtocolVoteBefore Round  `codec:"nextbefore"`
 		NextProtocolSwitchOn   Round  `codec:"nextswitch"`
-	}
-
-	// CompactCertState tracks the state of compact certificates.
-	CompactCertState struct {
-		_struct struct{} `codec:",omitempty,omitemptyarray"`
-
-		// CompactCertVoters is the root of a Merkle tree containing the
-		// online accounts that will help sign a compact certificate.  The
-		// Merkle root, and the compact certificate, happen on blocks that
-		// are a multiple of ConsensusParams.CompactCertRounds.  For blocks
-		// that are not a multiple of ConsensusParams.CompactCertRounds,
-		// this value is zero.
-		CompactCertVoters []byte `codec:"v"`
-
-		// CompactCertVotersTotal is the total number of microalgos held by
-		// the accounts in CompactCertVoters (or zero, if the merkle root is
-		// zero).  This is intended for computing the threshold of votes to
-		// expect from CompactCertVoters.
-		CompactCertVotersTotal MicroAlgos `codec:"t"`
-
-		// CompactCertNextRound is the next round for which we will accept
-		// a CompactCert transaction.
-		CompactCertNextRound Round `codec:"n"`
 	}
 
 	// A Block contains the Payset and metadata corresponding to a given Round.
