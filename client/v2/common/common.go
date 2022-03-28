@@ -230,7 +230,7 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 		return extractError(resp.StatusCode, bodyBytes)
 	}
 
-	dec := msgpack.NewDecoder(resp.Body)
+	dec := msgpack.NewLenientDecoder(resp.Body)
 	return dec.Decode(&response)
 }
 
