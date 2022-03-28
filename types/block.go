@@ -92,6 +92,21 @@ type (
 		// transactions have ever been committed (since TxnCounter
 		// started being supported).
 		TxnCounter uint64 `codec:"tc"`
+
+		// ParticipationUpdates contains the information needed to mark
+		// certain accounts offline because their participation keys expired
+		ParticipationUpdates
+	}
+
+	// ParticipationUpdates represents participation account data that
+	// needs to be checked/acted on by the network
+	ParticipationUpdates struct {
+		_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+		// ExpiredParticipationAccounts contains a list of online accounts
+		// that needs to be converted to offline since their
+		// participation key expired.
+		ExpiredParticipationAccounts []Address `codec:"partupdrmv"`
 	}
 
 	// RewardsState represents the global parameters controlling the rate
