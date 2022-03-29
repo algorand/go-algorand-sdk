@@ -10,6 +10,9 @@ import (
 // with our settings (canonical, paranoid about decoding errors)
 var CodecHandle *codec.MsgpackHandle
 
+// LenientCodecHandle is used to instantiate msgpack encoders for the REST API.
+var LenientCodecHandle *codec.MsgpackHandle
+
 // init configures our msgpack encoder and decoder
 func init() {
 	CodecHandle = new(codec.MsgpackHandle)
@@ -19,6 +22,15 @@ func init() {
 	CodecHandle.RecursiveEmptyCheck = true
 	CodecHandle.WriteExt = true
 	CodecHandle.PositiveIntUnsigned = true
+
+	LenientCodecHandle = new(codec.MsgpackHandle)
+	// allow unknown fields to ensure forward compatibility.
+	LenientCodecHandle.ErrorIfNoField = false
+	LenientCodecHandle.ErrorIfNoArrayExpand = true
+	LenientCodecHandle.Canonical = true
+	LenientCodecHandle.RecursiveEmptyCheck = true
+	LenientCodecHandle.WriteExt = true
+	LenientCodecHandle.PositiveIntUnsigned = true
 }
 
 // Encode returns a msgpack-encoded byte buffer for a given object
@@ -43,4 +55,9 @@ func Decode(b []byte, objptr interface{}) error {
 // NewDecoder returns a msgpack decoder
 func NewDecoder(r io.Reader) *codec.Decoder {
 	return codec.NewDecoder(r, CodecHandle)
+}
+
+// NewLenientDecoder returns a msgpack decoder
+func NewLenientDecoder(r io.Reader) *codec.Decoder {
+	return codec.NewDecoder(r, LenientCodecHandle)
 }
