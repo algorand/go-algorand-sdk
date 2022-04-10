@@ -13,6 +13,9 @@ type GetProofParams struct {
 
 	// Format configures whether the response object is JSON or MessagePack encoded.
 	Format string `url:"format,omitempty"`
+
+	// Hashtype the hash function to use for the proof.
+	Hashtype string `url:"hashtype,omitempty"`
 }
 
 // GetProof get a Merkle proof for a transaction in a block.
@@ -23,6 +26,12 @@ type GetProof struct {
 	txid  string
 
 	p GetProofParams
+}
+
+// Hashtype the hash function to use for the proof.
+func (s *GetProof) Hashtype(Hashtype string) *GetProof {
+	s.p.Hashtype = Hashtype
+	return s
 }
 
 // Do performs the HTTP request

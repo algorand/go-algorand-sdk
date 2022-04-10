@@ -9,7 +9,7 @@ import (
 
 // TealCompile given TEAL source code in plain text, return base64 encoded program
 // bytes and base32 SHA512_256 hash of program bytes (Address style). This endpoint
-// is only enabled when a node's configureation file sets EnableDeveloperAPI to
+// is only enabled when a node's configuration file sets EnableDeveloperAPI to
 // true.
 type TealCompile struct {
 	c *Client

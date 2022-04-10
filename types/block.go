@@ -18,10 +18,10 @@ type (
 		Seed [32]byte `codec:"seed"`
 
 		// TxnRoot authenticates the set of transactions appearing in the block.
-		// More specifically, it's the root of a merkle tree whose leaves are the block's Txids.
+		// More specifically, it contains the roots of merkle trees (SHA512_256 and SHA256) whose leaves are the block's Txids.
 		// Note that the TxnRoot does not authenticate the signatures on the transactions, only the transactions themselves.
 		// Two blocks with the same transactions but with different signatures will have the same TxnRoot.
-		TxnRoot Digest `codec:"txn"`
+		TxnRoot
 
 		// TimeStamp in seconds since epoch
 		TimeStamp int64 `codec:"ts"`
@@ -96,6 +96,13 @@ type (
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
 		ParticipationUpdates
+	}
+
+	// TxnRoot represents the root of the merkle tree generated from the transaction in this block.
+	TxnRoot struct {
+		_struct          struct{} `codec:",omitempty,omitemptyarray"`
+		DigestSha256     Digest   `codec:"txn256"` // root of transaction vector commitment merkle tree using SHA256 hash function
+		DigestSha512_256 Digest   `codec:"txn"`    // root of transaction merkle tree using SHA512_256 hash function
 	}
 
 	// ParticipationUpdates represents participation account data that
