@@ -14,7 +14,9 @@ type GetProofParams struct {
 	// Format configures whether the response object is JSON or MessagePack encoded.
 	Format string `url:"format,omitempty"`
 
-	// Hashtype the hash function to use for the proof.
+	// Hashtype the type of hash function used to create the proof, must be one of:
+	// * sha512_256
+	// * sha256
 	Hashtype string `url:"hashtype,omitempty"`
 }
 
@@ -28,7 +30,9 @@ type GetProof struct {
 	p GetProofParams
 }
 
-// Hashtype the hash function to use for the proof.
+// Hashtype the type of hash function used to create the proof, must be one of:
+// * sha512_256
+// * sha256
 func (s *GetProof) Hashtype(Hashtype string) *GetProof {
 	s.p.Hashtype = Hashtype
 	return s
