@@ -1,3 +1,10 @@
+# 1.14.1
+- Avoid client response failure on unknown field (#307)
+- Add ParticipationUpdates to BlockHeader (#306)
+# 1.14.0
+- Unlimited assets changes (#294)
+- Update abi impl from go-algorand (#303)
+- Update go to version 1.16 (#301)
 # 1.14.0-beta.1
 - Unlimited assets changes (#294)
 # 1.13.0

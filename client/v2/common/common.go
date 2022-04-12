@@ -3,13 +3,14 @@ package common
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
+	"github.com/algorand/go-algorand-sdk/encoding/json"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/google/go-querystring/query"
 )
@@ -123,7 +124,7 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, body inter
 
 			queryURL.RawQuery = mergeRawQueries(queryURL.RawQuery, v.Encode())
 			if encodeJSON {
-				jsonValue, _ := json.Marshal(body)
+				jsonValue := json.Encode(body)
 				bodyReader = bytes.NewBuffer(jsonValue)
 			}
 		}
@@ -182,7 +183,7 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	}
 
 	// Attempt to unmarshal a response regardless of whether or not there was an error.
-	err = json.Unmarshal(bodyBytes, response)
+	err = json.LenientDecode(bodyBytes, response)
 	if responseErr != nil {
 		// Even if there was an unmarshalling error, return the HTTP error first if there was one.
 		return responseErr
@@ -230,7 +231,7 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 		return extractError(resp.StatusCode, bodyBytes)
 	}
 
-	dec := msgpack.NewDecoder(resp.Body)
+	dec := msgpack.NewLenientDecoder(resp.Body)
 	return dec.Decode(&response)
 }
 
