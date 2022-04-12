@@ -133,13 +133,13 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 
 // StackPrinterConfig holds some configuration parameters for how to print a DryrunResponse stack trace
 type StackPrinterConfig struct {
-	MaxWidth        int  // Set the max width of the column, 0 is no max
+	MaxValueWidth   int  // Set the max width of the column, 0 is no max
 	TopOfStackFirst bool // Set the order of the stack values printed, true is top of stack (last pushed) first
 }
 
 // DefaultStackPrinterConfig returns a new StackPrinterConfig with reasonable defaults
 func DefaultStackPrinterConfig() StackPrinterConfig {
-	return StackPrinterConfig{MaxWidth: defaultMaxWidth, TopOfStackFirst: true}
+	return StackPrinterConfig{MaxValueWidth: defaultMaxWidth, TopOfStackFirst: true}
 }
 
 type DryrunResponse struct {
@@ -269,9 +269,9 @@ func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []strin
 
 		srcLine := fmt.Sprintf("%d\t%d\t%s\t%s\t%s",
 			s.Pc, s.Line,
-			truncate(src, spc.MaxWidth),
-			truncate(scratchToString(prevScratch, s.Scratch), spc.MaxWidth),
-			truncate(stackToString(spc.TopOfStackFirst, s.Stack), spc.MaxWidth))
+			truncate(src, spc.MaxValueWidth),
+			truncate(scratchToString(prevScratch, s.Scratch), spc.MaxValueWidth),
+			truncate(stackToString(spc.TopOfStackFirst, s.Stack), spc.MaxValueWidth))
 
 		fmt.Fprintln(w, srcLine)
 	}
