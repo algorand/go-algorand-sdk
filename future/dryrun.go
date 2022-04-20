@@ -1,8 +1,13 @@
 package future
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -12,6 +17,9 @@ import (
 
 const (
 	defaultAppId uint64 = 1380011588
+
+	rejectMsg       = "REJECT"
+	defaultMaxWidth = 30
 )
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
@@ -121,4 +129,172 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 	}
 
 	return
+}
+
+// StackPrinterConfig holds some configuration parameters for how to print a DryrunResponse stack trace
+type StackPrinterConfig struct {
+	MaxValueWidth   int  // Set the max width of the column, 0 is no max
+	TopOfStackFirst bool // Set the order of the stack values printed, true is top of stack (last pushed) first
+}
+
+// DefaultStackPrinterConfig returns a new StackPrinterConfig with reasonable defaults
+func DefaultStackPrinterConfig() StackPrinterConfig {
+	return StackPrinterConfig{MaxValueWidth: defaultMaxWidth, TopOfStackFirst: true}
+}
+
+type DryrunResponse struct {
+	Error           string            `json:"error"`
+	ProtocolVersion string            `json:"protocol-version"`
+	Txns            []DryrunTxnResult `json:"txns"`
+}
+
+func NewDryrunResponse(d models.DryrunResponse) (DryrunResponse, error) {
+	// TODO:  this is lazy but also works?
+	dr := DryrunResponse{}
+	b, err := json.Marshal(dr)
+	if err != nil {
+		return dr, err
+	}
+	err = json.Unmarshal(b, &dr)
+	return dr, err
+}
+
+func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
+	dr := DryrunResponse{}
+	err := json.Unmarshal(js, &dr)
+	return dr, err
+}
+
+type DryrunTxnResult struct {
+	models.DryrunTxnResult
+}
+
+// AppCallRejected returns true if the Application Call was rejected
+// for this transaction
+func (d *DryrunTxnResult) AppCallRejected() bool {
+	for _, m := range d.AppCallMessages {
+		if m == rejectMsg {
+			return true
+		}
+	}
+	return false
+}
+
+// LogicSigRejected returns true if the LogicSig was rejected
+// for this transaction
+func (d *DryrunTxnResult) LogicSigRejected() bool {
+	for _, m := range d.LogicSigMessages {
+		if m == rejectMsg {
+			return true
+		}
+	}
+	return false
+}
+
+type indexedScratchValue struct {
+	Idx int
+	Val models.TealValue
+}
+
+func scratchToString(prevScratch, currScratch []models.TealValue) string {
+	if len(currScratch) == 0 {
+		return ""
+	}
+
+	var newScratchVal *indexedScratchValue
+
+	prevScratchMap := map[indexedScratchValue]bool{}
+	for idx, psv := range prevScratch {
+		isv := indexedScratchValue{Idx: idx, Val: psv}
+		prevScratchMap[isv] = true
+	}
+
+	for idx, csv := range currScratch {
+		isv := indexedScratchValue{Idx: idx, Val: csv}
+		if _, ok := prevScratchMap[isv]; !ok {
+			newScratchVal = &isv
+		}
+	}
+
+	if newScratchVal == nil {
+		return ""
+	}
+
+	if len(newScratchVal.Val.Bytes) > 0 {
+		decoded, _ := base64.StdEncoding.DecodeString(newScratchVal.Val.Bytes)
+		return fmt.Sprintf("%d = %#x", newScratchVal.Idx, decoded)
+	}
+
+	return fmt.Sprintf("%d = %d", newScratchVal.Idx, newScratchVal.Val.Uint)
+}
+
+func stackToString(reverse bool, stack []models.TealValue) string {
+	elems := len(stack)
+	svs := make([]string, elems)
+	for idx, s := range stack {
+
+		svidx := idx
+		if reverse {
+			svidx = (elems - 1) - idx
+		}
+
+		if s.Type == 1 {
+			// Just returns empty string if there is an error, use it
+			decoded, _ := base64.StdEncoding.DecodeString(s.Bytes)
+			svs[svidx] = fmt.Sprintf("%#x", decoded)
+		} else {
+			svs[svidx] = fmt.Sprintf("%d", s.Uint)
+		}
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(svs, ", "))
+}
+
+func (d *DryrunTxnResult) trace(state []models.DryrunState, disassemmbly []string, spc StackPrinterConfig) string {
+	buff := bytes.NewBuffer(nil)
+	w := tabwriter.NewWriter(buff, 0, 0, 1, ' ', tabwriter.Debug)
+
+	fmt.Fprintln(w, "pc#\tln#\tsource\tscratch\tstack")
+	for idx, s := range state {
+
+		prevScratch := []models.TealValue{}
+		if idx > 0 {
+			prevScratch = state[idx-1].Scratch
+		}
+
+		src := disassemmbly[s.Line]
+		if s.Error != "" {
+			src = fmt.Sprintf("!! %s !!", s.Error)
+		}
+
+		srcLine := fmt.Sprintf("%d\t%d\t%s\t%s\t%s",
+			s.Pc, s.Line,
+			truncate(src, spc.MaxValueWidth),
+			truncate(scratchToString(prevScratch, s.Scratch), spc.MaxValueWidth),
+			truncate(stackToString(spc.TopOfStackFirst, s.Stack), spc.MaxValueWidth))
+
+		fmt.Fprintln(w, srcLine)
+	}
+	w.Flush()
+
+	return buff.String()
+}
+
+// GetAppCallTrace returns a string representing a stack trace for this transactions
+// application logic evaluation
+func (d *DryrunTxnResult) GetAppCallTrace(spc StackPrinterConfig) string {
+	return d.trace(d.AppCallTrace, d.Disassembly, spc)
+}
+
+// GetLogicSigTrace returns a string representing a stack trace for this transactions
+// logic signature evaluation
+func (d *DryrunTxnResult) GetLogicSigTrace(spc StackPrinterConfig) string {
+	return d.trace(d.LogicSigTrace, d.LogicSigDisassembly, spc)
+}
+
+func truncate(str string, width int) string {
+	if len(str) > width && width > 0 {
+		return str[:width] + "..."
+	}
+	return str
 }

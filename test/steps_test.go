@@ -105,6 +105,8 @@ var accountTxSigner future.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
 var accountTxAndSigner future.TransactionWithSigner
+var txTrace future.DryrunTxnResult
+var trace string
 
 var assetTestFixture struct {
 	Creator               string
@@ -319,6 +321,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
+	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
+	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2513,5 +2517,37 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 	}
 
 	// direct tx equality checking isn't fully implemented in go-sdk so this test is incomplete
+	return nil
+}
+
+func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
+	data, err := loadResource(arg1)
+	if err != nil {
+		return err
+	}
+	dr, err := future.NewDryrunResponseFromJson(data)
+	if err != nil {
+		return err
+	}
+	idx, err := strconv.Atoi(arg2)
+	if err != nil {
+		return err
+	}
+	txTrace = dr.Txns[idx]
+	return nil
+}
+
+func callingAppTraceProduces(arg1 string) error {
+	cfg := future.DefaultStackPrinterConfig()
+	cfg.TopOfStackFirst = false
+	trace = txTrace.GetAppCallTrace(cfg)
+
+	data, err := loadResource(arg1)
+	if err != nil {
+		return err
+	}
+	if string(data) != trace {
+		return fmt.Errorf("No matching trace: \n'%s'\nvs\n'%s'\n", string(data), trace)
+	}
 	return nil
 }
