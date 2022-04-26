@@ -49,6 +49,11 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 
 		accts = append(accts, t.Txn.Accounts...)
 		apps = append(apps, t.Txn.ForeignApps...)
+
+		for _, aidx := range t.Txn.ForeignApps {
+			accts = append(accts, crypto.GetApplicationAddress(uint64(aidx)))
+		}
+
 		assets = append(assets, t.Txn.ForeignAssets...)
 
 		if t.Txn.ApplicationID == 0 {
