@@ -9,8 +9,11 @@ type DryrunTxnResult struct {
 	// AppCallTrace
 	AppCallTrace []DryrunState `json:"app-call-trace,omitempty"`
 
-	// Cost execution cost of app call transaction
-	Cost uint64 `json:"cost,omitempty"`
+	// Budgetcredit budget consumed during execution of app call transaction.
+	Budgetcredit uint64 `json:"budgetCredit,omitempty"`
+
+	// Budgetdebit budget added during execution of app call transaction.
+	Budgetdebit uint64 `json:"budgetDebit,omitempty"`
 
 	// Disassembly disassembled program line by line.
 	Disassembly []string `json:"disassembly"`
