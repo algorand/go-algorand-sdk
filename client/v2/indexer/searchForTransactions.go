@@ -85,7 +85,9 @@ type SearchForTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
-// SearchForTransactions search for transactions.
+// SearchForTransactions search for transactions. Transactions are returned oldest
+// to newest unless the address parameter is used, in which case results are
+// returned newest to oldest.
 type SearchForTransactions struct {
 	c *Client
 

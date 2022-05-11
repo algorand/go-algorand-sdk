@@ -70,7 +70,8 @@ type LookupAccountTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
-// LookupAccountTransactions lookup account transactions.
+// LookupAccountTransactions lookup account transactions. Transactions are returned
+// newest to oldest.
 type LookupAccountTransactions struct {
 	c *Client
 
