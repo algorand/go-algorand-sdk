@@ -86,11 +86,14 @@ type AddMethodCallParams struct {
 	RekeyTo types.Address
 	// A transaction Signer that can authorize this application call from sender
 	Signer TransactionSigner
-	// Any foreign apps to be passed that aren't part of the method signature
+	// Any foreign apps to be passed that aren't part of the method signature.
+	// If apps are provided here, the apps specified in the method args will appear after these
 	ForeignApps []uint64
 	// Any foreign assets to be passed that aren't part of the method signature
+	// If assets are provided here, the assets specified in the method args will appear after these
 	ForeignAssets []uint64
 	// Any foreign accounts to be passed that aren't part of the method signature
+	// If accounts are provided here, the accounts specified in the method args will appear after these
 	ForeignAccounts []string
 }
 
