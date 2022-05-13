@@ -86,6 +86,12 @@ type AddMethodCallParams struct {
 	RekeyTo types.Address
 	// A transaction Signer that can authorize this application call from sender
 	Signer TransactionSigner
+	// Any foreign apps to be passed that aren't part of the method signature
+	ForeignApps []uint64
+	// Any foreign assets to be passed that aren't part of the method signature
+	ForeignAssets []uint64
+	// Any foreign accounts to be passed that aren't part of the method signature
+	ForeignAccounts []string
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an
@@ -305,9 +311,11 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		}
 	}
 
-	var foreignAccounts []string
-	var foreignApps []uint64
-	var foreignAssets []uint64
+	var (
+		foreignAccounts = params.ForeignAccounts[:]
+		foreignApps     = params.ForeignApps[:]
+		foreignAssets   = params.ForeignAssets[:]
+	)
 	refArgsResolved, err := populateMethodCallReferenceArgs(params.Sender.String(), params.AppID, refArgTypes, refArgValues, &foreignAccounts, &foreignApps, &foreignAssets)
 	if err != nil {
 		return err
