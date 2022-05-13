@@ -7,4 +7,7 @@ type CompileResponse struct {
 
 	// Result base64 encoded program bytes
 	Result string `json:"result"`
+
+	// Sourcemap jSON of the source map
+	Sourcemap *map[string]interface{} `json:"sourcemap,omitempty"`
 }

@@ -124,6 +124,10 @@ func (c *Client) TealCompile(source []byte) *TealCompile {
 	return &TealCompile{c: c, source: source}
 }
 
+func (c *Client) TealDisassemble(source []byte) *TealDisassemble {
+	return &TealDisassemble{c: c, source: source}
+}
+
 func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 	return &TealDryrun{c: c, request: request}
 }
