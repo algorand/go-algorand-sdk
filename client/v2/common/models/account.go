@@ -54,11 +54,6 @@ type Account struct {
 	// Deleted whether or not this account is currently closed.
 	Deleted bool `json:"deleted,omitempty"`
 
-	// Hashtype the type of hash function used to create the proof, must be one of:
-	// * sha512_256
-	// * sha256
-	Hashtype string `json:"hashtype,omitempty"`
-
 	// Participation accountParticipation describes the parameters used by this account
 	// in consensus protocol.
 	Participation AccountParticipation `json:"participation,omitempty"`
