@@ -700,8 +700,10 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	boxReferences := make([]types.BoxReference, 1)
+	boxReferences[0] = types.BoxReference{ForeignAppIdx: 0, Name: "box_name"}
 
-	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 0, tx.ExtraProgramPages)
 	tx, err = MakeApplicationCallTxWithExtraPages(tx, 2)

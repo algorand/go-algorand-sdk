@@ -172,27 +172,27 @@ func buildLegacyAppCallTransaction(
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
+			gSchema, lSchema, args, accs, fApp, fAssets, nil,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets, nil,
 			approvalP, clearP,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
 		tx, err = future.MakeApplicationCallTx(uint64(applicationId), args, accs,
-			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, nil, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets, nil,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets, nil,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets, nil,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets, nil,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)

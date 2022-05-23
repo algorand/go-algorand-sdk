@@ -605,6 +605,9 @@ func byte64FromBase64(in string) (out [64]byte, err error) {
 // - extraPages    ExtraProgramPages specifies the additional app program size requested in pages.
 //                 A page is 1024 bytes. This field enables execution of app programs
 //                 larger than the default maximum program size.
+//
+// - boxes		   lists the boxes to be accessed during evaluation of the application
+//				   call. This also must include the boxes accessed by inner app calls.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
@@ -618,6 +621,7 @@ func MakeApplicationCreateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -636,6 +640,7 @@ func MakeApplicationCreateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		oncomp,
 		approvalProg,
 		clearProg,
@@ -660,6 +665,7 @@ func MakeApplicationCreateTxWithExtraPages(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -678,6 +684,7 @@ func MakeApplicationCreateTxWithExtraPages(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		oncomp,
 		approvalProg,
 		clearProg,
@@ -703,6 +710,7 @@ func MakeApplicationUpdateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	approvalProg []byte,
 	clearProg []byte,
 	sp types.SuggestedParams,
@@ -716,6 +724,7 @@ func MakeApplicationUpdateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.UpdateApplicationOC,
 		approvalProg,
 		clearProg,
@@ -737,6 +746,7 @@ func MakeApplicationDeleteTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -748,6 +758,7 @@ func MakeApplicationDeleteTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.DeleteApplicationOC,
 		nil,
 		nil,
@@ -770,6 +781,7 @@ func MakeApplicationOptInTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -781,6 +793,7 @@ func MakeApplicationOptInTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.OptInOC,
 		nil,
 		nil,
@@ -803,6 +816,7 @@ func MakeApplicationCloseOutTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -814,6 +828,7 @@ func MakeApplicationCloseOutTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.CloseOutOC,
 		nil,
 		nil,
@@ -837,6 +852,7 @@ func MakeApplicationClearStateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -848,6 +864,7 @@ func MakeApplicationClearStateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.ClearStateOC,
 		nil,
 		nil,
@@ -871,6 +888,7 @@ func MakeApplicationNoOpTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -883,6 +901,7 @@ func MakeApplicationNoOpTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
+		boxReferences,
 		types.NoOpOC,
 		nil,
 		nil,
@@ -906,6 +925,7 @@ func MakeApplicationCallTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	boxReferences []types.BoxReference,
 	onCompletion types.OnCompletion,
 	approvalProg []byte,
 	clearProg []byte,
@@ -929,6 +949,7 @@ func MakeApplicationCallTx(
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)
 	tx.ForeignAssets = parseTxnForeignAssets(foreignAssets)
+	tx.BoxReferences = boxReferences
 	tx.ApprovalProgram = approvalProg
 	tx.ClearStateProgram = clearProg
 	tx.LocalStateSchema = localSchema
