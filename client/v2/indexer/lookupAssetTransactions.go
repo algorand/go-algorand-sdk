@@ -80,7 +80,8 @@ type LookupAssetTransactionsParams struct {
 	TXID string `url:"txid,omitempty"`
 }
 
-// LookupAssetTransactions lookup transactions for an asset.
+// LookupAssetTransactions lookup transactions for an asset. Transactions are
+// returned oldest to newest.
 type LookupAssetTransactions struct {
 	c *Client
 
