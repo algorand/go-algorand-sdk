@@ -314,12 +314,23 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		}
 	}
 
-	var (
-		foreignAccounts = params.ForeignAccounts[:]
-		foreignApps     = params.ForeignApps[:]
-		foreignAssets   = params.ForeignAssets[:]
+	// copy foreign arrays before modifying in populateMethodCallReferenceArgs
+	foreignAccounts := make([]string, len(params.ForeignAccounts))
+	copy(foreignAccounts, params.ForeignAccounts)
+	foreignApps := make([]uint64, len(params.ForeignApps))
+	copy(foreignApps, params.ForeignApps)
+	foreignAssets := make([]uint64, len(params.ForeignAssets))
+	copy(foreignAssets, params.ForeignAssets)
+
+	refArgsResolved, err := populateMethodCallReferenceArgs(
+		params.Sender.String(),
+		params.AppID,
+		refArgTypes,
+		refArgValues,
+		&foreignAccounts,
+		&foreignApps,
+		&foreignAssets,
 	)
-	refArgsResolved, err := populateMethodCallReferenceArgs(params.Sender.String(), params.AppID, refArgTypes, refArgValues, &foreignAccounts, &foreignApps, &foreignAssets)
 	if err != nil {
 		return err
 	}
