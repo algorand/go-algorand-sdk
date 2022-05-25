@@ -59,14 +59,6 @@ type AddMethodCallParams struct {
 	// The arguments to include in the method call. If omitted, no arguments will be passed to the
 	// method.
 	MethodArgs []interface{}
-	// The accounts that need to be accessed by this method call.
-	Accounts []string
-	// The ids of the apps that need to be accessed by this method call.
-	ForeignApps []uint64
-	// The ids of the assets that need to be accessed by this method call.
-	ForeignAssets []uint64
-	// References of the boxes to be accessed by this method call.
-	BoxReferences []types.BoxReference
 	// The address of the sender of this application call
 	Sender types.Address
 	// Transactions params to use for this application call
@@ -103,6 +95,8 @@ type AddMethodCallParams struct {
 	// Any foreign accounts to be passed that aren't part of the method signature
 	// If accounts are provided here, the accounts specified in the method args will appear after these
 	ForeignAccounts []string
+	// References of the boxes to be accessed by this method call.
+	BoxReferences []types.BoxReference
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an
@@ -327,7 +321,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		params.AppID,
 		refArgTypes,
 		refArgValues,
-		&params.Accounts,
+		&params.ForeignAccounts,
 		&params.ForeignApps,
 		&params.ForeignAssets,
 	)
@@ -375,7 +369,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 	tx, err := MakeApplicationCallTx(
 		params.AppID,
 		encodedAbiArgs,
-		params.Accounts,
+		params.ForeignAccounts,
 		params.ForeignApps,
 		params.ForeignAssets,
 		params.BoxReferences,
