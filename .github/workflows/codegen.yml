@@ -1,7 +1,7 @@
 name: "SDK Code Generation"
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '20 23 * * *'
 permissions:
   contents: write
   pull-requests: write
@@ -12,7 +12,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Generate and PR
-        uses: Eric-Warehime/generator/.github/actions/sdk-codegen/@sdk-generation
+        uses: algorand/generator/.github/actions/sdk-codegen/
         with:
           args: "-k GO"
         env:
