@@ -195,7 +195,7 @@ func TestAddMethodCallWithManualForeignArgs(t *testing.T) {
 	require.Equal(t, txns[0].Txn.ForeignApps[0], types.AppIndex(1))
 	require.Equal(t, txns[0].Txn.ForeignApps[1], types.AppIndex(2))
 	// verify original params object hasn't changed.
-	require.Equal(t, len(params.ForeignApps), 1)
+	require.Equal(t, params.ForeignApps, []uint64{1})
 
 	require.Equal(t, len(txns[0].Txn.ForeignAssets), 1)
 	require.Equal(t, txns[0].Txn.ForeignAssets[0], types.AssetIndex(5))
