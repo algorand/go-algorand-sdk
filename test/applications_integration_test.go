@@ -220,6 +220,9 @@ func iBuildAnApplicationTransaction(
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, staticBoxes, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
 	case "optin":
 		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
@@ -349,8 +352,8 @@ func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
 		}
 		staticBoxes = append(staticBoxes,
 			types.BoxReference{
-				ForeignAppIdx: uint8(appID),
-				Name:          boxesArray[i+1],
+				AppID: appID,
+				Name:  boxesArray[i+1],
 			})
 	}
 
@@ -907,7 +910,7 @@ func checkRandomElementResult(resultIndex int, input string) error {
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
-	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransaction)
+	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+)$, boxes "([^"]*)"`, iBuildAnApplicationTransaction)
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)

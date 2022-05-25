@@ -949,7 +949,11 @@ func MakeApplicationCallTx(
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)
 	tx.ForeignAssets = parseTxnForeignAssets(foreignAssets)
-	tx.BoxReferences = boxReferences
+	tx.BoxReferences, err = parseBoxReferences(boxReferences, foreignApps, appIdx)
+	if err != nil {
+		return tx, err
+	}
+
 	tx.ApprovalProgram = approvalProg
 	tx.ClearStateProgram = clearProg
 	tx.LocalStateSchema = localSchema
@@ -1003,6 +1007,45 @@ func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
 	for _, aidx := range foreignAssets {
 		parsed = append(parsed, types.AssetIndex(aidx))
 	}
+	return
+}
+
+func parseBoxReferences(boxReferences []types.BoxReference, foreignApps []uint64, curAppID uint64) (parsed []types.BoxReferenceToSerialize, err error) {
+	for _, boxReference := range boxReferences {
+		// there are a few unintuitive details to the parsing:
+		//     1. the AppID of the box must either be in the foreign apps array or
+		//        equal to 0, which references the current app.
+		//     2. if the box references the current app by its appID rather than 0 AND
+		//        the current appID is explicitly provided in the foreign apps array
+		//        then ForeignAppIdx should be set to its index in the array.
+		boxRefToSerialize := types.BoxReferenceToSerialize{Name: boxReference.Name}
+		found := false
+
+		if boxReference.AppID == 0 {
+			found = true
+			boxRefToSerialize.ForeignAppIdx = 0
+		} else {
+			for idx, appID := range foreignApps {
+				if appID == boxReference.AppID {
+					found = true
+					boxRefToSerialize.ForeignAppIdx = uint64(idx + 1)
+					break
+				}
+			}
+		}
+
+		if !found && boxReference.AppID == curAppID {
+			found = true
+			boxRefToSerialize.ForeignAppIdx = 0
+		}
+
+		if !found {
+			return nil, fmt.Errorf("the app id provided for this box is not in the foreignApps array")
+		}
+
+		parsed = append(parsed, boxRefToSerialize)
+	}
+
 	return
 }
 
