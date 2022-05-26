@@ -86,6 +86,15 @@ type AddMethodCallParams struct {
 	RekeyTo types.Address
 	// A transaction Signer that can authorize this application call from sender
 	Signer TransactionSigner
+	// Any foreign apps to be passed that aren't part of the method signature.
+	// If apps are provided here, the apps specified in the method args will appear after these
+	ForeignApps []uint64
+	// Any foreign assets to be passed that aren't part of the method signature
+	// If assets are provided here, the assets specified in the method args will appear after these
+	ForeignAssets []uint64
+	// Any foreign accounts to be passed that aren't part of the method signature
+	// If accounts are provided here, the accounts specified in the method args will appear after these
+	ForeignAccounts []string
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an
@@ -305,10 +314,23 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		}
 	}
 
-	var foreignAccounts []string
-	var foreignApps []uint64
-	var foreignAssets []uint64
-	refArgsResolved, err := populateMethodCallReferenceArgs(params.Sender.String(), params.AppID, refArgTypes, refArgValues, &foreignAccounts, &foreignApps, &foreignAssets)
+	// copy foreign arrays before modifying in populateMethodCallReferenceArgs
+	foreignAccounts := make([]string, len(params.ForeignAccounts))
+	copy(foreignAccounts, params.ForeignAccounts)
+	foreignApps := make([]uint64, len(params.ForeignApps))
+	copy(foreignApps, params.ForeignApps)
+	foreignAssets := make([]uint64, len(params.ForeignAssets))
+	copy(foreignAssets, params.ForeignAssets)
+
+	refArgsResolved, err := populateMethodCallReferenceArgs(
+		params.Sender.String(),
+		params.AppID,
+		refArgTypes,
+		refArgValues,
+		&foreignAccounts,
+		&foreignApps,
+		&foreignAssets,
+	)
 	if err != nil {
 		return err
 	}
