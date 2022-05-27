@@ -346,7 +346,7 @@ func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
 	boxesArray := strings.Split(boxesStr, ",")
 
 	for i := 0; i < len(boxesArray); i += 2 {
-		appID, err := strconv.ParseUint(boxesArray[i], 10, 8)
+		appID, err := strconv.ParseUint(boxesArray[i], 10, 64)
 		if err != nil {
 			return nil, err
 		}

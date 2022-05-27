@@ -215,5 +215,5 @@ func TransactionsUnitContext(s *godog.Suite) {
 
 	// @unit.transactions.keyreg
 	s.Step(`^I build a keyreg transaction with sender "([^"]*)", nonparticipation "([^"]*)", vote first (\d+), vote last (\d+), key dilution (\d+), vote public key "([^"]*)", selection public key "([^"]*)", and state proof public key "([^"]*)"$`, buildKeyregTransaction)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$, boxes "[^"]*)"`, buildLegacyAppCallTransaction)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+), boxes "([^"]*)"$`, buildLegacyAppCallTransaction)
 }
