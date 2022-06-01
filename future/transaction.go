@@ -1018,8 +1018,7 @@ func parseBoxReferences(boxReferences []types.BoxReference, foreignApps []uint64
 		//     2. if the box references the current app by its appID rather than 0 AND
 		//        the current appID is explicitly provided in the foreign apps array
 		//        then ForeignAppIdx should be set to its index in the array.
-		b64Name := types.DecodeBoxName(boxReference.Name)
-		boxRefToSerialize := types.BoxReferenceToSerialize{Name: b64Name}
+		boxRefToSerialize := types.BoxReferenceToSerialize{Name: []byte(boxReference.Name)}
 		found := false
 
 		if boxReference.AppID == 0 {

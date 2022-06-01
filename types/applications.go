@@ -35,7 +35,7 @@ type BoxReferenceToSerialize struct {
 	ForeignAppIdx uint64 `codec:"i"`
 
 	// The base64 enconded name of the box unique to the app it belongs to
-	Name string `codec:"n"`
+	Name []byte `codec:"n"`
 }
 
 const (
