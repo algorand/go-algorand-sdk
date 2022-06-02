@@ -1,11 +1,6 @@
 # 1.16.0
 
 ## What's Changed
-* Add ParticipationUpdates to BlockHeader. by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/306
-* Avoid client response failure on unknown field. by @winder in https://github.com/algorand/go-algorand-sdk/pull/307
-* Readme updates by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/296
-* adding dryrun stack printer by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/289
-* adding foreign app addr to dryrun creator by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/312
 * Adding `Foreign*` args to AddMethodCallParams by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/318
 * build: Bump golang to 1.17 by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/314
 * Update generated files by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/321
