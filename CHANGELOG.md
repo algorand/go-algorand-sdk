@@ -1,5 +1,8 @@
 # 1.16.0
 
+## Important Note
+This release includes an upgrade to golang 1.17.
+
 ## What's Changed
 * Adding `Foreign*` args to AddMethodCallParams by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/318
 * build: Bump golang to 1.17 by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/314
