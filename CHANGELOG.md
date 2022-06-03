@@ -1,3 +1,20 @@
+# 1.16.0
+
+## Important Note
+This release includes an upgrade to golang 1.17.
+
+## What's Changed
+* Adding `Foreign*` args to AddMethodCallParams by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/318
+* build: Bump golang to 1.17 by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/314
+* Update generated files by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/321
+* Copy foreign arrays before modifying by @algoidurovic in https://github.com/algorand/go-algorand-sdk/pull/323
+* Build: Sdk code generation automation by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/324
+* Update codegen.yml by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/325
+* Generate updated API client code by @algoidurovic in https://github.com/algorand/go-algorand-sdk/pull/316
+
+## New Contributors
+* @Eric-Warehime made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/314
+
 # 1.15.0
 * adding foreign app addr to dryrun creator ([#312](https://github.com/algorand/go-algorand-sdk/pull/312))
 * adding dryrun stack printer ([#289](https://github.com/algorand/go-algorand-sdk/pull/289))
