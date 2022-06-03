@@ -9,7 +9,7 @@ import (
 )
 
 // TealDryrun executes TEAL program(s) in context and returns debugging information
-// about the execution. This endpoint is only enabled when a node's configureation
+// about the execution. This endpoint is only enabled when a node's configuration
 // file sets EnableDeveloperAPI to true.
 type TealDryrun struct {
 	c *Client
