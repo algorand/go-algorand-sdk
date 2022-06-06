@@ -596,10 +596,6 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(txComposerResult.MethodResults))
 	}
 
-	if len(txComposerMethods) != len(txComposerResult.MethodResults) {
-		return fmt.Errorf("length of composer's methods doesn't match results: %d != %d", len(txComposerMethods), len(txComposerResult.MethodResults))
-	}
-
 	for i, b64ExpectedResult := range b64ExpectedResults {
 		expectedResult, err := base64.StdEncoding.DecodeString(b64ExpectedResult)
 		if err != nil {
@@ -607,7 +603,7 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 		}
 
 		actualResult := txComposerResult.MethodResults[i]
-		method := txComposerMethods[i]
+		method := actualResult.Method
 
 		if actualResult.DecodeError != nil {
 			return actualResult.DecodeError

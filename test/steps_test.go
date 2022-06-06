@@ -100,7 +100,6 @@ var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
 var txComposer future.AtomicTransactionComposer
-var txComposerMethods []abi.Method
 var accountTxSigner future.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
@@ -2168,7 +2167,6 @@ func deserializeContractJson() error {
 
 func aNewAtomicTransactionComposer() error {
 	txComposer = future.AtomicTransactionComposer{}
-	txComposerMethods = nil
 	return nil
 }
 
@@ -2401,7 +2399,6 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 		methodCallParams.Note = note
 	}
 
-	txComposerMethods = append(txComposerMethods, abiMethod)
 	return txComposer.AddMethodCall(methodCallParams)
 }
 
