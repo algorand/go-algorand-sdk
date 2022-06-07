@@ -322,6 +322,11 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
+	s.Step(`^I create an Interface object from the Method object$`, iCreateAnInterfaceObjectFromTheMethodObject)
+	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
+	s.Step(`^the produced method signature should equal "([^"]*)" if there is an error it is equal to "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItIsEqualTo)
+	s.Step(`^I create a Contract object from the Method object$`, iCreateAContractObjectFromTheMethodObject)
+	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2057,6 +2062,56 @@ func serializeContractObjectIntoJson() error {
 	}
 
 	abiJsonString = string(abiContractJson)
+	return nil
+}
+
+func iCreateAnInterfaceObjectFromTheMethodObject() error {
+	abiInterface = abi.Interface{
+		Name:    "",
+		Methods: []abi.Method{abiMethod},
+	}
+	return nil
+}
+
+func iGetTheMethodFromTheInterfaceByName(arg1 string) error {
+	abiMethod, globalErrForExamination = abiInterface.GetMethodByName(arg1)
+	return nil
+}
+
+func iCreateAContractObjectFromTheMethodObject() error {
+	abiContract = abi.Contract{
+		Name:    "",
+		Methods: []abi.Method{abiMethod},
+	}
+	return nil
+}
+
+func iGetTheMethodFromTheContractByName(arg1 string) error {
+	abiMethod, globalErrForExamination = abiContract.GetMethodByName(arg1)
+	return nil
+}
+
+func theProducedMethodSignatureShouldEqualIfThereIsAnErrorItIsEqualTo(arg1, arg2 string) error {
+	if abiMethod.Name != "" {
+		if arg2 != "" {
+			return fmt.Errorf("expected error condition but got a method")
+		}
+		if arg1 != abiMethod.GetSignature() {
+			return fmt.Errorf("signature mismatch: %s != %s", arg1, abiMethod.GetSignature())
+		}
+	} else if globalErrForExamination != nil {
+		if arg2 == "" {
+			return fmt.Errorf("got error, expected no error")
+		}
+
+		if !strings.Contains(globalErrForExamination.Error(), arg2) {
+			return fmt.Errorf("produced error does not match expected: %q does not contain %q", globalErrForExamination.Error(), arg2)
+		}
+
+	} else {
+		return fmt.Errorf("both abi method and error string are empty")
+	}
+
 	return nil
 }
 
