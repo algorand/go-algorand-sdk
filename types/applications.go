@@ -21,7 +21,7 @@ type BoxReference struct {
 	AppID uint64
 
 	// The Name of the box unique to the app it belongs to
-	Name string
+	Name []byte
 }
 
 func DecodeBoxName(boxName string) string {

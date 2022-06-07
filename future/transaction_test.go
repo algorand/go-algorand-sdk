@@ -701,9 +701,9 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	boxReferences := make([]types.BoxReference, 3)
-	boxReferences[0] = types.BoxReference{AppID: 2, Name: "box_name"}
-	boxReferences[1] = types.BoxReference{AppID: 10, Name: "box_name"}
-	boxReferences[2] = types.BoxReference{AppID: 10, Name: "box_name2"}
+	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.BoxReference{AppID: 10, Name: []byte("box_name2")}
 
 	tx, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
@@ -763,9 +763,9 @@ func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	boxReferences := make([]types.BoxReference, 3)
-	boxReferences[0] = types.BoxReference{AppID: 2, Name: "box_name"}
-	boxReferences[1] = types.BoxReference{AppID: 10, Name: "box_name"}
-	boxReferences[2] = types.BoxReference{AppID: 11, Name: "box_name"}
+	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.BoxReference{AppID: 11, Name: []byte("box_name")}
 
 	_, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.Error(t, err, "the app id provided for this box is not in the foreignApps array")

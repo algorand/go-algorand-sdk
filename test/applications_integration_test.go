@@ -350,10 +350,22 @@ func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
 		if err != nil {
 			return nil, err
 		}
+
+		var nameBytes []byte
+		nameArray := strings.Split(boxesArray[i+1], ":")
+		if nameArray[0] == "str" {
+			nameBytes = []byte(nameArray[1])
+		} else {
+			nameBytes, err = base64.StdEncoding.DecodeString(nameArray[1])
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		staticBoxes = append(staticBoxes,
 			types.BoxReference{
 				AppID: appID,
-				Name:  boxesArray[i+1],
+				Name:  nameBytes,
 			})
 	}
 
