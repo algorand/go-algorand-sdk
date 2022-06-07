@@ -606,8 +606,8 @@ func byte64FromBase64(in string) (out [64]byte, err error) {
 //                 A page is 1024 bytes. This field enables execution of app programs
 //                 larger than the default maximum program size.
 //
-// - boxes		   lists the boxes to be accessed during evaluation of the application
-//				   call. This also must include the boxes accessed by inner app calls.
+// - boxes         lists the boxes to be accessed during evaluation of the application
+//                 call. This also must include the boxes accessed by inner app calls.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
