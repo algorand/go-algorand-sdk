@@ -285,6 +285,30 @@ type Interface struct {
 	Methods []Method `json:"methods"`
 }
 
+func (i *Interface) GetMethodByName(name string) (Method, error) {
+	var methods []Method
+	for _, method := range i.Methods {
+		if method.Name == name {
+			methods = append(methods, method)
+		}
+	}
+
+	if len(methods) > 1 {
+		var sigs []string
+		for _, method := range methods {
+			sigs = append(sigs, method.GetSignature())
+		}
+
+		return Method{}, fmt.Errorf("found %d methods with the same name %s", len(methods), strings.Join(sigs, ","))
+	}
+
+	if len(methods) == 0 {
+		return Method{}, fmt.Errorf("found 0 methods with the name %s", name)
+	}
+
+	return methods[0], nil
+}
+
 // ContractNetworkInfo contains network-specific information about the contract
 type ContractNetworkInfo struct {
 	// The application ID of the contract for this network
@@ -303,4 +327,28 @@ type Contract struct {
 	Networks map[string]ContractNetworkInfo `json:"networks,omitempty"`
 	// The methods that the contract implements
 	Methods []Method `json:"methods"`
+}
+
+func (c *Contract) GetMethodByName(name string) (Method, error) {
+	var methods []Method
+	for _, method := range c.Methods {
+		if method.Name == name {
+			methods = append(methods, method)
+		}
+	}
+
+	if len(methods) > 1 {
+		var sigs []string
+		for _, method := range methods {
+			sigs = append(sigs, method.GetSignature())
+		}
+
+		return Method{}, fmt.Errorf("found %d methods with the same name %s", len(methods), strings.Join(sigs, ","))
+	}
+
+	if len(methods) == 0 {
+		return Method{}, fmt.Errorf("found 0 methods with the name %s", name)
+	}
+
+	return methods[0], nil
 }
