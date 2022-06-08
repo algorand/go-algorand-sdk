@@ -96,6 +96,7 @@ var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
+var extraAbiMethod abi.Method
 var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
@@ -324,9 +325,10 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 	s.Step(`^I create an Interface object from the Method object$`, iCreateAnInterfaceObjectFromTheMethodObject)
 	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
-	s.Step(`^the produced method signature should equal "([^"]*)" if there is an error it is equal to "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItIsEqualTo)
 	s.Step(`^I create a Contract object from the Method object$`, iCreateAContractObjectFromTheMethodObject)
 	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
+	s.Step(`^I create another Method object from method signature "([^"]*)"$`, iCreateAnotherMethodObjectFromMethodSignature)
+	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2065,10 +2067,27 @@ func serializeContractObjectIntoJson() error {
 	return nil
 }
 
+func iCreateAnotherMethodObjectFromMethodSignature(arg1 string) error {
+	if arg1 == "" {
+		extraAbiMethod = abi.Method{}
+		return nil
+	}
+
+	var err error
+	extraAbiMethod, err = abi.MethodFromSignature(arg1)
+	return err
+}
+
 func iCreateAnInterfaceObjectFromTheMethodObject() error {
+	methods := []abi.Method{abiMethod}
+
+	if extraAbiMethod.Name != "" {
+		methods = append(methods, extraAbiMethod)
+	}
+
 	abiInterface = abi.Interface{
 		Name:    "",
-		Methods: []abi.Method{abiMethod},
+		Methods: methods,
 	}
 	return nil
 }
@@ -2079,9 +2098,16 @@ func iGetTheMethodFromTheInterfaceByName(arg1 string) error {
 }
 
 func iCreateAContractObjectFromTheMethodObject() error {
+
+	methods := []abi.Method{abiMethod}
+
+	if extraAbiMethod.Name != "" {
+		methods = append(methods, extraAbiMethod)
+	}
+
 	abiContract = abi.Contract{
 		Name:    "",
-		Methods: []abi.Method{abiMethod},
+		Methods: methods,
 	}
 	return nil
 }
@@ -2091,7 +2117,7 @@ func iGetTheMethodFromTheContractByName(arg1 string) error {
 	return nil
 }
 
-func theProducedMethodSignatureShouldEqualIfThereIsAnErrorItIsEqualTo(arg1, arg2 string) error {
+func theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith(arg1, arg2 string) error {
 	if abiMethod.Name != "" {
 		if arg2 != "" {
 			return fmt.Errorf("expected error condition but got a method")
@@ -2101,7 +2127,7 @@ func theProducedMethodSignatureShouldEqualIfThereIsAnErrorItIsEqualTo(arg1, arg2
 		}
 	} else if globalErrForExamination != nil {
 		if arg2 == "" {
-			return fmt.Errorf("got error, expected no error")
+			return fmt.Errorf("got error %s, expected no error", globalErrForExamination)
 		}
 
 		if !strings.Contains(globalErrForExamination.Error(), arg2) {
