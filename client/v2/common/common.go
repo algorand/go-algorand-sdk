@@ -249,7 +249,7 @@ func EscapeParams(params ...interface{}) []interface{} {
 	for i, param := range params {
 		switch v := param.(type) {
 		case string:
-			paramsStr[i] = url.QueryEscape(v)
+			paramsStr[i] = url.PathEscape(v)
 		default:
 			paramsStr[i] = fmt.Sprintf("%v", v)
 		}
