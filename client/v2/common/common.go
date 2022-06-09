@@ -241,3 +241,19 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 func (client *Client) Post(ctx context.Context, response interface{}, path string, body interface{}, headers []*Header) error {
 	return client.submitForm(ctx, response, path, body, "POST", true /* encodeJSON */, headers)
 }
+
+// Helper function for correctly formatting and escaping URL path parameters.
+// Used in the generated API client code.
+func EscapeParams(params ...interface{}) []interface{} {
+	paramsStr := make([]interface{}, len(params))
+	for i, param := range params {
+		switch v := param.(type) {
+		case string:
+			paramsStr[i] = url.QueryEscape(v)
+		default:
+			paramsStr[i] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	return paramsStr
+}
