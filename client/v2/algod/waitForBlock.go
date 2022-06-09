@@ -18,6 +18,6 @@ type StatusAfterBlock struct {
 
 // Do performs the HTTP request
 func (s *StatusAfterBlock) Do(ctx context.Context, headers ...*common.Header) (response models.NodeStatus, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/status/wait-for-block-after/%v", s.round), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/status/wait-for-block-after/%s", common.EscapeParams(s.round)...), nil, headers)
 	return
 }

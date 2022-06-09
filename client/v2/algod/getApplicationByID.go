@@ -19,6 +19,6 @@ type GetApplicationByID struct {
 
 // Do performs the HTTP request
 func (s *GetApplicationByID) Do(ctx context.Context, headers ...*common.Header) (response models.Application, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%v", s.applicationId), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%s", common.EscapeParams(s.applicationId)...), nil, headers)
 	return
 }

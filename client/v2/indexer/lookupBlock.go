@@ -17,6 +17,6 @@ type LookupBlock struct {
 
 // Do performs the HTTP request
 func (s *LookupBlock) Do(ctx context.Context, headers ...*common.Header) (response models.Block, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%v", s.roundNumber), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%s", common.EscapeParams(s.roundNumber)...), nil, headers)
 	return
 }

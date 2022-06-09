@@ -36,6 +36,6 @@ func (s *LookupApplicationByID) IncludeAll(IncludeAll bool) *LookupApplicationBy
 
 // Do performs the HTTP request
 func (s *LookupApplicationByID) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%v", s.applicationId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%s", common.EscapeParams(s.applicationId)...), s.p, headers)
 	return
 }

@@ -68,6 +68,6 @@ func (s *LookupAccountCreatedAssets) Next(Next string) *LookupAccountCreatedAsse
 
 // Do performs the HTTP request
 func (s *LookupAccountCreatedAssets) Do(ctx context.Context, headers ...*common.Header) (response models.AssetsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/created-assets", s.accountId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/created-assets", common.EscapeParams(s.accountId)...), s.p, headers)
 	return
 }
