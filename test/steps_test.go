@@ -96,7 +96,7 @@ var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
-var extraAbiMethod abi.Method
+var abiMethods []abi.Method
 var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
@@ -323,15 +323,16 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
-	s.Step(`^I create an Interface object from the Method object$`, iCreateAnInterfaceObjectFromTheMethodObject)
+	s.Step(`^I append to my Method objects list in the case of a non-empty signature "([^"]*)"$`, iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature)
+	s.Step(`^I create an Interface object from my Method objects list$`, iCreateAnInterfaceObjectFromMyMethodObjectsList)
+	s.Step(`^I create a Contract object from my Method objects list$`, iCreateAContractObjectFromMyMethodObjectsList)
 	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
-	s.Step(`^I create a Contract object from the Method object$`, iCreateAContractObjectFromTheMethodObject)
 	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
-	s.Step(`^I create another Method object from method signature "([^"]*)"$`, iCreateAnotherMethodObjectFromMethodSignature)
 	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
+		abiMethods = nil
 		kcl.RenewWalletHandle(handle)
 	})
 }
@@ -2067,27 +2068,20 @@ func serializeContractObjectIntoJson() error {
 	return nil
 }
 
-func iCreateAnotherMethodObjectFromMethodSignature(arg1 string) error {
+func iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature(arg1 string) error {
 	if arg1 == "" {
-		extraAbiMethod = abi.Method{}
 		return nil
 	}
 
-	var err error
-	extraAbiMethod, err = abi.MethodFromSignature(arg1)
+	meth, err := abi.MethodFromSignature(arg1)
+	abiMethods = append(abiMethods, meth)
 	return err
 }
 
-func iCreateAnInterfaceObjectFromTheMethodObject() error {
-	methods := []abi.Method{abiMethod}
-
-	if extraAbiMethod.Name != "" {
-		methods = append(methods, extraAbiMethod)
-	}
-
+func iCreateAnInterfaceObjectFromMyMethodObjectsList() error {
 	abiInterface = abi.Interface{
 		Name:    "",
-		Methods: methods,
+		Methods: abiMethods,
 	}
 	return nil
 }
@@ -2097,17 +2091,10 @@ func iGetTheMethodFromTheInterfaceByName(arg1 string) error {
 	return nil
 }
 
-func iCreateAContractObjectFromTheMethodObject() error {
-
-	methods := []abi.Method{abiMethod}
-
-	if extraAbiMethod.Name != "" {
-		methods = append(methods, extraAbiMethod)
-	}
-
+func iCreateAContractObjectFromMyMethodObjectsList() error {
 	abiContract = abi.Contract{
 		Name:    "",
-		Methods: methods,
+		Methods: abiMethods,
 	}
 	return nil
 }
