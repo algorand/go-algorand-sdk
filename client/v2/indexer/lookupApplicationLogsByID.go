@@ -81,6 +81,6 @@ func (s *LookupApplicationLogsByID) Txid(Txid string) *LookupApplicationLogsByID
 
 // Do performs the HTTP request
 func (s *LookupApplicationLogsByID) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationLogsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%v/logs", s.applicationId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/applications/%s/logs", common.EscapeParams(s.applicationId)...), s.p, headers)
 	return
 }

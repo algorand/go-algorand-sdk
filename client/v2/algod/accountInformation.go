@@ -40,6 +40,6 @@ func (s *AccountInformation) Exclude(Exclude string) *AccountInformation {
 
 // Do performs the HTTP request
 func (s *AccountInformation) Do(ctx context.Context, headers ...*common.Header) (response models.Account, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v", s.address), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", common.EscapeParams(s.address)...), s.p, headers)
 	return
 }

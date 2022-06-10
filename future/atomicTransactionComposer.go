@@ -39,6 +39,8 @@ type ABIMethodResult struct {
 	TxID string
 	// Information about the confirmed transaction that invoked the ABI method call.
 	TransactionInfo models.PendingTransactionInfoResponse
+	// Method that was called for this ABIMethodResult
+	Method abi.Method
 	// The raw bytes of the return value from the ABI method call. This will be empty if the method
 	// does not return a value (return type "void").
 	RawReturnValue []byte
@@ -631,7 +633,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			continue
 		}
 
-		result := ABIMethodResult{TxID: txContext.txID()}
+		result := ABIMethodResult{TxID: txContext.txID(), Method: *txContext.method}
 
 		if i == indexToWaitFor {
 			result.TransactionInfo = groupInfo

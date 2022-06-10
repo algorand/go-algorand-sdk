@@ -84,6 +84,6 @@ func (s *LookupAssetBalances) NextToken(NextToken string) *LookupAssetBalances {
 
 // Do performs the HTTP request
 func (s *LookupAssetBalances) Do(ctx context.Context, headers ...*common.Header) (response models.AssetBalancesResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v/balances", s.assetId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%s/balances", common.EscapeParams(s.assetId)...), s.p, headers)
 	return
 }

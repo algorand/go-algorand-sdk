@@ -68,6 +68,6 @@ func (s *LookupAccountAssets) Next(Next string) *LookupAccountAssets {
 
 // Do performs the HTTP request
 func (s *LookupAccountAssets) Do(ctx context.Context, headers ...*common.Header) (response models.AssetHoldingsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/assets", s.accountId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/assets", common.EscapeParams(s.accountId)...), s.p, headers)
 	return
 }

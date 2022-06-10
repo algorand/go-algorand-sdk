@@ -18,6 +18,6 @@ type GetAssetByID struct {
 
 // Do performs the HTTP request
 func (s *GetAssetByID) Do(ctx context.Context, headers ...*common.Header) (response models.Asset, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v", s.assetId), nil, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%s", common.EscapeParams(s.assetId)...), nil, headers)
 	return
 }
