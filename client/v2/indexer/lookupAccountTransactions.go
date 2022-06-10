@@ -200,6 +200,6 @@ func (s *LookupAccountTransactions) TXID(TXID string) *LookupAccountTransactions
 
 // Do performs the HTTP request
 func (s *LookupAccountTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/transactions", s.accountId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions", common.EscapeParams(s.accountId)...), s.p, headers)
 	return
 }

@@ -40,6 +40,6 @@ func (s *GetProof) Hashtype(Hashtype string) *GetProof {
 
 // Do performs the HTTP request
 func (s *GetProof) Do(ctx context.Context, headers ...*common.Header) (response models.ProofResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%v/transactions/%v/proof", s.round, s.txid), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%s/transactions/%s/proof", common.EscapeParams(s.round, s.txid)...), s.p, headers)
 	return
 }

@@ -226,6 +226,6 @@ func (s *LookupAssetTransactions) TXID(TXID string) *LookupAssetTransactions {
 
 // Do performs the HTTP request
 func (s *LookupAssetTransactions) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%v/transactions", s.assetId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%s/transactions", common.EscapeParams(s.assetId)...), s.p, headers)
 	return
 }

@@ -30,6 +30,6 @@ type AccountAssetInformation struct {
 
 // Do performs the HTTP request
 func (s *AccountAssetInformation) Do(ctx context.Context, headers ...*common.Header) (response models.AccountAssetResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/assets/%v", s.address, s.assetId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/assets/%s", common.EscapeParams(s.address, s.assetId)...), s.p, headers)
 	return
 }
