@@ -96,6 +96,7 @@ var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
+var abiMethods []abi.Method
 var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
@@ -322,9 +323,16 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
+	s.Step(`^I append to my Method objects list in the case of a non-empty signature "([^"]*)"$`, iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature)
+	s.Step(`^I create an Interface object from my Method objects list$`, iCreateAnInterfaceObjectFromMyMethodObjectsList)
+	s.Step(`^I create a Contract object from my Method objects list$`, iCreateAContractObjectFromMyMethodObjectsList)
+	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
+	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
+	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
+		abiMethods = nil
 		kcl.RenewWalletHandle(handle)
 	})
 }
@@ -2057,6 +2065,66 @@ func serializeContractObjectIntoJson() error {
 	}
 
 	abiJsonString = string(abiContractJson)
+	return nil
+}
+
+func iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature(arg1 string) error {
+	if arg1 == "" {
+		return nil
+	}
+
+	meth, err := abi.MethodFromSignature(arg1)
+	abiMethods = append(abiMethods, meth)
+	return err
+}
+
+func iCreateAnInterfaceObjectFromMyMethodObjectsList() error {
+	abiInterface = abi.Interface{
+		Name:    "",
+		Methods: abiMethods,
+	}
+	return nil
+}
+
+func iGetTheMethodFromTheInterfaceByName(arg1 string) error {
+	abiMethod, globalErrForExamination = abiInterface.GetMethodByName(arg1)
+	return nil
+}
+
+func iCreateAContractObjectFromMyMethodObjectsList() error {
+	abiContract = abi.Contract{
+		Name:    "",
+		Methods: abiMethods,
+	}
+	return nil
+}
+
+func iGetTheMethodFromTheContractByName(arg1 string) error {
+	abiMethod, globalErrForExamination = abiContract.GetMethodByName(arg1)
+	return nil
+}
+
+func theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith(arg1, arg2 string) error {
+	if abiMethod.Name != "" {
+		if arg2 != "" {
+			return fmt.Errorf("expected error condition but got a method")
+		}
+		if arg1 != abiMethod.GetSignature() {
+			return fmt.Errorf("signature mismatch: %s != %s", arg1, abiMethod.GetSignature())
+		}
+	} else if globalErrForExamination != nil {
+		if arg2 == "" {
+			return fmt.Errorf("got error %s, expected no error", globalErrForExamination)
+		}
+
+		if !strings.Contains(globalErrForExamination.Error(), arg2) {
+			return fmt.Errorf("produced error does not match expected: %q does not contain %q", globalErrForExamination.Error(), arg2)
+		}
+
+	} else {
+		return fmt.Errorf("both abi method and error string are empty")
+	}
+
 	return nil
 }
 
