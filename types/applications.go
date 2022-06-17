@@ -1,9 +1,5 @@
 package types
 
-import (
-	"encoding/base64"
-)
-
 // This file has the applications specific structures
 
 type ApplicationFields struct {
@@ -24,17 +20,13 @@ type BoxReference struct {
 	Name []byte
 }
 
-func DecodeBoxName(boxName string) string {
-	return base64.StdEncoding.EncodeToString([]byte(boxName))
-}
-
 type BoxReferenceToSerialize struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// The index of the app in the foreign app array.
 	ForeignAppIdx uint64 `codec:"i"`
 
-	// The base64 enconded name of the box unique to the app it belongs to
+	// The name of the box unique to the app it belongs to
 	Name []byte `codec:"n"`
 }
 

@@ -80,6 +80,10 @@ func (c *Client) Block(round uint64) *Block {
 	return &Block{c: c, round: round}
 }
 
+func (c *Client) GetApplicationBoxByName(appID uint64, boxName string) *GetApplicationBoxByName {
+	return &GetApplicationBoxByName{c: c, applicationId: appID, boxName: boxName}
+}
+
 func (c *Client) GetProof(round uint64, txid string) *GetProof {
 	return &GetProof{c: c, round: round, txid: txid}
 }

@@ -914,7 +914,11 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
-//@applications.verified
+func theContentsOfTheBoxWithNameForTheCurrentAppShouldBeIfThereIsAnErrorItIs(arg1, arg2, arg3 string) error {
+	return godog.ErrPending
+}
+
+//@applications.verified and @applications.boxes
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
@@ -943,4 +947,6 @@ func ApplicationsContext(s *godog.Suite) {
 
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
+
+	s.Step(`^the contents of the box with name "([^"]*)" for the current app should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameForTheCurrentAppShouldBeIfThereIsAnErrorItIs)
 }

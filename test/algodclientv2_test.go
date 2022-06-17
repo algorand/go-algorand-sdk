@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
@@ -53,6 +54,7 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
+	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with box name "([^"]*)"$`, weMakeAGetApplicationBoxByNameCallForApplicationIDWithBoxName)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -254,5 +256,20 @@ func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(accoun
 		return err
 	}
 	algodClient.AccountApplicationInformation(account, uint64(appID)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetApplicationBoxByNameCallForApplicationIDWithBoxName(appID int, boxName string) error {
+	boxes, err := parseBoxes(strconv.Itoa(appID) + "," + boxName)
+	if err != nil {
+		return err
+	}
+
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	algodClient.GetApplicationBoxByName(boxes[0].AppID, string(boxes[0].Name)).Do(context.Background())
 	return nil
 }
