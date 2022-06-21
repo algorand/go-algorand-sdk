@@ -1,3 +1,11 @@
+# 1.17.0
+
+## What's Changed
+* Added GetMethodByName on Interface and Contract ([#330](https://github.com/algorand/go-algorand-sdk/pull/330))
+* Regenerated code with the latest specification file (d012c9f5) ([#332](https://github.com/algorand/go-algorand-sdk/pull/332))
+* Added helper method for formatting the algod API path ([#331](https://github.com/algorand/go-algorand-sdk/pull/331))
+* Added method in ABI results object ([#329](https://github.com/algorand/go-algorand-sdk/pull/329))
+
 # 1.16.0
 
 ## Important Note
