@@ -914,8 +914,21 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
-func theContentsOfTheBoxWithNameForTheCurrentAppShouldBeIfThereIsAnErrorItIs(arg1, arg2, arg3 string) error {
-	return godog.ErrPending
+func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(boxName, boxContents, errStr string) error {
+	box, err := algodV2client.GetApplicationBoxByName(applicationId, boxName).Do(context.Background())
+	if err != nil {
+		if strings.Contains(err.Error(), errStr) {
+			return nil
+		}
+		return err
+	}
+
+	b64Value := base64.StdEncoding.EncodeToString(box.Value)
+	if b64Value != boxContents {
+		return fmt.Errorf("expected box value %s is not equal to actual box value %s", boxContents, b64Value)
+	}
+
+	return nil
 }
 
 //@applications.verified and @applications.boxes
@@ -948,5 +961,5 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 
-	s.Step(`^the contents of the box with name "([^"]*)" for the current app should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameForTheCurrentAppShouldBeIfThereIsAnErrorItIs)
+	s.Step(`^the contents of the box with name "([^"]*)" should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
 }
