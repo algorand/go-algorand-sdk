@@ -68,6 +68,6 @@ func (s *LookupAccountAppLocalStates) Next(Next string) *LookupAccountAppLocalSt
 
 // Do performs the HTTP request
 func (s *LookupAccountAppLocalStates) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationLocalStatesResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/apps-local-state", s.accountId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/apps-local-state", common.EscapeParams(s.accountId)...), s.p, headers)
 	return
 }

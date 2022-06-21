@@ -68,6 +68,6 @@ func (s *LookupAccountCreatedApplications) Next(Next string) *LookupAccountCreat
 
 // Do performs the HTTP request
 func (s *LookupAccountCreatedApplications) Do(ctx context.Context, headers ...*common.Header) (response models.ApplicationsResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%v/created-applications", s.accountId), s.p, headers)
+	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s/created-applications", common.EscapeParams(s.accountId)...), s.p, headers)
 	return
 }
