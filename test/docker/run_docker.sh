@@ -5,10 +5,11 @@ set -e
 # reset test harness
 rm -rf test-harness
 rm -rf test/features
-git clone --single-branch --branch master https://github.com/algorand/algorand-sdk-testing.git test-harness
+git clone --single-branch --branch sourcemap https://github.com/algorand/algorand-sdk-testing.git test-harness
 #copy feature files into project
 mv test-harness/features test/features
 
+exit
 GO_VERSION=$(go version | cut -d' ' -f 3 | cut -d'.' -f 1,2)
 GO_IMAGE=golang:${GO_VERSION:2}-stretch
 

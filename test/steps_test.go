@@ -34,6 +34,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
@@ -107,6 +108,7 @@ var sigTxs [][]byte
 var accountTxAndSigner future.TransactionWithSigner
 var txTrace future.DryrunTxnResult
 var trace string
+var sourceMap logic.SourceMap
 
 var assetTestFixture struct {
 	Creator               string
@@ -329,6 +331,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
 	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
 	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
+	s.Step(`^a source map json file "([^"]*)"$`, aSourceMapJsonFile)
+	s.Step(`^the string composed of pc:line number equals "([^"]*)"$`, theStringComposedOfPclineNumberEquals)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2613,6 +2617,35 @@ func callingAppTraceProduces(arg1 string) error {
 	}
 	if string(data) != trace {
 		return fmt.Errorf("No matching trace: \n'%s'\nvs\n'%s'\n", string(data), trace)
+	}
+	return nil
+}
+
+func aSourceMapJsonFile(arg1 string) error {
+	b, err := loadResource(arg1)
+	if err != nil {
+		return err
+	}
+
+	ism := map[string]interface{}{}
+	if err := json.Unmarshal(b, &ism); err != nil {
+		return err
+	}
+
+	sourceMap = logic.NewSourceMap(ism)
+
+	return nil
+}
+
+func theStringComposedOfPclineNumberEquals(arg1 string) error {
+	var buff []string
+	for pc := 0; pc < len(sourceMap.PcToLine); pc++ {
+		line := sourceMap.PcToLine[pc]
+		buff = append(buff, fmt.Sprintf("%d:%d", pc, line))
+	}
+	actualStr := strings.Join(buff, ";")
+	if arg1 != actualStr {
+		return fmt.Errorf("Expected %s got %s", arg1, actualStr)
 	}
 	return nil
 }
