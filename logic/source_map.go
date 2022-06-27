@@ -75,7 +75,7 @@ func (s *SourceMap) GetLineForPc(pc int) int {
 	return s.PcToLine[pc]
 }
 
-func (s *SourceMap) GetPCsForLine(line int) []int {
+func (s *SourceMap) GetPcsForLine(line int) []int {
 	return s.LineToPc[line]
 }
 
