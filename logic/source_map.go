@@ -9,7 +9,7 @@ type SourceMap struct {
 	SourceRoot string   `json:"sourceRoot,omitempty"`
 	Sources    []string `json:"sources"`
 	Names      []string `json:"names"`
-	Mapping    string   `json:"mapping"`
+	Mappings   string   `json:"mappings"`
 	// Decoded mapping results
 	LineToPc map[int][]int
 	PcToLine map[int]int
@@ -46,15 +46,20 @@ func NewSourceMap(ism map[string]interface{}) SourceMap {
 		}
 	}
 
+	// For backwards compat, remove once go-algorand has correct key
 	if m, ok := ism["mapping"]; ok {
-		sm.Mapping = m.(string)
+		sm.Mappings = m.(string)
+	}
+
+	if m, ok := ism["mappings"]; ok {
+		sm.Mappings = m.(string)
 	}
 
 	sm.PcToLine = map[int]int{0: 0}
 	sm.LineToPc = map[int][]int{0: {0}}
 
 	lastLine := 0
-	for idx, chunk := range strings.Split(sm.Mapping, ";") {
+	for idx, chunk := range strings.Split(sm.Mappings, ";") {
 		vals := DecodeSourceMapLine(chunk)
 		if len(vals) > 3 {
 			lineNum := vals[2]
