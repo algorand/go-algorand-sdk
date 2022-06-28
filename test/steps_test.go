@@ -2632,9 +2632,9 @@ func aSourceMapJsonFile(arg1 string) error {
 		return err
 	}
 
-	sourceMap = logic.NewSourceMap(ism)
+	sourceMap, err = logic.DecodeSourceMap(ism)
 
-	return nil
+	return err
 }
 
 func theStringComposedOfPclineNumberEquals(arg1 string) error {

@@ -1,6 +1,9 @@
 package logic
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // SourceMap provides a mapping of the source to assembled program
 type SourceMap struct {
@@ -15,11 +18,15 @@ type SourceMap struct {
 	PcToLine map[int]int
 }
 
-func NewSourceMap(ism map[string]interface{}) SourceMap {
+func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	sm := SourceMap{}
 
 	if v, ok := ism["version"]; ok {
 		sm.Version = int(v.(float64))
+	}
+
+	if sm.Version != 3 {
+		return sm, fmt.Errorf("only version 3 is supported")
 	}
 
 	if f, ok := ism["file"]; ok {
@@ -55,6 +62,10 @@ func NewSourceMap(ism map[string]interface{}) SourceMap {
 		sm.Mappings = m.(string)
 	}
 
+	if sm.Mappings == "" {
+		return sm, fmt.Errorf("no mappings defined")
+	}
+
 	sm.PcToLine = map[int]int{0: 0}
 	sm.LineToPc = map[int][]int{0: {0}}
 
@@ -73,7 +84,7 @@ func NewSourceMap(ism map[string]interface{}) SourceMap {
 		sm.PcToLine[idx] = lastLine
 	}
 
-	return sm
+	return sm, nil
 }
 
 func (s *SourceMap) GetLineForPc(pc int) int {
