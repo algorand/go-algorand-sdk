@@ -124,7 +124,8 @@ func readTealProgram(fileName string) ([]byte, error) {
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, foreignAssets, appAccounts string, extraPages int) error {
+	appArgs, foreignApps, foreignAssets, appAccounts string,
+	extraPages int, boxes string) error {
 
 	var clearP []byte
 	var approvalP []byte
@@ -170,17 +171,22 @@ func iBuildAnApplicationTransaction(
 		return err
 	}
 
+	staticBoxes, err := parseBoxes(boxes)
+	if err != nil {
+		return err
+	}
+
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
 		if extraPages > 0 {
 			tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
+				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		} else {
 			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
+				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		}
 
@@ -191,11 +197,11 @@ func iBuildAnApplicationTransaction(
 	case "create_optin":
 		if extraPages > 0 {
 			tx, err = future.MakeApplicationCreateTxWithExtraPages(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
+				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 		} else {
 			tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
+				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
 				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		}
 
@@ -203,7 +209,7 @@ func iBuildAnApplicationTransaction(
 			return err
 		}
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			approvalP, clearP,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
@@ -212,31 +218,34 @@ func iBuildAnApplicationTransaction(
 
 	case "call":
 		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, staticBoxes, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
+		if err != nil {
+			return err
+		}
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
 		}
 
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 		if err != nil {
 			return err
@@ -327,6 +336,40 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 		}
 	}
 	return resp, err
+}
+
+func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
+	if boxesStr == "" {
+		return make([]types.BoxReference, 0), nil
+	}
+
+	boxesArray := strings.Split(boxesStr, ",")
+
+	for i := 0; i < len(boxesArray); i += 2 {
+		appID, err := strconv.ParseUint(boxesArray[i], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		var nameBytes []byte
+		nameArray := strings.Split(boxesArray[i+1], ":")
+		if nameArray[0] == "str" {
+			nameBytes = []byte(nameArray[1])
+		} else {
+			nameBytes, err = base64.StdEncoding.DecodeString(nameArray[1])
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		staticBoxes = append(staticBoxes,
+			types.BoxReference{
+				AppID: appID,
+				Name:  nameBytes,
+			})
+	}
+
+	return
 }
 
 func splitUint64(uint64s string) ([]uint64, error) {
@@ -871,11 +914,11 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
-//@applications.verified
+//@applications.verified and @applications.boxes
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
-	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransaction)
+	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+), boxes "([^"]*)"$`, iBuildAnApplicationTransaction)
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
@@ -900,4 +943,5 @@ func ApplicationsContext(s *godog.Suite) {
 
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
+
 }

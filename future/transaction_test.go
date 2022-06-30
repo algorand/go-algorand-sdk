@@ -700,13 +700,75 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	boxReferences := make([]types.BoxReference, 3)
+	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.BoxReference{AppID: 10, Name: []byte("box_name2")}
 
-	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 0, tx.ExtraProgramPages)
 	tx, err = MakeApplicationCallTxWithExtraPages(tx, 2)
 	require.NoError(t, err)
 	require.EqualValues(t, 2, tx.ExtraProgramPages)
+
+	// verify that the correct app index was calculated
+	require.EqualValues(t, 0, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+
+	// the current app can also be referenced with AppID = 0
+	boxReferences[0].AppID = 0
+	tx, err = MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 0, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+
+	// if the current app's ID is provided explicitly AND is present in the foreignApps array
+	// then the index in the array should be returned rather than the usual value of 0
+	boxReferences[0].AppID = 2
+	foreignApps = append(foreignApps, 2)
+	tx, err = MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 2, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+}
+
+func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+	note := byteFromBase64("8xMCTuLQ810=")
+	program := []byte{1, 32, 1, 1, 34}
+	args := make([][]byte, 2)
+	args[0] = []byte("123")
+	args[1] = []byte("456")
+	foreignApps := make([]uint64, 1)
+	foreignApps[0] = 10
+	foreignAssets := foreignApps
+	gSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	addr := make([]string, 1)
+	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	boxReferences := make([]types.BoxReference, 3)
+	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.BoxReference{AppID: 11, Name: []byte("box_name")}
+
+	_, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.Error(t, err, "the app id provided for this box is not in the foreignApps array")
 }
 
 func TestComputeGroupID(t *testing.T) {

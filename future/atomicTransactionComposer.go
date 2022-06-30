@@ -97,6 +97,9 @@ type AddMethodCallParams struct {
 	// Any foreign accounts to be passed that aren't part of the method signature
 	// If accounts are provided here, the accounts specified in the method args will appear after these
 	ForeignAccounts []string
+
+	// References of the boxes to be accessed by this method call.
+	BoxReferences []types.BoxReference
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an
@@ -379,6 +382,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		foreignAccounts,
 		foreignApps,
 		foreignAssets,
+		params.BoxReferences,
 		params.OnComplete,
 		params.ApprovalProgram,
 		params.ClearProgram,
