@@ -920,10 +920,6 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, box
 	c.Name(encodedBoxName)
 	box, err := c.Do(context.Background())
 	if err != nil {
-		fmt.Printf("===> %v", errStr)
-		fmt.Println("")
-		fmt.Printf("--------> %v", err)
-
 		if strings.Contains(err.Error(), errStr) {
 			return nil
 		}
