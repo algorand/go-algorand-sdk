@@ -116,6 +116,10 @@ func (c *Client) GetApplicationByID(applicationId uint64) *GetApplicationByID {
 	return &GetApplicationByID{c: c, applicationId: applicationId}
 }
 
+func (c *Client) GetApplicationBoxByName(applicationId uint64) *GetApplicationBoxByName {
+	return &GetApplicationBoxByName{c: c, applicationId: applicationId}
+}
+
 func (c *Client) GetAssetByID(assetId uint64) *GetAssetByID {
 	return &GetAssetByID{c: c, assetId: assetId}
 }
