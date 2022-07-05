@@ -66,7 +66,7 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 
 	lastLine := 0
 	for idx, chunk := range strings.Split(sm.Mappings, ";") {
-		vals := DecodeSourceMapLine(chunk)
+		vals := decodeSourceMapLine(chunk)
 		if len(vals) > 3 {
 			lineNum := lastLine + vals[2]
 			if _, ok := sm.LineToPc[lineNum]; !ok {
@@ -98,7 +98,7 @@ const (
 	vlqMask             = vlqFlag - 1
 )
 
-func DecodeSourceMapLine(vlq string) []int {
+func decodeSourceMapLine(vlq string) []int {
 
 	var (
 		results      []int
