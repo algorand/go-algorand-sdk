@@ -53,11 +53,6 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 		}
 	}
 
-	// For backwards compat, remove once go-algorand has correct key
-	if m, ok := ism["mapping"]; ok {
-		sm.Mappings = m.(string)
-	}
-
 	if m, ok := ism["mappings"]; ok {
 		sm.Mappings = m.(string)
 	}
@@ -66,14 +61,14 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 		return sm, fmt.Errorf("no mappings defined")
 	}
 
-	sm.PcToLine = map[int]int{0: 0}
-	sm.LineToPc = map[int][]int{0: {0}}
+	sm.PcToLine = map[int]int{}
+	sm.LineToPc = map[int][]int{}
 
 	lastLine := 0
 	for idx, chunk := range strings.Split(sm.Mappings, ";") {
 		vals := DecodeSourceMapLine(chunk)
 		if len(vals) > 3 {
-			lineNum := vals[2]
+			lineNum := lastLine + vals[2]
 			if _, ok := sm.LineToPc[lineNum]; !ok {
 				sm.LineToPc[lineNum] = []int{}
 			}
