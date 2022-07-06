@@ -103,7 +103,7 @@ func buildLegacyAppCallTransaction(
 	globalBytes, globalInts, localBytes, localInts int,
 	appArgs, foreignApps, foreignAssets, appAccounts string,
 	fee, firstValid, lastValid int,
-	genesisHash string, extraPages int) error {
+	genesisHash string, extraPages int, boxes string) error {
 
 	if applicationId < 0 || globalBytes < 0 || globalInts < 0 || localBytes < 0 || localInts < 0 || extraPages < 0 || fee < 0 || firstValid < 0 || lastValid < 0 {
 		return fmt.Errorf("Integer arguments cannot be negative")
@@ -150,6 +150,11 @@ func buildLegacyAppCallTransaction(
 		return err
 	}
 
+	boxReferences, err := parseBoxes(boxes)
+	if err != nil {
+		return err
+	}
+
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 
@@ -172,27 +177,27 @@ func buildLegacyAppCallTransaction(
 	switch operation {
 	case "create":
 		tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets,
+			gSchema, lSchema, args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			approvalP, clearP,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
 		tx, err = future.MakeApplicationCallTx(uint64(applicationId), args, accs,
-			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+			fApp, fAssets, boxReferences, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)
@@ -210,5 +215,5 @@ func TransactionsUnitContext(s *godog.Suite) {
 
 	// @unit.transactions.keyreg
 	s.Step(`^I build a keyreg transaction with sender "([^"]*)", nonparticipation "([^"]*)", vote first (\d+), vote last (\d+), key dilution (\d+), vote public key "([^"]*)", selection public key "([^"]*)", and state proof public key "([^"]*)"$`, buildKeyregTransaction)
-	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+)$`, buildLegacyAppCallTransaction)
+	s.Step(`^I build an application transaction with operation "([^"]*)", application-id (\d+), sender "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", fee (\d+), first-valid (\d+), last-valid (\d+), genesis-hash "([^"]*)", extra-pages (\d+), boxes "([^"]*)"$`, buildLegacyAppCallTransaction)
 }
