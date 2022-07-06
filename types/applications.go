@@ -11,16 +11,14 @@ type ApplicationFields struct {
 // AppParams
 type AppIndex uint64
 
-type BoxReference struct {
-	// The ID of the app that owns the box. When serialized this must first be
-	// converted to BoxReferenceToSerialize
+type AppBoxReference struct {
 	AppID uint64
 
 	// The Name of the box unique to the app it belongs to
 	Name []byte
 }
 
-type BoxReferenceToSerialize struct {
+type BoxReference struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// The index of the app in the foreign app array.
@@ -100,13 +98,13 @@ const (
 type ApplicationCallTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	ApplicationID   AppIndex                  `codec:"apid"`
-	OnCompletion    OnCompletion              `codec:"apan"`
-	ApplicationArgs [][]byte                  `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
-	Accounts        []Address                 `codec:"apat,allocbound=encodedMaxAccounts"`
-	ForeignApps     []AppIndex                `codec:"apfa,allocbound=encodedMaxForeignApps"`
-	ForeignAssets   []AssetIndex              `codec:"apas,allocbound=encodedMaxForeignAssets"`
-	BoxReferences   []BoxReferenceToSerialize `codec:"apbx,allocbound=encodedMaxBoxReferences"`
+	ApplicationID   AppIndex       `codec:"apid"`
+	OnCompletion    OnCompletion   `codec:"apan"`
+	ApplicationArgs [][]byte       `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
+	Accounts        []Address      `codec:"apat,allocbound=encodedMaxAccounts"`
+	ForeignApps     []AppIndex     `codec:"apfa,allocbound=encodedMaxForeignApps"`
+	ForeignAssets   []AssetIndex   `codec:"apas,allocbound=encodedMaxForeignAssets"`
+	BoxReferences   []BoxReference `codec:"apbx,allocbound=encodedMaxBoxReferences"`
 
 	LocalStateSchema  StateSchema `codec:"apls"`
 	GlobalStateSchema StateSchema `codec:"apgs"`

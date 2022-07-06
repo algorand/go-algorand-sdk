@@ -338,9 +338,9 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 	return resp, err
 }
 
-func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
+func parseBoxes(boxesStr string) (staticBoxes []types.AppBoxReference, err error) {
 	if boxesStr == "" {
-		return make([]types.BoxReference, 0), nil
+		return make([]types.AppBoxReference, 0), nil
 	}
 
 	boxesArray := strings.Split(boxesStr, ",")
@@ -363,7 +363,7 @@ func parseBoxes(boxesStr string) (staticBoxes []types.BoxReference, err error) {
 		}
 
 		staticBoxes = append(staticBoxes,
-			types.BoxReference{
+			types.AppBoxReference{
 				AppID: appID,
 				Name:  nameBytes,
 			})
@@ -965,5 +965,4 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 
 	s.Step(`^the contents of the box with name "([^"]*)" should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
-
 }

@@ -99,7 +99,7 @@ type AddMethodCallParams struct {
 	ForeignAccounts []string
 
 	// References of the boxes to be accessed by this method call.
-	BoxReferences []types.BoxReference
+	BoxReferences []types.AppBoxReference
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an

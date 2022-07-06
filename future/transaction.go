@@ -621,7 +621,7 @@ func MakeApplicationCreateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -640,7 +640,7 @@ func MakeApplicationCreateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		oncomp,
 		approvalProg,
 		clearProg,
@@ -665,7 +665,7 @@ func MakeApplicationCreateTxWithExtraPages(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -684,7 +684,7 @@ func MakeApplicationCreateTxWithExtraPages(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		oncomp,
 		approvalProg,
 		clearProg,
@@ -710,7 +710,7 @@ func MakeApplicationUpdateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	approvalProg []byte,
 	clearProg []byte,
 	sp types.SuggestedParams,
@@ -724,7 +724,7 @@ func MakeApplicationUpdateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.UpdateApplicationOC,
 		approvalProg,
 		clearProg,
@@ -746,7 +746,7 @@ func MakeApplicationDeleteTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -758,7 +758,7 @@ func MakeApplicationDeleteTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.DeleteApplicationOC,
 		nil,
 		nil,
@@ -781,7 +781,7 @@ func MakeApplicationOptInTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -793,7 +793,7 @@ func MakeApplicationOptInTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.OptInOC,
 		nil,
 		nil,
@@ -816,7 +816,7 @@ func MakeApplicationCloseOutTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -828,7 +828,7 @@ func MakeApplicationCloseOutTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.CloseOutOC,
 		nil,
 		nil,
@@ -852,7 +852,7 @@ func MakeApplicationClearStateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -864,7 +864,7 @@ func MakeApplicationClearStateTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.ClearStateOC,
 		nil,
 		nil,
@@ -888,7 +888,7 @@ func MakeApplicationNoOpTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -901,7 +901,7 @@ func MakeApplicationNoOpTx(
 		accounts,
 		foreignApps,
 		foreignAssets,
-		boxReferences,
+		appBoxReferences,
 		types.NoOpOC,
 		nil,
 		nil,
@@ -925,7 +925,7 @@ func MakeApplicationCallTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	boxReferences []types.BoxReference,
+	appBoxReferences []types.AppBoxReference,
 	onCompletion types.OnCompletion,
 	approvalProg []byte,
 	clearProg []byte,
@@ -949,7 +949,7 @@ func MakeApplicationCallTx(
 
 	tx.ForeignApps = parseTxnForeignApps(foreignApps)
 	tx.ForeignAssets = parseTxnForeignAssets(foreignAssets)
-	tx.BoxReferences, err = parseBoxReferences(boxReferences, foreignApps, appIdx)
+	tx.BoxReferences, err = parseBoxReferences(appBoxReferences, foreignApps, appIdx)
 	if err != nil {
 		return tx, err
 	}
@@ -1010,40 +1010,40 @@ func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
 	return
 }
 
-func parseBoxReferences(boxReferences []types.BoxReference, foreignApps []uint64, curAppID uint64) (parsed []types.BoxReferenceToSerialize, err error) {
-	for _, boxReference := range boxReferences {
+func parseBoxReferences(abrs []types.AppBoxReference, foreignApps []uint64, curAppID uint64) (parsed []types.BoxReference, err error) {
+	for _, abr := range abrs {
 		// there are a few unintuitive details to the parsing:
 		//     1. the AppID of the box must either be in the foreign apps array or
 		//        equal to 0, which references the current app.
 		//     2. if the box references the current app by its appID rather than 0 AND
 		//        the current appID is explicitly provided in the foreign apps array
 		//        then ForeignAppIdx should be set to its index in the array.
-		boxRefToSerialize := types.BoxReferenceToSerialize{Name: boxReference.Name}
+		br := types.BoxReference{Name: abr.Name}
 		found := false
 
-		if boxReference.AppID == 0 {
+		if abr.AppID == 0 {
 			found = true
-			boxRefToSerialize.ForeignAppIdx = 0
+			br.ForeignAppIdx = 0
 		} else {
 			for idx, appID := range foreignApps {
-				if appID == boxReference.AppID {
+				if appID == abr.AppID {
 					found = true
-					boxRefToSerialize.ForeignAppIdx = uint64(idx + 1)
+					br.ForeignAppIdx = uint64(idx + 1)
 					break
 				}
 			}
 		}
 
-		if !found && boxReference.AppID == curAppID {
+		if !found && abr.AppID == curAppID {
 			found = true
-			boxRefToSerialize.ForeignAppIdx = 0
+			br.ForeignAppIdx = 0
 		}
 
 		if !found {
 			return nil, fmt.Errorf("the app id provided for this box is not in the foreignApps array")
 		}
 
-		parsed = append(parsed, boxRefToSerialize)
+		parsed = append(parsed, br)
 	}
 
 	return

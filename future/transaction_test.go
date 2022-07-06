@@ -700,10 +700,10 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
-	boxReferences := make([]types.BoxReference, 3)
-	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
-	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
-	boxReferences[2] = types.BoxReference{AppID: 10, Name: []byte("box_name2")}
+	boxReferences := make([]types.AppBoxReference, 3)
+	boxReferences[0] = types.AppBoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.AppBoxReference{AppID: 10, Name: []byte("box_name2")}
 
 	tx, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
@@ -762,10 +762,10 @@ func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
 	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
-	boxReferences := make([]types.BoxReference, 3)
-	boxReferences[0] = types.BoxReference{AppID: 2, Name: []byte("box_name")}
-	boxReferences[1] = types.BoxReference{AppID: 10, Name: []byte("box_name")}
-	boxReferences[2] = types.BoxReference{AppID: 11, Name: []byte("box_name")}
+	boxReferences := make([]types.AppBoxReference, 3)
+	boxReferences[0] = types.AppBoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.AppBoxReference{AppID: 11, Name: []byte("box_name")}
 
 	_, err := MakeApplicationCallTx(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.Error(t, err, "the app id provided for this box is not in the foreignApps array")
@@ -970,5 +970,93 @@ func TestFee(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, testcase.expected, tx.Fee)
 		})
+	}
+}
+
+func TestParseBoxReferences(t *testing.T) {
+
+	genWithAppId := func(appId uint64) types.AppBoxReference {
+		return types.AppBoxReference{appId, []byte("example")}
+	}
+
+	genWithNewAppId := func() types.AppBoxReference {
+		return types.AppBoxReference{0, []byte("example")}
+	}
+
+	appIndexExists := func() {
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4, appId},
+			appId-1)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(4),
+				Name:          abr.Name}},
+			brs)
+	}
+
+	appIndexDoesNotExist := func() {
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		_, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4},
+			appId-1)
+		require.Error(t, err)
+	}
+
+	newAppId := func() {
+		abr := genWithNewAppId()
+
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{},
+			uint64(1))
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(0),
+				Name:          abr.Name}},
+			brs)
+	}
+
+	fallbackToCurrentApp := func() {
+		// Mirrors priority search in goal from `cmd/goal/application.go::translateBoxRefs`.
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		// Prefer foreign apps index when present.
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4, appId},
+			appId)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(4),
+				Name:          abr.Name}},
+			brs)
+
+		// Fallback to current app when absent from foreign apps.
+		brs, err = parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4},
+			appId)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(0),
+				Name:          abr.Name}},
+			brs)
+	}
+
+	cases := []func(){appIndexExists, appIndexDoesNotExist, newAppId, fallbackToCurrentApp}
+	for _, c := range cases {
+		c()
 	}
 }
