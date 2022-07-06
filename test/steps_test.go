@@ -2621,8 +2621,8 @@ func callingAppTraceProduces(arg1 string) error {
 	return nil
 }
 
-func aSourceMapJsonFile(arg1 string) error {
-	b, err := loadResource(arg1)
+func aSourceMapJsonFile(srcMapJsonPath string) error {
+	b, err := loadResource(srcMapJsonPath)
 	if err != nil {
 		return err
 	}
@@ -2637,15 +2637,15 @@ func aSourceMapJsonFile(arg1 string) error {
 	return err
 }
 
-func theStringComposedOfPclineNumberEquals(arg1 string) error {
+func theStringComposedOfPclineNumberEquals(expectedPcToLineString string) error {
 	var buff []string
 	for pc := 0; pc < len(sourceMap.PcToLine); pc++ {
 		line := sourceMap.PcToLine[pc]
 		buff = append(buff, fmt.Sprintf("%d:%d", pc, line))
 	}
 	actualStr := strings.Join(buff, ";")
-	if arg1 != actualStr {
-		return fmt.Errorf("Expected %s got %s", arg1, actualStr)
+	if expectedPcToLineString != actualStr {
+		return fmt.Errorf("Expected %s got %s", expectedPcToLineString, actualStr)
 	}
 	return nil
 }
