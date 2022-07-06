@@ -105,17 +105,26 @@ func mergeRawQueries(q1, q2 string) string {
 // submitFormRaw is a helper used for submitting (ex.) GETs and POSTs to the server
 func (client *Client) submitFormRaw(ctx context.Context, path string, body interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
-	queryURL.Path += path
+
+	parsedURL, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+
+	queryURL.Path += parsedURL.Path
 
 	var req *http.Request
 	var bodyReader io.Reader
 	if body != nil {
-		if requestMethod == "POST" && rawRequestPaths[path] {
+		if requestMethod == "POST" && rawRequestPaths[parsedURL.Path] {
 			reqBytes, ok := body.([]byte)
 			if !ok {
 				return nil, fmt.Errorf("couldn't decode raw body as bytes")
 			}
 			bodyReader = bytes.NewBuffer(reqBytes)
+
+			queryURL.RawQuery = parsedURL.RawQuery
+
 		} else {
 			v, err := query.Values(body)
 			if err != nil {

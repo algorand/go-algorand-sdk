@@ -36,6 +36,10 @@ func (s *TealCompile) Sourcemap(Sourcemap bool) *TealCompile {
 
 // Do performs the HTTP request
 func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (response models.CompileResponse, err error) {
-	err = s.c.post(ctx, &response, "/v2/teal/compile", s.source, headers)
+	if s.p.Sourcemap {
+		err = s.c.post(ctx, &response, "/v2/teal/compile?sourcemap=true", s.source, headers)
+	} else {
+		err = s.c.post(ctx, &response, "/v2/teal/compile", s.source, headers)
+	}
 	return
 }

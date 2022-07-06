@@ -109,6 +109,7 @@ var accountTxAndSigner future.TransactionWithSigner
 var txTrace future.DryrunTxnResult
 var trace string
 var sourceMap logic.SourceMap
+var srcMapping map[string]interface{}
 
 var assetTestFixture struct {
 	Creator               string
@@ -333,6 +334,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
 	s.Step(`^a source map json file "([^"]*)"$`, aSourceMapJsonFile)
 	s.Step(`^the string composed of pc:line number equals "([^"]*)"$`, theStringComposedOfPclineNumberEquals)
+	s.Step(`^I compile a teal program "([^"]*)" with mapping enabled$`, iCompileATealProgramWithMappingEnabled)
+	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2647,5 +2650,56 @@ func theStringComposedOfPclineNumberEquals(expectedPcToLineString string) error 
 	if expectedPcToLineString != actualStr {
 		return fmt.Errorf("Expected %s got %s", expectedPcToLineString, actualStr)
 	}
+	return nil
+}
+
+func iCompileATealProgramWithMappingEnabled(programPath string) error {
+	fileContents, err := loadResource(programPath)
+	if err != nil {
+		return err
+	}
+
+	result, err := aclv2.TealCompile(fileContents).Sourcemap(true).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	if result.Sourcemap == nil {
+		return fmt.Errorf("No source map returned")
+	}
+
+	srcMapping = *result.Sourcemap
+	return nil
+}
+
+func theResultingSourceMapIsTheSameAsTheJson(expectedJsonPath string) error {
+
+	expectedJson, err := loadResource(expectedJsonPath)
+	if err != nil {
+		return err
+	}
+
+	// Marshal the map to json then unmarshal it so we get alphabetic ordering
+	expectedMap := map[string]interface{}{}
+	err = json.Unmarshal(expectedJson, &expectedMap)
+	if err != nil {
+		return err
+	}
+
+	expectedJson, err = json.Marshal(expectedMap)
+	if err != nil {
+		return err
+	}
+
+	// Turn it back into a string
+	actualJson, err := json.Marshal(srcMapping)
+	if err != nil {
+		return nil
+	}
+
+	if !bytes.Equal(expectedJson, actualJson) {
+		return fmt.Errorf("expected %s got %s", expectedJson, actualJson)
+	}
+
 	return nil
 }
