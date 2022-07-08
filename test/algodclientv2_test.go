@@ -263,8 +263,6 @@ func weMakeAGetApplicationBoxByNameCallForApplicationIDWithEncodedBoxName(appId 
 		return err
 	}
 
-	c := algodClient.GetApplicationBoxByName(uint64(appId))
-	c.Name(encodedBoxName)
-	_, _ = c.Do(context.Background())
+	_, _ = algodClient.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
 	return nil
 }

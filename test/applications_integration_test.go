@@ -916,9 +916,7 @@ func checkRandomElementResult(resultIndex int, input string) error {
 
 func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, boxContents, errStr string) error {
 
-	c := algodV2client.GetApplicationBoxByName(applicationId)
-	c.Name(encodedBoxName)
-	box, err := c.Do(context.Background())
+	box, err := algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
 	if err != nil {
 		if strings.Contains(err.Error(), errStr) {
 			return nil
