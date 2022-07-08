@@ -12,8 +12,7 @@ type ApplicationFields struct {
 type AppIndex uint64
 
 type AppBoxReference struct {
-	// The ID of the app that owns the box. When serialized this must first be
-	// converted to BoxReference
+	// The ID of the app that owns the box. Must be converted to BoxReference during transaction submission.
 	AppID uint64
 
 	// The Name of the box unique to the app it belongs to
