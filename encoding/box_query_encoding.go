@@ -28,6 +28,7 @@ func EncodeBoxReferenceForBoxQuery(br types.BoxReference) string {
 	return EncodeBytesForBoxQuery(br.Name)
 }
 
+// EncodeAppBoxReferenceForBoxQuery provides a convenience method to string encode box names for use with Box search APIs (e.g. GetApplicationBoxByName).
 func EncodeAppBoxReferenceForBoxQuery(abr types.AppBoxReference) string {
 	return EncodeBytesForBoxQuery(abr.Name)
 }
