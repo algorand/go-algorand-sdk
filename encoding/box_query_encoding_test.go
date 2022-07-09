@@ -31,6 +31,14 @@ func TestEncode(t *testing.T) {
 		actual,
 	)
 
+	// Encode BoxDescriptor
+	bd := models.BoxDescriptor{Name: []byte(base64.StdEncoding.EncodeToString(e.source))}
+	actual, err = EncodeBoxDescriptorForBoxQuery(bd)
+	require.NoError(t, err)
+	require.Equal(t,
+		e.expectedEncoding,
+		actual,
+	)
 	// Encode BoxReference
 	require.Equal(t,
 		e.expectedEncoding,
