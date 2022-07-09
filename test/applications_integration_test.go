@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -331,6 +332,12 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 				return nil, fmt.Errorf("failed to convert %s to bytes", arg)
 			}
 			resp[idx] = buf.Bytes()
+		case "b64":
+			d, err := (base64.StdEncoding.DecodeString(typeArg[1]))
+			if err != nil {
+				return nil, fmt.Errorf("failed to b64 decode arg = %s", arg)
+			}
+			resp[idx] = d
 		default:
 			return nil, fmt.Errorf("Applications doesn't currently support argument of type %s", typeArg[0])
 		}
@@ -914,6 +921,28 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
+// decodeBoxName parses the encoding scheme to return the corresponding byte representation
+func decodeBoxName(encodedBoxName string) ([]byte, error) {
+	split := strings.Split(encodedBoxName, ":")
+	if len(split) != 2 {
+		return nil, errors.New("encodedBoxName (" + encodedBoxName + ") does not match expected format")
+	}
+	encoding, encoded := split[0], split[1]
+	switch encoding {
+	case "str":
+		return []byte(encoded), nil
+	case "b64":
+		d, err := base64.StdEncoding.DecodeString(encoded)
+		if err != nil {
+			return nil, fmt.Errorf("failed to b64 decode arg = %s", encoded)
+		}
+
+		return d, nil
+	default:
+		return nil, errors.New("unsupported encoding = " + encoding)
+	}
+}
+
 func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, boxContents, errStr string) error {
 
 	box, err := algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
@@ -962,5 +991,52 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 
-	s.Step(`^the contents of the box with name "([^"]*)" should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
+	s.Step(`^the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
+
+	s.Step(`^the current application should have the following boxes "([^"]*)"\.$`,
+		func(encodedBoxesRaw string) error {
+			var expectedNames [][]byte
+			if len(encodedBoxesRaw) > 0 {
+				encodedBoxes := strings.Split(encodedBoxesRaw, ",")
+				expectedNames = make([][]byte, len(encodedBoxes))
+				for i, b := range encodedBoxes {
+					expected, err := decodeBoxName(b)
+					if err != nil {
+						return err
+					}
+					expectedNames[i] = expected
+				}
+			}
+
+			r, err := algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+			if err != nil {
+				return err
+			}
+
+			actualNames := make([][]byte, len(r.Boxes))
+			for i, b := range r.Boxes {
+				actualNames[i] = b.Name
+			}
+
+			if len(expectedNames) != len(actualNames) {
+				return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
+			}
+
+			contains := func(elem []byte, xs [][]byte) bool {
+				for _, x := range xs {
+					if bytes.Equal(elem, x) {
+						return true
+					}
+				}
+				return false
+			}
+
+			for _, e := range expectedNames {
+				if !contains(e, actualNames) {
+					return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+				}
+			}
+
+			return nil
+		})
 }
