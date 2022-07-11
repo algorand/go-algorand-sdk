@@ -67,15 +67,16 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	lastLine := 0
 	for idx, chunk := range strings.Split(sm.Mappings, ";") {
 		vals := decodeSourceMapLine(chunk)
-		if len(vals) > 3 {
-			lineNum := lastLine + vals[2]
-			if _, ok := sm.LineToPc[lineNum]; !ok {
-				sm.LineToPc[lineNum] = []int{}
-			}
-			sm.LineToPc[lineNum] = append(sm.LineToPc[lineNum], idx)
-
-			lastLine = lineNum
+		// If the vals length >= 3 the lineDelta
+		if len(vals) >= 3 {
+			lastLine = lastLine + vals[2] // Add the line delta
 		}
+
+		if _, ok := sm.LineToPc[lastLine]; !ok {
+			sm.LineToPc[lastLine] = []int{}
+		}
+
+		sm.LineToPc[lastLine] = append(sm.LineToPc[lastLine], idx)
 		sm.PcToLine[idx] = lastLine
 	}
 
