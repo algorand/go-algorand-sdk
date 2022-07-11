@@ -2,9 +2,11 @@ package algod
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/google/go-querystring/query"
 )
 
 // TealCompileParams contains all of the query parameters for url serialization.
@@ -36,10 +38,12 @@ func (s *TealCompile) Sourcemap(Sourcemap bool) *TealCompile {
 
 // Do performs the HTTP request
 func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (response models.CompileResponse, err error) {
-	if s.p.Sourcemap {
-		err = s.c.post(ctx, &response, "/v2/teal/compile?sourcemap=true", s.source, headers)
-	} else {
-		err = s.c.post(ctx, &response, "/v2/teal/compile", s.source, headers)
+	vals, err := query.Values(s.p)
+	if err != nil {
+		return
 	}
+
+	err = s.c.post(ctx, &response, fmt.Sprintf("/v2/teal/compile?%s", vals.Encode()), s.source, headers)
+
 	return
 }

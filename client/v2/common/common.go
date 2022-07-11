@@ -124,7 +124,6 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, body inter
 			bodyReader = bytes.NewBuffer(reqBytes)
 
 			queryURL.RawQuery = parsedURL.RawQuery
-
 		} else {
 			v, err := query.Values(body)
 			if err != nil {
