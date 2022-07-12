@@ -336,6 +336,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the string composed of pc:line number equals "([^"]*)"$`, theStringComposedOfPclineNumberEquals)
 	s.Step(`^I compile a teal program "([^"]*)" with mapping enabled$`, iCompileATealProgramWithMappingEnabled)
 	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
+	s.Step(`^getting the line associated with a pc "([^"]*)" equals "([^"]*)"$`, gettingTheLineAssociatedWithAPcEquals)
+	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2650,6 +2652,36 @@ func theStringComposedOfPclineNumberEquals(expectedPcToLineString string) error 
 	if expectedPcToLineString != actualStr {
 		return fmt.Errorf("Expected %s got %s", expectedPcToLineString, actualStr)
 	}
+	return nil
+}
+
+func gettingTheLineAssociatedWithAPcEquals(strPc, strLine string) error {
+	pc, _ := strconv.Atoi(strPc)
+	expectedLine, _ := strconv.Atoi(strLine)
+
+	actualLine, ok := sourceMap.GetLineForPc(pc)
+	if !ok {
+		return fmt.Errorf("expected valid line, got !ok")
+	}
+
+	if actualLine != expectedLine {
+		return fmt.Errorf("expected %d got %d", expectedLine, actualLine)
+	}
+
+	return nil
+}
+
+func gettingTheLastPcAssociatedWithALineEquals(strLine, strPc string) error {
+	expectedPc, _ := strconv.Atoi(strPc)
+	line, _ := strconv.Atoi(strLine)
+
+	pcs := sourceMap.GetPcsForLine(line)
+	actualPc := pcs[len(pcs)-1]
+
+	if actualPc != expectedPc {
+		return fmt.Errorf("expected %d got %d", expectedPc, actualPc)
+	}
+
 	return nil
 }
 

@@ -83,8 +83,9 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	return sm, nil
 }
 
-func (s *SourceMap) GetLineForPc(pc int) int {
-	return s.PcToLine[pc]
+func (s *SourceMap) GetLineForPc(pc int) (int, bool) {
+	line, ok := s.PcToLine[pc]
+	return line, ok
 }
 
 func (s *SourceMap) GetPcsForLine(line int) []int {

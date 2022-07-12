@@ -42,6 +42,7 @@ func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (respon
 	if err != nil {
 		return
 	}
+
 	err = s.c.post(ctx, &response, fmt.Sprintf("/v2/teal/compile?%s", vals.Encode()), s.source, headers)
 	return
 }
