@@ -58,10 +58,10 @@ func AlgodClientV2Context(s *godog.Suite) {
 				_, _ = c.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
 			})
 		})
-	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+)$`,
-		func(appId int) error {
+	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+)$`,
+		func(appId int, max int) error {
 			return withClient(func(c algod.Client) {
-				_, _ = c.GetApplicationBoxes(uint64(appId)).Do(context.Background())
+				_, _ = c.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Do(context.Background())
 			})
 		},
 	)
