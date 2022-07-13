@@ -39,6 +39,7 @@ func TestEncode(t *testing.T) {
 		e.expectedEncoding,
 		actual,
 	)
+
 	// Encode BoxReference
 	require.Equal(t,
 		e.expectedEncoding,
