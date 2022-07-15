@@ -19,6 +19,6 @@ type TealDryrun struct {
 
 // Do performs the HTTP request
 func (s *TealDryrun) Do(ctx context.Context, headers ...*common.Header) (response models.DryrunResponse, err error) {
-	err = s.c.post(ctx, &response, "/v2/teal/dryrun", msgpack.Encode(&s.request), headers)
+	err = s.c.post(ctx, &response, "/v2/teal/dryrun", msgpack.Encode(&s.request), headers, nil)
 	return
 }

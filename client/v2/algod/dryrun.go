@@ -19,6 +19,6 @@ func (s *TealDryRun) Do(
 	headers ...*common.Header,
 ) (response models.DryrunResponse, err error) {
 	err = s.c.post(ctx, &response,
-		"/v2/teal/dryrun", s.rawobj, headers)
+		"/v2/teal/dryrun", s.rawobj, headers, nil)
 	return
 }
