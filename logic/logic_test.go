@@ -57,7 +57,7 @@ func TestCheckProgram(t *testing.T) {
 	for _, v := range versions {
 		program[0] = v
 		err = CheckProgram(program, args)
-		require.EqualError(t, err, "program too costly for Teal version < 4. consider using v4.")
+		require.EqualError(t, err, "program too costly for version < 4. consider using v4.")
 	}
 
 	// check 800x keccak256 ok for v4 and above

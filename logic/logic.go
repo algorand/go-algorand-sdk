@@ -132,7 +132,7 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 
 	// costs calculated dynamically starting in v4
 	if version < 4 && cost > types.LogicSigMaxCost {
-		err = fmt.Errorf("program too costly for Teal version < 4. consider using v4.")
+		err = fmt.Errorf("program too costly for version < 4. consider using v4.")
 	}
 
 	return
