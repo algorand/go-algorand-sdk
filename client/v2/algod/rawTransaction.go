@@ -29,7 +29,7 @@ func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) 
 	if addContentType {
 		headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
 	}
-	err = s.c.post(ctx, &response, "/v2/transactions", s.rawtxn, headers, nil)
+	err = s.c.post(ctx, &response, "/v2/transactions", nil, headers, s.rawtxn)
 	txid = response.Txid
 	return
 }
