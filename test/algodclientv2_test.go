@@ -52,7 +52,19 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
-	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeAGetApplicationBoxByNameCallForApplicationIDWithEncodedBoxName)
+	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with encoded box name "([^"]*)"$`,
+		func(appId int, encodedBoxName string) error {
+			return withClient(func(c algod.Client) {
+				_, _ = c.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+			})
+		})
+	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+)$`,
+		func(appId int, max int) error {
+			return withClient(func(c algod.Client) {
+				_, _ = c.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Do(context.Background())
+			})
+		},
+	)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -257,12 +269,12 @@ func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(accoun
 	return nil
 }
 
-func weMakeAGetApplicationBoxByNameCallForApplicationIDWithEncodedBoxName(appId int, encodedBoxName string) error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
+func withClient(f func(client algod.Client)) error {
+	c, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
 	}
 
-	_, _ = algodClient.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+	f(*c)
 	return nil
 }

@@ -23,6 +23,15 @@ func EncodeBoxForBoxQuery(b models.Box) (string, error) {
 	return EncodeBytesForBoxQuery(decoded), nil
 }
 
+func EncodeBoxDescriptorForBoxQuery(bd models.BoxDescriptor) (string, error) {
+	decoded, err := base64.StdEncoding.DecodeString(string(bd.Name))
+	if err != nil {
+		return "", err
+	}
+
+	return EncodeBytesForBoxQuery(decoded), nil
+}
+
 // EncodeBoxReferenceForBoxQuery provides a convenience method to string encode box names for use with Box search APIs (e.g. GetApplicationBoxByName).
 func EncodeBoxReferenceForBoxQuery(br types.BoxReference) string {
 	return EncodeBytesForBoxQuery(br.Name)
