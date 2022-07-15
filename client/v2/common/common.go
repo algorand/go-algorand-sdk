@@ -240,7 +240,7 @@ func (client *Client) GetRawMsgpack(ctx context.Context, response interface{}, p
 // No query parameters will be sent if body is nil.
 // response must be a pointer to an object as post writes the response there.
 func (client *Client) Post(ctx context.Context, response interface{}, path string, params interface{}, headers []*Header, body interface{}) error {
-	return client.submitForm(ctx, response, path, body, "POST", true /* encodeJSON */, headers, params)
+	return client.submitForm(ctx, response, path, params, "POST", true /* encodeJSON */, headers, body)
 }
 
 // Helper function for correctly formatting and escaping URL path parameters.
