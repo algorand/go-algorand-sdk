@@ -56,8 +56,11 @@ type VRFPK [ed25519.PublicKeySize]byte
 // MasterDerivationKey is the secret key used to derive keys in wallets
 type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 
+// DigestSize is the number of bytes in the preferred hash Digest used here.
+const DigestSize = hashLenBytes
+
 // Digest is a SHA512_256 hash
-type Digest [hashLenBytes]byte
+type Digest [DigestSize]byte
 
 // MerkleVerifier is a state proof
 type MerkleVerifier [KeyStoreRootSize]byte

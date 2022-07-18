@@ -3,7 +3,7 @@ module github.com/algorand/go-algorand-sdk
 go 1.17
 
 require (
-	github.com/algorand/go-algorand v0.0.0-20220323144801-17c0feef002f
+	github.com/algorand/go-algorand v0.22.0-crypto-split
 	github.com/algorand/go-codec/codec v1.1.8
 	github.com/cucumber/godog v0.8.1
 	github.com/google/go-querystring v1.0.0
@@ -16,4 +16,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+)
+
+replace (
+	github.com/algorand/go-algorand v0.22.0-crypto-split => github.com/algonathan/go-algorand v0.22.0-crypto-split
 )
