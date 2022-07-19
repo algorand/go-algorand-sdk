@@ -12,7 +12,7 @@ type StateProofVerifier struct {
 	stateProofVerifier *stateproof.Verifier
 }
 
-func initializeVerifier(genesisVotersCommitment datatypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
+func InitializeVerifier(genesisVotersCommitment datatypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
 	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(genesisVotersCommitment),
 		genesisLnProvenWeight, strengthTarget)}
 }
