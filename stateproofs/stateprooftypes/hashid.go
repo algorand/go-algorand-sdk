@@ -1,4 +1,4 @@
-package datatypes
+package stateprooftypes
 
 // HashID is a domain separation prefix for an object type that might be hashed
 // This ensures, for example, the hash of a transaction will never collide with the hash of a vote
