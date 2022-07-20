@@ -1,8 +1,8 @@
-package functions
+package stateproofverification
 
 import (
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/stateproofs/datatypes"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	"github.com/algorand/go-algorand/crypto/stateproof"
 )
 
@@ -12,16 +12,16 @@ type StateProofVerifier struct {
 	stateProofVerifier *stateproof.Verifier
 }
 
-func InitializeVerifier(genesisVotersCommitment datatypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
+func InitializeVerifier(genesisVotersCommitment stateprooftypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
 	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(genesisVotersCommitment),
 		genesisLnProvenWeight, strengthTarget)}
 }
 
-func (v *StateProofVerifier) advanceVerifier(message datatypes.Message) {
+func (v *StateProofVerifier) advanceVerifier(message stateprooftypes.Message) {
 	v.stateProofVerifier = stateproof.MkVerifierWithLnProvenWeight(message.VotersCommitment, message.LnProvenWeight, strengthTarget)
 }
 
-func (v *StateProofVerifier) verifyStateProofMessage(stateProof *datatypes.EncodedStateProof, message datatypes.Message) error {
+func (v *StateProofVerifier) verifyStateProofMessage(stateProof *stateprooftypes.EncodedStateProof, message stateprooftypes.Message) error {
 	messageHash := message.IntoStateProofMessageHash()
 
 	var decodedStateProof stateproof.StateProof
@@ -35,7 +35,7 @@ func (v *StateProofVerifier) verifyStateProofMessage(stateProof *datatypes.Encod
 	return v.stateProofVerifier.Verify(message.LastAttestedRound, stateProofMessageHash, &decodedStateProof)
 }
 
-func (v *StateProofVerifier) AdvanceState(stateProof *datatypes.EncodedStateProof, message datatypes.Message) error {
+func (v *StateProofVerifier) AdvanceState(stateProof *stateprooftypes.EncodedStateProof, message stateprooftypes.Message) error {
 	err := v.verifyStateProofMessage(stateProof, message)
 	if err != nil {
 		return err
