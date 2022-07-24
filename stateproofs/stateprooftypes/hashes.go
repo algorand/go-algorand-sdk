@@ -3,21 +3,16 @@ package stateprooftypes
 import (
 	"crypto/sha256"
 	"crypto/sha512"
-	"fmt"
+	"errors"
 	"hash"
+)
+
+var (
+	ErrUnsupportedHashFuncType = errors.New("unsupported hash function type")
 )
 
 // HashType represents different hash functions
 type HashType uint16
-
-// TODO: Add error object
-// Validate verifies that the hash type is in a valid range.
-func (h HashType) Validate() error {
-	if h >= MaxHashType {
-		return fmt.Errorf("error invalid object")
-	}
-	return nil
-}
 
 // types of hashes
 const (
@@ -26,16 +21,6 @@ const (
 	Sha256
 	MaxHashType
 )
-
-type Hashable interface {
-	ToBeHashed() (HashID, []byte)
-}
-
-// HashRep appends the correct hashid before the message to be hashed.
-func HashRep(h Hashable) []byte {
-	hashid, data := h.ToBeHashed()
-	return append([]byte(hashid), data...)
-}
 
 // Sumhash512DigestSize  The size in bytes of the sumhash checksum
 const Sumhash512DigestSize = 64
@@ -51,14 +36,23 @@ const (
 	Sha256Size        = sha256.Size
 )
 
-// TODO: add error
 func UnmarshalHashFunc(hashStr string) (hash.Hash, error) {
 	switch hashStr {
 	case "sha256":
 		return sha256.New(), nil
 	default:
-		return nil, fmt.Errorf("unsupported hash function detected")
+		return nil, ErrUnsupportedHashFuncType
 	}
+}
+
+type Hashable interface {
+	ToBeHashed() (HashID, []byte)
+}
+
+// HashRep appends the correct hashid before the message to be hashed.
+func HashRep(h Hashable) []byte {
+	hashid, data := h.ToBeHashed()
+	return append([]byte(hashid), data...)
 }
 
 func HashBytes(hash hash.Hash, m []byte) []byte {
