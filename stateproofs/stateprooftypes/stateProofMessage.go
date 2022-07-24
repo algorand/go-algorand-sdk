@@ -12,8 +12,6 @@ type EncodedStateProof []byte
 // MessageHash represents the message that a state proof will attest to.
 type MessageHash [32]byte
 
-// TODO: handle the allocbound
-
 // Message represents the message that the state proofs are attesting to. This message can be
 // used by lightweight client and gives it the ability to verify proofs on the Algorand's state.
 // In addition to that proof, this message also contains fields that
@@ -21,8 +19,8 @@ type MessageHash [32]byte
 type Message struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 	// BlockHeadersCommitment contains a commitment on all light block headers within a state proof interval.
-	BlockHeadersCommitment []byte `codec:"b,allocbound=crypto.Sha256Size"`
-	VotersCommitment       []byte `codec:"v,allocbound=crypto.SumhashDigestSize"`
+	BlockHeadersCommitment []byte `codec:"b,allocbound=Sha256Size"`
+	VotersCommitment       []byte `codec:"v,allocbound=SumhashDigestSize"`
 	LnProvenWeight         uint64 `codec:"P"`
 	FirstAttestedRound     uint64 `codec:"f"`
 	LastAttestedRound      uint64 `codec:"l"`
