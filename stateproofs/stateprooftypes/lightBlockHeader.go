@@ -15,10 +15,10 @@ type Seed [32]byte
 type LightBlockHeader struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Seed                Seed          `codec:"s"`
-	RoundNumber         types.Round   `codec:"r"`
-	GenesisHash         types.Digest  `codec:"gh"`
-	Sha256TxnCommitment GenericDigest `codec:"tc,allocbound=Sha256Size"`
+	Seed                Seed         `codec:"s"`
+	RoundNumber         types.Round  `codec:"r"`
+	GenesisHash         types.Digest `codec:"gh"`
+	Sha256TxnCommitment types.Digest `codec:"tc"`
 }
 
 // ToBeHashed implements the crypto.Hashable interface
