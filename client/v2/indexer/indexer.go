@@ -28,8 +28,8 @@ func (c *Client) getRaw(ctx context.Context, path string, body interface{}, head
 // post sends a POST request to the given path with the given request object.
 // No query parameters will be sent if request is nil.
 // response must be a pointer to an object as post writes the response there.
-func (c *Client) post(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
-	return (*common.Client)(c).Post(ctx, response, path, body, headers)
+func (c *Client) post(ctx context.Context, response interface{}, path string, params interface{}, headers []*common.Header, body interface{}) error {
+	return (*common.Client)(c).Post(ctx, response, path, params, headers, body)
 }
 
 // MakeClient is the factory for constructing a ClientV2 for a given endpoint.
