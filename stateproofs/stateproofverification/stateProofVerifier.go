@@ -3,6 +3,7 @@ package stateproofverification
 import (
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/algorand/go-algorand/crypto/stateproof"
 )
 
@@ -12,8 +13,8 @@ type StateProofVerifier struct {
 	stateProofVerifier *stateproof.Verifier
 }
 
-func InitializeVerifier(genesisVotersCommitment stateprooftypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
-	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(genesisVotersCommitment),
+func InitializeVerifier(genesisVotersCommitment types.Digest, genesisLnProvenWeight uint64) *StateProofVerifier {
+	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight(genesisVotersCommitment[:],
 		genesisLnProvenWeight, strengthTarget)}
 }
 
