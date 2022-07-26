@@ -13,13 +13,9 @@ type StateProofVerifier struct {
 	stateProofVerifier *stateproof.Verifier
 }
 
-func InitializeVerifier(genesisVotersCommitment stateprooftypes.GenericDigest, genesisLnProvenWeight uint64) *StateProofVerifier {
-	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(genesisVotersCommitment),
-		genesisLnProvenWeight, strengthTarget)}
-}
-
-func (v *StateProofVerifier) advanceVerifier(message stateprooftypes.Message) {
-	v.stateProofVerifier = stateproof.MkVerifierWithLnProvenWeight(message.VotersCommitment, message.LnProvenWeight, strengthTarget)
+func InitializeVerifier(votersCommitment stateprooftypes.GenericDigest, lnProvenWeight uint64) *StateProofVerifier {
+	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(votersCommitment),
+		lnProvenWeight, strengthTarget)}
 }
 
 func (v *StateProofVerifier) verifyStateProofMessage(stateProof *stateprooftypes.EncodedStateProof, message stateprooftypes.Message) error {
@@ -34,14 +30,4 @@ func (v *StateProofVerifier) verifyStateProofMessage(stateProof *stateprooftypes
 	var stateProofMessageHash stateproof.MessageHash
 	copy(stateProofMessageHash[:], messageHash[:])
 	return v.stateProofVerifier.Verify(message.LastAttestedRound, stateProofMessageHash, &decodedStateProof)
-}
-
-func (v *StateProofVerifier) AdvanceState(stateProof *stateprooftypes.EncodedStateProof, message stateprooftypes.Message) error {
-	err := v.verifyStateProofMessage(stateProof, message)
-	if err != nil {
-		return err
-	}
-
-	v.advanceVerifier(message)
-	return nil
 }
