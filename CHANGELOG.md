@@ -1,3 +1,16 @@
+# 1.18.0
+
+## What's Changed
+
+### New Features
+* Dev Tools: Source map decoder by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/335
+
+### Enhancements
+* Github-Actions: Adding pr title and label checks by @algojack in https://github.com/algorand/go-algorand-sdk/pull/336
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.17.0...v1.18.0
+
+
 # 1.17.0
 
 ## What's Changed

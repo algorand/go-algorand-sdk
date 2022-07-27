@@ -53,6 +53,7 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
+
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
