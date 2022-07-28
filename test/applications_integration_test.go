@@ -69,7 +69,7 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	_, err = future.WaitForConfirmation(algodV2client, ltxid, 5, context.Background())
+	_, err = future.WaitForConfirmation(algodV2client, ltxid, 1, context.Background())
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func iFundTheCurrentApplicationsAddress(microalgos int) error {
 		return err
 	}
 
-	_, err = future.WaitForConfirmation(algodV2client, txid, 5, context.Background())
+	_, err = future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
 	return err
 }
 
@@ -266,7 +266,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr s
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	_, err := future.WaitForConfirmation(algodV2client, txid, 5, context.Background())
+	_, err := future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
 	if err != nil {
 		return err
 	}
