@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -71,6 +72,7 @@ var status models.NodeStatus
 var statusAfter models.NodeStatus
 var msigExp kmd.ExportMultisigResponse
 var pk string
+var rekey string
 var accounts []string
 var e bool
 var lastRound uint64
@@ -138,6 +140,57 @@ var opt = godog.Options{
 	Format: "progress", // can define default values
 }
 
+// Dev mode helper functions
+const devModeInitialAmount = 10_000_000
+
+func initializeAccount(accountAddress string) error {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+
+	txn, err = future.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	if err != nil {
+		return err
+	}
+	time.Sleep(500 * time.Millisecond)
+	return err
+}
+
+func selfPayTransaction() error {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+
+	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	if err != nil {
+		return err
+	}
+	time.Sleep(500 * time.Millisecond)
+	return err
+}
+
 func init() {
 	godog.BindFlags("godog.", flag.CommandLine, &opt)
 }
@@ -199,7 +252,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the multisig should equal the exported multisig", msigEq)
 	s.Step("I delete the multisig", deleteMsig)
 	s.Step("the multisig should not be in the wallet", msigNotInWallet)
-	s.Step("I generate a key using kmd", genKeyKmd)
+	s.Step("^I generate a key using kmd for rekeying and fund it$", genRekeyKmd)
+	s.Step("^I generate a key using kmd$", genKeyKmd)
 	s.Step("the key should be in the wallet", keyInWallet)
 	s.Step("I delete the key", deleteKey)
 	s.Step("the key should not be in the wallet", keyNotInWallet)
@@ -766,6 +820,16 @@ func genKeyKmd() error {
 	return nil
 }
 
+func genRekeyKmd() error {
+	p, err := kcl.GenerateKey(handle)
+	if err != nil {
+		return err
+	}
+	rekey = p.Address
+	initializeAccount(rekey)
+	return nil
+}
+
 func keyInWallet() error {
 	resp, err := kcl.ListKeys(handle)
 	if err != nil {
@@ -876,7 +940,8 @@ func walletInfo() error {
 	return err
 }
 
-func defaultTxn(iamt int, inote string) error {
+// Helper function for making default transactions.
+func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
 	var err error
 	if inote != "none" {
 		note, err = base64.StdEncoding.DecodeString(inote)
@@ -891,14 +956,22 @@ func defaultTxn(iamt int, inote string) error {
 	}
 
 	amt = uint64(iamt)
-	pk = accounts[0]
+	pk = senderAddress
 	params, err := acl.BuildSuggestedParams()
 	if err != nil {
 		return err
 	}
 	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[1], amt, note, "", params)
+	txn, err = future.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
 	return err
+}
+
+func defaultTxn(iamt int, inote string) error {
+	return defaultTxnWithAddress(iamt, inote, accounts[0])
+}
+
+func defaultTxnRekey(iamt int, inote string) error {
+	return defaultTxnWithAddress(iamt, inote, rekey)
 }
 
 func defaultMsigTxn(iamt int, inote string) error {
@@ -997,14 +1070,15 @@ func sendMsigTxn() error {
 }
 
 func checkTxn() error {
+	time.Sleep(500 * time.Millisecond)
 	_, err := acl.PendingTransactionInformation(txid)
 	if err != nil {
 		return err
 	}
-	_, err = acl.StatusAfterBlock(lastRound + 2)
-	if err != nil {
-		return err
-	}
+	// _, err = acl.StatusAfterBlock(lastRound + 2)
+	// if err != nil {
+	// 	return err
+	// }
 	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
 		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
 	} else {
@@ -1019,10 +1093,11 @@ func checkTxn() error {
 
 func txnbyID() error {
 	var err error
-	_, err = acl.StatusAfterBlock(lastRound + 2)
-	if err != nil {
-		return err
-	}
+	time.Sleep(500 * time.Millisecond)
+	// _, err = acl.StatusAfterBlock(lastRound + 2)
+	// if err != nil {
+	// 	return err
+	// }
 	_, err = acl.TransactionByID(txid)
 	return err
 }
