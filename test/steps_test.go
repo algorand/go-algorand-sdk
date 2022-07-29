@@ -11,7 +11,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -143,6 +142,18 @@ var opt = godog.Options{
 // Dev mode helper functions
 const devModeInitialAmount = 10_000_000
 
+/**
+ * waitForAlgodInDevMode is a Dev mode helper method
+ * to wait for blocks to be finalized.
+ * Since Dev mode produces blocks on a per transaction basis, it's possible
+ * algod generates a block _before_ the corresponding SDK call to wait for a block.
+ * Without _any_ wait, it's possible the SDK looks for the transaction before algod completes processing.
+ * So, the method performs a local sleep to simulate waiting for a block.
+ */
+func waitForAlgodInDevMode() {
+	time.Sleep(500 * time.Millisecond)
+}
+
 func initializeAccount(accountAddress string) error {
 	params, err := acl.BuildSuggestedParams()
 	if err != nil {
@@ -163,31 +174,7 @@ func initializeAccount(accountAddress string) error {
 	if err != nil {
 		return err
 	}
-	time.Sleep(500 * time.Millisecond)
-	return err
-}
-
-func selfPayTransaction() error {
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
-	if err != nil {
-		return err
-	}
-
-	res, err := kcl.SignTransaction(handle, walletPswd, txn)
-	if err != nil {
-		return err
-	}
-
-	_, err = acl.SendRawTransaction(res.SignedTransaction)
-	if err != nil {
-		return err
-	}
-	time.Sleep(500 * time.Millisecond)
+	waitForAlgodInDevMode()
 	return err
 }
 
@@ -716,6 +703,7 @@ func getStatus() error {
 
 func statusAfterBlock() error {
 	var err error
+	waitForAlgodInDevMode()
 	statusAfter, err = acl.StatusAfterBlock(lastRound)
 	if err != nil {
 		return err
@@ -1070,15 +1058,11 @@ func sendMsigTxn() error {
 }
 
 func checkTxn() error {
-	time.Sleep(500 * time.Millisecond)
+	waitForAlgodInDevMode()
 	_, err := acl.PendingTransactionInformation(txid)
 	if err != nil {
 		return err
 	}
-	// _, err = acl.StatusAfterBlock(lastRound + 2)
-	// if err != nil {
-	// 	return err
-	// }
 	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
 		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
 	} else {
@@ -1093,11 +1077,7 @@ func checkTxn() error {
 
 func txnbyID() error {
 	var err error
-	time.Sleep(500 * time.Millisecond)
-	// _, err = acl.StatusAfterBlock(lastRound + 2)
-	// if err != nil {
-	// 	return err
-	// }
+	waitForAlgodInDevMode()
 	_, err = acl.TransactionByID(txid)
 	return err
 }
