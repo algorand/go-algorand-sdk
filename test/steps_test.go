@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -161,6 +162,30 @@ func initializeAccount(accountAddress string) error {
 	}
 
 	txn, err = future.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	if err != nil {
+		return err
+	}
+	waitForAlgodInDevMode()
+	return err
+}
+
+func selfPayTransaction() error {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+
+	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
 	if err != nil {
 		return err
 	}
@@ -703,7 +728,7 @@ func getStatus() error {
 
 func statusAfterBlock() error {
 	var err error
-	waitForAlgodInDevMode()
+	selfPayTransaction()
 	statusAfter, err = acl.StatusAfterBlock(lastRound)
 	if err != nil {
 		return err
