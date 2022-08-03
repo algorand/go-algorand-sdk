@@ -15,7 +15,7 @@ type Seed [32]byte
 type LightBlockHeader struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Seed                Seed         `codec:"s"`
+	Seed                Seed         `codec:"0"`
 	RoundNumber         types.Round  `codec:"r"`
 	GenesisHash         types.Digest `codec:"gh"`
 	Sha256TxnCommitment types.Digest `codec:"tc"`
