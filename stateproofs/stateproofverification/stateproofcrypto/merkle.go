@@ -1,4 +1,4 @@
-package stateproofverification
+package stateproofcrypto
 
 const (
 	// MaxEncodedTreeDepth is the maximum tree depth (root only depth 0) for a tree which
