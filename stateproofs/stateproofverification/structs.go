@@ -2,6 +2,7 @@ package stateproofverification
 
 import (
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	merklesignature2 "github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
 )
 
 //msgp:ignore sigslot
@@ -22,7 +23,7 @@ type sigslotCommit struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// Sig is a signature by the participant on the expected message.
-	Sig Signature `codec:"s"`
+	Sig merklesignature2.Signature `codec:"s"`
 
 	// L is the total weight of signatures in lower-numbered slots.
 	// This is initialized once the builder has collected a sufficient

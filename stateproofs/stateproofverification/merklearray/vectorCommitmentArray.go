@@ -1,4 +1,4 @@
-package stateproofverification
+package merklearray
 
 import (
 	"fmt"

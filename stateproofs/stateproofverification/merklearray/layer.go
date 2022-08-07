@@ -1,4 +1,4 @@
-package stateproofverification
+package merklearray
 
 import (
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"

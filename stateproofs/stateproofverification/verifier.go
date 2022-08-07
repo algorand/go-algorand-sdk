@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklearray"
 )
 
 // Errors for the StateProof verifier
@@ -74,12 +75,12 @@ func (v *Verifier) Verify(round uint64, data stateprooftypes.MessageHash, s *Sta
 	}
 
 	// verify all the reveals proofs on the signature commitment.
-	if err := VerifyVectorCommitment(s.SigCommit[:], sigs, &s.SigProofs); err != nil {
+	if err := merklearray.VerifyVectorCommitment(s.SigCommit[:], sigs, &s.SigProofs); err != nil {
 		return err
 	}
 
 	// verify all the reveals proofs on the participant commitment.
-	if err := VerifyVectorCommitment(v.participantsCommitment[:], parts, &s.PartProofs); err != nil {
+	if err := merklearray.VerifyVectorCommitment(v.participantsCommitment[:], parts, &s.PartProofs); err != nil {
 		return err
 	}
 
