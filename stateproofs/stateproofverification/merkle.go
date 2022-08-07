@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	"hash"
 	"sort"
+
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 )
 
 // Merkle tree errors

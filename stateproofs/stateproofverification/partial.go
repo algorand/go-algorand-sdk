@@ -3,7 +3,6 @@ package stateproofverification
 import (
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklearray"
 	"hash"
 )
 
@@ -90,7 +89,7 @@ func (pl partialLayer) up(s *siblings, l uint64, doHash bool, hsh hash.Hash) (pa
 		var nextLayerHash stateprooftypes.GenericDigest
 
 		if doHash {
-			var p merklearray.pair
+			var p pair
 			p.hashDigestSize = hsh.Size()
 			if pos&1 == 0 {
 				// We are left
