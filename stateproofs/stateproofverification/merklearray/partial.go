@@ -2,8 +2,9 @@ package merklearray
 
 import (
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	"hash"
+
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 )
 
 // siblings represents the siblings needed to compute the root hash

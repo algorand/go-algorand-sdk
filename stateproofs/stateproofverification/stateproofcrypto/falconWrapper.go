@@ -1,4 +1,4 @@
-package stateproofverification
+package stateproofcrypto
 
 import (
 	cfalcon "github.com/algorand/falcon"

@@ -3,6 +3,8 @@ package stateproofverification
 import (
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	merklesignature2 "github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofbasics"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
 )
 
 //msgp:ignore sigslot
@@ -37,8 +39,8 @@ type sigslotCommit struct {
 type Reveal struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	SigSlot sigslotCommit `codec:"s"`
-	Part    Participant   `codec:"p"`
+	SigSlot sigslotCommit                `codec:"s"`
+	Part    stateproofbasics.Participant `codec:"p"`
 }
 
 // StateProof represents a proof on Algorand's state.
@@ -47,8 +49,8 @@ type StateProof struct {
 
 	SigCommit                  stateprooftypes.GenericDigest `codec:"c"`
 	SignedWeight               uint64                        `codec:"w"`
-	SigProofs                  Proof                         `codec:"S"`
-	PartProofs                 Proof                         `codec:"P"`
+	SigProofs                  stateproofcrypto.Proof        `codec:"S"`
+	PartProofs                 stateproofcrypto.Proof        `codec:"P"`
 	MerkleSignatureSaltVersion byte                          `codec:"v"`
 	// Reveals is a sparse map from the position being revealed
 	// to the corresponding elements from the sigs and participants

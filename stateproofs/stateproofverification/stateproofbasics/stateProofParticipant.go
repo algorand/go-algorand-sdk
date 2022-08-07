@@ -1,4 +1,4 @@
-package stateproofverification
+package stateproofbasics
 
 import (
 	"encoding/binary"

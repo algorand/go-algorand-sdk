@@ -3,14 +3,14 @@ package merklesignature
 import (
 	"encoding/binary"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
 )
 
 type (
 	// committablePublicKeyArray used to arrange the keys so a merkle tree could be build on them.
 	//msgp:ignore committablePublicKeyArray
 	committablePublicKeyArray struct {
-		keys        []stateproofverification.FalconSigner
+		keys        []stateproofcrypto.FalconSigner
 		firstValid  uint64
 		keyLifetime uint64
 	}
@@ -18,7 +18,7 @@ type (
 	// CommittablePublicKey  is used to create a binary representation of public keys in the merkle
 	// signature scheme.
 	CommittablePublicKey struct {
-		VerifyingKey stateproofverification.FalconVerifier
+		VerifyingKey stateproofcrypto.FalconVerifier
 		Round        uint64
 	}
 )

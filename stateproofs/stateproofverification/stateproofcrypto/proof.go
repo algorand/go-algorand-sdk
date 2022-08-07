@@ -1,7 +1,8 @@
-package stateproofverification
+package stateproofcrypto
 
 import (
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
 )
 
 // Proof is used to convince a verifier about membership of leaves: h0,h1...hn
@@ -40,14 +41,14 @@ type SingleLeafProof struct {
 func (p *SingleLeafProof) GetFixedLengthHashableRepresentation() []byte {
 	hash := p.HashFactory.NewHash()
 
-	var binProof = make([]byte, 0, 1+(MaxEncodedTreeDepth*hash.Size()))
+	var binProof = make([]byte, 0, 1+(stateproofverification.MaxEncodedTreeDepth*hash.Size()))
 
 	proofLenByte := p.TreeDepth
 	binProof = append(binProof, proofLenByte)
 
 	zeroDigest := make([]byte, hash.Size())
 
-	for i := uint8(0); i < (MaxEncodedTreeDepth - proofLenByte); i++ {
+	for i := uint8(0); i < (stateproofverification.MaxEncodedTreeDepth - proofLenByte); i++ {
 		binProof = append(binProof, zeroDigest...)
 	}
 

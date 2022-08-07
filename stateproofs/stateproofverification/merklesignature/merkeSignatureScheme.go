@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklearray"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
 )
 
 // Errors for the merkle signature scheme
@@ -28,10 +28,10 @@ type (
 	Signature struct {
 		_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-		Signature             stateproofverification.FalconSignature `codec:"sig"`
-		VectorCommitmentIndex uint64                                 `codec:"idx"`
-		Proof                 stateproofverification.SingleLeafProof `codec:"prf"`
-		VerifyingKey          stateproofverification.FalconVerifier  `codec:"vkey"`
+		Signature             stateproofcrypto.FalconSignature `codec:"sig"`
+		VectorCommitmentIndex uint64                           `codec:"idx"`
+		Proof                 stateproofcrypto.SingleLeafProof `codec:"prf"`
+		VerifyingKey          stateproofcrypto.FalconVerifier  `codec:"vkey"`
 	}
 
 	// Commitment represents the root of the vector commitment tree built upon the MSS keys.

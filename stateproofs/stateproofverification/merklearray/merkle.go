@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
 	"hash"
 	"sort"
+
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
 )
 
 // Merkle tree errors
@@ -86,7 +87,7 @@ func inspectRoot(root stateprooftypes.GenericDigest, pl partialLayer) error {
 	return nil
 }
 
-func verifyPath(root stateprooftypes.GenericDigest, proof *stateproofverification.Proof, pl partialLayer) error {
+func verifyPath(root stateprooftypes.GenericDigest, proof *stateproofcrypto.Proof, pl partialLayer) error {
 	hints := proof.Path
 
 	s := &siblings{
@@ -107,7 +108,7 @@ func verifyPath(root stateprooftypes.GenericDigest, proof *stateproofverificatio
 // Verify ensures that the positions in elems correspond to the respective hashes
 // in a tree with the given root hash.  The proof is expected to be the proof
 // returned by Prove().
-func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofverification.Proof) error {
+func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofcrypto.Proof) error {
 	if proof == nil {
 		return ErrProofIsNil
 	}
@@ -129,7 +130,7 @@ func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes
 }
 
 // VerifyVectorCommitment verifies a vector commitment proof against a given root.
-func VerifyVectorCommitment(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofverification.Proof) error {
+func VerifyVectorCommitment(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofcrypto.Proof) error {
 	if proof == nil {
 		return ErrProofIsNil
 	}
