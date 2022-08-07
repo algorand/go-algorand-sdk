@@ -8,9 +8,13 @@ type HashID string
 // Hash IDs must be PREFIX-FREE (no hash ID is a prefix of another).
 const (
 	BlockHeader256  HashID = "B256"
+	KeysInMSS       HashID = "KP"
 	MerkleArrayNode HashID = "MA"
 
+	StateProofCoin    HashID = "spc"
 	StateProofMessage HashID = "spm"
+	StateProofPart    HashID = "spp"
+	StateProofSig     HashID = "sps"
 
 	TxnMerkleLeaf HashID = "TL"
 )

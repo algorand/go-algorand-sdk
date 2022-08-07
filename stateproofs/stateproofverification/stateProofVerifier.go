@@ -1,8 +1,6 @@
 package stateproofverification
 
 import (
-	"github.com/algorand/go-algorand/crypto/stateproof"
-
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 )
@@ -10,24 +8,24 @@ import (
 const strengthTarget = uint64(256)
 
 type StateProofVerifier struct {
-	stateProofVerifier *stateproof.Verifier
+	stateProofVerifier *Verifier
 }
 
 func InitializeVerifier(votersCommitment stateprooftypes.GenericDigest, lnProvenWeight uint64) *StateProofVerifier {
-	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight([]byte(votersCommitment),
+	return &StateProofVerifier{stateProofVerifier: MkVerifierWithLnProvenWeight(votersCommitment,
 		lnProvenWeight, strengthTarget)}
 }
 
 func (v *StateProofVerifier) VerifyStateProofMessage(stateProof *stateprooftypes.EncodedStateProof, message stateprooftypes.Message) error {
 	messageHash := message.IntoStateProofMessageHash()
 
-	var decodedStateProof stateproof.StateProof
+	var decodedStateProof StateProof
 	err := msgpack.Decode(*stateProof, &decodedStateProof)
 	if err != nil {
 		return err
 	}
 
-	var stateProofMessageHash stateproof.MessageHash
+	var stateProofMessageHash stateprooftypes.MessageHash
 	copy(stateProofMessageHash[:], messageHash[:])
 	return v.stateProofVerifier.Verify(message.LastAttestedRound, stateProofMessageHash, &decodedStateProof)
 }

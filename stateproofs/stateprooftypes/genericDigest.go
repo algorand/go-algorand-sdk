@@ -2,11 +2,6 @@ package stateprooftypes
 
 import "bytes"
 
-// GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
-
-const MaxHashDigestSize = 64
-const Sha256Size = 32
-
 //msgp:allocbound GenericDigest MaxHashDigestSize
 type GenericDigest []byte
 
