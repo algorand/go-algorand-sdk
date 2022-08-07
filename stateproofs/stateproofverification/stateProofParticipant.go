@@ -3,7 +3,6 @@ package stateproofverification
 import (
 	"encoding/binary"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
 )
 
 // A Participant corresponds to an account whose AccountData.Status
@@ -19,7 +18,7 @@ type Participant struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// PK is the identifier used to verify the signature for a specific participant
-	PK merklesignature.Verifier `codec:"p"`
+	PK Verifier `codec:"p"`
 
 	// Weight is AccountData.MicroAlgos.
 	Weight uint64 `codec:"w"`

@@ -1,12 +1,11 @@
-package merklesignature
+package stateproofverification
 
 import (
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklearray"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
 )
 
 // Errors for the merkle signature scheme
@@ -28,14 +27,14 @@ type (
 	Signature struct {
 		_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-		Signature             stateproofverification.FalconSignature `codec:"sig"`
-		VectorCommitmentIndex uint64                                 `codec:"idx"`
-		Proof                 stateproofverification.SingleLeafProof `codec:"prf"`
-		VerifyingKey          stateproofverification.FalconVerifier  `codec:"vkey"`
+		Signature             FalconSignature `codec:"sig"`
+		VectorCommitmentIndex uint64          `codec:"idx"`
+		Proof                 SingleLeafProof `codec:"prf"`
+		VerifyingKey          FalconVerifier  `codec:"vkey"`
 	}
 
 	// Commitment represents the root of the vector commitment tree built upon the MSS keys.
-	Commitment [MerkleSignatureSchemeRootSize]byte
+	Commitment [merklesignature.MerkleSignatureSchemeRootSize]byte
 
 	// Verifier is used to verify a merklesignature.Signature produced by merklesignature.Secrets.
 	Verifier struct {
@@ -60,7 +59,7 @@ func (v *Verifier) FirstRoundInKeyLifetime(round uint64) (uint64, error) {
 		return 0, ErrKeyLifetimeIsZero
 	}
 
-	return firstRoundInKeyLifetime(round, v.KeyLifetime), nil
+	return merklesignature.firstRoundInKeyLifetime(round, v.KeyLifetime), nil
 }
 
 // VerifyBytes verifies that a merklesignature sig is valid, on a specific round, under a given public key
@@ -77,7 +76,7 @@ func (v *Verifier) VerifyBytes(round uint64, msg []byte, sig *Signature) error {
 
 	// verify the merkle tree verification path using the ephemeral public key, the
 	// verification path and the index.
-	err = merklearray.VerifyVectorCommitment(
+	err = VerifyVectorCommitment(
 		v.Commitment[:],
 		map[uint64]stateprooftypes.Hashable{sig.VectorCommitmentIndex: &ephkey},
 		sig.Proof.ToProof(),
@@ -98,7 +97,7 @@ func (v *Verifier) VerifyBytes(round uint64, msg []byte, sig *Signature) error {
 // the format details can be found in the Algorand's spec.
 func (s *Signature) GetFixedLengthHashableRepresentation() ([]byte, error) {
 	schemeType := make([]byte, 2)
-	binary.LittleEndian.PutUint16(schemeType, CryptoPrimitivesID)
+	binary.LittleEndian.PutUint16(schemeType, merklesignature.CryptoPrimitivesID)
 	sigBytes, err := s.Signature.GetFixedLengthHashableRepresentation()
 	if err != nil {
 		return nil, err

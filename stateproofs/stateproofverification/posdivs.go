@@ -1,4 +1,4 @@
-package merklesignature
+package stateproofverification
 
 // firstRoundInKeyLifetime calculates the round of the valid key for a given round by lowering to the closest KeyLiftime divisor.
 // It is implicitly assumed that round is larger than keyLifetime, as an MSS key for round 0 is not valid.

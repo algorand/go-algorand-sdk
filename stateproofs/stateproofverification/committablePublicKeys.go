@@ -1,16 +1,16 @@
-package merklesignature
+package stateproofverification
 
 import (
 	"encoding/binary"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification"
+	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
 )
 
 type (
 	// committablePublicKeyArray used to arrange the keys so a merkle tree could be build on them.
 	//msgp:ignore committablePublicKeyArray
 	committablePublicKeyArray struct {
-		keys        []stateproofverification.FalconSigner
+		keys        []FalconSigner
 		firstValid  uint64
 		keyLifetime uint64
 	}
@@ -18,7 +18,7 @@ type (
 	// CommittablePublicKey  is used to create a binary representation of public keys in the merkle
 	// signature scheme.
 	CommittablePublicKey struct {
-		VerifyingKey stateproofverification.FalconVerifier
+		VerifyingKey FalconVerifier
 		Round        uint64
 	}
 )
@@ -34,7 +34,7 @@ func (e *CommittablePublicKey) ToBeHashed() (stateprooftypes.HashID, []byte) {
 	binary.LittleEndian.PutUint64(roundAsBytes, e.Round)
 
 	schemeAsBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(schemeAsBytes, CryptoPrimitivesID)
+	binary.LittleEndian.PutUint16(schemeAsBytes, merklesignature.CryptoPrimitivesID)
 
 	keyCommitment := make([]byte, 0, len(schemeAsBytes)+len(verifyingRawKey)+len(roundAsBytes))
 	keyCommitment = append(keyCommitment, schemeAsBytes...)
