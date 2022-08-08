@@ -112,8 +112,8 @@ func (c *Client) PendingTransactionInformation(txid string) *PendingTransactionI
 	return &PendingTransactionInformation{c: c, txid: txid}
 }
 
-func (c *Client) StateProof(round uint64) *StateProof {
-	return &StateProof{c: c, round: round}
+func (c *Client) GetStateProof(round uint64) *GetStateProof {
+	return &GetStateProof{c: c, round: round}
 }
 
 func (c *Client) GetProofForLightBlockHeader(round uint64) *GetProofForLightBlockHeader {
