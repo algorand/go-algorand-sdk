@@ -8,18 +8,24 @@ import (
 	"sort"
 
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
+)
+
+const (
+	// MaxEncodedTreeDepth is the maximum tree depth (root only depth 0) for a tree which
+	// is being encoded (either by msbpack or by the fixed length encoding)
+	MaxEncodedTreeDepth = 16
+
+	// MaxNumLeavesOnEncodedTree is the maximum number of leaves allowed for a tree which
+	// is being encoded (either by msbpack or by the fixed length encoding)
+	MaxNumLeavesOnEncodedTree = 1 << MaxEncodedTreeDepth
 )
 
 // Merkle tree errors
 var (
 	ErrRootMismatch                  = errors.New("root mismatch")
-	ErrProvingZeroCommitment         = errors.New("proving in zero-length commitment")
 	ErrProofIsNil                    = errors.New("proof should not be nil")
 	ErrNonEmptyProofForEmptyElements = errors.New("non-empty proof for empty set of elements")
-	ErrUnexpectedTreeDepth           = errors.New("unexpected tree depth")
 	ErrPosOutOfBound                 = errors.New("pos out of bound")
-	ErrProofLengthDigestSizeMismatch = errors.New("proof length and digest size mismatched")
 )
 
 // Tree is a Merkle tree, represented by layers of nodes (hashes) in the tree
@@ -28,7 +34,7 @@ type Tree struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// Levels represents the tree in layers. layer[0] contains the leaves.
-	Levels []Layer `codec:"lvls,allocbound=MaxEncodedTreeDepth+1"`
+	Levels []Layer `codec:"lvls,allocbound=stateproofcrypto.MaxEncodedTreeDepth+1"`
 
 	// NumOfElements represents the number of the elements in the array which the tree is built on.
 	// notice that the number of leaves might be larger in case of a vector commitment
@@ -87,7 +93,7 @@ func inspectRoot(root stateprooftypes.GenericDigest, pl partialLayer) error {
 	return nil
 }
 
-func verifyPath(root stateprooftypes.GenericDigest, proof *stateproofcrypto.Proof, pl partialLayer) error {
+func verifyPath(root stateprooftypes.GenericDigest, proof *Proof, pl partialLayer) error {
 	hints := proof.Path
 
 	s := &siblings{
@@ -108,7 +114,7 @@ func verifyPath(root stateprooftypes.GenericDigest, proof *stateproofcrypto.Proo
 // Verify ensures that the positions in elems correspond to the respective hashes
 // in a tree with the given root hash.  The proof is expected to be the proof
 // returned by Prove().
-func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofcrypto.Proof) error {
+func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *Proof) error {
 	if proof == nil {
 		return ErrProofIsNil
 	}
@@ -130,7 +136,7 @@ func Verify(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes
 }
 
 // VerifyVectorCommitment verifies a vector commitment proof against a given root.
-func VerifyVectorCommitment(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *stateproofcrypto.Proof) error {
+func VerifyVectorCommitment(root stateprooftypes.GenericDigest, elems map[uint64]stateprooftypes.Hashable, proof *Proof) error {
 	if proof == nil {
 		return ErrProofIsNil
 	}

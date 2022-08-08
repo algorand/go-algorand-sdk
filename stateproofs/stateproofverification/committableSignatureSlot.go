@@ -40,8 +40,11 @@ func (sc committableSignatureSlotArray) Marshal(pos uint64) (stateprooftypes.Has
 }
 
 func buildCommittableSignature(sigCommit sigslotCommit) (*committableSignatureSlot, error) {
-	if sigCommit.Sig.Signature == nil {
+	if sigCommit.Sig.MsgIsZero() { // Empty merkle signature
 		return &committableSignatureSlot{isEmptySlot: true}, nil
+	}
+	if sigCommit.Sig.Signature == nil { // Merkle signature is not empty, but falcon signature is (invalid case)
+		return nil, fmt.Errorf("buildCommittableSignature: Falcon signature is nil")
 	}
 	sigBytes, err := sigCommit.Sig.GetFixedLengthHashableRepresentation()
 	if err != nil {
@@ -58,11 +61,11 @@ func (cs *committableSignatureSlot) ToBeHashed() (stateprooftypes.HashID, []byte
 	if cs.isEmptySlot {
 		return stateprooftypes.StateProofSig, []byte{}
 	}
-	binaryLValue := make([]byte, 8)
-	binary.LittleEndian.PutUint64(binaryLValue, cs.sigCommit.L)
+	var binaryLValue [8]byte
+	binary.LittleEndian.PutUint64(binaryLValue[:], cs.sigCommit.L)
 
 	sigSlotByteRepresentation := make([]byte, 0, len(binaryLValue)+len(cs.serializedSignature))
-	sigSlotByteRepresentation = append(sigSlotByteRepresentation, binaryLValue...)
+	sigSlotByteRepresentation = append(sigSlotByteRepresentation, binaryLValue[:]...)
 	sigSlotByteRepresentation = append(sigSlotByteRepresentation, cs.serializedSignature...)
 
 	return stateprooftypes.StateProofSig, sigSlotByteRepresentation

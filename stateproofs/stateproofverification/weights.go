@@ -9,13 +9,27 @@ import (
 
 // errors for the weights verification
 var (
-	ErrSignedWeightLessThanProvenWeight = errors.New("signed weight is less than or equal to proven weight")
-	ErrTooManyReveals                   = errors.New("too many reveals in state proof")
-	ErrZeroSignedWeight                 = errors.New("signed weight cannot be zero")
-	ErrIllegalInputForLnApprox          = errors.New("cannot calculate a ln integer value for 0")
-	ErrInsufficientSingedWeight         = errors.New("the number of reveals is not large enough to prove that the desired weight signed, with the desired security level")
-	ErrNegativeNumOfRevealsEquation     = errors.New("state proof creation failed: weights will not be able to satisfy the verification equation")
+	ErrTooManyReveals           = errors.New("too many reveals in state proof")
+	ErrZeroSignedWeight         = errors.New("signed weight cannot be zero")
+	ErrIllegalInputForLnApprox  = errors.New("cannot calculate a ln integer value for 0")
+	ErrInsufficientSingedWeight = errors.New("the number of reveals is not large enough to prove that the desired weight signed, with the desired security level")
 )
+
+func bigInt(num uint64) *big.Int {
+	return (&big.Int{}).SetUint64(num)
+}
+
+// LnIntApproximation returns a uint64 approximation
+func LnIntApproximation(x uint64) (uint64, error) {
+	if x == 0 {
+		return 0, ErrIllegalInputForLnApprox
+	}
+	result := math.Log(float64(x))
+	precision := uint64(1 << precisionBits)
+	expandWithPrecision := result * float64(precision)
+	return uint64(math.Ceil(expandWithPrecision)), nil
+
+}
 
 // verifyWeights makes sure that the number of reveals in the state proof is correct with respect
 // to the signedWeight and a provenWeight upper bound.
@@ -105,20 +119,4 @@ func getSubExpressions(signedWeight uint64) (y *big.Int, x *big.Int, w *big.Int)
 	w.Mul(w, bigInt(ln2IntApproximation-1))
 
 	return
-}
-
-func bigInt(num uint64) *big.Int {
-	return (&big.Int{}).SetUint64(num)
-}
-
-// LnIntApproximation returns a uint64 approximation
-func LnIntApproximation(x uint64) (uint64, error) {
-	if x == 0 {
-		return 0, ErrIllegalInputForLnApprox
-	}
-	result := math.Log(float64(x))
-	precision := uint64(1 << precisionBits)
-	expandWithPrecision := result * float64(precision)
-	return uint64(math.Ceil(expandWithPrecision)), nil
-
 }

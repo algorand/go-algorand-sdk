@@ -1,4 +1,4 @@
-package stateproofcrypto
+package merklearray
 
 import (
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
@@ -13,7 +13,6 @@ type Proof struct {
 	// Path is bounded by MaxNumLeavesOnEncodedTree since there could be multiple reveals, and
 	// given the distribution of the elt positions and the depth of the tree,
 	// the path length can increase up to 2^MaxEncodedTreeDepth / 2
-	// TODO: allocbound
 	Path        []stateprooftypes.GenericDigest `codec:"pth,allocbound=MaxNumLeavesOnEncodedTree/2"`
 	HashFactory stateprooftypes.HashFactory     `codec:"hsh"`
 	// TreeDepth represents the depth of the tree that is being proven.

@@ -20,6 +20,28 @@ type coinChoiceSeed struct {
 	data           stateprooftypes.MessageHash
 }
 
+// ToBeHashed returns a binary representation of the coinChoiceSeed structure.
+// Since this code is also implemented as a circuit in the stateproof SNARK prover we can't use
+// msgpack encoding since it may result in a variable length byte slice.
+// Alternatively, we serialize the fields in the structure in a specific format.
+func (cc *coinChoiceSeed) ToBeHashed() (stateprooftypes.HashID, []byte) {
+	var signedWtAsBytes [8]byte
+	binary.LittleEndian.PutUint64(signedWtAsBytes[:], cc.signedWeight)
+
+	var lnProvenWtAsBytes [8]byte
+	binary.LittleEndian.PutUint64(lnProvenWtAsBytes[:], cc.lnProvenWeight)
+
+	coinChoiceBytes := make([]byte, 0, 1+len(cc.partCommitment)+len(lnProvenWtAsBytes)+len(cc.sigCommitment)+len(signedWtAsBytes)+len(cc.data))
+	coinChoiceBytes = append(coinChoiceBytes, cc.version)
+	coinChoiceBytes = append(coinChoiceBytes, cc.partCommitment...)
+	coinChoiceBytes = append(coinChoiceBytes, lnProvenWtAsBytes[:]...)
+	coinChoiceBytes = append(coinChoiceBytes, cc.sigCommitment...)
+	coinChoiceBytes = append(coinChoiceBytes, signedWtAsBytes[:]...)
+	coinChoiceBytes = append(coinChoiceBytes, cc.data[:]...)
+
+	return stateprooftypes.StateProofCoin, coinChoiceBytes
+}
+
 // coinGenerator is used for extracting "randomized" 64 bits for coin flips
 type coinGenerator struct {
 	shkContext   sha3.ShakeHash
@@ -27,26 +49,20 @@ type coinGenerator struct {
 	threshold    *big.Int
 }
 
-// ToBeHashed returns a binary representation of the coinChoiceSeed structure.
-// Since this code is also implemented as a circuit in the stateproof SNARK prover we can't use
-// msgpack encoding since it may result in a variable length byte slice.
-// Alternatively, we serialize the fields in the structure in a specific format.
-func (cc *coinChoiceSeed) ToBeHashed() (stateprooftypes.HashID, []byte) {
-	signedWtAsBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(signedWtAsBytes, cc.signedWeight)
+// makeCoinGenerator creates a new CoinHash context.
+// it is used for squeezing 64 bits for coin flips.
+// the function inits the XOF function in the following manner
+// Shake(coinChoiceSeed)
+// we extract 64 bits from shake for each coin flip and divide it by signedWeight
+func makeCoinGenerator(choice *coinChoiceSeed) coinGenerator {
+	choice.version = VersionForCoinGenerator
+	rep := stateprooftypes.HashRep(choice)
+	shk := sha3.NewShake256()
+	shk.Write(rep)
 
-	lnProvenWtAsBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(lnProvenWtAsBytes, cc.lnProvenWeight)
+	threshold := prepareRejectionSamplingThreshold(choice.signedWeight)
+	return coinGenerator{shkContext: shk, signedWeight: choice.signedWeight, threshold: threshold}
 
-	coinChoiceBytes := make([]byte, 0, 1+len(cc.partCommitment)+len(lnProvenWtAsBytes)+len(cc.sigCommitment)+len(signedWtAsBytes)+len(cc.data))
-	coinChoiceBytes = append(coinChoiceBytes, cc.version)
-	coinChoiceBytes = append(coinChoiceBytes, cc.partCommitment...)
-	coinChoiceBytes = append(coinChoiceBytes, lnProvenWtAsBytes...)
-	coinChoiceBytes = append(coinChoiceBytes, cc.sigCommitment...)
-	coinChoiceBytes = append(coinChoiceBytes, signedWtAsBytes...)
-	coinChoiceBytes = append(coinChoiceBytes, cc.data[:]...)
-
-	return stateprooftypes.StateProofCoin, coinChoiceBytes
 }
 
 func prepareRejectionSamplingThreshold(signedWeight uint64) *big.Int {
@@ -70,29 +86,13 @@ func prepareRejectionSamplingThreshold(signedWeight uint64) *big.Int {
 	return threshold
 }
 
-// makeCoinGenerator creates a new CoinHash context.
-// it is used for squeezing 64 bits for coin flips.
-// the function inits the XOF function in the following manner
-// Shake(coinChoiceSeed)
-// we extract 64 bits from shake for each coin flip and divide it by signedWeight
-func makeCoinGenerator(choice *coinChoiceSeed) coinGenerator {
-	choice.version = VersionForCoinGenerator
-	rep := stateprooftypes.HashRep(choice)
-	shk := sha3.NewShake256()
-	shk.Write(rep)
-
-	threshold := prepareRejectionSamplingThreshold(choice.signedWeight)
-	return coinGenerator{shkContext: shk, signedWeight: choice.signedWeight, threshold: threshold}
-
-}
-
 // getNextCoin returns the next 64bits integer which represents a number between [0,signedWeight)
 func (cg *coinGenerator) getNextCoin() uint64 {
 	// take b bits from the XOF and generate an integer z.
 	// we accept the sample if z < threshold
 	// else, we reject the sample and repeat the process.
 	var randNumFromXof uint64
-	for true {
+	for {
 		var shakeDigest [8]byte
 		cg.shkContext.Read(shakeDigest[:])
 		randNumFromXof = binary.LittleEndian.Uint64(shakeDigest[:])

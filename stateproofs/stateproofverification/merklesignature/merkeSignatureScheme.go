@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklearray"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/stateproofcrypto"
@@ -11,9 +12,7 @@ import (
 
 // Errors for the merkle signature scheme
 var (
-	ErrStartBiggerThanEndRound           = errors.New("cannot create Merkle Signature Scheme because end round is smaller then start round")
 	ErrKeyLifetimeIsZero                 = errors.New("received zero KeyLifetime")
-	ErrNoStateProofKeyForRound           = errors.New("no stateproof key exists for this round")
 	ErrSignatureSchemeVerificationFailed = errors.New("merkle signature verification failed")
 	ErrSignatureSaltVersionMismatch      = errors.New("the signature's salt version does not match")
 )
@@ -30,7 +29,7 @@ type (
 
 		Signature             stateproofcrypto.FalconSignature `codec:"sig"`
 		VectorCommitmentIndex uint64                           `codec:"idx"`
-		Proof                 stateproofcrypto.SingleLeafProof `codec:"prf"`
+		Proof                 merklearray.SingleLeafProof      `codec:"prf"`
 		VerifyingKey          stateproofcrypto.FalconVerifier  `codec:"vkey"`
 	}
 
@@ -97,8 +96,8 @@ func (v *Verifier) VerifyBytes(round uint64, msg []byte, sig *Signature) error {
 // GetFixedLengthHashableRepresentation returns the signature as a hashable byte sequence.
 // the format details can be found in the Algorand's spec.
 func (s *Signature) GetFixedLengthHashableRepresentation() ([]byte, error) {
-	schemeType := make([]byte, 2)
-	binary.LittleEndian.PutUint16(schemeType, CryptoPrimitivesID)
+	var schemeType [2]byte
+	binary.LittleEndian.PutUint16(schemeType[:], CryptoPrimitivesID)
 	sigBytes, err := s.Signature.GetFixedLengthHashableRepresentation()
 	if err != nil {
 		return nil, err
@@ -106,16 +105,16 @@ func (s *Signature) GetFixedLengthHashableRepresentation() ([]byte, error) {
 
 	verifierBytes := s.VerifyingKey.GetFixedLengthHashableRepresentation()
 
-	binaryVectorCommitmentIndex := make([]byte, 8)
-	binary.LittleEndian.PutUint64(binaryVectorCommitmentIndex, s.VectorCommitmentIndex)
+	var binaryVectorCommitmentIndex [8]byte
+	binary.LittleEndian.PutUint64(binaryVectorCommitmentIndex[:], s.VectorCommitmentIndex)
 
 	proofBytes := s.Proof.GetFixedLengthHashableRepresentation()
 
 	merkleSignatureBytes := make([]byte, 0, len(schemeType)+len(sigBytes)+len(verifierBytes)+len(binaryVectorCommitmentIndex)+len(proofBytes))
-	merkleSignatureBytes = append(merkleSignatureBytes, schemeType...)
+	merkleSignatureBytes = append(merkleSignatureBytes, schemeType[:]...)
 	merkleSignatureBytes = append(merkleSignatureBytes, sigBytes...)
 	merkleSignatureBytes = append(merkleSignatureBytes, verifierBytes...)
-	merkleSignatureBytes = append(merkleSignatureBytes, binaryVectorCommitmentIndex...)
+	merkleSignatureBytes = append(merkleSignatureBytes, binaryVectorCommitmentIndex[:]...)
 	merkleSignatureBytes = append(merkleSignatureBytes, proofBytes...)
 	return merkleSignatureBytes, nil
 }
