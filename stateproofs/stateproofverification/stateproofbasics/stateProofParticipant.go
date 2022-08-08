@@ -2,8 +2,8 @@ package stateproofbasics
 
 import (
 	"encoding/binary"
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
 	"github.com/algorand/go-algorand-sdk/stateproofs/stateproofverification/merklesignature"
+	"github.com/algorand/go-algorand-sdk/stateproofs/transactionverificationtypes"
 )
 
 // A Participant corresponds to an account whose AccountData.Status
@@ -29,7 +29,7 @@ type Participant struct {
 // In order to create a more SNARK-friendly commitments on the signature we must avoid using the msgpack infrastructure.
 // msgpack creates a compressed representation of the struct which might be varied in length, which will
 // be bad for creating SNARK
-func (p Participant) ToBeHashed() (stateprooftypes.HashID, []byte) {
+func (p Participant) ToBeHashed() (transactionverificationtypes.HashID, []byte) {
 
 	var weightAsBytes [8]byte
 	binary.LittleEndian.PutUint64(weightAsBytes[:], p.Weight)
@@ -44,5 +44,5 @@ func (p Participant) ToBeHashed() (stateprooftypes.HashID, []byte) {
 	partCommitment = append(partCommitment, keyLifetimeBytes[:]...)
 	partCommitment = append(partCommitment, publicKeyBytes[:]...)
 
-	return stateprooftypes.StateProofPart, partCommitment
+	return transactionverificationtypes.StateProofPart, partCommitment
 }

@@ -1,4 +1,4 @@
-package stateproofverification
+package stateprooftypes
 
 import (
 	"errors"

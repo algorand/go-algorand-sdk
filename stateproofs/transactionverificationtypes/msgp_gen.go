@@ -1,4 +1,4 @@
-package stateprooftypes
+package transactionverificationtypes
 
 // MsgIsZero returns whether this is a zero value
 func (z *HashFactory) MsgIsZero() bool {

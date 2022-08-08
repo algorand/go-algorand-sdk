@@ -1,4 +1,4 @@
-package stateprooftypes
+package transactionverificationtypes
 
 import (
 	"crypto/sha256"

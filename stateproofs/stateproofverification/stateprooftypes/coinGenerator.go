@@ -1,11 +1,11 @@
-package stateproofverification
+package stateprooftypes
 
 import (
 	"encoding/binary"
 	"golang.org/x/crypto/sha3"
 	"math/big"
 
-	"github.com/algorand/go-algorand-sdk/stateproofs/stateprooftypes"
+	"github.com/algorand/go-algorand-sdk/stateproofs/transactionverificationtypes"
 )
 
 // The coinChoiceSeed defines the randomness seed that will be given to an XOF function. This will be used for choosing
@@ -13,18 +13,18 @@ import (
 type coinChoiceSeed struct {
 	// the ToBeHashed function should be updated when fields are added to this structure
 	version        byte
-	partCommitment stateprooftypes.GenericDigest
+	partCommitment transactionverificationtypes.GenericDigest
 	lnProvenWeight uint64
-	sigCommitment  stateprooftypes.GenericDigest
+	sigCommitment  transactionverificationtypes.GenericDigest
 	signedWeight   uint64
-	data           stateprooftypes.MessageHash
+	data           transactionverificationtypes.MessageHash
 }
 
 // ToBeHashed returns a binary representation of the coinChoiceSeed structure.
 // Since this code is also implemented as a circuit in the stateproof SNARK prover we can't use
 // msgpack encoding since it may result in a variable length byte slice.
 // Alternatively, we serialize the fields in the structure in a specific format.
-func (cc *coinChoiceSeed) ToBeHashed() (stateprooftypes.HashID, []byte) {
+func (cc *coinChoiceSeed) ToBeHashed() (transactionverificationtypes.HashID, []byte) {
 	var signedWtAsBytes [8]byte
 	binary.LittleEndian.PutUint64(signedWtAsBytes[:], cc.signedWeight)
 
@@ -39,7 +39,7 @@ func (cc *coinChoiceSeed) ToBeHashed() (stateprooftypes.HashID, []byte) {
 	coinChoiceBytes = append(coinChoiceBytes, signedWtAsBytes[:]...)
 	coinChoiceBytes = append(coinChoiceBytes, cc.data[:]...)
 
-	return stateprooftypes.StateProofCoin, coinChoiceBytes
+	return transactionverificationtypes.StateProofCoin, coinChoiceBytes
 }
 
 // coinGenerator is used for extracting "randomized" 64 bits for coin flips
@@ -56,7 +56,7 @@ type coinGenerator struct {
 // we extract 64 bits from shake for each coin flip and divide it by signedWeight
 func makeCoinGenerator(choice *coinChoiceSeed) coinGenerator {
 	choice.version = VersionForCoinGenerator
-	rep := stateprooftypes.HashRep(choice)
+	rep := transactionverificationtypes.HashRep(choice)
 	shk := sha3.NewShake256()
 	shk.Write(rep)
 
