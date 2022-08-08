@@ -1,4 +1,4 @@
-package stateprooftypes
+package stateproof
 
 const (
 	precisionBits       = uint8(16)     // number of bits used for log approximation. This should not exceed 63

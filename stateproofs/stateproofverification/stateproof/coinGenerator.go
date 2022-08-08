@@ -1,4 +1,4 @@
-package stateprooftypes
+package stateproof
 
 import (
 	"encoding/binary"
