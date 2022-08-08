@@ -26,7 +26,5 @@ func (v *StateProofVerifier) VerifyStateProofMessage(stateProof *transactionveri
 		return err
 	}
 
-	var stateProofMessageHash transactionverificationtypes.MessageHash
-	copy(stateProofMessageHash[:], messageHash[:])
-	return v.stateProofVerifier.Verify(message.LastAttestedRound, stateProofMessageHash, &decodedStateProof)
+	return v.stateProofVerifier.Verify(message.LastAttestedRound, messageHash, &decodedStateProof)
 }
