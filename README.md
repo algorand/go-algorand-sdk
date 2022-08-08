@@ -29,6 +29,8 @@ In `client/v2` the `indexer` package contains a client for the Algorand Indexer 
 
 `mnemonic` contains support for turning 32-byte keys into checksummed, human-readable mnemonics (and going from mnemonics back to keys).
 
+`stateproofs` contains both data structures and logic required to verify state proofs and to use verified state proofs to verify transactions.
+
 # SDK Development
 
 Run tests with `make docker-test`
