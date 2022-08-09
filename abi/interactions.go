@@ -5,52 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/algorand/go-algorand-sdk/types"
+	avm_abi "github.com/algorand/avm-abi/avm-abi"
 )
-
-// AnyTransactionType is the ABI argument type string for a nonspecific
-// transaction argument
-const AnyTransactionType = "txn"
-
-var transactionArgTypes = map[string]interface{}{
-	AnyTransactionType:              nil, // denotes a placeholder for any of the size types below
-	string(types.PaymentTx):         nil,
-	string(types.KeyRegistrationTx): nil,
-	string(types.AssetConfigTx):     nil,
-	string(types.AssetTransferTx):   nil,
-	string(types.AssetFreezeTx):     nil,
-	string(types.ApplicationCallTx): nil,
-}
-
-// IsTransactionType checks if a type string represents a transaction type
-// argument, such as "txn", "pay", "keyreg", etc.
-func IsTransactionType(typeStr string) bool {
-	_, ok := transactionArgTypes[typeStr]
-	return ok
-}
-
-// AccountReferenceType is the ABI argument type string for account references
-const AccountReferenceType = "account"
-
-// AssetReferenceType is the ABI argument type string for asset references
-const AssetReferenceType = "asset"
-
-// ApplicationReferenceType is the ABI argument type string for application
-// references
-const ApplicationReferenceType = "application"
-
-var referenceArgTypes = map[string]interface{}{
-	AccountReferenceType:     nil,
-	AssetReferenceType:       nil,
-	ApplicationReferenceType: nil,
-}
-
-// IsReferenceType checks if a type string represents a reference type argument,
-// such as "account", "asset", or "application".
-func IsReferenceType(typeStr string) bool {
-	_, ok := referenceArgTypes[typeStr]
-	return ok
-}
 
 // Arg represents an ABI Method argument
 type Arg struct {
@@ -94,10 +50,6 @@ func (a *Arg) GetTypeObject() (Type, error) {
 	}
 	return typeObject, err
 }
-
-// VoidReturnType is the ABI return type string for a method that does not have
-// a return value
-const VoidReturnType = "void"
 
 // Return represents an ABI method return value
 type Return struct {
@@ -144,91 +96,34 @@ type Method struct {
 	Returns Return `json:"returns"`
 }
 
-// parseMethodArgs parses the arguments from a method signature string.
-// trMethod is the complete method signature and startIdx is the index of the
-// opening parenthesis of the arguments list. This function returns a list of
-// the argument types from the method signature and the index of the closing
-// parenthesis of the arguments list.
-func parseMethodArgs(strMethod string, startIdx int) ([]string, int, error) {
-	// handle no args
-	if startIdx < len(strMethod)-1 && strMethod[startIdx+1] == ')' {
-		return []string{}, startIdx + 1, nil
-	}
-
-	var argTypes []string
-	parenCnt := 1
-	prevPos := startIdx + 1
-	closeIdx := -1
-	for curPos := prevPos; curPos < len(strMethod); curPos++ {
-		if strMethod[curPos] == '(' {
-			parenCnt++
-		} else if strMethod[curPos] == ')' {
-			parenCnt--
-		}
-
-		if parenCnt < 0 {
-			return nil, -1, fmt.Errorf("method signature parentheses mismatch")
-		} else if parenCnt > 1 {
-			continue
-		}
-
-		if strMethod[curPos] == ',' || parenCnt == 0 {
-			strArg := strMethod[prevPos:curPos]
-			argTypes = append(argTypes, strArg)
-			prevPos = curPos + 1
-		}
-
-		if parenCnt == 0 {
-			closeIdx = curPos
-			break
-		}
-	}
-
-	if closeIdx == -1 {
-		return nil, -1, fmt.Errorf("method signature parentheses mismatch")
-	}
-
-	return argTypes, closeIdx, nil
-}
-
 // MethodFromSignature decoded a method signature string into a Method object.
 func MethodFromSignature(methodStr string) (Method, error) {
-	openIdx := strings.Index(methodStr, "(")
-	if openIdx == -1 {
-		return Method{}, fmt.Errorf("method signature is missing an open parenthesis")
-	}
-
-	name := methodStr[:openIdx]
-	if name == "" {
-		return Method{}, fmt.Errorf("method must have a non empty name")
-	}
-
-	argTypes, closeIdx, err := parseMethodArgs(methodStr, openIdx)
+	name, argTypesStr, retTypeStr, err := avm_abi.ParseMethodSignature(methodStr)
 	if err != nil {
 		return Method{}, err
 	}
 
-	returnType := Return{Type: methodStr[closeIdx+1:]}
+	returnType := Return{Type: retTypeStr}
 	if !returnType.IsVoid() {
 		// fill type object cache and catch any errors
 		_, err := returnType.GetTypeObject()
 		if err != nil {
-			return Method{}, err
+			return Method{}, fmt.Errorf("Could not parse method return type: %w", err)
 		}
 	}
 
-	args := make([]Arg, len(argTypes))
-	for i, argType := range argTypes {
-		args[i].Type = argType
+	args := make([]Arg, len(argTypesStr))
+	for i, argTypeStr := range argTypesStr {
+		args[i].Type = argTypeStr
 
-		if IsTransactionType(argType) || IsReferenceType(argType) {
+		if IsTransactionType(argTypeStr) || IsReferenceType(argTypeStr) {
 			continue
 		}
 
 		// fill type object cache and catch any errors
 		_, err := args[i].GetTypeObject()
 		if err != nil {
-			return Method{}, err
+			return Method{}, fmt.Errorf("Could not parse argument type at index %d: %w", i, err)
 		}
 	}
 
