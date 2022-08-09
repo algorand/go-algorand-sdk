@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -34,6 +35,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
+	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/cucumber/godog"
@@ -70,6 +72,7 @@ var status models.NodeStatus
 var statusAfter models.NodeStatus
 var msigExp kmd.ExportMultisigResponse
 var pk string
+var rekey string
 var accounts []string
 var e bool
 var lastRound uint64
@@ -107,6 +110,8 @@ var sigTxs [][]byte
 var accountTxAndSigner future.TransactionWithSigner
 var txTrace future.DryrunTxnResult
 var trace string
+var sourceMap logic.SourceMap
+var srcMapping map[string]interface{}
 
 var assetTestFixture struct {
 	Creator               string
@@ -133,6 +138,69 @@ var tealDryrunResult struct {
 var opt = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "progress", // can define default values
+}
+
+// Dev mode helper functions
+const devModeInitialAmount = 10_000_000
+
+/**
+ * waitForAlgodInDevMode is a Dev mode helper method
+ * to wait for blocks to be finalized.
+ * Since Dev mode produces blocks on a per transaction basis, it's possible
+ * algod generates a block _before_ the corresponding SDK call to wait for a block.
+ * Without _any_ wait, it's possible the SDK looks for the transaction before algod completes processing.
+ * So, the method performs a local sleep to simulate waiting for a block.
+ */
+func waitForAlgodInDevMode() {
+	time.Sleep(500 * time.Millisecond)
+}
+
+func initializeAccount(accountAddress string) error {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+
+	txn, err = future.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	if err != nil {
+		return err
+	}
+	waitForAlgodInDevMode()
+	return err
+}
+
+func selfPayTransaction() error {
+	params, err := acl.BuildSuggestedParams()
+	if err != nil {
+		return err
+	}
+
+	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
+	if err != nil {
+		return err
+	}
+
+	res, err := kcl.SignTransaction(handle, walletPswd, txn)
+	if err != nil {
+		return err
+	}
+
+	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	if err != nil {
+		return err
+	}
+	waitForAlgodInDevMode()
+	return err
 }
 
 func init() {
@@ -196,7 +264,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the multisig should equal the exported multisig", msigEq)
 	s.Step("I delete the multisig", deleteMsig)
 	s.Step("the multisig should not be in the wallet", msigNotInWallet)
-	s.Step("I generate a key using kmd", genKeyKmd)
+	s.Step("^I generate a key using kmd for rekeying and fund it$", genRekeyKmd)
+	s.Step("^I generate a key using kmd$", genKeyKmd)
 	s.Step("the key should be in the wallet", keyInWallet)
 	s.Step("I delete the key", deleteKey)
 	s.Step("the key should not be in the wallet", keyNotInWallet)
@@ -329,6 +398,12 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I get the method from the Interface by name "([^"]*)"$`, iGetTheMethodFromTheInterfaceByName)
 	s.Step(`^I get the method from the Contract by name "([^"]*)"$`, iGetTheMethodFromTheContractByName)
 	s.Step(`^the produced method signature should equal "([^"]*)"\. If there is an error it begins with "([^"]*)"$`, theProducedMethodSignatureShouldEqualIfThereIsAnErrorItBeginsWith)
+	s.Step(`^a source map json file "([^"]*)"$`, aSourceMapJsonFile)
+	s.Step(`^the string composed of pc:line number equals "([^"]*)"$`, theStringComposedOfPclineNumberEquals)
+	s.Step(`^I compile a teal program "([^"]*)" with mapping enabled$`, iCompileATealProgramWithMappingEnabled)
+	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
+	s.Step(`^getting the line associated with a pc "([^"]*)" equals "([^"]*)"$`, gettingTheLineAssociatedWithAPcEquals)
+	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -653,6 +728,7 @@ func getStatus() error {
 
 func statusAfterBlock() error {
 	var err error
+	selfPayTransaction()
 	statusAfter, err = acl.StatusAfterBlock(lastRound)
 	if err != nil {
 		return err
@@ -754,6 +830,16 @@ func genKeyKmd() error {
 		return err
 	}
 	pk = p.Address
+	return nil
+}
+
+func genRekeyKmd() error {
+	p, err := kcl.GenerateKey(handle)
+	if err != nil {
+		return err
+	}
+	rekey = p.Address
+	initializeAccount(rekey)
 	return nil
 }
 
@@ -867,7 +953,8 @@ func walletInfo() error {
 	return err
 }
 
-func defaultTxn(iamt int, inote string) error {
+// Helper function for making default transactions.
+func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
 	var err error
 	if inote != "none" {
 		note, err = base64.StdEncoding.DecodeString(inote)
@@ -882,14 +969,22 @@ func defaultTxn(iamt int, inote string) error {
 	}
 
 	amt = uint64(iamt)
-	pk = accounts[0]
+	pk = senderAddress
 	params, err := acl.BuildSuggestedParams()
 	if err != nil {
 		return err
 	}
 	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[1], amt, note, "", params)
+	txn, err = future.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
 	return err
+}
+
+func defaultTxn(iamt int, inote string) error {
+	return defaultTxnWithAddress(iamt, inote, accounts[0])
+}
+
+func defaultTxnRekey(iamt int, inote string) error {
+	return defaultTxnWithAddress(iamt, inote, rekey)
 }
 
 func defaultMsigTxn(iamt int, inote string) error {
@@ -988,11 +1083,8 @@ func sendMsigTxn() error {
 }
 
 func checkTxn() error {
+	waitForAlgodInDevMode()
 	_, err := acl.PendingTransactionInformation(txid)
-	if err != nil {
-		return err
-	}
-	_, err = acl.StatusAfterBlock(lastRound + 2)
 	if err != nil {
 		return err
 	}
@@ -1010,10 +1102,7 @@ func checkTxn() error {
 
 func txnbyID() error {
 	var err error
-	_, err = acl.StatusAfterBlock(lastRound + 2)
-	if err != nil {
-		return err
-	}
+	waitForAlgodInDevMode()
 	_, err = acl.TransactionByID(txid)
 	return err
 }
@@ -2614,5 +2703,115 @@ func callingAppTraceProduces(arg1 string) error {
 	if string(data) != trace {
 		return fmt.Errorf("No matching trace: \n'%s'\nvs\n'%s'\n", string(data), trace)
 	}
+	return nil
+}
+
+func aSourceMapJsonFile(srcMapJsonPath string) error {
+	b, err := loadResource(srcMapJsonPath)
+	if err != nil {
+		return err
+	}
+
+	ism := map[string]interface{}{}
+	if err := json.Unmarshal(b, &ism); err != nil {
+		return err
+	}
+
+	sourceMap, err = logic.DecodeSourceMap(ism)
+
+	return err
+}
+
+func theStringComposedOfPclineNumberEquals(expectedPcToLineString string) error {
+	var buff []string
+	for pc := 0; pc < len(sourceMap.PcToLine); pc++ {
+		line := sourceMap.PcToLine[pc]
+		buff = append(buff, fmt.Sprintf("%d:%d", pc, line))
+	}
+	actualStr := strings.Join(buff, ";")
+	if expectedPcToLineString != actualStr {
+		return fmt.Errorf("Expected %s got %s", expectedPcToLineString, actualStr)
+	}
+	return nil
+}
+
+func gettingTheLineAssociatedWithAPcEquals(strPc, strLine string) error {
+	pc, _ := strconv.Atoi(strPc)
+	expectedLine, _ := strconv.Atoi(strLine)
+
+	actualLine, ok := sourceMap.GetLineForPc(pc)
+	if !ok {
+		return fmt.Errorf("expected valid line, got !ok")
+	}
+
+	if actualLine != expectedLine {
+		return fmt.Errorf("expected %d got %d", expectedLine, actualLine)
+	}
+
+	return nil
+}
+
+func gettingTheLastPcAssociatedWithALineEquals(strLine, strPc string) error {
+	expectedPc, _ := strconv.Atoi(strPc)
+	line, _ := strconv.Atoi(strLine)
+
+	pcs := sourceMap.GetPcsForLine(line)
+	actualPc := pcs[len(pcs)-1]
+
+	if actualPc != expectedPc {
+		return fmt.Errorf("expected %d got %d", expectedPc, actualPc)
+	}
+
+	return nil
+}
+
+func iCompileATealProgramWithMappingEnabled(programPath string) error {
+	fileContents, err := loadResource(programPath)
+	if err != nil {
+		return err
+	}
+
+	result, err := aclv2.TealCompile(fileContents).Sourcemap(true).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	if result.Sourcemap == nil {
+		return fmt.Errorf("No source map returned")
+	}
+
+	srcMapping = *result.Sourcemap
+	return nil
+}
+
+func theResultingSourceMapIsTheSameAsTheJson(expectedJsonPath string) error {
+
+	expectedJson, err := loadResource(expectedJsonPath)
+	if err != nil {
+		return err
+	}
+
+	// Marshal the map to json then unmarshal it so we get alphabetic ordering
+	expectedMap := map[string]interface{}{}
+	err = json.Unmarshal(expectedJson, &expectedMap)
+	if err != nil {
+		return err
+	}
+
+	expectedJson, err = json.Marshal(expectedMap)
+	if err != nil {
+		return err
+	}
+
+	// Turn it back into a string
+	actualJson, err := json.Marshal(srcMapping)
+	if err != nil {
+		return nil
+	}
+
+	if !bytes.Equal(expectedJson, actualJson) {
+		return fmt.Errorf("expected %s got %s", expectedJson, actualJson)
+	}
+
 	return nil
 }
