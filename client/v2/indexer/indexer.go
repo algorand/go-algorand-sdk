@@ -87,6 +87,14 @@ func (c *Client) LookupApplicationByID(applicationId uint64) *LookupApplicationB
 	return &LookupApplicationByID{c: c, applicationId: applicationId}
 }
 
+func (c *Client) SearchForApplicationBoxes(applicationId uint64) *SearchForApplicationBoxes {
+	return &SearchForApplicationBoxes{c: c, applicationId: applicationId}
+}
+
+func (c *Client) LookupApplicationBoxByIDandName(applicationId uint64) *LookupApplicationBoxByIDandName {
+	return &LookupApplicationBoxByIDandName{c: c, applicationId: applicationId}
+}
+
 func (c *Client) LookupApplicationLogsByID(applicationId uint64) *LookupApplicationLogsByID {
 	return &LookupApplicationLogsByID{c: c, applicationId: applicationId}
 }
