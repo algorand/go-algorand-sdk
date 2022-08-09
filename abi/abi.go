@@ -1,7 +1,7 @@
 package abi
 
 import (
-	avm_abi "github.com/algorand/avm-abi/avm-abi"
+	avm_abi "github.com/algorand/avm-abi/abi"
 )
 
 type Type = avm_abi.Type

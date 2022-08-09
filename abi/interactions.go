@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	avm_abi "github.com/algorand/avm-abi/avm-abi"
+	avm_abi "github.com/algorand/avm-abi/abi"
 )
 
 // Arg represents an ABI Method argument
