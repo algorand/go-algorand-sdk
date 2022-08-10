@@ -55,6 +55,24 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Search Accounts call with exclude "([^"]*)"$`, weMakeASearchAccountsCallWithExclude)
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeALookupAccountByIDCallAgainstAccountWithExclude)
 	s.Step(`^we make a SearchForApplications call with creator "([^"]*)"$`, weMakeASearchForApplicationsCallWithCreator)
+	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`,
+		func(appId int, encodedBoxName string) error {
+			indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+			if err != nil {
+				return err
+			}
+			indexerClient.LookupApplicationBoxByIDandName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+			return nil
+		})
+	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+)$`,
+		func(appId int, limit int) error {
+			indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+			if err != nil {
+				return err
+			}
+			indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Do(context.Background())
+			return nil
+		})
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
