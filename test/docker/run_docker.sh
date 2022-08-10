@@ -5,7 +5,7 @@ set -e
 # reset test harness
 rm -rf test-harness
 rm -rf test/features
-git clone --single-branch --branch feature/box-storage https://github.com/algorand/algorand-sdk-testing.git test-harness
+git clone --single-branch --branch indexer-boxes https://github.com/algorand/algorand-sdk-testing.git test-harness
 #copy feature files into project
 mv test-harness/features test/features
 
