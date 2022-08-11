@@ -80,8 +80,8 @@ func (c *Client) Block(round uint64) *Block {
 	return &Block{c: c, round: round}
 }
 
-func (c *Client) GetProof(round uint64, txid string) *GetProof {
-	return &GetProof{c: c, round: round, txid: txid}
+func (c *Client) GetTransactionProof(round uint64, txid string) *GetTransactionProof {
+	return &GetTransactionProof{c: c, round: round, txid: txid}
 }
 
 func (c *Client) Supply() *Supply {
@@ -116,8 +116,8 @@ func (c *Client) GetStateProof(round uint64) *GetStateProof {
 	return &GetStateProof{c: c, round: round}
 }
 
-func (c *Client) GetProofForLightBlockHeader(round uint64) *GetProofForLightBlockHeader {
-	return &GetProofForLightBlockHeader{c: c, round: round}
+func (c *Client) GetLightBlockHeaderProof(round uint64) *GetLightBlockHeaderProof {
+	return &GetLightBlockHeaderProof{c: c, round: round}
 }
 
 func (c *Client) GetApplicationByID(applicationId uint64) *GetApplicationByID {
