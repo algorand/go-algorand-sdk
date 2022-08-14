@@ -152,7 +152,7 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "DryRun":
 			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
 		case "Proof":
-			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
+			response, err = algodC.GetTransactionProof(10, "asdf").Do(context.Background())
 		case "GetGenesis":
 			response, err = algodC.GetGenesis().Do(context.Background())
 		case "AccountApplicationInformation":
