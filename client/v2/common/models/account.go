@@ -36,6 +36,9 @@ type Account struct {
 	// transaction by setting the RekeyTo field.
 	AuthAddr string `json:"auth-addr,omitempty"`
 
+	// ClosedAtRound round during which this account was most recently closed.
+	ClosedAtRound uint64 `json:"closed-at-round,omitempty"`
+
 	// CreatedApps (appp) parameters of applications created by this account including
 	// app global data.
 	// Note: the raw account uses `map[int] -> AppParams` for this type.
@@ -45,9 +48,11 @@ type Account struct {
 	// Note: the raw account uses `map[int] -> Asset` for this type.
 	CreatedAssets []Asset `json:"created-assets,omitempty"`
 
-	// MinBalance microAlgo balance required by the account.
-	// The requirement grows based on asset and application usage.
-	MinBalance uint64 `json:"min-balance"`
+	// CreatedAtRound round during which this account first appeared in a transaction.
+	CreatedAtRound uint64 `json:"created-at-round,omitempty"`
+
+	// Deleted whether or not this account is currently closed.
+	Deleted bool `json:"deleted,omitempty"`
 
 	// Participation accountParticipation describes the parameters used by this account
 	// in consensus protocol.
@@ -72,6 +77,7 @@ type Account struct {
 	// * sig
 	// * msig
 	// * lsig
+	// * or null if unknown
 	SigType string `json:"sig-type,omitempty"`
 
 	// Status (onl) delegation status of the account's MicroAlgos

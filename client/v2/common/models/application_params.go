@@ -10,7 +10,7 @@ type ApplicationParams struct {
 
 	// Creator the address that created this application. This is the address where the
 	// parameters and global state for this application can be found.
-	Creator string `json:"creator"`
+	Creator string `json:"creator,omitempty"`
 
 	// ExtraProgramPages (epp) the amount of extra program pages available to this app.
 	ExtraProgramPages uint64 `json:"extra-program-pages,omitempty"`
