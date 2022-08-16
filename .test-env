@@ -1,0 +1,8 @@
+# Configs for testing repo download:
+SDK_TESTING_URL="https://github.com/algorand/algorand-sdk-testing"
+SDK_TESTING_BRANCH="trim-indexer"
+SDK_TESTING_HARNESS="test-harness"
+
+# WARNING: Be careful when turning on the next variable.
+# In that case you'll need to provide all variables expected by `algorand-sdk-testing`'s `.env`
+OVERWRITE_TESTING_ENVIRONMENT=0
