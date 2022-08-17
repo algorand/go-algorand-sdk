@@ -1184,7 +1184,10 @@ func checkEnc() error {
 	dataold, _ := ioutil.ReadFile(pathold)
 
 	pathnew := filepath.Dir(filepath.Dir(path)) + "/temp/raw" + num + ".tx"
-	datanew, _ := ioutil.ReadFile(pathnew)
+	datanew, err := ioutil.ReadFile(pathnew)
+	if err != nil {
+		return fmt.Errorf("checkEnc: %w", err)
+	}
 
 	if bytes.Equal(dataold, datanew) {
 		return nil
