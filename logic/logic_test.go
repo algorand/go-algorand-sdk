@@ -57,7 +57,7 @@ func TestCheckProgram(t *testing.T) {
 	for _, v := range versions {
 		program[0] = v
 		err = CheckProgram(program, args)
-		require.EqualError(t, err, "program too costly for Teal version < 4. consider using v4.")
+		require.EqualError(t, err, "program too costly for version < 4. consider using v4.")
 	}
 
 	// check 800x keccak256 ok for v4 and above
@@ -70,7 +70,7 @@ func TestCheckProgram(t *testing.T) {
 }
 
 func TestCheckProgramV2(t *testing.T) {
-	// check TEAL v2 opcodes
+	// check program v2 opcodes
 	require.True(t, spec.EvalMaxVersion >= 2)
 	require.True(t, spec.LogicSigVersion >= 2)
 
@@ -93,7 +93,7 @@ func TestCheckProgramV2(t *testing.T) {
 }
 
 func TestCheckProgramV3(t *testing.T) {
-	// check TEAL v3 opcodes
+	// check program v3 opcodes
 	require.True(t, spec.EvalMaxVersion >= 3)
 	require.True(t, spec.LogicSigVersion >= 3)
 
@@ -121,7 +121,7 @@ func TestCheckProgramV3(t *testing.T) {
 }
 
 func TestCheckProgramV4(t *testing.T) {
-	// check TEAL v4 opcodes
+	// check program v4 opcodes
 	require.True(t, spec.EvalMaxVersion >= 4)
 
 	args := make([][]byte, 0)
@@ -163,7 +163,7 @@ func TestCheckProgramV4(t *testing.T) {
 }
 
 func TestCheckProgramV5(t *testing.T) {
-	// check TEAL v5 opcodes
+	// check program v5 opcodes
 	require.True(t, spec.EvalMaxVersion >= 5)
 
 	args := make([][]byte, 0)
@@ -191,7 +191,7 @@ func TestCheckProgramV5(t *testing.T) {
 }
 
 func TestCheckProgramV6(t *testing.T) {
-	// check TEAL v6 opcodes
+	// check program v6 opcodes
 	require.True(t, spec.EvalMaxVersion >= 6)
 
 	args := make([][]byte, 0)
