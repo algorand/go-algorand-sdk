@@ -25,6 +25,8 @@ const (
 	AssetFreezeTx TxType = "afrz"
 	// ApplicationCallTx allows creating, deleting, and interacting with an application
 	ApplicationCallTx TxType = "appl"
+	// StateProofTx records a state proof
+	StateProofTx TxType = "stpf"
 )
 
 const masterDerivationKeyLenBytes = 32

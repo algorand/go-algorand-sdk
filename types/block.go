@@ -93,6 +93,11 @@ type (
 		// started being supported).
 		TxnCounter uint64 `codec:"tc"`
 
+		// StateProofTracking tracks the status of the state proofs, potentially
+		// for multiple types of ASPs (Algorand's State Proofs).
+		//msgp:sort protocol.StateProofType protocol.SortStateProofType
+		StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt,allocbound=protocol.NumStateProofTypes"`
+
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
 		ParticipationUpdates
@@ -165,6 +170,28 @@ type (
 		NextProtocolApprovals  uint64 `codec:"nextyes"`
 		NextProtocolVoteBefore Round  `codec:"nextbefore"`
 		NextProtocolSwitchOn   Round  `codec:"nextswitch"`
+	}
+
+	// StateProofTrackingData tracks the status of state proofs.
+	StateProofTrackingData struct {
+		_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+		// StateProofVotersCommitment is the root of a vector commitment containing the
+		// online accounts that will help sign a state proof.  The
+		// VC root, and the state proof, happen on blocks that
+		// are a multiple of ConsensusParams.StateProofRounds.  For blocks
+		// that are not a multiple of ConsensusParams.StateProofRounds,
+		// this value is zero.
+		StateProofVotersCommitment GenericDigest `codec:"v"`
+
+		// StateProofOnlineTotalWeight is the total number of microalgos held by the online accounts
+		// during the StateProof round (or zero, if the merkle root is zero - no commitment for StateProof voters).
+		// This is intended for computing the threshold of votes to expect from StateProofVotersCommitment.
+		StateProofOnlineTotalWeight MicroAlgos `codec:"t"`
+
+		// StateProofNextRound is the next round for which we will accept
+		// a StateProof transaction.
+		StateProofNextRound Round `codec:"n"`
 	}
 
 	// A Block contains the Payset and metadata corresponding to a given Round.
