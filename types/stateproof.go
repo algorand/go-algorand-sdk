@@ -139,7 +139,7 @@ type FalconVerifier struct {
 	PublicKey FalconPublicKey `codec:"k"`
 }
 
-// Signature represents a signature in the merkle signature scheme using falcon signatures as an underlying crypto scheme.
+// FalconSignatureStruct represents a signature in the merkle signature scheme using falcon signatures as an underlying crypto scheme.
 // It consists of an ephemeral public key, a signature, a merkle verification path and an index.
 // The merkle signature considered valid only if the Signature is verified under the ephemeral public key and
 // the Merkle verification path verifies that the ephemeral public key is located at the given index of the tree
