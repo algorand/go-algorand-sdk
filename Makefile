@@ -18,13 +18,15 @@ build: generate
 test:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
 
+UNITS = "@unit.sourcemap,@unit.offline,@unit.algod,@unit.indexer,@unit.transactions.keyreg,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest,@unit.indexer.logs,@unit.abijson,@unit.abijson.byname,@unit.transactions.payment,@unit.atomic_transaction_composer,@unit.responses.unlimited_assets,@unit.indexer.ledger_refactoring,@unit.algod.ledger_refactoring,@unit.dryrun.trace.application"
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@unit.sourcemap,@unit.offline,@unit.algod,@unit.indexer,@unit.transactions.keyreg,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest,@unit.indexer.logs,@unit.abijson,@unit.abijson.byname,@unit.transactions.payment,@unit.atomic_transaction_composer,@unit.responses.unlimited_assets,@unit.indexer.ledger_refactoring,@unit.algod.ledger_refactoring,@unit.dryrun.trace.application" --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNITS) --test.v .
 
+INTEGRATIONS = "@algod,@assets,@auction,@kmd,@send,@indexer,@rekey_v1,@send.keyregtxn,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231,@abi,@c2c,@compile.sourcemap"
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@indexer,@rekey_v1,@send.keyregtxn,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231,@abi,@c2c,@compile.sourcemap" --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS) --test.v .
 
 harness:
 	./test-harness.sh

@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 
@@ -198,7 +197,7 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 	return weMakeAGetBlockCallAgainstBlockNumber(blocknum)
 }
 
-var dryrunResponse models.DryrunResponse
+var dryrunResponse modelsV2.DryrunResponse
 
 func weMakeAnyDryrunCall() (err error) {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")

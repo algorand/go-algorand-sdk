@@ -210,7 +210,7 @@ func iBuildAnApplicationTransaction(
 		}
 
 	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
+		tx, _ = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":

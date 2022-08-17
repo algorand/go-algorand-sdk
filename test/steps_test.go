@@ -95,7 +95,6 @@ var votekd uint64
 var nonpart bool
 var num string
 var backupTxnSender string
-var groupTxnBytes []byte
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
@@ -978,10 +977,6 @@ func defaultTxn(iamt int, inote string) error {
 	return defaultTxnWithAddress(iamt, inote, accounts[0])
 }
 
-func defaultTxnRekey(iamt int, inote string) error {
-	return defaultTxnWithAddress(iamt, inote, rekey)
-}
-
 func defaultMsigTxn(iamt int, inote string) error {
 	var err error
 	if inote != "none" {
@@ -1077,15 +1072,13 @@ func sendMsigTxn() error {
 	return nil
 }
 
+// TODO: this needs to be modified/removed when v1 is no longer supported
 func checkTxn() error {
-	fmt.Print("ZZZZZZZ 1")
 	waitForAlgodInDevMode()
-	fmt.Print("ZZZZZZZ 2")
 	_, err := acl.PendingTransactionInformation(txid)
 	if err != nil {
 		return err
 	}
-	fmt.Print("ZZZZZZZ 3")
 	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
 		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
 	} else {
@@ -1094,9 +1087,10 @@ func checkTxn() error {
 	if err != nil {
 		return err
 	}
-	fmt.Print("ZZZZZZZ 4")
-	_, err = acl.TransactionByID(txid)
-	return err
+	// v1 indexer dependency:
+	// _, err = acl.TransactionByID(txid)
+	// return err
+	return nil
 }
 
 func txnFail() error {
@@ -1124,7 +1118,7 @@ func signBothEqual() error {
 
 func signMsigKmd() error {
 	kcl.ImportMultisig(handle, msig.Version, msig.Threshold, msig.Pks)
-	decoded, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(pk)
+	decoded, _ := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(pk)
 	s, err := kcl.MultisigSignTransaction(handle, walletPswd, txn, decoded[:32], types.MultisigSig{})
 	if err != nil {
 		return err
@@ -1161,7 +1155,7 @@ func readTxn(encodedTxn string, inum string) error {
 	}
 	num = inum
 	path = filepath.Dir(filepath.Dir(path)) + "/temp/old" + num + ".tx"
-	err = ioutil.WriteFile(path, encodedBytes, 0644)
+	_ = ioutil.WriteFile(path, encodedBytes, 0644)
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -1187,10 +1181,10 @@ func checkEnc() error {
 		return err
 	}
 	pathold := filepath.Dir(filepath.Dir(path)) + "/temp/old" + num + ".tx"
-	dataold, err := ioutil.ReadFile(pathold)
+	dataold, _ := ioutil.ReadFile(pathold)
 
 	pathnew := filepath.Dir(filepath.Dir(path)) + "/temp/raw" + num + ".tx"
-	datanew, err := ioutil.ReadFile(pathnew)
+	datanew, _ := ioutil.ReadFile(pathnew)
 
 	if bytes.Equal(dataold, datanew) {
 		return nil

@@ -16,7 +16,6 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-var signingAccount crypto.Account
 var sk1 ed25519.PrivateKey
 var addr1 types.Address
 
@@ -35,28 +34,6 @@ func aSigningAccountWithAddressAndMnemonic(address, mnem string) error {
 	}
 
 	return err
-}
-
-func suggestedTransactionParametersTxn(fee int, flatFee string, firstValid, LastValid int, genesisHash, genesisId string) error {
-	if flatFee != "true" && flatFee != "false" {
-		return fmt.Errorf("flatFee must be either 'true' or 'false'")
-	}
-
-	genHash, err := base64.StdEncoding.DecodeString(genesisHash)
-	if err != nil {
-		return err
-	}
-
-	sugParams = types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       genesisId,
-		GenesisHash:     genHash,
-		FirstRoundValid: types.Round(firstValid),
-		LastRoundValid:  types.Round(LastValid),
-		FlatFee:         flatFee == "true",
-	}
-
-	return nil
 }
 
 func signTheTransaction() error {
