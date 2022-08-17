@@ -215,7 +215,6 @@ func TestMain(m *testing.M) {
 		FeatureContext(s)
 		AlgodClientV2Context(s)
 		IndexerUnitTestContext(s)
-		IndexerIntegrationTestContext(s)
 		TransactionsUnitContext(s)
 		ApplicationsContext(s)
 		ApplicationsUnitContext(s)
@@ -318,14 +317,10 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^it should still be the same amount of microalgos (\d+)`, checkAlgos)
 	s.Step(`I get account information`, accInfo)
 	s.Step("I sign the bid", signBid)
-	s.Step("I get transactions by address only", txnsByAddrOnly)
-	s.Step("I get transactions by address and date", txnsByAddrDate)
 	s.Step(`key registration transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)`, keyregTxnParams)
 	s.Step("I create the key registration transaction", createKeyregTxn)
 	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
-	s.Step(`^I get recent transactions, limited by (\d+) transactions$`, getTxnsByCount)
 	s.Step(`^I can get account information`, newAccInfo)
-	s.Step(`^I can get the transaction by ID$`, txnbyID)
 	s.Step("asset test fixture", createAssetTestFixture)
 	s.Step(`^default asset creation transaction with total issuance (\d+)$`, defaultAssetCreateTxn)
 	s.Step(`^I update the asset index$`, getAssetIndex)
@@ -404,7 +399,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
 	s.Step(`^getting the line associated with a pc "([^"]*)" equals "([^"]*)"$`, gettingTheLineAssociatedWithAPcEquals)
 	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
-
+	
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
 		abiMethods = nil
@@ -1083,11 +1078,14 @@ func sendMsigTxn() error {
 }
 
 func checkTxn() error {
+	fmt.Print("ZZZZZZZ 1")
 	waitForAlgodInDevMode()
+	fmt.Print("ZZZZZZZ 2")
 	_, err := acl.PendingTransactionInformation(txid)
 	if err != nil {
 		return err
 	}
+	fmt.Print("ZZZZZZZ 3")
 	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
 		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
 	} else {
@@ -1096,13 +1094,7 @@ func checkTxn() error {
 	if err != nil {
 		return err
 	}
-	_, err = acl.TransactionByID(txid)
-	return err
-}
-
-func txnbyID() error {
-	var err error
-	waitForAlgodInDevMode()
+	fmt.Print("ZZZZZZZ 4")
 	_, err = acl.TransactionByID(txid)
 	return err
 }
@@ -1247,17 +1239,6 @@ func txnsByAddrRound() error {
 		return err
 	}
 	_, err = acl.TransactionsByAddr(accounts[0], 1, lr.LastRound)
-	return err
-}
-
-func txnsByAddrOnly() error {
-	_, err := acl.TransactionsByAddrLimit(accounts[0], 10)
-	return err
-}
-
-func txnsByAddrDate() error {
-	fromDate := time.Now().Format("2006-01-02")
-	_, err := acl.TransactionsByAddrForDate(accounts[0], fromDate, fromDate)
 	return err
 }
 
@@ -1531,11 +1512,6 @@ func createKeyregWithStateProof(keyregType string) (err error) {
 		return err
 	}
 
-	return err
-}
-
-func getTxnsByCount(cnt int) error {
-	_, err := acl.TransactionsByAddrLimit(accounts[0], uint64(cnt))
 	return err
 }
 
