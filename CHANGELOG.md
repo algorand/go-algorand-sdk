@@ -1,3 +1,9 @@
+# 1.19.0
+## Enhancements
+* AVM: Consolidate TEAL and AVM versions ([#345](https://github.com/algorand/go-algorand-sdk/pull/345))
+* Testing: Use Dev mode network for cucumber tests ([#349](https://github.com/algorand/go-algorand-sdk/pull/349))
+* AVM: Use avm-abi repo ([#352](https://github.com/algorand/go-algorand-sdk/pull/352))
+
 # 1.18.0
 
 ## What's Changed
