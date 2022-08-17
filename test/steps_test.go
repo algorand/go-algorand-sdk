@@ -1118,7 +1118,10 @@ func signBothEqual() error {
 
 func signMsigKmd() error {
 	kcl.ImportMultisig(handle, msig.Version, msig.Threshold, msig.Pks)
-	decoded, _ := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(pk)
+	decoded, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(pk)
+	if err != nil {
+		return fmt.Errorf("signMsigKmd: %w", err)
+	}
 	s, err := kcl.MultisigSignTransaction(handle, walletPswd, txn, decoded[:32], types.MultisigSig{})
 	if err != nil {
 		return err
@@ -1155,7 +1158,10 @@ func readTxn(encodedTxn string, inum string) error {
 	}
 	num = inum
 	path = filepath.Dir(filepath.Dir(path)) + "/temp/old" + num + ".tx"
-	_ = ioutil.WriteFile(path, encodedBytes, 0644)
+	err = ioutil.WriteFile(path, encodedBytes, 0644)
+	if err != nil {
+		return fmt.Errorf("readTxn: %w", err)
+	}
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
