@@ -22,6 +22,9 @@ type Block struct {
 	// Seed (seed) Sortition seed.
 	Seed []byte `json:"seed"`
 
+	// StateProofTracking tracks the status of state proofs.
+	StateProofTracking []StateProofTracking `json:"state-proof-tracking,omitempty"`
+
 	// Timestamp (ts) Block creation timestamp in seconds since eposh
 	Timestamp uint64 `json:"timestamp"`
 
