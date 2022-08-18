@@ -1,6 +1,8 @@
 SRCPATH     := $(shell pwd)
 TEST_SOURCES := $(shell cd $(SRCPATH) && go list ./...)
 TEST_SOURCES_NO_CUCUMBER := $(shell cd $(SRCPATH) && go list ./... | grep -v test)
+UNIT_TAGS :=  $(shell awk '{print $2}' test/unit.tags | paste -s -d, -)
+INTEGRATIONS_TAGS := $(shell awk '{print $2}' test/integration.tags | paste -s -d, -)
 GO_IMAGE := golang:$(subst go,,$(shell go version | cut -d' ' -f 3 | cut -d'.' -f 1,2))-stretch
 
 lint:
@@ -18,15 +20,13 @@ build: generate
 test:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
 
-UNITS = "@unit.sourcemap,@unit.offline,@unit.algod,@unit.indexer,@unit.transactions.keyreg,@unit.rekey,@unit.tealsign,@unit.dryrun,@unit.responses,@unit.applications,@unit.transactions,@unit.indexer.rekey,@unit.responses.messagepack,@unit.responses.231,@unit.responses.messagepack.231,@unit.responses.genesis,@unit.feetest,@unit.indexer.logs,@unit.abijson,@unit.abijson.byname,@unit.transactions.payment,@unit.atomic_transaction_composer,@unit.responses.unlimited_assets,@unit.indexer.ledger_refactoring,@unit.algod.ledger_refactoring,@unit.dryrun.trace.application"
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNITS) --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNIT_TAGS) --test.v .
 
-INTEGRATIONS = "@algod,@assets,@auction,@kmd,@send,@indexer,@rekey_v1,@send.keyregtxn,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231,@abi,@c2c,@compile.sourcemap"
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS) --test.v .
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
 
 harness:
 	./test-harness.sh
