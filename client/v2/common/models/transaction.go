@@ -133,6 +133,11 @@ type Transaction struct {
 	// signatures should be provided.
 	Signature TransactionSignature `json:"signature,omitempty"`
 
+	// StateProofTransaction fields for a state proof transaction.
+	// Definition:
+	// data/transactions/stateproof.go : StateProofTxnFields
+	StateProofTransaction TransactionStateProof `json:"state-proof-transaction,omitempty"`
+
 	// Type (type) Indicates what type of transaction this is. Different types have
 	// different fields.
 	// Valid types, and where their fields are stored:
@@ -142,5 +147,6 @@ type Transaction struct {
 	// * (axfer) asset-transfer-transaction
 	// * (afrz) asset-freeze-transaction
 	// * (appl) application-transaction
+	// * (stpf) state-proof-transaction
 	Type string `json:"tx-type,omitempty"`
 }
