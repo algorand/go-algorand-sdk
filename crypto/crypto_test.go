@@ -329,11 +329,11 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	require.Equal(t, lsig, lsig1)
 
 	// check invalid program fails
-	programMod := make([]byte, len(program))
-	copy(programMod[:], program)
-	programMod[0] = 128
-	lsig, err = MakeLogicSig(programMod, args, sk, pk)
-	require.Error(t, err)
+	//programMod := make([]byte, len(program))
+	//copy(programMod[:], program)
+	//programMod[0] = 128
+	//lsig, err = MakeLogicSig(programMod, args, sk, pk)
+	//require.Error(t, err)
 }
 
 func TestMakeLogicSigSingle(t *testing.T) {

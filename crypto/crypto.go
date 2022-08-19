@@ -160,7 +160,7 @@ func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err
 	return
 }
 
-//VerifyBytes verifies that the signature is valid
+// VerifyBytes verifies that the signature is valid
 func VerifyBytes(pk ed25519.PublicKey, message, signature []byte) bool {
 	msgParts := [][]byte{bytesPrefix, message}
 	toBeVerified := bytes.Join(msgParts, nil)
@@ -462,9 +462,12 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 // multsig account). In that case, it should be the address of the delegating
 // account.
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
-	if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
+	if err := logic.SanityCheckProgram(lsig.Logic); err != nil {
 		return false
 	}
+	//if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
+	//	return false
+	//}
 
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()
@@ -615,9 +618,12 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma Multi
 		err = errLsigInvalidProgram
 		return
 	}
-	if err = logic.CheckProgram(program, args); err != nil {
+	if err = logic.SanityCheckProgram(program); err != nil {
 		return
 	}
+	//if err = logic.CheckProgram(program, args); err != nil {
+	//	return
+	//}
 
 	if sk == nil && ma.Blank() {
 		lsig.Logic = program
