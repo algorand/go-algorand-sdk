@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -19,8 +18,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"path/filepath"
 
 	"golang.org/x/crypto/ed25519"
 
@@ -93,7 +90,6 @@ var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var num string
 var backupTxnSender string
 var data []byte
 var sig types.Signature
@@ -238,7 +234,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the wallet handle should not work", tryHandle)
 	s.Step(`payment transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) "([^"]*)" "([^"]*)"`, txnParams)
 	s.Step(`mnemonic for private key "([^"]*)"`, mnForSk)
-	s.Step("I create the payment transaction", createTxn)
 	s.Step(`multisig addresses "([^"]*)"`, msigAddresses)
 	s.Step("I create the multisig payment transaction$", createMsigTxn)
 	s.Step("I create the multisig payment transaction with zero fee", createMsigTxnZeroFee)
@@ -286,10 +281,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the signed transaction should equal the kmd signed transaction", signBothEqual)
 	s.Step("I sign the multisig transaction with kmd", signMsigKmd)
 	s.Step("the multisig transaction should equal the kmd signed multisig transaction", signMsigBothEqual)
-	s.Step(`I read a transaction "([^"]*)" from file "([^"]*)"`, readTxn)
-	s.Step("I write the transaction to file", writeTxn)
-	s.Step("the transaction should still be the same", checkEnc)
-	s.Step("I do my part", createSaveTxn)
 	s.Step(`^the node should be healthy`, nodeHealth)
 	s.Step(`^I get the ledger supply`, ledger)
 	s.Step(`^I get transactions by address and round`, txnsByAddrRound)
@@ -316,8 +307,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^it should still be the same amount of microalgos (\d+)`, checkAlgos)
 	s.Step(`I get account information`, accInfo)
 	s.Step("I sign the bid", signBid)
-	s.Step(`key registration transaction parameters (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" (\d+) (\d+) (\d+) "([^"]*)" "([^"]*)`, keyregTxnParams)
-	s.Step("I create the key registration transaction", createKeyregTxn)
 	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
 	s.Step(`^I can get account information`, newAccInfo)
 	s.Step("asset test fixture", createAssetTestFixture)
@@ -548,24 +537,6 @@ func mnForSk(mn string) error {
 	}
 	return err
 }
-
-func createTxn() error {
-	var err error
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         false,
-	}
-	txn, err = future.MakePaymentTxn(a.String(), to, amt, note, close, paramsToUse)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
 func msigAddresses(addresses string) error {
 	var err error
 	addrlist := strings.Fields(addresses)
@@ -1147,85 +1118,6 @@ func signMsigBothEqual() error {
 
 }
 
-func readTxn(encodedTxn string, inum string) error {
-	encodedBytes, err := base64.StdEncoding.DecodeString(encodedTxn)
-	if err != nil {
-		return err
-	}
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	num = inum
-	path = filepath.Dir(filepath.Dir(path)) + "/temp/old" + num + ".tx"
-	err = ioutil.WriteFile(path, encodedBytes, 0644)
-	if err != nil {
-		return fmt.Errorf("readTxn: %w", err)
-	}
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	err = msgpack.Decode(data, &stxObj)
-	return err
-}
-
-func writeTxn() error {
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	path = filepath.Dir(filepath.Dir(path)) + "/temp/raw" + num + ".tx"
-	data := msgpack.Encode(stxObj)
-	err = ioutil.WriteFile(path, data, 0644)
-	return err
-}
-
-func checkEnc() error {
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	pathold := filepath.Dir(filepath.Dir(path)) + "/temp/old" + num + ".tx"
-	dataold, _ := ioutil.ReadFile(pathold)
-
-	pathnew := filepath.Dir(filepath.Dir(path)) + "/temp/raw" + num + ".tx"
-	datanew, err := ioutil.ReadFile(pathnew)
-	if err != nil {
-		return fmt.Errorf("checkEnc: %w", err)
-	}
-
-	if bytes.Equal(dataold, datanew) {
-		return nil
-	}
-	return fmt.Errorf("should be equal")
-}
-
-func createSaveTxn() error {
-	var err error
-
-	amt = 100000
-	pk = accounts[0]
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[1], amt, note, "", params)
-	if err != nil {
-		return err
-	}
-
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	path = filepath.Dir(filepath.Dir(path)) + "/temp/txn.tx"
-	data := msgpack.Encode(txn)
-	err = ioutil.WriteFile(path, data, 0644)
-	return err
-}
-
 func nodeHealth() error {
 	err := acl.HealthCheck()
 	return err
@@ -1422,58 +1314,6 @@ func accInfo() error {
 func newAccInfo() error {
 	_, err := acl.AccountInformation(pk)
 	_, _ = kcl.DeleteKey(handle, walletPswd, pk)
-	return err
-}
-
-func keyregTxnParams(ifee, ifv, ilv int, igh, ivotekey, iselkey string, ivotefst, ivotelst, ivotekd int, igen, inote string) error {
-	var err error
-	if inote != "none" {
-		note, err = base64.StdEncoding.DecodeString(inote)
-		if err != nil {
-			return err
-		}
-	} else {
-		note, err = base64.StdEncoding.DecodeString("")
-		if err != nil {
-			return err
-		}
-	}
-	gh, err = base64.StdEncoding.DecodeString(igh)
-	if err != nil {
-		return err
-	}
-	votekey = ivotekey
-	selkey = iselkey
-	fee = uint64(ifee)
-	fv = uint64(ifv)
-	lv = uint64(ilv)
-	votefst = uint64(ivotefst)
-	votelst = uint64(ivotelst)
-	votekd = uint64(ivotekd)
-	if igen != "none" {
-		gen = igen
-	} else {
-		gen = ""
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createKeyregTxn() (err error) {
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         false,
-	}
-	txn, err = future.MakeKeyRegTxn(a.String(), note, paramsToUse, votekey, selkey, votefst, votelst, votekd)
-	if err != nil {
-		return err
-	}
 	return err
 }
 
