@@ -28,6 +28,9 @@ integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
 	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
 
+display-all-go-steps:
+	find test -name "*.go" | xargs grep "github.com/cucumber/godog" 2>/dev/null | cut -d: -f1 | sort | uniq | xargs grep -Eo "Step[(].[^\`]+" | awk '{sub(/:Step\(./,":")} 1' | sed -E 's/", [a-zA-Z0-9]+\)//g' #| grep "with path"
+
 harness:
 	./test-harness.sh
 
