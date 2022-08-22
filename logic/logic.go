@@ -45,6 +45,8 @@ func CheckProgram(program []byte, args [][]byte) error {
 	return err
 }
 
+// SanityCheckProgram performs heuristic program validation:
+// check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
 func SanityCheckProgram(program []byte) error {
 	if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
 		return fmt.Errorf("program should not be b64 encoded")
