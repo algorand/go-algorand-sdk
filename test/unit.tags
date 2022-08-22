@@ -12,6 +12,7 @@
 @unit.indexer.logs
 @unit.indexer.rekey
 @unit.offline
+@unit.program_sanity_check
 @unit.rekey
 @unit.responses
 @unit.responses.231

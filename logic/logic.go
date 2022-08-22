@@ -39,26 +39,48 @@ var spec *langSpec
 var opcodes []operation
 
 // CheckProgram performs basic program validation: instruction count and program cost
-// Deprecated
+// Deprecated: `langspec.json` can no longer correctly to depicting the cost model (as of 2022.08.22),
+// also to minimize the work in updating SDKs per AVM release, we are deprecating`langspec.json` across all SDKs.
+// The behavior of `CheckProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func CheckProgram(program []byte, args [][]byte) error {
 	_, _, err := ReadProgram(program, args)
 	return err
 }
 
+func isAsciiPrintableByte(symbol byte) bool {
+	isBreakLine := symbol == '\n'
+	isStdPrintable := symbol >= ' ' && symbol <= '~'
+	return isBreakLine || isStdPrintable
+}
+
+func isAsciiPrintable(program []byte) bool {
+	for _, b := range program {
+		if !isAsciiPrintableByte(b) {
+			return false
+		}
+	}
+	return true
+}
+
 // SanityCheckProgram performs heuristic program validation:
 // check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
 func SanityCheckProgram(program []byte) error {
-	if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
-		return fmt.Errorf("program should not be b64 encoded")
-	}
-	if _, err := types.DecodeAddress(string(program)); err == nil {
-		return fmt.Errorf("requesting program bytes, but get Algorand address")
+	if isAsciiPrintable(program) {
+		if _, err := types.DecodeAddress(string(program)); err == nil {
+			return fmt.Errorf("requesting program bytes, get Algorand address")
+		}
+		if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
+			return fmt.Errorf("program should not be b64 encoded")
+		}
+		return fmt.Errorf("program bytes are all ASCII printable characters, not looking like Teal byte code")
 	}
 	return nil
 }
 
 // ReadProgram is used to validate a program as well as extract found variables
-// Deprecated
+// Deprecated: `langspec.json` can no longer correctly to depicting the cost model (as of 2022.08.22),
+// also to minimize the work in updating SDKs per AVM release, we are deprecating`langspec.json` across all SDKs.
+// The behavior of `ReadProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
 	const intcblockOpcode = 32
 	const bytecblockOpcode = 38
