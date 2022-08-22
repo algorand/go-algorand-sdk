@@ -465,9 +465,6 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	if err := logic.SanityCheckProgram(lsig.Logic); err != nil {
 		return false
 	}
-	//if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
-	//	return false
-	//}
 
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()
@@ -621,9 +618,6 @@ func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma Multi
 	if err = logic.SanityCheckProgram(program); err != nil {
 		return
 	}
-	//if err = logic.CheckProgram(program, args); err != nil {
-	//	return
-	//}
 
 	if sk == nil && ma.Blank() {
 		lsig.Logic = program
