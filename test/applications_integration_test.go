@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cucumber/godog"
 
@@ -211,7 +210,7 @@ func iBuildAnApplicationTransaction(
 		}
 
 	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
+		tx, _ = future.MakeApplicationCallTx(applicationId, args, accs,
 			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
@@ -448,124 +447,11 @@ func theTransientAccountShouldHave(appCreated string, byteSlices, uints int,
 		}
 	}
 	if !found {
-		fmt.Errorf("Could not find key '%s'", key)
+		return fmt.Errorf("Could not find key '%s'", key)
 	}
 	return nil
 }
 
-func theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields() error {
-	status, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
-	if err != nil {
-		return err
-	}
-	if status.ConfirmedRound == 0 {
-		if len(status.GlobalStateDelta) != 0 {
-			return fmt.Errorf("unexpected global state delta, there should be none: %v", status.GlobalStateDelta)
-		}
-		if len(status.LocalStateDelta) != 0 {
-			return fmt.Errorf("unexpected local state delta, there should be none: %v", status.LocalStateDelta)
-		}
-	}
-	return nil
-}
-
-func getAccountDelta(addr string, data []models.AccountStateDelta) []models.EvalDeltaKeyValue {
-	for _, v := range data {
-		if v.Address == addr {
-			return v.Delta
-		}
-	}
-	return nil
-}
-func theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldAlsoConfirmThis(stateLocation, key, newValue string, indexer int) error {
-	status, _, err := algodV2client.PendingTransactionInformation(txid).Do(context.Background())
-	if err != nil {
-		return err
-	}
-
-	c1 := make(chan models.Transaction, 1)
-
-	go func() {
-		for true {
-			indexerResponse, _ := indexerClients[indexer].SearchForTransactions().TXID(txid).Do(context.Background())
-			if len(indexerResponse.Transactions) == 1 {
-				c1 <- indexerResponse.Transactions[0]
-			}
-			time.Sleep(time.Second)
-		}
-	}()
-
-	var indexerTx models.Transaction
-	select {
-	case res := <-c1:
-		indexerTx = res
-	case <-time.After(5 * time.Second):
-		return fmt.Errorf("timeout waiting for indexer trasaction")
-	}
-
-	var algodKeyValues []models.EvalDeltaKeyValue
-	var indexerKeyValues []models.EvalDeltaKeyValue
-
-	switch stateLocation {
-	case "local":
-		addr := indexerTx.Sender
-		algodKeyValues = getAccountDelta(addr, status.LocalStateDelta)
-		indexerKeyValues = getAccountDelta(addr, indexerTx.LocalStateDelta)
-	case "global":
-		algodKeyValues = status.GlobalStateDelta
-		indexerKeyValues = indexerTx.GlobalStateDelta
-	default:
-		return fmt.Errorf("unknown location: " + stateLocation)
-	}
-
-	// algod
-	if len(algodKeyValues) != 1 {
-		return fmt.Errorf("expected 1 key value, found: %d", len(algodKeyValues))
-	}
-	if algodKeyValues[0].Key != key {
-		return fmt.Errorf("wrong key in algod: %s != %s", algodKeyValues[0].Key, key)
-	}
-
-	// indexer
-	if len(indexerKeyValues) != 1 {
-		return fmt.Errorf("expected 1 key value, found: %d", len(indexerKeyValues))
-	}
-	if indexerKeyValues[0].Key != key {
-		return fmt.Errorf("wrong key in indexer: %s != %s", indexerKeyValues[0].Key, key)
-	}
-
-	if indexerKeyValues[0].Value.Action != algodKeyValues[0].Value.Action {
-		return fmt.Errorf("action mismatch between algod and indexer")
-	}
-
-	switch algodKeyValues[0].Value.Action {
-	case uint64(1):
-		// bytes
-		if algodKeyValues[0].Value.Bytes != newValue {
-			return fmt.Errorf("algod value mismatch: %s != %s", algodKeyValues[0].Value.Bytes, newValue)
-		}
-		if indexerKeyValues[0].Value.Bytes != newValue {
-			return fmt.Errorf("indexer value mismatch: %s != %s", indexerKeyValues[0].Value.Bytes, newValue)
-		}
-	case uint64(2):
-		// int
-		newValueInt, err := strconv.ParseUint(newValue, 10, 64)
-		if err != nil {
-			return fmt.Errorf("problem parsing new int value: %s", newValue)
-		}
-
-		if algodKeyValues[0].Value.Uint != newValueInt {
-			return fmt.Errorf("algod value mismatch: %d != %s", algodKeyValues[0].Value.Uint, newValue)
-		}
-		if indexerKeyValues[0].Value.Uint != newValueInt {
-			return fmt.Errorf("indexer value mismatch: %d != %s", indexerKeyValues[0].Value.Uint, newValue)
-		}
-	default:
-		return fmt.Errorf("unexpected action: %d", algodKeyValues[0].Value.Action)
-	}
-
-	return nil
-}
 
 func suggestedParamsAlgodV2() error {
 	var err error
@@ -883,8 +769,6 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I get the account address for the current application and see that it matches the app id\'s hash$`, iGetTheAccountAddressForTheCurrentApp)
 	s.Step(`^The transient account should have the created app "([^"]*)" and total schema byte-slices (\d+) and uints (\d+), the application "([^"]*)" state contains key "([^"]*)" with value "([^"]*)"$`,
 		theTransientAccountShouldHave)
-	s.Step(`^the unconfirmed pending transaction by ID should have no apply data fields\.$`, theUnconfirmedPendingTransactionByIDShouldHaveNoApplyDataFields)
-	s.Step(`^the confirmed pending transaction by ID should have a "([^"]*)" state change for "([^"]*)" to "([^"]*)", indexer (\d+) should also confirm this\.$`, theConfirmedPendingTransactionByIDShouldHaveAStateChangeForToIndexerShouldAlsoConfirmThis)
 	s.Step(`^suggested transaction parameters from the algod v2 client$`, suggestedParamsAlgodV2)
 	s.Step(`^I add the current transaction with signer to the composer\.$`, iAddTheCurrentTransactionWithSignerToTheComposer)
 	s.Step(`^I clone the composer\.$`, iCloneTheComposer)
