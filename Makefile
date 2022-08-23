@@ -26,23 +26,7 @@ unit:
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
-
-display-all-go-steps:
-	find test -name "*.go" | xargs grep "github.com/cucumber/godog" 2>/dev/null | cut -d: -f1 | sort | uniq | xargs grep -Eo "Step[(].[^\`]+" | awk '{sub(/:Step\(./,":")} 1' | sed -E 's/", [a-zA-Z0-9]+\)//g' #| grep "with path"
-
-harness:
-	./test-harness.sh
-
-docker-gosdk-build:
-	echo "Building docker image from base $(GO_IMAGE)"
-	docker build -t go-sdk-testing --build-arg GO_IMAGE="$(GO_IMAGE)" -f test/docker/Dockerfile $(shell pwd)
-
-docker-gosdk-run:
-	docker ps -a
-	docker run -it --network host go-sdk-testing:latest
-
-docker-test: harness docker-gosdk-build docker-gosdk-run
+	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags="@algod,@assets,@auction,@kmd,@send,@indexer,@rekey_v1,@send.keyregtxn,@dryrun,@compile,@applications.verified,@indexer.applications,@indexer.231,@abi,@c2c,@compile.sourcemap" --test.v .
 
 
 .PHONY: test fmt
