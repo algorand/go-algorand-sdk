@@ -65,6 +65,9 @@ func isAsciiPrintable(program []byte) bool {
 // SanityCheckProgram performs heuristic program validation:
 // check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
 func SanityCheckProgram(program []byte) error {
+	if len(program) == 0 {
+		return fmt.Errorf("empty program")
+	}
 	if isAsciiPrintable(program) {
 		if _, err := types.DecodeAddress(string(program)); err == nil {
 			return fmt.Errorf("requesting program bytes, get Algorand address")
