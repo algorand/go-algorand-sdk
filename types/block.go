@@ -103,6 +103,18 @@ type (
 		ParticipationUpdates
 	}
 
+	// TxnCommitments represents the commitments computed from the transactions in the block.
+	// It contains multiple commitments based on different algorithms and hash functions, to support different use cases.
+	TxnCommitments struct {
+		_struct struct{} `codec:",omitempty,omitemptyarray"`
+		// Root of transaction merkle tree using SHA512_256 hash function.
+		// This commitment is computed based on the PaysetCommit type specified in the block's consensus protocol.
+		NativeSha512_256Commitment GenericDigest `codec:"txn"`
+
+		// Root of transaction vector commitment merkle tree using SHA256 hash function
+		Sha256Commitment GenericDigest `codec:"txn256"`
+	}
+
 	// ParticipationUpdates represents participation account data that
 	// needs to be checked/acted on by the network
 	ParticipationUpdates struct {
