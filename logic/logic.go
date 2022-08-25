@@ -81,8 +81,7 @@ func SanityCheckProgram(program []byte) error {
 }
 
 // ReadProgram is used to validate a program as well as extract found variables
-// Deprecated: `langspec.json` can no longer correctly to depicting the cost model (as of 2022.08.22),
-// also to minimize the work in updating SDKs per AVM release, we are deprecating`langspec.json` across all SDKs.
+// Deprecated: Validation relies on metadata (`langspec.json`) that does not accurately represent opcode behavior across program versions.
 // The behavior of `ReadProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
 	const intcblockOpcode = 32
