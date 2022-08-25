@@ -39,8 +39,7 @@ var spec *langSpec
 var opcodes []operation
 
 // CheckProgram performs basic program validation: instruction count and program cost
-// Deprecated: `langspec.json` can no longer correctly to depicting the cost model (as of 2022.08.22),
-// also to minimize the work in updating SDKs per AVM release, we are deprecating`langspec.json` across all SDKs.
+// Deprecated: Validation relies on metadata (`langspec.json`) that does not accurately represent opcode behavior across program versions.
 // The behavior of `CheckProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func CheckProgram(program []byte, args [][]byte) error {
 	_, _, err := ReadProgram(program, args)
