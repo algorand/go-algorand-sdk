@@ -635,8 +635,9 @@ func AddressFromProgram(program []byte) types.Address {
 
 // MakeLogicSig produces a new LogicSig signature.
 //
-// THIS FUNCTION IS DEPRECATED. It will be removed in v2 of this library. Use
-// one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
+// Deprecated: THIS FUNCTION IS DEPRECATED.
+// It will be removed in v2 of this library.
+// Use one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
 // MakeLogicSigAccountDelegatedMsig instead.
 //
 // The function can work in three modes:

@@ -189,6 +189,8 @@ type LogicSigAccount struct {
 
 // MakeLogicSigAccountEscrow creates a new escrow LogicSigAccount. The address
 // of this account will be a hash of its program.
+// Deprecated: This method is deprecated for not applying basic sanity check over program bytes,
+// use `MakeLogicSigAccountEscrowChecked` instead.
 func MakeLogicSigAccountEscrow(program []byte, args [][]byte) LogicSigAccount {
 	return LogicSigAccount{
 		Lsig: types.LogicSig{
@@ -196,6 +198,20 @@ func MakeLogicSigAccountEscrow(program []byte, args [][]byte) LogicSigAccount {
 			Args:  args,
 		},
 	}
+}
+
+// MakeLogicSigAccountEscrowChecked creates a new escrow LogicSigAccount.
+// The address of this account will be a hash of its program.
+func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAccount, error) {
+	if err := sanityCheckProgram(program); err != nil {
+		return LogicSigAccount{}, err
+	}
+	return LogicSigAccount{
+		Lsig: types.LogicSig{
+			Logic: program,
+			Args:  args,
+		},
+	}, nil
 }
 
 // MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount. This
