@@ -17,11 +17,7 @@ type (
 		// Sortition seed
 		Seed [32]byte `codec:"seed"`
 
-		// TxnRoot authenticates the set of transactions appearing in the block.
-		// More specifically, it's the root of a merkle tree whose leaves are the block's Txids.
-		// Note that the TxnRoot does not authenticate the signatures on the transactions, only the transactions themselves.
-		// Two blocks with the same transactions but with different signatures will have the same TxnRoot.
-		TxnRoot Digest `codec:"txn"`
+		TxnCommitments
 
 		// TimeStamp in seconds since epoch
 		TimeStamp int64 `codec:"ts"`
