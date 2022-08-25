@@ -17,6 +17,17 @@ const (
 	// that we support.  This is used as an allocation bound for a map
 	// containing different stateproof types in msgpack encoding.
 	NumStateProofTypes int = 1
+
+	// MaxReveals is a bound on allocation and on numReveals to limit log computation
+	MaxReveals int = 640
+
+	// MaxEncodedTreeDepth is the maximum tree depth (root only depth 0) for a tree which
+	// is being encoded (either by msbpack or by the fixed length encoding)
+	MaxEncodedTreeDepth = 16
+
+	// MaxNumLeavesOnEncodedTree is the maximum number of leaves allowed for a tree which
+	// is being encoded (either by msbpack or by the fixed length encoding)
+	MaxNumLeavesOnEncodedTree = 1 << MaxEncodedTreeDepth
 )
 
 // GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
@@ -113,9 +124,9 @@ type Participant struct {
 	Weight uint64 `codec:"w"`
 }
 
-// FalconSignature represents a Falcon signature in a compressed-form
-//msgp:allocbound FalconSignature FalconMaxSignatureSize
-type FalconSignature []byte
+// MerkleSignature represents a Falcon signature in a compressed-form
+//msgp:allocbound MerkleSignature FalconMaxSignatureSize
+type MerkleSignature []byte
 
 // SingleLeafProof is used to convince a verifier about membership of a specific
 // leaf h at index i on a tree. The verifier has a trusted value of the tree
@@ -148,7 +159,7 @@ type FalconVerifier struct {
 type FalconSignatureStruct struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Signature             FalconSignature `codec:"sig"`
+	Signature             MerkleSignature `codec:"sig"`
 	VectorCommitmentIndex uint64          `codec:"idx"`
 	Proof                 SingleLeafProof `codec:"prf"`
 	VerifyingKey          FalconVerifier  `codec:"vkey"`
