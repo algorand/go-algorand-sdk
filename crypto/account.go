@@ -203,15 +203,11 @@ func MakeLogicSigAccountEscrow(program []byte, args [][]byte) LogicSigAccount {
 // MakeLogicSigAccountEscrowChecked creates a new escrow LogicSigAccount.
 // The address of this account will be a hash of its program.
 func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAccount, error) {
-	if err := sanityCheckProgram(program); err != nil {
+	lsig, err := MakeLogicSig(program, args, nil, MultisigAccount{})
+	if err != nil {
 		return LogicSigAccount{}, err
 	}
-	return LogicSigAccount{
-		Lsig: types.LogicSig{
-			Logic: program,
-			Args:  args,
-		},
-	}, nil
+	return LogicSigAccount{Lsig: lsig}, nil
 }
 
 // MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount. This
