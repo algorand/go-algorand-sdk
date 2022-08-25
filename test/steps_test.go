@@ -391,7 +391,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
 	s.Step(`^a base64 encoded program bytes for heuristic sanity check "([^"]*)"$`, takeB64encodedBytes)
 	s.Step(`^I start heuristic sanity check over the bytes$`, heuristicCheckOverBytes)
-	s.Step(`^if there exists an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
+	s.Step(`^if the heuristic sanity check throws an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
