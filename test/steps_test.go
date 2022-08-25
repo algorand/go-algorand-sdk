@@ -387,7 +387,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
 	s.Step(`^getting the line associated with a pc "([^"]*)" equals "([^"]*)"$`, gettingTheLineAssociatedWithAPcEquals)
 	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
-	
+
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
 		abiMethods = nil
