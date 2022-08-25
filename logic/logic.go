@@ -3,7 +3,6 @@ package logic
 //go:generate ./bundle_langspec_json.sh
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -44,39 +43,6 @@ var opcodes []operation
 func CheckProgram(program []byte, args [][]byte) error {
 	_, _, err := ReadProgram(program, args)
 	return err
-}
-
-func isAsciiPrintableByte(symbol byte) bool {
-	isBreakLine := symbol == '\n'
-	isStdPrintable := symbol >= ' ' && symbol <= '~'
-	return isBreakLine || isStdPrintable
-}
-
-func isAsciiPrintable(program []byte) bool {
-	for _, b := range program {
-		if !isAsciiPrintableByte(b) {
-			return false
-		}
-	}
-	return true
-}
-
-// SanityCheckProgram performs heuristic program validation:
-// check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
-func SanityCheckProgram(program []byte) error {
-	if len(program) == 0 {
-		return fmt.Errorf("empty program")
-	}
-	if isAsciiPrintable(program) {
-		if _, err := types.DecodeAddress(string(program)); err == nil {
-			return fmt.Errorf("requesting program bytes, get Algorand address")
-		}
-		if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
-			return fmt.Errorf("program should not be b64 encoded")
-		}
-		return fmt.Errorf("program bytes are all ASCII printable characters, not looking like Teal byte code")
-	}
-	return nil
 }
 
 // ReadProgram is used to validate a program as well as extract found variables

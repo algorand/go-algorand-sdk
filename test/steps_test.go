@@ -2650,7 +2650,7 @@ func takeB64encodedBytes(b64encodedBytes string) error {
 }
 
 func heuristicCheckOverBytes() error {
-	sanityCheckError = logic.SanityCheckProgram(seeminglyProgram)
+	_, sanityCheckError = crypto.MakeLogicSig(seeminglyProgram, nil, nil, crypto.MultisigAccount{})
 	if sanityCheckError != nil {
 		fmt.Printf(sanityCheckError.Error())
 	}
