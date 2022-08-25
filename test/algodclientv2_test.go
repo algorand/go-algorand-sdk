@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 
@@ -20,7 +19,6 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make any Pending Transaction Information call$`, weMakeAnyPendingTransactionInformationCall)
 	s.Step(`^the parsed Pending Transaction Information response should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Pending Transactions Information call$`, weMakeAnyPendingTransactionsInformationCall)
-	s.Step(`^the parsed Pending Transactions Information response should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Send Raw Transaction call$`, weMakeAnySendRawTransactionCall)
 	s.Step(`^the parsed Send Raw Transaction response should have txid "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Pending Transactions By Address call$`, weMakeAnyPendingTransactionsByAddressCall)
@@ -38,11 +36,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
-	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with max (\d+)$`, weMakeAPendingTransactionInformationAgainstTxidWithMax)
-	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+)$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax)
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
 	s.Step(`^we make an Account Information call against account "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccount)
-	s.Step(`^we make a Get Block call against block number (\d+)$`, weMakeAGetBlockCallAgainstBlockNumber)
 	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Pending Transaction Information against txid "([^"]*)" with format "([^"]*)"$`, weMakeAPendingTransactionInformationAgainstTxidWithFormat)
 	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
@@ -122,24 +117,6 @@ func weMakeAnySuggestedTransactionParametersCall() error {
 	return weMakeAnyCallTo("algod", "TransactionParams")
 }
 
-func weMakeAPendingTransactionInformationAgainstTxidWithMax(txid string, max int) error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	_, _, globalErrForExamination = algodClient.PendingTransactionInformation(txid).Do(context.Background())
-	return nil
-}
-
-func weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax(account string, max int) error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	_, _, globalErrForExamination = algodClient.PendingTransactionsByAddress(account).Max(uint64(max)).Do(context.Background())
-	return nil
-}
-
 func weMakeAStatusAfterBlockCallWithRound(round int) error {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
@@ -158,20 +135,16 @@ func weMakeAnAccountInformationCallAgainstAccount(account string) error {
 	return nil
 }
 
-func weMakeAGetBlockCallAgainstBlockNumber(blocknum int) error {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return err
-	}
-	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
-	return nil
-}
-
 func weMakeAPendingTransactionInformationAgainstTxidWithFormat(txid, format string) error {
 	if format != "msgpack" {
 		return fmt.Errorf("this sdk does not support format %s", format)
 	}
-	return weMakeAPendingTransactionInformationAgainstTxidWithMax(txid, 0)
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, _, globalErrForExamination = algodClient.PendingTransactionInformation(txid).Do(context.Background())
+	return nil
 }
 
 func weMakeAPendingTransactionInformationWithMaxAndFormat(max int, format string) error {
@@ -190,17 +163,27 @@ func weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat(accoun
 	if format != "msgpack" {
 		return fmt.Errorf("this sdk does not support format %s", format)
 	}
-	return weMakeAPendingTransactionsByAddressCallAgainstAccountAndMax(account, max)
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, _, globalErrForExamination = algodClient.PendingTransactionsByAddress(account).Max(uint64(max)).Do(context.Background())
+	return nil
 }
 
 func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string) error {
 	if format != "msgpack" {
 		return fmt.Errorf("this sdk does not support format %s", format)
 	}
-	return weMakeAGetBlockCallAgainstBlockNumber(blocknum)
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
+	return nil
 }
 
-var dryrunResponse models.DryrunResponse
+var dryrunResponse modelsV2.DryrunResponse
 
 func weMakeAnyDryrunCall() (err error) {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
