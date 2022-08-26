@@ -107,6 +107,8 @@ var txTrace future.DryrunTxnResult
 var trace string
 var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
+var seeminglyProgram []byte
+var sanityCheckError error
 
 var assetTestFixture struct {
 	Creator               string
@@ -387,7 +389,10 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the resulting source map is the same as the json "([^"]*)"$`, theResultingSourceMapIsTheSameAsTheJson)
 	s.Step(`^getting the line associated with a pc "([^"]*)" equals "([^"]*)"$`, gettingTheLineAssociatedWithAPcEquals)
 	s.Step(`^getting the last pc associated with a line "([^"]*)" equals "([^"]*)"$`, gettingTheLastPcAssociatedWithALineEquals)
-	
+	s.Step(`^a base64 encoded program bytes for heuristic sanity check "([^"]*)"$`, takeB64encodedBytes)
+	s.Step(`^I start heuristic sanity check over the bytes$`, heuristicCheckOverBytes)
+	s.Step(`^if the heuristic sanity check throws an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
+
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
 		abiMethods = nil
@@ -2632,5 +2637,32 @@ func theResultingSourceMapIsTheSameAsTheJson(expectedJsonPath string) error {
 		return fmt.Errorf("expected %s got %s", expectedJson, actualJson)
 	}
 
+	return nil
+}
+
+func takeB64encodedBytes(b64encodedBytes string) error {
+	var err error
+	seeminglyProgram, err = base64.StdEncoding.DecodeString(b64encodedBytes)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func heuristicCheckOverBytes() error {
+	_, sanityCheckError = crypto.MakeLogicSigAccountEscrowChecked(seeminglyProgram, nil)
+	return nil
+}
+
+func checkErrorIfMatching(errMsg string) error {
+	if len(errMsg) == 0 {
+		if sanityCheckError != nil {
+			return fmt.Errorf("expected err message to be empty, but sanity check says %w", sanityCheckError)
+		}
+	} else {
+		if sanityCheckError == nil || !strings.Contains(sanityCheckError.Error(), errMsg) {
+			return fmt.Errorf("expected err to contain %s, but sanity check error not matching: %w", errMsg, sanityCheckError)
+		}
+	}
 	return nil
 }

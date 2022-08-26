@@ -5,13 +5,13 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/logic"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -160,7 +160,7 @@ func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err
 	return
 }
 
-//VerifyBytes verifies that the signature is valid
+// VerifyBytes verifies that the signature is valid
 func VerifyBytes(pk ed25519.PublicKey, message, signature []byte) bool {
 	msgParts := [][]byte{bytesPrefix, message}
 	toBeVerified := bytes.Join(msgParts, nil)
@@ -454,6 +454,39 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 /* LogicSig support */
 
+func isAsciiPrintableByte(symbol byte) bool {
+	isBreakLine := symbol == '\n'
+	isStdPrintable := symbol >= ' ' && symbol <= '~'
+	return isBreakLine || isStdPrintable
+}
+
+func isAsciiPrintable(program []byte) bool {
+	for _, b := range program {
+		if !isAsciiPrintableByte(b) {
+			return false
+		}
+	}
+	return true
+}
+
+// sanityCheckProgram performs heuristic program validation:
+// check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
+func sanityCheckProgram(program []byte) error {
+	if len(program) == 0 {
+		return fmt.Errorf("empty program")
+	}
+	if isAsciiPrintable(program) {
+		if _, err := types.DecodeAddress(string(program)); err == nil {
+			return fmt.Errorf("requesting program bytes, get Algorand address")
+		}
+		if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
+			return fmt.Errorf("program should not be b64 encoded")
+		}
+		return fmt.Errorf("program bytes are all ASCII printable characters, not looking like Teal byte code")
+	}
+	return nil
+}
+
 // VerifyLogicSig verifies that a LogicSig contains a valid program and, if a
 // delegated signature is present, that the signature is valid.
 //
@@ -462,7 +495,7 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 // multsig account). In that case, it should be the address of the delegating
 // account.
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
-	if err := logic.CheckProgram(lsig.Logic, lsig.Args); err != nil {
+	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
 	}
 
@@ -602,8 +635,9 @@ func AddressFromProgram(program []byte) types.Address {
 
 // MakeLogicSig produces a new LogicSig signature.
 //
-// THIS FUNCTION IS DEPRECATED. It will be removed in v2 of this library. Use
-// one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
+// Deprecated: THIS FUNCTION IS DEPRECATED.
+// It will be removed in v2 of this library.
+// Use one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
 // MakeLogicSigAccountDelegatedMsig instead.
 //
 // The function can work in three modes:
@@ -611,11 +645,7 @@ func AddressFromProgram(program []byte) types.Address {
 // 2. If no ma provides, it returns Sig delegated LogicSig
 // 3. If both sk and ma specified the function returns Multisig delegated LogicSig
 func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
-	if len(program) == 0 {
-		err = errLsigInvalidProgram
-		return
-	}
-	if err = logic.CheckProgram(program, args); err != nil {
+	if err = sanityCheckProgram(program); err != nil {
 		return
 	}
 
