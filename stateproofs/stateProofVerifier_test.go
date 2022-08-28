@@ -1,7 +1,7 @@
 package stateproofverification
 
 import (
-	"os"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +12,7 @@ import (
 )
 
 func readJsonFile(filePath string, target interface{}, assertions *require.Assertions) {
-	contents, err := os.ReadFile(filePath)
+	contents, err := ioutil.ReadFile(filePath)
 	assertions.NoError(err)
 
 	err = json.Decode(contents, &target)
