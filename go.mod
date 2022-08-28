@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/algorand/avm-abi v0.1.0
 	github.com/algorand/go-codec/codec v1.1.9
-	github.com/algorand/go-stateproof-verification v0.0.0-20220824112854-9b300647cd7a
+	github.com/algorand/go-stateproof-verification a7d16e789a0bec318a36580c227c878606ba1fc8
 	github.com/cucumber/godog v0.8.1
 	github.com/google/go-querystring v1.0.0
 	github.com/stretchr/testify v1.8.0

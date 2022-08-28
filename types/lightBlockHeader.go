@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/algorand/go-stateproof-verification/msgpack"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 )
 
 // A Seed contains cryptographic entropy which can be used to determine a

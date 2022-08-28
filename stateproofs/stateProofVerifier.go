@@ -1,9 +1,10 @@
 package stateproofverification
 
 import (
+	"github.com/algorand/go-stateproof-verification/stateproof"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
-	"github.com/algorand/go-stateproof-verification/msgpack"
-	"github.com/algorand/go-stateproof-verification/stateproofverification/stateproof"
 )
 
 const strengthTarget = uint64(256)
@@ -13,7 +14,7 @@ type StateProofVerifier struct {
 }
 
 func InitializeVerifier(votersCommitment types.GenericDigest, lnProvenWeight uint64) *StateProofVerifier {
-	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight(stateprooftypes.GenericDigest(votersCommitment),
+	return &StateProofVerifier{stateProofVerifier: stateproof.MkVerifierWithLnProvenWeight(votersCommitment,
 		lnProvenWeight, strengthTarget)}
 }
 
