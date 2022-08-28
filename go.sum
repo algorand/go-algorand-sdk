@@ -1,9 +1,13 @@
 github.com/algorand/avm-abi v0.1.0 h1:znZFQXpSUVYz37vXbaH5OZG2VK4snTyXwnc/tV9CVr4=
 github.com/algorand/avm-abi v0.1.0/go.mod h1:+CgwM46dithy850bpTeHh9MC99zpn2Snirb3QTl2O/g=
-github.com/algorand/go-codec v1.1.8 h1:XDSreeeZY8gMst6Edz4RBkl08/DGMJOeHYkoXL2B7wI=
-github.com/algorand/go-codec v1.1.8/go.mod h1:XhzVs6VVyWMLu6cApb9/192gBjGRVGm5cX5j203Heg4=
-github.com/algorand/go-codec/codec v1.1.8 h1:lsFuhcOH2LiEhpBH3BVUUkdevVmwCRyvb7FCAAPeY6U=
-github.com/algorand/go-codec/codec v1.1.8/go.mod h1:tQ3zAJ6ijTps6V+wp8KsGDnPC2uhHVC7ANyrtkIY0bA=
+github.com/algorand/falcon v0.0.0-20220727072124-02a2a64c4414 h1:nwYN+GQ7Z5OOfZwqBO1ma7DSlP7S1YrKWICOyjkwqrc=
+github.com/algorand/falcon v0.0.0-20220727072124-02a2a64c4414/go.mod h1:OkQyHlGvS0kLNcIWbC21/uQcnbfwSOQm+wiqWwBG9pQ=
+github.com/algorand/go-codec/codec v1.1.9 h1:el4HFSPZhP+YCgOZxeFGB/BqlNkaUIs55xcALulUTCM=
+github.com/algorand/go-codec/codec v1.1.9/go.mod h1:YkEx5nmr/zuCeaDYOIhlDg92Lxju8tj2d2NrYqP7g7k=
+github.com/algorand/go-stateproof-verification v0.0.0-20220824112854-9b300647cd7a h1:9VoI+a/LWOmIWwKnOS/5rfHne0ny8PP3gCdnLzTz7BM=
+github.com/algorand/go-stateproof-verification v0.0.0-20220824112854-9b300647cd7a/go.mod h1:PbwMS5Dq7QS5wFXZw8fD3HOcEwFofJp9+RQnu2x49Po=
+github.com/algorand/go-sumhash v1.0.0 h1:00PkvdWAvPGxjd51eF84gZV81hlx3Yt/5sGeHzmcY0U=
+github.com/algorand/go-sumhash v1.0.0/go.mod h1:OOe7jdDWUhLkuP1XytkK5gnLu9entAviN5DfDZh6XAc=
 github.com/chrismcguire/gobberish v0.0.0-20150821175641-1d8adb509a0e h1:CHPYEbz71w8DqJ7DRIq+MXyCQsdibK08vdcQTY4ufas=
 github.com/chrismcguire/gobberish v0.0.0-20150821175641-1d8adb509a0e/go.mod h1:6Xhs0ZlsRjXLIiSMLKafbZxML/j30pg9Z1priLuha5s=
 github.com/cucumber/godog v0.8.1 h1:lVb+X41I4YDreE+ibZ50bdXmySxgRviYFgKY6Aw4XE8=
@@ -21,8 +25,10 @@ github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLA
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
-github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=
+github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
+github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 h1:7I4JAnoQBe7ZtJcBaYHi5UtiO8tQHbUSXxL+pnGRANg=
@@ -54,5 +60,5 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f h1:BLraFXnmrev5lT+xlilqcH8XK9/i0At2xKjWk4p6zsU=
 gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 h1:tQIYjPdBoyREyB9XMu+nnTclpTYkz2zFM+lzLJFO4gQ=
-gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
