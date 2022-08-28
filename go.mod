@@ -5,7 +5,8 @@ go 1.17
 require (
 	github.com/algorand/avm-abi v0.1.0
 	github.com/algorand/go-codec/codec v1.1.9
-	github.com/algorand/go-stateproof-verification a7d16e789a0bec318a36580c227c878606ba1fc8
+	github.com/algorand/go-stateproof-verification v0.0.0-20220828091440-a7d16e789a0b
+	github.com/algorand/go-sumhash v1.0.0
 	github.com/cucumber/godog v0.8.1
 	github.com/google/go-querystring v1.0.0
 	github.com/stretchr/testify v1.8.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	github.com/algorand/falcon v0.0.0-20220727072124-02a2a64c4414 // indirect
-	github.com/algorand/go-sumhash v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
