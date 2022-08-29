@@ -92,7 +92,7 @@ type (
 		// StateProofTracking tracks the status of the state proofs, potentially
 		// for multiple types of ASPs (Algorand's State Proofs).
 		//msgp:sort protocol.StateProofType protocol.SortStateProofType
-		StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt,allocbound=protocol.NumStateProofTypes"`
+		StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt,allocbound=NumStateProofTypes"`
 
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
@@ -105,10 +105,10 @@ type (
 		_struct struct{} `codec:",omitempty,omitemptyarray"`
 		// Root of transaction merkle tree using SHA512_256 hash function.
 		// This commitment is computed based on the PaysetCommit type specified in the block's consensus protocol.
-		NativeSha512_256Commitment GenericDigest `codec:"txn"`
+		NativeSha512_256Commitment Digest `codec:"txn"`
 
 		// Root of transaction vector commitment merkle tree using SHA256 hash function
-		Sha256Commitment GenericDigest `codec:"txn256"`
+		Sha256Commitment Digest `codec:"txn256"`
 	}
 
 	// ParticipationUpdates represents participation account data that
