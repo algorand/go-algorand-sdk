@@ -3,10 +3,6 @@ package types
 // StateProofType identifies a particular configuration of state proofs.
 type StateProofType uint64
 
-// GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
-//msgp:allocbound GenericDigest MaxHashDigestSize
-type GenericDigest []byte
-
 // Message represents the message that the state proofs are attesting to. This message can be
 // used by lightweight client and gives it the ability to verify proofs on the Algorand's state.
 // In addition to that proof, this message also contains fields that
