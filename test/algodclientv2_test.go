@@ -48,6 +48,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
+	s.Step(`^we make a GetLightBlockHeaderProof call for round (\d+)$`, weMakeAGetLightBlockHeaderProofCallForRound)
+	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -238,5 +240,23 @@ func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(accoun
 		return err
 	}
 	algodClient.AccountApplicationInformation(account, uint64(appID)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetLightBlockHeaderProofCallForRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetLightBlockHeaderProof(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetStateProofCallForRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetStateProof(uint64(round)).Do(context.Background())
 	return nil
 }
