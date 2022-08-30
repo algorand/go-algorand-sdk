@@ -22,7 +22,12 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	sm := SourceMap{}
 
 	if v, ok := ism["version"]; ok {
-		sm.Version = int(v.(float64))
+		switch t := v.(type) {
+		case float64:
+			sm.Version = int(t)
+		case uint64:
+			sm.Version = int(t)
+		}
 	}
 
 	if sm.Version != 3 {
