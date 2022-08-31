@@ -1,7 +1,7 @@
 package stateproofverification
 
 import (
-	"io/ioutil"
+	"embed"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,8 +11,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-func readJsonFile(filePath string, target interface{}, assertions *require.Assertions) {
-	contents, err := ioutil.ReadFile(filePath)
+//go:embed "prevStateProof.json" "newStateProof.json"
+var res embed.FS
+
+func readJsonFileFromRes(filePath string, target interface{}, assertions *require.Assertions) {
+	contents, err := res.ReadFile(filePath)
 	assertions.NoError(err)
 
 	err = json.Decode(contents, &target)
@@ -28,8 +31,8 @@ func TestStateProofVerification(t *testing.T) {
 	var prevStateProof models.StateProof
 	var newStateProof models.StateProof
 
-	readJsonFile(prevStateProofFileName, &prevStateProof, a)
-	readJsonFile(newStateProofFileName, &newStateProof, a)
+	readJsonFileFromRes(prevStateProofFileName, &prevStateProof, a)
+	readJsonFileFromRes(newStateProofFileName, &newStateProof, a)
 
 	message := types.Message{
 		BlockHeadersCommitment: newStateProof.Message.Blockheaderscommitment,
