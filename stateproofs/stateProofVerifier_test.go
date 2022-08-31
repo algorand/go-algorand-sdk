@@ -1,4 +1,4 @@
-package stateproofverification
+package stateproofs
 
 import (
 	"embed"

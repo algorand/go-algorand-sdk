@@ -1,4 +1,4 @@
-package stateproofverification
+package stateproofs
 
 import (
 	"github.com/algorand/go-stateproof-verification/stateproof"
