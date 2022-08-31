@@ -1,9 +1,6 @@
 package types
 
-import (
-	"crypto/sha256"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-)
+import "github.com/algorand/go-sumhash"
 
 // EncodedStateProof represents the msgpack encoded state proof.
 type EncodedStateProof []byte
@@ -14,7 +11,11 @@ type MessageHash [32]byte
 // StateProofType identifies a particular configuration of state proofs.
 type StateProofType uint64
 
-const StateProofMessage HashID = "spm"
+const MaxHashDigestSize = sumhash.Sumhash512DigestSize
+
+// GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
+//msgp:allocbound GenericDigest MaxHashDigestSize
+type GenericDigest []byte
 
 // Message represents the message that the state proofs are attesting to. This message can be
 // used by lightweight client and gives it the ability to verify proofs on the Algorand's state.
@@ -28,19 +29,6 @@ type Message struct {
 	LnProvenWeight         uint64 `codec:"P"`
 	FirstAttestedRound     uint64 `codec:"f"`
 	LastAttestedRound      uint64 `codec:"l"`
-}
-
-// ToBeHashed returns the bytes of the message.
-func (m Message) ToBeHashed() (HashID, []byte) {
-	return StateProofMessage, msgpack.Encode(&m)
-}
-
-// IntoStateProofMessageHash returns a hashed representation fitting the state proof messages.
-func (m Message) IntoStateProofMessageHash() MessageHash {
-	digest := GenericHashObj(sha256.New(), m)
-	result := MessageHash{}
-	copy(result[:], digest)
-	return result
 }
 
 // StateProofTxnFields captures the fields used for stateproof transactions.

@@ -41,6 +41,6 @@ func TestStateProofVerification(t *testing.T) {
 	encodedStateProof := types.EncodedStateProof(newStateProof.Stateproof)
 
 	verifier := InitializeVerifier(prevStateProof.Message.Voterscommitment, prevStateProof.Message.Lnprovenweight)
-	err := verifier.VerifyStateProofMessage(&encodedStateProof, &message)
+	err := verifier.Verify(&encodedStateProof, &message)
 	a.NoError(err)
 }

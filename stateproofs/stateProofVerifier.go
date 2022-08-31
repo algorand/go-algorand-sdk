@@ -4,6 +4,7 @@ import (
 	"github.com/algorand/go-stateproof-verification/stateproof"
 	"github.com/algorand/go-stateproof-verification/stateproofcrypto"
 
+	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -20,7 +21,7 @@ func InitializeVerifier(votersCommitment types.GenericDigest, lnProvenWeight uin
 }
 
 func (v *StateProofVerifier) Verify(stateProof *types.EncodedStateProof, message *types.Message) error {
-	messageHash := message.IntoStateProofMessageHash()
+	messageHash := crypto.HashStateProofMessage(message)
 
 	var decodedStateProof stateproof.StateProof
 	err := msgpack.Decode(*stateProof, &decodedStateProof)

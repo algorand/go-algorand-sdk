@@ -3,6 +3,7 @@ package crypto
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
@@ -35,6 +36,9 @@ var programDataPrefix = []byte("ProgData")
 
 // appIDPrefix is prepended to application IDs in order to compute addresses
 var appIDPrefix = []byte("appID")
+
+// StateProofMessagePrefix is prepended to the state proof message when computing its hash
+var StateProofMessagePrefix = []byte("spm")
 
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
@@ -755,4 +759,13 @@ func GetApplicationAddress(appID uint64) types.Address {
 
 	hash := sha512.Sum512_256(toBeHashed)
 	return types.Address(hash)
+}
+
+func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
+	var stateProofMessageData []byte
+
+	stateProofMessageData = append(stateProofMessageData, StateProofMessagePrefix...)
+	stateProofMessageData = append(stateProofMessageData, msgpack.Encode(stateProofMessage)...)
+
+	return sha256.Sum256(stateProofMessageData)
 }
