@@ -1,5 +1,8 @@
 package types
 
+// MessageHash represents the message that a state proof will attest to.
+type MessageHash [32]byte
+
 // StateProofType identifies a particular configuration of state proofs.
 type StateProofType uint64
 
