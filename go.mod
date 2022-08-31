@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/algorand/avm-abi v0.1.0
 	github.com/algorand/go-codec/codec v1.1.8
-	github.com/algorand/go-stateproof-verification v0.1.0
 	github.com/cucumber/godog v0.8.1
 	github.com/google/go-querystring v1.0.0
 	github.com/stretchr/testify v1.7.1
@@ -13,8 +12,6 @@ require (
 )
 
 require (
-	github.com/algorand/falcon v0.0.0-20220727072124-02a2a64c4414 // indirect
-	github.com/algorand/go-sumhash v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
