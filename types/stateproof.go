@@ -1,21 +1,10 @@
 package types
 
-import "github.com/algorand/go-sumhash"
-
-// EncodedStateProof represents the msgpack encoded state proof.
-type EncodedStateProof []byte
-
 // MessageHash represents the message that a state proof will attest to.
 type MessageHash [32]byte
 
 // StateProofType identifies a particular configuration of state proofs.
 type StateProofType uint64
-
-const MaxHashDigestSize = sumhash.Sumhash512DigestSize
-
-// GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
-//msgp:allocbound GenericDigest MaxHashDigestSize
-type GenericDigest []byte
 
 // Message represents the message that the state proofs are attesting to. This message can be
 // used by lightweight client and gives it the ability to verify proofs on the Algorand's state.
