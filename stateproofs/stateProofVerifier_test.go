@@ -1,7 +1,7 @@
 package stateproofs
 
 import (
-	"embed"
+	_ "embed"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,28 +11,22 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-//go:embed "prevStateProof.json" "newStateProof.json"
-var res embed.FS
+//go:embed "prevStateProof.json"
+var prevStateProofData []byte
 
-func readJsonFileFromRes(filePath string, target interface{}, assertions *require.Assertions) {
-	contents, err := res.ReadFile(filePath)
-	assertions.NoError(err)
-
-	err = json.Decode(contents, &target)
-	assertions.NoError(err)
-}
+//go:embed "newStateProof.json"
+var newStateProofData []byte
 
 func TestStateProofVerification(t *testing.T) {
 	a := require.New(t)
 
-	prevStateProofFileName := "prevStateProof.json"
-	newStateProofFileName := "newStateProof.json"
-
 	var prevStateProof models.StateProof
 	var newStateProof models.StateProof
 
-	readJsonFileFromRes(prevStateProofFileName, &prevStateProof, a)
-	readJsonFileFromRes(newStateProofFileName, &newStateProof, a)
+	err := json.Decode(prevStateProofData, &prevStateProof)
+	a.NoError(err)
+	err = json.Decode(newStateProofData, &newStateProof)
+	a.NoError(err)
 
 	message := types.Message{
 		BlockHeadersCommitment: newStateProof.Message.Blockheaderscommitment,
@@ -44,6 +38,6 @@ func TestStateProofVerification(t *testing.T) {
 	encodedStateProof := types.EncodedStateProof(newStateProof.Stateproof)
 
 	verifier := InitializeVerifier(prevStateProof.Message.Voterscommitment, prevStateProof.Message.Lnprovenweight)
-	err := verifier.Verify(&encodedStateProof, &message)
+	err = verifier.Verify(&encodedStateProof, &message)
 	a.NoError(err)
 }
