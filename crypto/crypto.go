@@ -762,10 +762,11 @@ func GetApplicationAddress(appID uint64) types.Address {
 }
 
 func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
-	var stateProofMessageData []byte
+	msgPackedStateProofMessage := msgpack.Encode(stateProofMessage)
 
+	stateProofMessageData := make([]byte, 0, len(StateProofMessagePrefix)+len(msgPackedStateProofMessage))
 	stateProofMessageData = append(stateProofMessageData, StateProofMessagePrefix...)
-	stateProofMessageData = append(stateProofMessageData, msgpack.Encode(stateProofMessage)...)
+	stateProofMessageData = append(stateProofMessageData, msgPackedStateProofMessage...)
 
 	return sha256.Sum256(stateProofMessageData)
 }
