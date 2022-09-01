@@ -40,8 +40,8 @@ var appIDPrefix = []byte("appID")
 // StateProofMessagePrefix is prepended to the canonical msgpack encoded state proof message when computing its hash.
 var StateProofMessagePrefix = []byte("spm")
 
-// BlockHeader256 is prepended to the canonical msgpack encoded light block header when computing its vector commitment leaf.
-var BlockHeader256 = []byte("B256")
+// LightBlockHeaderPrefix is prepended to the canonical msgpack encoded light block header when computing its vector commitment leaf.
+var LightBlockHeaderPrefix = []byte("B256")
 
 // RandomBytes fills the passed slice with randomness, and panics if it is
 // unable to do so
@@ -777,8 +777,8 @@ func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
 func ComputeLightBlockHeaderVectorCommitmentLeaf(lightBlockHeader types.LightBlockHeader) types.Digest {
 	msgPackedLightBlockHeader := msgpack.Encode(lightBlockHeader)
 
-	lightBlockHeaderData := make([]byte, 0, len(BlockHeader256)+len(msgPackedLightBlockHeader))
-	lightBlockHeaderData = append(lightBlockHeaderData, BlockHeader256...)
+	lightBlockHeaderData := make([]byte, 0, len(LightBlockHeaderPrefix)+len(msgPackedLightBlockHeader))
+	lightBlockHeaderData = append(lightBlockHeaderData, LightBlockHeaderPrefix...)
 	lightBlockHeaderData = append(lightBlockHeaderData, msgpack.Encode(lightBlockHeader)...)
 
 	return sha256.Sum256(lightBlockHeaderData)
