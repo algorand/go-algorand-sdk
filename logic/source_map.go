@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -19,42 +20,20 @@ type SourceMap struct {
 }
 
 func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
-	sm := SourceMap{}
+	var sm SourceMap
 
-	if v, ok := ism["version"]; ok {
-		sm.Version = int(v.(float64))
+	buff, err := json.Marshal(ism)
+	if err != nil {
+		return sm, err
+	}
+
+	err = json.Unmarshal(buff, &sm)
+	if err != nil {
+		return sm, err
 	}
 
 	if sm.Version != 3 {
 		return sm, fmt.Errorf("only version 3 is supported")
-	}
-
-	if f, ok := ism["file"]; ok {
-		sm.File = f.(string)
-	}
-
-	if sr, ok := ism["sourceRoot"]; ok {
-		sm.SourceRoot = sr.(string)
-	}
-
-	if srcs, ok := ism["sources"]; ok {
-		srcSlice := srcs.([]interface{})
-		sm.Sources = make([]string, len(srcSlice))
-		for idx, s := range srcSlice {
-			sm.Sources[idx] = s.(string)
-		}
-	}
-
-	if names, ok := ism["names"]; ok {
-		nameSlice := names.([]interface{})
-		sm.Names = make([]string, len(nameSlice))
-		for idx, n := range nameSlice {
-			sm.Names[idx] = n.(string)
-		}
-	}
-
-	if m, ok := ism["mappings"]; ok {
-		sm.Mappings = m.(string)
 	}
 
 	if sm.Mappings == "" {

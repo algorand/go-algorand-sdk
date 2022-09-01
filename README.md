@@ -31,7 +31,7 @@ In `client/v2` the `indexer` package contains a client for the Algorand Indexer 
 
 # SDK Development
 
-Run tests with `make docker-test`
+Run tests with `make docker-test`. To set up the sandbox-based test harness without standing up the go-algorand docker image use `make harness`.
 
 # Quick Start
 
