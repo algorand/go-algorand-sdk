@@ -64,13 +64,13 @@ func IndexerUnitTestContext(s *godog.Suite) {
 			indexerClient.LookupApplicationBoxByIDandName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
 			return nil
 		})
-	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+)$`,
-		func(appId int, limit int) error {
+	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`,
+		func(appId int, limit int, next string) error {
 			indexerClient, err := indexer.MakeClient(mockServer.URL, "")
 			if err != nil {
 				return err
 			}
-			indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Do(context.Background())
+			indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
 			return nil
 		})
 	s.BeforeScenario(func(interface{}) {
