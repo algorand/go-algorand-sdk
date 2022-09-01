@@ -774,7 +774,7 @@ func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
 	return sha256.Sum256(stateProofMessageData)
 }
 
-func ComputeLightBlockHeaderVectorCommitmentLeaf(lightBlockHeader types.LightBlockHeader) types.Digest {
+func HashLightBlockHeader(lightBlockHeader types.LightBlockHeader) types.Digest {
 	msgPackedLightBlockHeader := msgpack.Encode(lightBlockHeader)
 
 	lightBlockHeaderData := make([]byte, 0, len(LightBlockHeaderPrefix)+len(msgPackedLightBlockHeader))
