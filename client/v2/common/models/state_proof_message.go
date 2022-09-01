@@ -1,23 +1,19 @@
 package models
 
-// StateProofMessage represents the message that the state proofs are attesting to.
+// StateProofMessage defines a model for StateProofMessage.
 type StateProofMessage struct {
-	// Blockheaderscommitment the vector commitment root on all light block headers
-	// within a state proof interval.
-	Blockheaderscommitment []byte `json:"BlockHeadersCommitment"`
+	// BlockHeadersCommitment (b)
+	BlockHeadersCommitment []byte `json:"block-headers-commitment,omitempty"`
 
-	// Firstattestedround the first round the message attests to.
-	Firstattestedround uint64 `json:"FirstAttestedRound"`
+	// FirstAttestedRound (f)
+	FirstAttestedRound uint64 `json:"first-attested-round,omitempty"`
 
-	// Lastattestedround the last round the message attests to.
-	Lastattestedround uint64 `json:"LastAttestedRound"`
+	// LatestAttestedRound (l)
+	LatestAttestedRound uint64 `json:"latest-attested-round,omitempty"`
 
-	// Lnprovenweight an integer value representing the natural log of the proven
-	// weight with 16 bits of precision. This value would be used to verify the next
-	// state proof.
-	Lnprovenweight uint64 `json:"LnProvenWeight"`
+	// LnProvenWeight (P)
+	LnProvenWeight uint64 `json:"ln-proven-weight,omitempty"`
 
-	// Voterscommitment the vector commitment root of the top N accounts to sign the
-	// next StateProof.
-	Voterscommitment []byte `json:"VotersCommitment"`
+	// VotersCommitment (v)
+	VotersCommitment []byte `json:"voters-commitment,omitempty"`
 }
