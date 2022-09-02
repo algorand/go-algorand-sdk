@@ -151,8 +151,10 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			}
 		case "DryRun":
 			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
+		case "GetTransactionProof":
+			fallthrough
 		case "Proof":
-			response, err = algodC.GetProof(10, "asdf").Do(context.Background())
+			response, err = algodC.GetTransactionProof(10, "asdf").Do(context.Background())
 		case "GetGenesis":
 			response, err = algodC.GetGenesis().Do(context.Background())
 		case "AccountApplicationInformation":
@@ -161,6 +163,12 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "AccountAssetInformation":
 			response, err =
 				algodC.AccountAssetInformation("abc", 123).Do(context.Background())
+		case "GetLightBlockHeaderProof":
+			response, err =
+				algodC.GetLightBlockHeaderProof(123).Do(context.Background())
+		case "GetStateProof":
+			response, err =
+				algodC.GetStateProof(123).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response

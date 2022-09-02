@@ -17,11 +17,7 @@ type (
 		// Sortition seed
 		Seed [32]byte `codec:"seed"`
 
-		// TxnRoot authenticates the set of transactions appearing in the block.
-		// More specifically, it's the root of a merkle tree whose leaves are the block's Txids.
-		// Note that the TxnRoot does not authenticate the signatures on the transactions, only the transactions themselves.
-		// Two blocks with the same transactions but with different signatures will have the same TxnRoot.
-		TxnRoot Digest `codec:"txn"`
+		TxnCommitments
 
 		// TimeStamp in seconds since epoch
 		TimeStamp int64 `codec:"ts"`
@@ -93,9 +89,26 @@ type (
 		// started being supported).
 		TxnCounter uint64 `codec:"tc"`
 
+		// StateProofTracking tracks the status of the state proofs, potentially
+		// for multiple types of ASPs (Algorand's State Proofs).
+		//msgp:sort protocol.StateProofType protocol.SortStateProofType
+		StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt,allocbound=NumStateProofTypes"`
+
 		// ParticipationUpdates contains the information needed to mark
 		// certain accounts offline because their participation keys expired
 		ParticipationUpdates
+	}
+
+	// TxnCommitments represents the commitments computed from the transactions in the block.
+	// It contains multiple commitments based on different algorithms and hash functions, to support different use cases.
+	TxnCommitments struct {
+		_struct struct{} `codec:",omitempty,omitemptyarray"`
+		// Root of transaction merkle tree using SHA512_256 hash function.
+		// This commitment is computed based on the PaysetCommit type specified in the block's consensus protocol.
+		NativeSha512_256Commitment Digest `codec:"txn"`
+
+		// Root of transaction vector commitment merkle tree using SHA256 hash function
+		Sha256Commitment Digest `codec:"txn256"`
 	}
 
 	// ParticipationUpdates represents participation account data that
@@ -165,6 +178,28 @@ type (
 		NextProtocolApprovals  uint64 `codec:"nextyes"`
 		NextProtocolVoteBefore Round  `codec:"nextbefore"`
 		NextProtocolSwitchOn   Round  `codec:"nextswitch"`
+	}
+
+	// StateProofTrackingData tracks the status of state proofs.
+	StateProofTrackingData struct {
+		_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+		// StateProofVotersCommitment is the root of a vector commitment containing the
+		// online accounts that will help sign a state proof.  The
+		// VC root, and the state proof, happen on blocks that
+		// are a multiple of ConsensusParams.StateProofRounds.  For blocks
+		// that are not a multiple of ConsensusParams.StateProofRounds,
+		// this value is zero.
+		StateProofVotersCommitment []byte `codec:"v"`
+
+		// StateProofOnlineTotalWeight is the total number of microalgos held by the online accounts
+		// during the StateProof round (or zero, if the merkle root is zero - no commitment for StateProof voters).
+		// This is intended for computing the threshold of votes to expect from StateProofVotersCommitment.
+		StateProofOnlineTotalWeight MicroAlgos `codec:"t"`
+
+		// StateProofNextRound is the next round for which we will accept
+		// a StateProof transaction.
+		StateProofNextRound Round `codec:"n"`
 	}
 
 	// A Block contains the Payset and metadata corresponding to a given Round.
