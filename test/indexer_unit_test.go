@@ -55,24 +55,8 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Search Accounts call with exclude "([^"]*)"$`, weMakeASearchAccountsCallWithExclude)
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeALookupAccountByIDCallAgainstAccountWithExclude)
 	s.Step(`^we make a SearchForApplications call with creator "([^"]*)"$`, weMakeASearchForApplicationsCallWithCreator)
-	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`,
-		func(appId int, encodedBoxName string) error {
-			indexerClient, err := indexer.MakeClient(mockServer.URL, "")
-			if err != nil {
-				return err
-			}
-			indexerClient.LookupApplicationBoxByIDandName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
-			return nil
-		})
-	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`,
-		func(appId int, limit int, next string) error {
-			indexerClient, err := indexer.MakeClient(mockServer.URL, "")
-			if err != nil {
-				return err
-			}
-			indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
-			return nil
-		})
+	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeALookupApplicationBoxByIDandName)
+	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`, weMakeASearchForApplicationBoxes)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -375,5 +359,23 @@ func weMakeASearchForApplicationsCallWithCreator(creator string) error {
 		return err
 	}
 	indexerClient.SearchForApplications().Creator(creator).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupApplicationBoxByIDandName(appId int, encodedBoxName string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	indexerClient.LookupApplicationBoxByIDandName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+	return nil
+}
+
+func weMakeASearchForApplicationBoxes(appId int, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }
