@@ -1,3 +1,32 @@
+# 1.20.0
+## What's Changed
+### Bugfixes
+* Bug-Fix: passthru verbosity by @tzaffi in https://github.com/algorand/go-algorand-sdk/pull/371
+* BugFix: Src map type assert fix by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/370
+### New Features
+* StateProof: State proof support by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/374
+* StateProof: State Proof Verification additions by @almog-t in https://github.com/algorand/go-algorand-sdk/pull/377
+* State Proofs: added compute leaf function for light block header to sdk by @almog-t in https://github.com/algorand/go-algorand-sdk/pull/382
+* State Proofs: renamed light block header hash func by @almog-t in https://github.com/algorand/go-algorand-sdk/pull/383
+### Enhancements
+* Enhancement: Use Sandbox for Testing by @tzaffi in https://github.com/algorand/go-algorand-sdk/pull/360
+* Enhancement: Deprecating use of langspec by @ahangsu in https://github.com/algorand/go-algorand-sdk/pull/366
+* State Proofs: Use generic type for StateProof txn field. by @winder in https://github.com/algorand/go-algorand-sdk/pull/378
+* Improvement: Better SourceMap decoding by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/380
+* tests: Enable stpf cucumber unit tests by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/386
+
+## New Contributors
+* @tzaffi made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/360
+* @almog-t made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/377
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.19.0...v1.20.0
+
+# 1.19.0
+## Enhancements
+* AVM: Consolidate TEAL and AVM versions ([#345](https://github.com/algorand/go-algorand-sdk/pull/345))
+* Testing: Use Dev mode network for cucumber tests ([#349](https://github.com/algorand/go-algorand-sdk/pull/349))
+* AVM: Use avm-abi repo ([#352](https://github.com/algorand/go-algorand-sdk/pull/352))
+
 # 1.18.0
 
 ## What's Changed

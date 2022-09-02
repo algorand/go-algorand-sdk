@@ -327,13 +327,6 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	err = msgpack.Decode(encoded, &lsig1)
 	require.NoError(t, err)
 	require.Equal(t, lsig, lsig1)
-
-	// check invalid program fails
-	programMod := make([]byte, len(program))
-	copy(programMod[:], program)
-	programMod[0] = 128
-	lsig, err = MakeLogicSig(programMod, args, sk, pk)
-	require.Error(t, err)
 }
 
 func TestMakeLogicSigSingle(t *testing.T) {
