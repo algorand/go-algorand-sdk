@@ -2,9 +2,7 @@ package test
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/types"
 
 	"github.com/cucumber/godog"
 
@@ -35,24 +33,6 @@ func feeFieldNotInTxn() error {
 		return fmt.Errorf("fee field found but it should have been omitted. %v", err)
 	}
 	return nil
-}
-
-func getSuggestedParams(
-	fee, fv, lv uint64,
-	gen, ghb64 string,
-	flat bool) (types.SuggestedParams, error) {
-	gh, err := base64.StdEncoding.DecodeString(ghb64)
-	if err != nil {
-		return types.SuggestedParams{}, err
-	}
-	return types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         flat,
-	}, err
 }
 
 func weMakeAGetAssetByIDCall(assetID int) error {

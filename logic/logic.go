@@ -10,12 +10,14 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
+// Deprecated
 type langSpec struct {
 	EvalMaxVersion  int
 	LogicSigVersion int
 	Ops             []operation
 }
 
+// Deprecated
 type operation struct {
 	Opcode        int
 	Name          string
@@ -29,16 +31,23 @@ type operation struct {
 	Group         []string
 }
 
+// Deprecated
 var spec *langSpec
+
+// Deprecated
 var opcodes []operation
 
 // CheckProgram performs basic program validation: instruction count and program cost
+// Deprecated: Validation relies on metadata (`langspec.json`) that does not accurately represent opcode behavior across program versions.
+// The behavior of `CheckProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func CheckProgram(program []byte, args [][]byte) error {
 	_, _, err := ReadProgram(program, args)
 	return err
 }
 
 // ReadProgram is used to validate a program as well as extract found variables
+// Deprecated: Validation relies on metadata (`langspec.json`) that does not accurately represent opcode behavior across program versions.
+// The behavior of `ReadProgram` relies on `langspec.json`. Thus, this method is being deprecated.
 func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]byte, err error) {
 	const intcblockOpcode = 32
 	const bytecblockOpcode = 38
@@ -138,6 +147,7 @@ func ReadProgram(program []byte, args [][]byte) (ints []uint64, byteArrays [][]b
 	return
 }
 
+// Deprecated
 func readIntConstBlock(program []byte, pc int) (size int, ints []uint64, err error) {
 	size = 1
 	numInts, bytesUsed := binary.Uvarint(program[pc+size:])
@@ -163,6 +173,7 @@ func readIntConstBlock(program []byte, pc int) (size int, ints []uint64, err err
 	return
 }
 
+// Deprecated
 func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, err error) {
 	size = 1
 	numInts, bytesUsed := binary.Uvarint(program[pc+size:])
@@ -195,6 +206,7 @@ func readByteConstBlock(program []byte, pc int) (size int, byteArrays [][]byte, 
 	return
 }
 
+// Deprecated
 func readPushIntOp(program []byte, pc int) (size int, foundInt uint64, err error) {
 	size = 1
 	foundInt, bytesUsed := binary.Uvarint(program[pc+size:])
@@ -207,6 +219,7 @@ func readPushIntOp(program []byte, pc int) (size int, foundInt uint64, err error
 	return
 }
 
+// Deprecated
 func readPushByteOp(program []byte, pc int) (size int, byteArray []byte, err error) {
 	size = 1
 	itemLen, bytesUsed := binary.Uvarint(program[pc+size:])
