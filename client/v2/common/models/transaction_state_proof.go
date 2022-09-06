@@ -5,12 +5,12 @@ package models
 // data/transactions/stateproof.go : StateProofTxnFields
 type TransactionStateProof struct {
 	// Message (spmsg)
-	Message IndexerStateProofMessage `json:"message,omitempty"`
+	Message StateProofMessage `json:"message,omitempty"`
 
 	// StateProof (sp) represents a state proof.
 	// Definition:
 	// crypto/stateproof/structs.go : StateProof
-	StateProof StateProofFields `json:"state-proof,omitempty"`
+	StateProof StateProof `json:"state-proof,omitempty"`
 
 	// StateProofType (sptype) Type of the state proof. Integer representing an entry
 	// defined in protocol/stateproof.go
