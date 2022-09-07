@@ -830,9 +830,16 @@ func decodeBoxName(encodedBoxName string) ([]byte, error) {
 	}
 }
 
-func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, boxContents, errStr string) error {
-
-	box, err := algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
+func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encodedBoxName, boxContents, errStr string) error {
+	var box models.Box
+	var err error
+	if fromClient == "algod" {
+		box, err = algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
+	} else if fromClient == "indexer" {
+		box, err = indexerV2client.LookupApplicationBoxByIDandName(applicationId).Name(encodedBoxName).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, get " + fromClient)
+	}
 	if err != nil {
 		if strings.Contains(err.Error(), errStr) {
 			return nil
@@ -843,6 +850,61 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, box
 	b64Value := base64.StdEncoding.EncodeToString(box.Value)
 	if b64Value != boxContents {
 		return fmt.Errorf("expected box value %s is not equal to actual box value %s", boxContents, b64Value)
+	}
+
+	return nil
+}
+
+func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ",")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := decodeBoxName(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+
+	if len(expectedNames) != len(actualNames) {
+		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
+	}
+
+	contains := func(elem []byte, xs [][]byte) bool {
+		for _, x := range xs {
+			if bytes.Equal(elem, x) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, e := range expectedNames {
+		if !contains(e, actualNames) {
+			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+		}
 	}
 
 	return nil
@@ -876,52 +938,6 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 
-	s.Step(`^the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
-
-	s.Step(`^the current application should have the following boxes "([^"]*)"\.$`,
-		func(encodedBoxesRaw string) error {
-			var expectedNames [][]byte
-			if len(encodedBoxesRaw) > 0 {
-				encodedBoxes := strings.Split(encodedBoxesRaw, ",")
-				expectedNames = make([][]byte, len(encodedBoxes))
-				for i, b := range encodedBoxes {
-					expected, err := decodeBoxName(b)
-					if err != nil {
-						return err
-					}
-					expectedNames[i] = expected
-				}
-			}
-
-			r, err := algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
-			if err != nil {
-				return err
-			}
-
-			actualNames := make([][]byte, len(r.Boxes))
-			for i, b := range r.Boxes {
-				actualNames[i] = b.Name
-			}
-
-			if len(expectedNames) != len(actualNames) {
-				return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
-			}
-
-			contains := func(elem []byte, xs [][]byte) bool {
-				for _, x := range xs {
-					if bytes.Equal(elem, x) {
-						return true
-					}
-				}
-				return false
-			}
-
-			for _, e := range expectedNames {
-				if !contains(e, actualNames) {
-					return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
-				}
-			}
-
-			return nil
-		})
+	s.Step(`^according to "([^"]*)", the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
+	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
 }
