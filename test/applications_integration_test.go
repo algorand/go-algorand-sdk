@@ -19,6 +19,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	sdkJson "github.com/algorand/go-algorand-sdk/encoding/json"
 	"github.com/algorand/go-algorand-sdk/future"
@@ -26,6 +27,7 @@ import (
 )
 
 var algodV2client *algod.Client
+var indexerV2client *indexer.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
