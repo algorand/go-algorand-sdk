@@ -1,5 +1,7 @@
 package algod
 
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
+
 import (
 	"bytes"
 	"encoding/json"
@@ -20,23 +22,27 @@ const (
 )
 
 // unversionedPaths ais a set of paths that should not be prefixed by the API version
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 var unversionedPaths = map[string]bool{
 	"/versions": true,
 	"/health":   true,
 }
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 var rawRequestPaths = map[string]bool{
 	"/transactions": true,
 }
 
 // Header is a struct for custom headers.
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 type Header struct {
 	Key   string
 	Value string
 }
 
 // Client manages the REST interface for a calling user.
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 type Client struct {
 	serverURL url.URL
 	apiToken  string
@@ -44,6 +50,7 @@ type Client struct {
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func MakeClient(address string, apiToken string) (c Client, err error) {
 	url, err := url.Parse(address)
 	if err != nil {
@@ -58,6 +65,7 @@ func MakeClient(address string, apiToken string) (c Client, err error) {
 }
 
 // MakeClientWithHeaders is the factory for constructing a Client for a given endpoint with additional user defined headers.
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (c Client, err error) {
 	c, err = MakeClient(address, apiToken)
 	if err != nil {
@@ -72,6 +80,7 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*Header) (
 // extractError checks if the response signifies an error (for now, StatusCode != 200).
 // If so, it returns the error.
 // Otherwise, it returns nil.
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func extractError(resp *http.Response) error {
 	if resp.StatusCode == 200 {
 		return nil
@@ -82,6 +91,7 @@ func extractError(resp *http.Response) error {
 }
 
 // stripTransaction gets a transaction of the form "tx-XXXXXXXX" and truncates the "tx-" part, if it starts with "tx-"
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func stripTransaction(tx string) string {
 	if strings.HasPrefix(tx, "tx-") {
 		return strings.SplitAfter(tx, "-")[1]
@@ -90,6 +100,7 @@ func stripTransaction(tx string) string {
 }
 
 // mergeRawQueries merges two raw queries, appending an "&" if both are non-empty
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func mergeRawQueries(q1, q2 string) string {
 	if q1 == "" {
 		return q2
@@ -101,6 +112,7 @@ func mergeRawQueries(q1, q2 string) string {
 }
 
 // RawRequest submits the requests, and returns a map of the response fields
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) RawRequest(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (
 	v map[string]interface{}, err error) {
 	response, err := client.submitFormRaw(path, request, requestMethod, encodeJSON, headers)
@@ -120,6 +132,7 @@ func (client Client) RawRequest(path string, request interface{}, requestMethod 
 }
 
 // submitForm is a helper used for submitting (ex.) GETs and POSTs to the server
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) submitFormRaw(path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) (resp *http.Response, err error) {
 	queryURL := client.serverURL
 
@@ -185,6 +198,7 @@ func (client Client) submitFormRaw(path string, request interface{}, requestMeth
 	return resp, nil
 }
 
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) submitForm(response interface{}, path string, request interface{}, requestMethod string, encodeJSON bool, headers []*Header) error {
 	resp, err := client.submitFormRaw(path, request, requestMethod, encodeJSON, headers)
 	if err != nil {
@@ -198,6 +212,7 @@ func (client Client) submitForm(response interface{}, path string, request inter
 }
 
 // get performs a GET request to the specific path against the server
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) get(response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(response, path, request, "GET", false /* encodeJSON */, headers)
 }
@@ -210,11 +225,13 @@ func (client Client) post(response interface{}, path string, request interface{}
 }
 
 // as post, but with MethodPut
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) put(response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(response, path, request, "PUT", true /* encodeJSON */, headers)
 }
 
 // as post, but with MethodPatch
+// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
 func (client Client) patch(response interface{}, path string, request interface{}, headers []*Header) error {
 	return client.submitForm(response, path, request, "PATCH", true /* encodeJSON */, headers)
 }
