@@ -1,7 +1,5 @@
 package algod
 
-// Deprecated: v1 algod client is deprecated, please use the v2 algod client.
-
 import (
 	"bytes"
 	"encoding/json"
