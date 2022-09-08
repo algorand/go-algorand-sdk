@@ -888,6 +888,106 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 		actualNames[i] = b.Name
 	}
 
+	fmt.Println(expectedNames)
+	fmt.Println(actualNames)
+
+	if len(expectedNames) != len(actualNames) {
+		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
+	}
+
+	contains := func(elem []byte, xs [][]byte) bool {
+		for _, x := range xs {
+			if bytes.Equal(elem, x) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, e := range expectedNames {
+		if !contains(e, actualNames) {
+			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+		}
+	}
+
+	return nil
+}
+
+func forwardNEmptyRounds(n int) error {
+	params, err := algodV2client.SuggestedParams().Do(context.Background())
+	if err != nil {
+		return err
+	}
+	randomNotes := make([]byte, 8)
+	for i := 0; i < n; i++ {
+		crypto.RandomBytes(randomNotes)
+		ptx, err := future.MakePaymentTxn(transientAccount.Address.String(), types.ZeroAddress.String(), 0, randomNotes, close, params)
+		if err != nil {
+			return err
+		}
+		txid, stx, err := crypto.SignTransaction(transientAccount.PrivateKey, ptx)
+		if err != nil {
+			return err
+		}
+		_, err = algodV2client.SendRawTransaction(stx).Do(context.Background())
+		if err != nil {
+			return err
+		}
+		_, err = future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func currentApplicationShouldHaveBoxNum(fromClient string, max int, expectedNum int) error {
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Max(uint64(max)).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	if len(r.Boxes) != expectedNum {
+		return fmt.Errorf("expected and actual box number do not match: %v != %v", expectedNum, len(r.Boxes))
+	}
+	return nil
+}
+
+func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxesRaw string) error {
+	r, err := indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Next(next).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ",")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := decodeBoxName(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+
+	fmt.Println(expectedNames)
+	fmt.Println(actualNames)
+
 	if len(expectedNames) != len(actualNames) {
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
@@ -940,4 +1040,7 @@ func ApplicationsContext(s *godog.Suite) {
 
 	s.Step(`^according to "([^"]*)", the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
 	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
+	s.Step(`^according to "([^"]*)", by parameter max (\d+), the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
+	s.Step(`^according to indexer, by parameter max (\d+) and next "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
+	s.Step(`^I forward (\d+) empty rounds with transient account\.$`, forwardNEmptyRounds)
 }
