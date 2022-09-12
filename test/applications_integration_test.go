@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 
@@ -888,9 +889,6 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 		actualNames[i] = b.Name
 	}
 
-	fmt.Println(expectedNames)
-	fmt.Println(actualNames)
-
 	if len(expectedNames) != len(actualNames) {
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
@@ -938,6 +936,7 @@ func forwardNEmptyRounds(n int) error {
 			return err
 		}
 	}
+	time.Sleep(2 * time.Second)
 	return nil
 }
 
@@ -984,9 +983,6 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 			expectedNames[i] = expected
 		}
 	}
-
-	fmt.Println(expectedNames)
-	fmt.Println(actualNames)
 
 	if len(expectedNames) != len(actualNames) {
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
