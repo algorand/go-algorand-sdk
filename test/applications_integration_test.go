@@ -911,32 +911,8 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	return nil
 }
 
-func forwardNEmptyRounds(n int) error {
-	params, err := algodV2client.SuggestedParams().Do(context.Background())
-	if err != nil {
-		return err
-	}
-	randomNotes := make([]byte, 8)
-	for i := 0; i < n; i++ {
-		crypto.RandomBytes(randomNotes)
-		ptx, err := future.MakePaymentTxn(transientAccount.Address.String(), types.ZeroAddress.String(), 0, randomNotes, close, params)
-		if err != nil {
-			return err
-		}
-		txid, stx, err := crypto.SignTransaction(transientAccount.PrivateKey, ptx)
-		if err != nil {
-			return err
-		}
-		_, err = algodV2client.SendRawTransaction(stx).Do(context.Background())
-		if err != nil {
-			return err
-		}
-		_, err = future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
-		if err != nil {
-			return err
-		}
-	}
-	time.Sleep(2 * time.Second)
+func sleptForNSecForIndexer(n int) error {
+	time.Sleep(time.Duration(n) * time.Second)
 	return nil
 }
 
@@ -1038,5 +1014,5 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
 	s.Step(`^according to "([^"]*)", by parameter max (\d+), the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
 	s.Step(`^according to indexer, by parameter max (\d+) and next "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
-	s.Step(`^I forward (\d+) empty rounds with transient account\.$`, forwardNEmptyRounds)
+	s.Step(`^I sleep for (\d+) seconds for indexer to digest things down\.$`, sleptForNSecForIndexer)
 }
