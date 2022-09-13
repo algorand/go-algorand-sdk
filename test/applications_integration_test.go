@@ -911,8 +911,8 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	return nil
 }
 
-func sleptForNSecForIndexer(n int) error {
-	time.Sleep(time.Duration(n) * time.Second)
+func sleptForNMilliSecsForIndexer(n int) error {
+	time.Sleep(time.Duration(n) * time.Millisecond)
 	return nil
 }
 
@@ -1014,5 +1014,5 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
 	s.Step(`^according to "([^"]*)", by parameter max (\d+), the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
 	s.Step(`^according to indexer, by parameter max (\d+) and next "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
-	s.Step(`^I sleep for (\d+) seconds for indexer to digest things down\.$`, sleptForNSecForIndexer)
+	s.Step(`^I sleep for (\d+) milliseconds for indexer to digest things down\.$`, sleptForNMilliSecsForIndexer)
 }
