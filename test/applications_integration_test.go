@@ -859,10 +859,10 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
 	var expectedNames [][]byte
 	if len(encodedBoxesRaw) > 0 {
-		encodedBoxes := strings.Split(encodedBoxesRaw, ",")
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
 		expectedNames = make([][]byte, len(encodedBoxes))
 		for i, b := range encodedBoxes {
-			expected, err := decodeBoxName(b)
+			expected, err := base64.StdEncoding.DecodeString(b)
 			if err != nil {
 				return err
 			}
@@ -949,10 +949,10 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 
 	var expectedNames [][]byte
 	if len(encodedBoxesRaw) > 0 {
-		encodedBoxes := strings.Split(encodedBoxesRaw, ",")
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
 		expectedNames = make([][]byte, len(encodedBoxes))
 		for i, b := range encodedBoxes {
-			expected, err := decodeBoxName(b)
+			expected, err := base64.StdEncoding.DecodeString(b)
 			if err != nil {
 				return err
 			}
