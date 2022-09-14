@@ -154,14 +154,11 @@ type DryrunResponse struct {
 }
 
 func NewDryrunResponse(d models.DryrunResponse) (DryrunResponse, error) {
-	// TODO:  this is lazy but also works?
-	dr := DryrunResponse{}
-	b, err := json.Marshal(dr)
+	b, err := json.Marshal(d)
 	if err != nil {
-		return dr, err
+		return DryrunResponse{}, err
 	}
-	err = json.Unmarshal(b, &dr)
-	return dr, err
+	return NewDryrunResponseFromJson(b)
 }
 
 func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
