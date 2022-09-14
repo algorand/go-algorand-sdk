@@ -1012,7 +1012,7 @@ func ApplicationsContext(s *godog.Suite) {
 
 	s.Step(`^according to "([^"]*)", the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
 	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
-	s.Step(`^according to "([^"]*)", by parameter max (\d+), the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
-	s.Step(`^according to indexer, by parameter max (\d+) and next "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
+	s.Step(`^according to "([^"]*)", with (\d+) being the parameter that limits results, the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
+	s.Step(`^according to indexer, with (\d+) being the parameter that limits results, and "([^"]*)" being the parameter that sets the next result, the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
 	s.Step(`^I sleep for (\d+) milliseconds for indexer to digest things down\.$`, sleptForNMilliSecsForIndexer)
 }
