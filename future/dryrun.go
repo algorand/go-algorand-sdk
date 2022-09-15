@@ -154,6 +154,7 @@ type DryrunResponse struct {
 }
 
 func NewDryrunResponse(d models.DryrunResponse) (DryrunResponse, error) {
+	// Marshal and unmarshal to fix integer types.
 	b, err := json.Marshal(d)
 	if err != nil {
 		return DryrunResponse{}, err
