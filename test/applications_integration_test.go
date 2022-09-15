@@ -13,12 +13,14 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	sdkJson "github.com/algorand/go-algorand-sdk/encoding/json"
 	"github.com/algorand/go-algorand-sdk/future"
@@ -26,6 +28,7 @@ import (
 )
 
 var algodV2client *algod.Client
+var indexerV2client *indexer.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
@@ -828,9 +831,16 @@ func decodeBoxName(encodedBoxName string) ([]byte, error) {
 	}
 }
 
-func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, boxContents, errStr string) error {
-
-	box, err := algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
+func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encodedBoxName, boxContents, errStr string) error {
+	var box models.Box
+	var err error
+	if fromClient == "algod" {
+		box, err = algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
+	} else if fromClient == "indexer" {
+		box, err = indexerV2client.LookupApplicationBoxByIDandName(applicationId).Name(encodedBoxName).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
 	if err != nil {
 		if strings.Contains(err.Error(), errStr) {
 			return nil
@@ -841,6 +851,132 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(encodedBoxName, box
 	b64Value := base64.StdEncoding.EncodeToString(box.Value)
 	if b64Value != boxContents {
 		return fmt.Errorf("expected box value %s is not equal to actual box value %s", boxContents, b64Value)
+	}
+
+	return nil
+}
+
+func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := base64.StdEncoding.DecodeString(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+
+	if len(expectedNames) != len(actualNames) {
+		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
+	}
+
+	contains := func(elem []byte, xs [][]byte) bool {
+		for _, x := range xs {
+			if bytes.Equal(elem, x) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, e := range expectedNames {
+		if !contains(e, actualNames) {
+			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+		}
+	}
+
+	return nil
+}
+
+func sleptForNMilliSecsForIndexer(n int) error {
+	time.Sleep(time.Duration(n) * time.Millisecond)
+	return nil
+}
+
+func currentApplicationShouldHaveBoxNum(fromClient string, max int, expectedNum int) error {
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Max(uint64(max)).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	if len(r.Boxes) != expectedNum {
+		return fmt.Errorf("expected and actual box number do not match: %v != %v", expectedNum, len(r.Boxes))
+	}
+	return nil
+}
+
+func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxesRaw string) error {
+	r, err := indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Next(next).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := base64.StdEncoding.DecodeString(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+
+	if len(expectedNames) != len(actualNames) {
+		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
+	}
+
+	contains := func(elem []byte, xs [][]byte) bool {
+		for _, x := range xs {
+			if bytes.Equal(elem, x) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, e := range expectedNames {
+		if !contains(e, actualNames) {
+			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+		}
 	}
 
 	return nil
@@ -874,52 +1010,9 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
 
-	s.Step(`^the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
-
-	s.Step(`^the current application should have the following boxes "([^"]*)"\.$`,
-		func(encodedBoxesRaw string) error {
-			var expectedNames [][]byte
-			if len(encodedBoxesRaw) > 0 {
-				encodedBoxes := strings.Split(encodedBoxesRaw, ",")
-				expectedNames = make([][]byte, len(encodedBoxes))
-				for i, b := range encodedBoxes {
-					expected, err := decodeBoxName(b)
-					if err != nil {
-						return err
-					}
-					expectedNames[i] = expected
-				}
-			}
-
-			r, err := algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
-			if err != nil {
-				return err
-			}
-
-			actualNames := make([][]byte, len(r.Boxes))
-			for i, b := range r.Boxes {
-				actualNames[i] = b.Name
-			}
-
-			if len(expectedNames) != len(actualNames) {
-				return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
-			}
-
-			contains := func(elem []byte, xs [][]byte) bool {
-				for _, x := range xs {
-					if bytes.Equal(elem, x) {
-						return true
-					}
-				}
-				return false
-			}
-
-			for _, e := range expectedNames {
-				if !contains(e, actualNames) {
-					return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
-				}
-			}
-
-			return nil
-		})
+	s.Step(`^according to "([^"]*)", the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
+	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
+	s.Step(`^according to "([^"]*)", with (\d+) being the parameter that limits results, the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
+	s.Step(`^according to indexer, with (\d+) being the parameter that limits results, and "([^"]*)" being the parameter that sets the next result, the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
+	s.Step(`^I sleep for (\d+) milliseconds for indexer to digest things down\.$`, sleptForNMilliSecsForIndexer)
 }
