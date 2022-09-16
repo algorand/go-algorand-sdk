@@ -10,6 +10,10 @@ type Block struct {
 	// GenesisId (gen) ID to which this block belongs.
 	GenesisId string `json:"genesis-id"`
 
+	// ParticipationUpdates participation account data that needs to be checked/acted
+	// on by the network.
+	ParticipationUpdates ParticipationUpdates `json:"participation-updates,omitempty"`
+
 	// PreviousBlockHash (prev) Previous block hash.
 	PreviousBlockHash []byte `json:"previous-block-hash"`
 
