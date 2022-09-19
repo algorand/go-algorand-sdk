@@ -1,3 +1,13 @@
+# 1.21.0
+## What's Changed
+### Enhancements
+* Deprecation: Add deprecated tags to v1 `algod1` API ([#392](https://github.com/algorand/go-algorand-sdk/pull/392))
+* Enhancement: update block model ([#401](https://github.com/algorand/go-algorand-sdk/pull/401))
+### Bugfixes
+* Bugfix: Fix dryrun parser ([#400](https://github.com/algorand/go-algorand-sdk/pull/400))
+## Protocol Upgrade
+This release does not contain a protocol upgrade.
+
 # 1.20.0
 ## What's Changed
 ### Bugfixes
