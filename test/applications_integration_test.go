@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -809,28 +808,6 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
-// decodeBoxName parses the encoding scheme to return the corresponding byte representation
-func decodeBoxName(encodedBoxName string) ([]byte, error) {
-	split := strings.Split(encodedBoxName, ":")
-	if len(split) != 2 {
-		return nil, errors.New("encodedBoxName (" + encodedBoxName + ") does not match expected format")
-	}
-	encoding, encoded := split[0], split[1]
-	switch encoding {
-	case "str":
-		return []byte(encoded), nil
-	case "b64":
-		d, err := base64.StdEncoding.DecodeString(encoded)
-		if err != nil {
-			return nil, fmt.Errorf("failed to b64 decode arg = %s", encoded)
-		}
-
-		return d, nil
-	default:
-		return nil, errors.New("unsupported encoding = " + encoding)
-	}
-}
-
 func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encodedBoxName, boxContents, errStr string) error {
 	var box models.Box
 	var err error
@@ -854,6 +831,15 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	}
 
 	return nil
+}
+
+func bytesContains(elem []byte, xs [][]byte) bool {
+	for _, x := range xs {
+		if bytes.Equal(elem, x) {
+			return true
+		}
+	}
+	return false
 }
 
 func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
@@ -893,17 +879,8 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
 
-	contains := func(elem []byte, xs [][]byte) bool {
-		for _, x := range xs {
-			if bytes.Equal(elem, x) {
-				return true
-			}
-		}
-		return false
-	}
-
 	for _, e := range expectedNames {
-		if !contains(e, actualNames) {
+		if !bytesContains(e, actualNames) {
 			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
 		}
 	}
@@ -964,17 +941,8 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
 
-	contains := func(elem []byte, xs [][]byte) bool {
-		for _, x := range xs {
-			if bytes.Equal(elem, x) {
-				return true
-			}
-		}
-		return false
-	}
-
 	for _, e := range expectedNames {
-		if !contains(e, actualNames) {
+		if !bytesContains(e, actualNames) {
 			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
 		}
 	}
