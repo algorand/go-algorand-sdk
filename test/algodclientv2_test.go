@@ -48,19 +48,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
-	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with encoded box name "([^"]*)"$`,
-		func(appId int, encodedBoxName string) error {
-			return withClient(func(c algod.Client) {
-				_, _ = c.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
-			})
-		})
-	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+)$`,
-		func(appId int, max int) error {
-			return withClient(func(c algod.Client) {
-				_, _ = c.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Do(context.Background())
-			})
-		},
-	)
+	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeAGetApplicationBoxByNameCall)
+	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+)$`, weMakeAGetApplicationBoxesCall)
 	s.Step(`^we make a GetLightBlockHeaderProof call for round (\d+)$`, weMakeAGetLightBlockHeaderProofCallForRound)
 	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
 
@@ -256,13 +245,21 @@ func weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID(accoun
 	return nil
 }
 
-func withClient(f func(client algod.Client)) error {
-	c, err := algod.MakeClient(mockServer.URL, "")
+func weMakeAGetApplicationBoxByNameCall(appId int, encodedBoxName string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
 	}
+	algodClient.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+	return nil
+}
 
-	f(*c)
+func weMakeAGetApplicationBoxesCall(appId int, max int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Do(context.Background())
 	return nil
 }
 
