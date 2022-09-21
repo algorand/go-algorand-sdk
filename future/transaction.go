@@ -312,10 +312,11 @@ func MakeAssetCreateTxn(account string, note []byte, params types.SuggestedParam
 // MakeAssetConfigTxn creates a tx template for changing the
 // key configuration of an existing asset.
 // Important notes -
-// 	* Every asset config transaction is a fresh one. No parameters will be inherited from the current config.
-// 	* Once an address is set to to the empty string, IT CAN NEVER BE CHANGED AGAIN. For example, if you want to keep
-//    The current manager, you must specify its address again.
-//	Parameters -
+//   - Every asset config transaction is a fresh one. No parameters will be inherited from the current config.
+//   - Once an address is set to to the empty string, IT CAN NEVER BE CHANGED AGAIN. For example, if you want to keep
+//     The current manager, you must specify its address again.
+//     Parameters -
+//
 // - account is a checksummed, human-readable address that will send the transaction
 // - note is an arbitrary byte array
 // - params is typically received from algod, it defines common-to-all-txns arguments like fee and validity period
@@ -1021,7 +1022,7 @@ func parseBoxReferences(abrs []types.AppBoxReference, foreignApps []uint64, curA
 		br := types.BoxReference{Name: abr.Name}
 		found := false
 
-		if abr.AppID == 0 {
+		if abr.AppID == 0 || abr.AppID == curAppID {
 			found = true
 			br.ForeignAppIdx = 0
 		} else {
@@ -1032,11 +1033,6 @@ func parseBoxReferences(abrs []types.AppBoxReference, foreignApps []uint64, curA
 					break
 				}
 			}
-		}
-
-		if !found && abr.AppID == curAppID {
-			found = true
-			br.ForeignAppIdx = 0
 		}
 
 		if !found {

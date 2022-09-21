@@ -856,6 +856,15 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	return nil
 }
 
+func bytesContains(elem []byte, xs [][]byte) bool {
+	for _, x := range xs {
+		if bytes.Equal(elem, x) {
+			return true
+		}
+	}
+	return false
+}
+
 func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
 	var expectedNames [][]byte
 	if len(encodedBoxesRaw) > 0 {
@@ -893,17 +902,8 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
 
-	contains := func(elem []byte, xs [][]byte) bool {
-		for _, x := range xs {
-			if bytes.Equal(elem, x) {
-				return true
-			}
-		}
-		return false
-	}
-
 	for _, e := range expectedNames {
-		if !contains(e, actualNames) {
+		if !bytesContains(e, actualNames) {
 			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
 		}
 	}
@@ -964,17 +964,8 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
 	}
 
-	contains := func(elem []byte, xs [][]byte) bool {
-		for _, x := range xs {
-			if bytes.Equal(elem, x) {
-				return true
-			}
-		}
-		return false
-	}
-
 	for _, e := range expectedNames {
-		if !contains(e, actualNames) {
+		if !bytesContains(e, actualNames) {
 			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
 		}
 	}
