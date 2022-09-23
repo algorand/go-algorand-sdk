@@ -91,8 +91,8 @@ func (c *Client) SearchForApplicationBoxes(applicationId uint64) *SearchForAppli
 	return &SearchForApplicationBoxes{c: c, applicationId: applicationId}
 }
 
-func (c *Client) LookupApplicationBoxByIDandName(applicationId uint64) *LookupApplicationBoxByIDandName {
-	return &LookupApplicationBoxByIDandName{c: c, applicationId: applicationId}
+func (c *Client) LookupApplicationBoxByIDAndName(applicationId uint64) *LookupApplicationBoxByIDAndName {
+	return &LookupApplicationBoxByIDAndName{c: c, applicationId: applicationId}
 }
 
 func (c *Client) LookupApplicationLogsByID(applicationId uint64) *LookupApplicationLogsByID {
