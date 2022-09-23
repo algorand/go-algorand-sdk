@@ -2,6 +2,7 @@ package encoding
 
 import (
 	"encoding/base64"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -14,22 +15,12 @@ func EncodeBytesForBoxQuery(xs []byte) string {
 }
 
 // EncodeBoxForBoxQuery provides a convenience method to string encode box names for use with Box search APIs (e.g. GetApplicationBoxByName).
-func EncodeBoxForBoxQuery(b models.Box) (string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(string(b.Name))
-	if err != nil {
-		return "", err
-	}
-
-	return EncodeBytesForBoxQuery(decoded), nil
+func EncodeBoxForBoxQuery(b models.Box) string {
+	return EncodeBytesForBoxQuery(b.Name)
 }
 
-func EncodeBoxDescriptorForBoxQuery(bd models.BoxDescriptor) (string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(string(bd.Name))
-	if err != nil {
-		return "", err
-	}
-
-	return EncodeBytesForBoxQuery(decoded), nil
+func EncodeBoxDescriptorForBoxQuery(bd models.BoxDescriptor) string {
+	return EncodeBytesForBoxQuery(bd.Name)
 }
 
 // EncodeBoxReferenceForBoxQuery provides a convenience method to string encode box names for use with Box search APIs (e.g. GetApplicationBoxByName).

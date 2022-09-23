@@ -1,11 +1,12 @@
 package encoding
 
 import (
-	"encoding/base64"
+	"encoding/json"
+	"testing"
+
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type example struct {
@@ -23,18 +24,16 @@ func TestEncode(t *testing.T) {
 	)
 
 	// Encode Box
-	b := models.Box{Name: []byte(base64.StdEncoding.EncodeToString(e.source))}
-	actual, err := EncodeBoxForBoxQuery(b)
-	require.NoError(t, err)
+	b := models.Box{Name: e.source}
+	actual := EncodeBoxForBoxQuery(b)
 	require.Equal(t,
 		e.expectedEncoding,
 		actual,
 	)
 
 	// Encode BoxDescriptor
-	bd := models.BoxDescriptor{Name: []byte(base64.StdEncoding.EncodeToString(e.source))}
-	actual, err = EncodeBoxDescriptorForBoxQuery(bd)
-	require.NoError(t, err)
+	bd := models.BoxDescriptor{Name: e.source}
+	actual = EncodeBoxDescriptorForBoxQuery(bd)
 	require.Equal(t,
 		e.expectedEncoding,
 		actual,
@@ -49,4 +48,16 @@ func TestEncode(t *testing.T) {
 	require.Equal(t,
 		e.expectedEncoding,
 		EncodeAppBoxReferenceForBoxQuery(types.AppBoxReference{Name: e.source}))
+}
+
+func TestEncodeFromJSON(t *testing.T) {
+	jsonEncoding := []byte(`{"name":"ZXhhbXBsZSBib3ggbmFtZQ==","value":"dGvDv8O/"}`)
+
+	var box models.Box
+	err := json.Unmarshal(jsonEncoding, &box)
+	require.NoError(t, err)
+
+	actualEncodedName := EncodeBoxForBoxQuery(box)
+	expectedEncodedName := "b64:ZXhhbXBsZSBib3ggbmFtZQ=="
+	require.Equal(t, expectedEncodedName, actualEncodedName)
 }
