@@ -830,8 +830,9 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 		return bytes.Compare(actualNames[i], actualNames[j]) < 0
 	})
 
-	if !reflect.DeepEqual(expectedNames, actualNames) {
-		return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
 	}
 
 	return nil
@@ -892,8 +893,9 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 		return bytes.Compare(expectedNames[i], expectedNames[j]) < 0
 	})
 
-	if !reflect.DeepEqual(expectedNames, actualNames) {
-		return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
 	}
 
 	return nil
