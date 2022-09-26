@@ -89,13 +89,13 @@ func (lo LimitOrder) GetSwapAssetsTransaction(assetAmount uint64, microAlgoAmoun
 // txn alone, close out value after timeout
 //
 // Parameters:
-//  - owner: the address to refund funds to on timeout
-//  - assetID: ID of the transferred asset
-//  - ratn: exchange rate (N asset per D Algos, or better)
-//  - ratd: exchange rate (N asset per D Algos, or better)
-//  - expiryRound: the round at which the account expires
-//  - minTrade: the minimum amount (of Algos) to be traded away
-//  - maxFee: maximum fee used by the limit order transaction
+//   - owner: the address to refund funds to on timeout
+//   - assetID: ID of the transferred asset
+//   - ratn: exchange rate (N asset per D Algos, or better)
+//   - ratd: exchange rate (N asset per D Algos, or better)
+//   - expiryRound: the round at which the account expires
+//   - minTrade: the minimum amount (of Algos) to be traded away
+//   - maxFee: maximum fee used by the limit order transaction
 //
 // Deprecated: Use TealCompile source compilation instead.
 func MakeLimitOrder(owner string, assetID, ratn, ratd, expiryRound, minTrade, maxFee uint64) (LimitOrder, error) {

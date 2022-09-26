@@ -22,13 +22,13 @@ type DynamicFee struct {
 // transfer.
 //
 // Parameters:
-//  - receiver: address which is authorized to receive withdrawals
-//  - closeRemainder: address which will receive the balance of funds
-//  - amount: the maximum number of funds allowed for a single withdrawal
-//  - withdrawWindow: the duration of a withdrawal period
-//  - period: the time between a pair of withdrawal periods
-//  - expiryRound: the round at which the account expires
-//  - maxFee: maximum fee used by the withdrawal transaction
+//   - receiver: address which is authorized to receive withdrawals
+//   - closeRemainder: address which will receive the balance of funds
+//   - amount: the maximum number of funds allowed for a single withdrawal
+//   - withdrawWindow: the duration of a withdrawal period
+//   - period: the time between a pair of withdrawal periods
+//   - expiryRound: the round at which the account expires
+//   - maxFee: maximum fee used by the withdrawal transaction
 //
 // Deprecated: Use TealCompile source compilation instead.
 func MakeDynamicFee(receiver, closeRemainder string, amount, firstValid, lastValid uint64) (DynamicFee, error) {

@@ -77,12 +77,12 @@ func GetPeriodicPaymentWithdrawalTransaction(contract []byte, firstValid, fee ui
 // are available to receiver.
 //
 // Parameters:
-//  - receiver: address which is authorized to receive withdrawals
-//  - amount: the maximum number of funds allowed for a single withdrawal
-//  - withdrawWindow: the duration of a withdrawal period
-//  - period: the time between a pair of withdrawal periods
-//  - expiryRound: the round at which the account expires
-//  - maxFee: maximum fee used by the withdrawal transaction
+//   - receiver: address which is authorized to receive withdrawals
+//   - amount: the maximum number of funds allowed for a single withdrawal
+//   - withdrawWindow: the duration of a withdrawal period
+//   - period: the time between a pair of withdrawal periods
+//   - expiryRound: the round at which the account expires
+//   - maxFee: maximum fee used by the withdrawal transaction
 //
 // Deprecated: Use TealCompile source compilation instead.
 func MakePeriodicPayment(receiver string, amount, withdrawWindow, period, expiryRound, maxFee uint64) (PeriodicPayment, error) {

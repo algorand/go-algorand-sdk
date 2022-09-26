@@ -266,6 +266,7 @@ type EvalDelta struct {
 
 // StateDelta is a map from key/value store keys to ValueDeltas, indicating
 // what should happen for that key
+//
 //msgp:allocbound StateDelta config.MaxStateDeltaKeys
 type StateDelta map[string]ValueDelta
 

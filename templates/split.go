@@ -24,7 +24,7 @@ type Split struct {
 	receiverTwo types.Address
 }
 
-//GetSplitFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
+// GetSplitFundsTransaction returns a group transaction array which transfer funds according to the contract's ratio
 // the returned byte array is suitable for passing to SendRawTransaction
 // contract: the bytecode of the contract to be used
 // amount: uint64 total number of algos to be transferred (payment1_amount + payment2_amount)
@@ -117,14 +117,14 @@ func GetSplitFundsTransaction(contract []byte, amount uint64, params types.Sugge
 // firstRecipient_amount == secondRecipient_amount * (rat1/rat2)
 //
 // Parameters:
-//  - owner: the address to refund funds to on timeout
-//  - receiverOne: the first recipient in the split account
-//  - receiverTwo: the second recipient in the split account
-//  - rat1: fraction determines resource split ratio
-//  - rat2: fraction determines resource split ratio
-//  - expiryRound: the round at which the account expires
-//  - minPay: minimum amount to be paid out of the account to receiverOne
-//  - maxFee: half of the maximum fee used by each split forwarding group transaction
+//   - owner: the address to refund funds to on timeout
+//   - receiverOne: the first recipient in the split account
+//   - receiverTwo: the second recipient in the split account
+//   - rat1: fraction determines resource split ratio
+//   - rat2: fraction determines resource split ratio
+//   - expiryRound: the round at which the account expires
+//   - minPay: minimum amount to be paid out of the account to receiverOne
+//   - maxFee: half of the maximum fee used by each split forwarding group transaction
 //
 // Deprecated: Use TealCompile source compilation instead.
 func MakeSplit(owner, receiverOne, receiverTwo string, rat1, rat2, expiryRound, minPay, maxFee uint64) (Split, error) {

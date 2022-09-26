@@ -315,10 +315,11 @@ func MakeAssetCreateTxn(account string, feePerByte, firstRound, lastRound uint64
 // MakeAssetConfigTxn creates a tx template for changing the
 // key configuration of an existing asset.
 // Important notes -
-// 	* Every asset config transaction is a fresh one. No parameters will be inherited from the current config.
-// 	* Once an address is set to to the empty string, IT CAN NEVER BE CHANGED AGAIN. For example, if you want to keep
-//    The current manager, you must specify its address again.
-//	Parameters -
+//   - Every asset config transaction is a fresh one. No parameters will be inherited from the current config.
+//   - Once an address is set to to the empty string, IT CAN NEVER BE CHANGED AGAIN. For example, if you want to keep
+//     The current manager, you must specify its address again.
+//     Parameters -
+//
 // - account is a checksummed, human-readable address that will send the transaction
 // - feePerByte  is a fee per byte
 // - firstRound is the first round this txn is valid (txn semantics unrelated to asset config)
