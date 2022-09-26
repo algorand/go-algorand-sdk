@@ -597,20 +597,22 @@ func byte64FromBase64(in string) (out [64]byte, err error) {
 //                 maintained inside the account of any users who opt into this
 //                 application. The LocalStateSchema is immutable.
 //
+// - extraPages    ExtraProgramPages specifies the additional app program size requested in pages.
+//                 A page is 1024 bytes. This field enables execution of app programs
+//                 larger than the default maximum program size.
+//
 // - onComplete    This is the faux application type used to distinguish different
 //                 application actions. Specifically, OnCompletion specifies what
 //                 side effects this transaction will have if it successfully makes
 //                 it into a block.
-//
-// - extraPages    ExtraProgramPages specifies the additional app program size requested in pages.
-//                 A page is 1024 bytes. This field enables execution of app programs
-//                 larger than the default maximum program size.
 //
 // - boxes         lists the boxes to be accessed during evaluation of the application
 //                 call. This also must include the boxes accessed by inner app calls.
 
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
+//
+// NOTE: if you need to use extra pages or boxes, use MakeApplicationCreateTxWithBoxes instead.
 func MakeApplicationCreateTx(
 	optIn bool,
 	approvalProg []byte,
@@ -621,31 +623,24 @@ func MakeApplicationCreateTx(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
-	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-
-	oncomp := types.NoOpOC
-	if optIn {
-		oncomp = types.OptInOC
-	}
-
-	return MakeApplicationCallTx(
+	return MakeApplicationCreateTxWithBoxes(
+		optIn,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
 		0,
 		appArgs,
 		accounts,
 		foreignApps,
 		foreignAssets,
-		appBoxReferences,
-		oncomp,
-		approvalProg,
-		clearProg,
-		globalSchema,
-		localSchema,
+		nil,
 		sp,
 		sender,
 		note,
@@ -655,6 +650,10 @@ func MakeApplicationCreateTx(
 	)
 }
 
+// MakeApplicationCreateTxWithExtraPages makes a transaction for creating an application (see above for args desc.)
+// - optIn: true for opting in on complete, false for no-op.
+//
+// NOTE: if you need to use boxes, use MakeApplicationCreateTxWithBoxes instead.
 func MakeApplicationCreateTxWithExtraPages(
 	optIn bool,
 	approvalProg []byte,
@@ -665,20 +664,61 @@ func MakeApplicationCreateTxWithExtraPages(
 	accounts []string,
 	foreignApps []uint64,
 	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address,
+	extraPages uint32) (tx types.Transaction, err error) {
+	return MakeApplicationCreateTxWithBoxes(
+		optIn,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
+		extraPages,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationCreateTxWithBoxes makes a transaction for creating an application (see above for args desc.)
+// - optIn: true for opting in on complete, false for no-op.
+func MakeApplicationCreateTxWithBoxes(
+	optIn bool,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	extraPages uint32,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
 	appBoxReferences []types.AppBoxReference,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
 	group types.Digest,
 	lease [32]byte,
-	rekeyTo types.Address, extraPages uint32) (tx types.Transaction, err error) {
+	rekeyTo types.Address) (tx types.Transaction, err error) {
 
 	oncomp := types.NoOpOC
 	if optIn {
 		oncomp = types.OptInOC
 	}
 
-	appCallTx, err := MakeApplicationCallTx(
+	return MakeApplicationCallTxWithBoxes(
 		0,
 		appArgs,
 		accounts,
@@ -690,21 +730,52 @@ func MakeApplicationCreateTxWithExtraPages(
 		clearProg,
 		globalSchema,
 		localSchema,
+		extraPages,
 		sp,
 		sender,
 		note,
 		group,
 		lease,
-		rekeyTo)
-
-	if err != nil {
-		return
-	}
-	return MakeApplicationCallTxWithExtraPages(appCallTx, extraPages)
+		rekeyTo,
+	)
 }
 
 // MakeApplicationUpdateTx makes a transaction for updating an application's programs (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationUpdateTxWithBoxes instead.
 func MakeApplicationUpdateTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	approvalProg []byte,
+	clearProg []byte,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationUpdateTxWithBoxes(appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		approvalProg,
+		clearProg,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationUpdateTxWithBoxes makes a transaction for updating an application's programs (see above for args desc.)
+func MakeApplicationUpdateTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -719,7 +790,7 @@ func MakeApplicationUpdateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx,
+	return MakeApplicationCallTxWithBoxes(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
@@ -730,6 +801,7 @@ func MakeApplicationUpdateTx(
 		clearProg,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -740,7 +812,37 @@ func MakeApplicationUpdateTx(
 }
 
 // MakeApplicationDeleteTx makes a transaction for deleting an application (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationDeleteTxWithBoxes instead.
 func MakeApplicationDeleteTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationDeleteTxWithBoxes(appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationDeleteTxWithBoxes makes a transaction for deleting an application (see above for args desc.)
+func MakeApplicationDeleteTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -753,7 +855,7 @@ func MakeApplicationDeleteTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx,
+	return MakeApplicationCallTxWithBoxes(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
@@ -764,6 +866,7 @@ func MakeApplicationDeleteTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -775,7 +878,38 @@ func MakeApplicationDeleteTx(
 
 // MakeApplicationOptInTx makes a transaction for opting in to (allocating
 // some account-specific state for) an application (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationOptInTxWithBoxes instead.
 func MakeApplicationOptInTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationOptInTxWithBoxes(appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationOptInTxWithBoxes makes a transaction for opting in to (allocating
+// some account-specific state for) an application (see above for args desc.)
+func MakeApplicationOptInTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -788,7 +922,7 @@ func MakeApplicationOptInTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx,
+	return MakeApplicationCallTxWithBoxes(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
@@ -799,6 +933,7 @@ func MakeApplicationOptInTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -810,7 +945,39 @@ func MakeApplicationOptInTx(
 
 // MakeApplicationCloseOutTx makes a transaction for closing out of
 // (deallocating all account-specific state for) an application (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationCloseOutTxWithBoxes
+// instead.
 func MakeApplicationCloseOutTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationCloseOutTxWithBoxes(appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationCloseOutTxWithBoxes makes a transaction for closing out of
+// (deallocating all account-specific state for) an application (see above for args desc.)
+func MakeApplicationCloseOutTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -823,7 +990,7 @@ func MakeApplicationCloseOutTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx,
+	return MakeApplicationCallTxWithBoxes(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
@@ -834,6 +1001,7 @@ func MakeApplicationCloseOutTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -846,7 +1014,40 @@ func MakeApplicationCloseOutTx(
 // MakeApplicationClearStateTx makes a transaction for clearing out all
 // account-specific state for an application. It may not be rejected by the
 // application's logic. (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationClearStateTxWithBoxes
+// instead.
 func MakeApplicationClearStateTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationClearStateTxWithBoxes(appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationClearStateTxWithBoxes makes a transaction for clearing out all
+// account-specific state for an application. It may not be rejected by the
+// application's logic. (see above for args desc.)
+func MakeApplicationClearStateTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -859,7 +1060,7 @@ func MakeApplicationClearStateTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(appIdx,
+	return MakeApplicationCallTxWithBoxes(appIdx,
 		appArgs,
 		accounts,
 		foreignApps,
@@ -870,6 +1071,7 @@ func MakeApplicationClearStateTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -882,7 +1084,40 @@ func MakeApplicationClearStateTx(
 // MakeApplicationNoOpTx makes a transaction for interacting with an existing
 // application, potentially updating any account-specific local state and
 // global state associated with it. (see above for args desc.)
+//
+// NOTE: if you need to use boxes, use MakeApplicationNoOpTxWithBoxes instead.
 func MakeApplicationNoOpTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationNoOpTxWithBoxes(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationNoOpTxWithBoxes makes a transaction for interacting with an
+// existing application, potentially updating any account-specific local state
+// and global state associated with it. (see above for args desc.)
+func MakeApplicationNoOpTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -895,7 +1130,7 @@ func MakeApplicationNoOpTx(
 	group types.Digest,
 	lease [32]byte,
 	rekeyTo types.Address) (tx types.Transaction, err error) {
-	return MakeApplicationCallTx(
+	return MakeApplicationCallTxWithBoxes(
 		appIdx,
 		appArgs,
 		accounts,
@@ -907,6 +1142,7 @@ func MakeApplicationNoOpTx(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		sp,
 		sender,
 		note,
@@ -919,7 +1155,63 @@ func MakeApplicationNoOpTx(
 // MakeApplicationCallTx is a helper for the above ApplicationCall
 // transaction constructors. A fully custom ApplicationCall transaction may
 // be constructed using this method. (see above for args desc.)
+//
+// NOTE: if you need to use boxes or extra program pages, use
+// MakeApplicationCallTxWithBoxes instead.
 func MakeApplicationCallTx(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	onCompletion types.OnCompletion,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+	return MakeApplicationCallTxWithBoxes(
+		appIdx,
+		appArgs,
+		accounts,
+		foreignApps,
+		foreignAssets,
+		nil,
+		onCompletion,
+		approvalProg,
+		clearProg,
+		globalSchema,
+		localSchema,
+		0,
+		sp,
+		sender,
+		note,
+		group,
+		lease,
+		rekeyTo,
+	)
+}
+
+// MakeApplicationCallTxWithExtraPages sets the ExtraProgramPages on an existing
+// application call transaction.
+//
+// Consider using MakeApplicationCallTxWithBoxes instead if you wish to assign
+// the extra pages value at creation.
+func MakeApplicationCallTxWithExtraPages(
+	txn types.Transaction, extraPages uint32) (types.Transaction, error) {
+	txn.ExtraProgramPages = extraPages
+	return txn, nil
+}
+
+// MakeApplicationCallTxWithBoxes is a helper for the above ApplicationCall
+// transaction constructors. A fully custom ApplicationCall transaction may
+// be constructed using this method. (see above for args desc.)
+func MakeApplicationCallTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,
 	accounts []string,
@@ -931,6 +1223,7 @@ func MakeApplicationCallTx(
 	clearProg []byte,
 	globalSchema types.StateSchema,
 	localSchema types.StateSchema,
+	extraPages uint32,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -958,6 +1251,7 @@ func MakeApplicationCallTx(
 	tx.ClearStateProgram = clearProg
 	tx.LocalStateSchema = localSchema
 	tx.GlobalStateSchema = globalSchema
+	tx.ExtraProgramPages = extraPages
 
 	var gh types.Digest
 	copy(gh[:], sp.GenesisHash)
@@ -977,12 +1271,6 @@ func MakeApplicationCallTx(
 
 	// Update fee
 	return setFee(tx, sp)
-}
-
-func MakeApplicationCallTxWithExtraPages(
-	txn types.Transaction, extraPages uint32) (types.Transaction, error) {
-	txn.ExtraProgramPages = extraPages
-	return txn, nil
 }
 
 func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
@@ -1040,7 +1328,7 @@ func parseBoxReferences(abrs []types.AppBoxReference, foreignApps []uint64, curA
 		}
 
 		if !found {
-			return nil, fmt.Errorf("the app id provided for this box is not in the foreignApps array")
+			return nil, fmt.Errorf("the app id %d provided for this box is not in the foreignApps array", abr.AppID)
 		}
 
 		parsed = append(parsed, br)

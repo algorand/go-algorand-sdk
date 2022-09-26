@@ -170,8 +170,8 @@ type AtomicTransactionComposer struct {
 	// The current status of the composer. The status increases monotonically.
 	status AtomicTransactionComposerStatus
 
-	// The transaction contexts in the group with their respective signers. If status is greater then
-	// BUILDING then this slice cannot change.
+	// The transaction contexts in the group with their respective signers.
+	// If status is greater than BUILDING, then this slice cannot change.
 	txContexts []transactionContext
 }
 
@@ -376,7 +376,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		encodedAbiArgs = append(encodedAbiArgs, encodedArg)
 	}
 
-	tx, err := MakeApplicationCallTx(
+	tx, err := MakeApplicationCallTxWithBoxes(
 		params.AppID,
 		encodedAbiArgs,
 		foreignAccounts,
@@ -388,6 +388,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		params.ClearProgram,
 		params.GlobalSchema,
 		params.LocalSchema,
+		params.ExtraPages,
 		params.SuggestedParams,
 		params.Sender,
 		params.Note,
@@ -396,13 +397,6 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		params.RekeyTo)
 	if err != nil {
 		return err
-	}
-
-	if params.ExtraPages != 0 {
-		tx, err = MakeApplicationCallTxWithExtraPages(tx, params.ExtraPages)
-		if err != nil {
-			return err
-		}
 	}
 
 	txAndSigner := TransactionWithSigner{

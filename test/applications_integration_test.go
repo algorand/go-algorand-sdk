@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -182,81 +183,38 @@ func iBuildAnApplicationTransaction(
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		if extraPages > 0 {
-			tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		} else {
-			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		}
-
-		if err != nil {
-			return err
-		}
-
+		tx, err = future.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
+			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "create_optin":
-		if extraPages > 0 {
-			tx, err = future.MakeApplicationCreateTxWithExtraPages(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		} else {
-			tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets, staticBoxes,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		}
-
-		if err != nil {
-			return err
-		}
+		tx, err = future.MakeApplicationCreateTxWithBoxes(true, approvalP, clearP,
+			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = future.MakeApplicationUpdateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			approvalP, clearP,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "call":
-		tx, err = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, fAssets, staticBoxes, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+		tx, err = future.MakeApplicationNoOpTxWithBoxes(applicationId, args, accs,
+			fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = future.MakeApplicationOptInTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = future.MakeApplicationClearStateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = future.MakeApplicationCloseOutTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = future.MakeApplicationDeleteTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
 	default:
 		return fmt.Errorf("unsupported tx type: %s", operation)
 	}
 
-	return nil
+	return err
 }
 
 func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr string) error {
@@ -833,15 +791,6 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	return nil
 }
 
-func bytesContains(elem []byte, xs [][]byte) bool {
-	for _, x := range xs {
-		if bytes.Equal(elem, x) {
-			return true
-		}
-	}
-	return false
-}
-
 func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
 	var expectedNames [][]byte
 	if len(encodedBoxesRaw) > 0 {
@@ -855,6 +804,9 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 			expectedNames[i] = expected
 		}
 	}
+	sort.Slice(expectedNames, func(i, j int) bool {
+		return bytes.Compare(expectedNames[i], expectedNames[j]) < 0
+	})
 
 	var r models.BoxesResponse
 	var err error
@@ -874,15 +826,13 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	for i, b := range r.Boxes {
 		actualNames[i] = b.Name
 	}
+	sort.Slice(actualNames, func(i, j int) bool {
+		return bytes.Compare(actualNames[i], actualNames[j]) < 0
+	})
 
-	if len(expectedNames) != len(actualNames) {
-		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
-	}
-
-	for _, e := range expectedNames {
-		if !bytesContains(e, actualNames) {
-			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
-		}
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
 	}
 
 	return nil
@@ -923,6 +873,9 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 	for i, b := range r.Boxes {
 		actualNames[i] = b.Name
 	}
+	sort.Slice(actualNames, func(i, j int) bool {
+		return bytes.Compare(actualNames[i], actualNames[j]) < 0
+	})
 
 	var expectedNames [][]byte
 	if len(encodedBoxesRaw) > 0 {
@@ -936,15 +889,13 @@ func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxe
 			expectedNames[i] = expected
 		}
 	}
+	sort.Slice(expectedNames, func(i, j int) bool {
+		return bytes.Compare(expectedNames[i], expectedNames[j]) < 0
+	})
 
-	if len(expectedNames) != len(actualNames) {
-		return fmt.Errorf("expected and actual box names length do not match:  %v != %v", len(expectedNames), len(actualNames))
-	}
-
-	for _, e := range expectedNames {
-		if !bytesContains(e, actualNames) {
-			return fmt.Errorf("expected and actual box names do not match: %v != %v", expectedNames, actualNames)
-		}
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
 	}
 
 	return nil

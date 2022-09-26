@@ -140,7 +140,7 @@ func buildLegacyAppCallTransaction(
 		return err
 	}
 
-	// this is only kept to keep compatability with old features
+	// this is only kept to keep compatibility with old features
 	// going forward, use txnSuggestedParams
 	sugParams = types.SuggestedParams{
 		Fee:             types.MicroAlgos(uint64(fee)),
@@ -153,28 +153,28 @@ func buildLegacyAppCallTransaction(
 
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-			gSchema, lSchema, args, accs, fApp, fAssets, boxReferences,
-			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
+		tx, err = future.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
+			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, boxReferences,
+			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = future.MakeApplicationUpdateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			approvalP, clearP,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
-		tx, err = future.MakeApplicationCallTx(uint64(applicationId), args, accs,
-			fApp, fAssets, boxReferences, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+		tx, err = future.MakeApplicationNoOpTxWithBoxes(uint64(applicationId), args, accs,
+			fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = future.MakeApplicationOptInTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = future.MakeApplicationClearStateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = future.MakeApplicationCloseOutTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = future.MakeApplicationDeleteTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)
