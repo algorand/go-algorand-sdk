@@ -94,7 +94,6 @@ func expectErrorStringToContain(contains string) error {
 		"actual error string: %s", contains, globalErrForExamination.Error())
 }
 
-
 func loadResource(filepath string) ([]byte, error) {
 	return ioutil.ReadFile(path.Join("features", "resources", filepath))
 }
