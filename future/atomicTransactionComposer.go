@@ -170,8 +170,8 @@ type AtomicTransactionComposer struct {
 	// The current status of the composer. The status increases monotonically.
 	status AtomicTransactionComposerStatus
 
-	// The transaction contexts in the group with their respective signers. If status is greater then
-	// BUILDING then this slice cannot change.
+	// The transaction contexts in the group with their respective signers.
+	// If status is greater than BUILDING, then this slice cannot change.
 	txContexts []transactionContext
 }
 
