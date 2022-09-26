@@ -612,7 +612,7 @@ func byte64FromBase64(in string) (out [64]byte, err error) {
 // MakeApplicationCreateTx makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
 //
-// NOTE: if you need to use extra pages or boxes, use MakeApplicationUpdateTxWithBoxes instead.
+// NOTE: if you need to use extra pages or boxes, use MakeApplicationCreateTxWithBoxes instead.
 func MakeApplicationCreateTx(
 	optIn bool,
 	approvalProg []byte,
@@ -653,7 +653,7 @@ func MakeApplicationCreateTx(
 // MakeApplicationCreateTxWithExtraPages makes a transaction for creating an application (see above for args desc.)
 // - optIn: true for opting in on complete, false for no-op.
 //
-// NOTE: if you need to use boxes, use MakeApplicationUpdateTxWithBoxes instead.
+// NOTE: if you need to use boxes, use MakeApplicationCreateTxWithBoxes instead.
 func MakeApplicationCreateTxWithExtraPages(
 	optIn bool,
 	approvalProg []byte,
