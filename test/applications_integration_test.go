@@ -814,7 +814,7 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	if fromClient == "algod" {
 		box, err = algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
 	} else if fromClient == "indexer" {
-		box, err = indexerV2client.LookupApplicationBoxByIDandName(applicationId).Name(encodedBoxName).Do(context.Background())
+		box, err = indexerV2client.LookupApplicationBoxByIDAndName(applicationId).Name(encodedBoxName).Do(context.Background())
 	} else {
 		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
 	}

@@ -361,7 +361,7 @@ func weMakeALookupApplicationBoxByIDandName(appId int, encodedBoxName string) er
 	if err != nil {
 		return err
 	}
-	indexerClient.LookupApplicationBoxByIDandName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+	indexerClient.LookupApplicationBoxByIDAndName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
 	return nil
 }
 
