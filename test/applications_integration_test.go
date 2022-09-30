@@ -768,11 +768,15 @@ func checkRandomElementResult(resultIndex int, input string) error {
 
 func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encodedBoxName, boxContents, errStr string) error {
 	var box models.Box
-	var err error
+	decodedBoxNames, err := parseAppArgs(encodedBoxName)
+	if err != nil {
+		return err
+	}
+	decodedBoxName := decodedBoxNames[0]
 	if fromClient == "algod" {
-		box, err = algodV2client.GetApplicationBoxByName(applicationId).Name(encodedBoxName).Do(context.Background())
+		box, err = algodV2client.GetApplicationBoxByName(applicationId, decodedBoxName).Do(context.Background())
 	} else if fromClient == "indexer" {
-		box, err = indexerV2client.LookupApplicationBoxByIDAndName(applicationId).Name(encodedBoxName).Do(context.Background())
+		box, err = indexerV2client.LookupApplicationBoxByIDAndName(applicationId, decodedBoxName).Do(context.Background())
 	} else {
 		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
 	}

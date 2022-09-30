@@ -31,6 +31,7 @@ type TealCompile struct {
 // Defaults to `false`.
 func (s *TealCompile) Sourcemap(Sourcemap bool) *TealCompile {
 	s.p.Sourcemap = Sourcemap
+
 	return s
 }
 

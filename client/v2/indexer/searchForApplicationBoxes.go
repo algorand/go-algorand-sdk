@@ -34,6 +34,7 @@ type SearchForApplicationBoxes struct {
 // if the limit is not reached.
 func (s *SearchForApplicationBoxes) Limit(Limit uint64) *SearchForApplicationBoxes {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -41,6 +42,7 @@ func (s *SearchForApplicationBoxes) Limit(Limit uint64) *SearchForApplicationBox
 // results.
 func (s *SearchForApplicationBoxes) Next(Next string) *SearchForApplicationBoxes {
 	s.p.Next = Next
+
 	return s
 }
 

@@ -80,6 +80,10 @@ func (c *Client) Block(round uint64) *Block {
 	return &Block{c: c, round: round}
 }
 
+func (c *Client) GetBlockHash(round uint64) *GetBlockHash {
+	return &GetBlockHash{c: c, round: round}
+}
+
 func (c *Client) GetTransactionProof(round uint64, txid string) *GetTransactionProof {
 	return &GetTransactionProof{c: c, round: round, txid: txid}
 }
@@ -128,8 +132,8 @@ func (c *Client) GetApplicationBoxes(applicationId uint64) *GetApplicationBoxes 
 	return &GetApplicationBoxes{c: c, applicationId: applicationId}
 }
 
-func (c *Client) GetApplicationBoxByName(applicationId uint64) *GetApplicationBoxByName {
-	return &GetApplicationBoxByName{c: c, applicationId: applicationId}
+func (c *Client) GetApplicationBoxByName(applicationId uint64, name []byte) *GetApplicationBoxByName {
+	return (&GetApplicationBoxByName{c: c, applicationId: applicationId}).name(name)
 }
 
 func (c *Client) GetAssetByID(assetId uint64) *GetAssetByID {
