@@ -452,7 +452,6 @@ func theTransientAccountShouldHave(appCreated string, byteSlices, uints int,
 	return nil
 }
 
-
 func suggestedParamsAlgodV2() error {
 	var err error
 	sugParams, err = aclv2.SuggestedParams().Do(context.Background())
