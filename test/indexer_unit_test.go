@@ -53,6 +53,8 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Search Accounts call with exclude "([^"]*)"$`, weMakeASearchAccountsCallWithExclude)
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeALookupAccountByIDCallAgainstAccountWithExclude)
 	s.Step(`^we make a SearchForApplications call with creator "([^"]*)"$`, weMakeASearchForApplicationsCallWithCreator)
+	s.Step(`^we make a Lookup Block call against round (\d+) and header "([^"]*)"$`, weMakeALookupBlockCallAgainstRoundAndHeader)
+
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -265,14 +267,14 @@ func weMakeALookupApplicationLogsByIDCallWithApplicationIDLimitMinRoundMaxRoundN
 	return nil
 }
 
-func parseIncludeAll(s string) (bool, error) {
+func parseBool(s string) (bool, error) {
 	if s == "true" {
 		return true, nil
 	}
 	if s == "false" {
 		return false, nil
 	}
-	return false, fmt.Errorf("parseIncludeAll() cannot parse \"%s\"", s)
+	return false, fmt.Errorf("parseBool() cannot parse \"%s\"", s)
 }
 
 func weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accountID string, assetID int, includeAll string, limit int, next string) error {
@@ -280,7 +282,7 @@ func weMakeALookupAccountAssetsCallWithAccountIDAssetIDIncludeAllLimitNext(accou
 	if err != nil {
 		return err
 	}
-	includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseBool(includeAll)
 	if err != nil {
 		return err
 	}
@@ -293,7 +295,7 @@ func weMakeALookupAccountCreatedAssetsCallWithAccountIDAssetIDIncludeAllLimitNex
 	if err != nil {
 		return err
 	}
-	includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseBool(includeAll)
 	if err != nil {
 		return err
 	}
@@ -306,7 +308,7 @@ func weMakeALookupAccountAppLocalStatesCallWithAccountIDApplicationIDIncludeAllL
 	if err != nil {
 		return err
 	}
-	includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseBool(includeAll)
 	if err != nil {
 		return err
 	}
@@ -319,7 +321,7 @@ func weMakeALookupAccountCreatedApplicationsCallWithAccountIDApplicationIDInclud
 	if err != nil {
 		return err
 	}
-	includeAllBool, err := parseIncludeAll(includeAll)
+	includeAllBool, err := parseBool(includeAll)
 	if err != nil {
 		return err
 	}
@@ -351,5 +353,20 @@ func weMakeASearchForApplicationsCallWithCreator(creator string) error {
 		return err
 	}
 	indexerClient.SearchForApplications().Creator(creator).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupBlockCallAgainstRoundAndHeader(round int, headerOnly string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	headerOnlyBool, err := parseBool(headerOnly)
+	if err != nil {
+		return weMakeALookupBlockCallAgainstRound(round)
+	}
+
+	_, globalErrForExamination = indexerClient.LookupBlock(uint64(round)).HeaderOnly(headerOnlyBool).Do(context.Background())
 	return nil
 }

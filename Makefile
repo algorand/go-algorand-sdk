@@ -32,7 +32,10 @@ display-all-go-steps:
 	find test -name "*.go" | xargs grep "github.com/cucumber/godog" 2>/dev/null | cut -d: -f1 | sort | uniq | xargs grep -Eo "Step[(].[^\`]+" | awk '{sub(/:Step\(./,":")} 1' | sed -E 's/", [a-zA-Z0-9]+\)//g'
 
 harness:
-	./test-harness.sh
+	./test-harness.sh up
+
+harness-down:
+	./test-harness.sh down
 
 docker-gosdk-build:
 	echo "Building docker image from base $(GO_IMAGE)"
