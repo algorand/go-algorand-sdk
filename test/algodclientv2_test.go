@@ -50,6 +50,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
 	s.Step(`^we make a GetLightBlockHeaderProof call for round (\d+)$`, weMakeAGetLightBlockHeaderProofCallForRound)
 	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
+	s.Step(`^we make a GetTransactionProof call for round (\d+) txid "([^"]*)" and hashtype "([^"]*)"$`, weMakeAGetTransactionProofCallForRoundTxidAndHashtype)
+	s.Step(`^we make a Lookup Block Hash call against round (\d+)$`, weMakeALookupBlockHashCallAgainstRound)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -258,5 +260,23 @@ func weMakeAGetStateProofCallForRound(round int) error {
 		return err
 	}
 	algodClient.GetStateProof(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetTransactionProofCallForRoundTxidAndHashtype(round int, txid, hashtype string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetTransactionProof(uint64(round), txid).Hashtype(hashtype).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupBlockHashCallAgainstRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetBlockHash(uint64(round)).Do(context.Background())
 	return nil
 }

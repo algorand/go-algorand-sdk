@@ -1,6 +1,7 @@
 @unit.abijson
 @unit.abijson.byname
 @unit.algod
+@unit.blocksummary
 @unit.algod.ledger_refactoring
 @unit.applications
 @unit.atomic_transaction_composer
@@ -21,6 +22,7 @@
 @unit.responses.messagepack.231
 @unit.responses.participationupdates
 @unit.responses.unlimited_assets
+@unit.responses.blocksummary
 @unit.sourcemap
 @unit.stateproof.paths
 @unit.stateproof.responses
