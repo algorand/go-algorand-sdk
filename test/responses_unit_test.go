@@ -169,6 +169,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetStateProof":
 			response, err =
 				algodC.GetStateProof(123).Do(context.Background())
+		case "GetBlockHash":
+			response, err =
+				algodC.GetBlockHash(123).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
