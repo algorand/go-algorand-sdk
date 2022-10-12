@@ -1,4 +1,4 @@
-# 1.22.0w
+# 1.22.0
 ## What's Changed
 ## Enhancements
 * REST API: Add algod block hash endpoint, add indexer block header-only param. ([#421](https://github.com/algorand/go-algorand-sdk/pull/421))
