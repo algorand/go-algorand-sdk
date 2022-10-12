@@ -29,6 +29,7 @@ type LookupBlock struct {
 // contain the transactions
 func (s *LookupBlock) HeaderOnly(HeaderOnly bool) *LookupBlock {
 	s.p.HeaderOnly = HeaderOnly
+
 	return s
 }
 
