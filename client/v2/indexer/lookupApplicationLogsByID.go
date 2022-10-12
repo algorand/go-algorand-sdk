@@ -45,18 +45,21 @@ type LookupApplicationLogsByID struct {
 // if the limit is not reached.
 func (s *LookupApplicationLogsByID) Limit(Limit uint64) *LookupApplicationLogsByID {
 	s.p.Limit = Limit
+
 	return s
 }
 
 // MaxRound include results at or before the specified max-round.
 func (s *LookupApplicationLogsByID) MaxRound(MaxRound uint64) *LookupApplicationLogsByID {
 	s.p.MaxRound = MaxRound
+
 	return s
 }
 
 // MinRound include results at or after the specified min-round.
 func (s *LookupApplicationLogsByID) MinRound(MinRound uint64) *LookupApplicationLogsByID {
 	s.p.MinRound = MinRound
+
 	return s
 }
 
@@ -64,18 +67,21 @@ func (s *LookupApplicationLogsByID) MinRound(MinRound uint64) *LookupApplication
 // results.
 func (s *LookupApplicationLogsByID) Next(Next string) *LookupApplicationLogsByID {
 	s.p.Next = Next
+
 	return s
 }
 
 // SenderAddress only include transactions with this sender address.
 func (s *LookupApplicationLogsByID) SenderAddress(SenderAddress string) *LookupApplicationLogsByID {
 	s.p.SenderAddress = SenderAddress
+
 	return s
 }
 
 // Txid lookup the specific transaction by ID.
 func (s *LookupApplicationLogsByID) Txid(Txid string) *LookupApplicationLogsByID {
 	s.p.Txid = Txid
+
 	return s
 }
 

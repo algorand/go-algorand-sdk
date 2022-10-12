@@ -31,6 +31,7 @@ type LookupApplicationByID struct {
 // localstates.
 func (s *LookupApplicationByID) IncludeAll(IncludeAll bool) *LookupApplicationByID {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 

@@ -252,7 +252,11 @@ func weMakeAGetApplicationBoxByNameCall(appId int, encodedBoxName string) error 
 	if err != nil {
 		return err
 	}
-	algodClient.GetApplicationBoxByName(uint64(appId)).Name(encodedBoxName).Do(context.Background())
+	decodedBoxNames, err := parseAppArgs(encodedBoxName)
+	if err != nil {
+		return err
+	}
+	algodClient.GetApplicationBoxByName(uint64(appId), decodedBoxNames[0]).Do(context.Background())
 	return nil
 }
 

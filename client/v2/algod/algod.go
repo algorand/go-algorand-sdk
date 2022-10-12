@@ -132,8 +132,8 @@ func (c *Client) GetApplicationBoxes(applicationId uint64) *GetApplicationBoxes 
 	return &GetApplicationBoxes{c: c, applicationId: applicationId}
 }
 
-func (c *Client) GetApplicationBoxByName(applicationId uint64) *GetApplicationBoxByName {
-	return &GetApplicationBoxByName{c: c, applicationId: applicationId}
+func (c *Client) GetApplicationBoxByName(applicationId uint64, name []byte) *GetApplicationBoxByName {
+	return (&GetApplicationBoxByName{c: c, applicationId: applicationId}).name(name)
 }
 
 func (c *Client) GetAssetByID(assetId uint64) *GetAssetByID {

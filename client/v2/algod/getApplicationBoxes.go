@@ -30,6 +30,7 @@ type GetApplicationBoxes struct {
 // all box-names.
 func (s *GetApplicationBoxes) Max(Max uint64) *GetApplicationBoxes {
 	s.p.Max = Max
+
 	return s
 }
 

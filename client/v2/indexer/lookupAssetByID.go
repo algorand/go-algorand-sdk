@@ -31,6 +31,7 @@ type LookupAssetByID struct {
 // localstates.
 func (s *LookupAssetByID) IncludeAll(IncludeAll bool) *LookupAssetByID {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 

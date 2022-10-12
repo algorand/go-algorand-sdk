@@ -35,6 +35,7 @@ type AccountInformation struct {
 // `none`.
 func (s *AccountInformation) Exclude(Exclude string) *AccountInformation {
 	s.p.Exclude = Exclude
+
 	return s
 }
 

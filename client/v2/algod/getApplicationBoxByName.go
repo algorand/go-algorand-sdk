@@ -2,6 +2,7 @@ package algod
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
@@ -30,11 +31,12 @@ type GetApplicationBoxByName struct {
 	p GetApplicationBoxByNameParams
 }
 
-// Name a box name, in the goal app call arg form 'encoding:value'. For ints, use
+// name a box name, in the goal app call arg form 'encoding:value'. For ints, use
 // the form 'int:1234'. For raw bytes, use the form 'b64:A=='. For printable
 // strings, use the form 'str:hello'. For addresses, use the form 'addr:XYZ...'.
-func (s *GetApplicationBoxByName) Name(Name string) *GetApplicationBoxByName {
-	s.p.Name = Name
+func (s *GetApplicationBoxByName) name(name []byte) *GetApplicationBoxByName {
+	s.p.Name = "b64:" + base64.StdEncoding.EncodeToString(name)
+
 	return s
 }
 
