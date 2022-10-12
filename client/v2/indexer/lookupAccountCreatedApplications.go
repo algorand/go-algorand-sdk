@@ -41,6 +41,7 @@ type LookupAccountCreatedApplications struct {
 // ApplicationID application ID
 func (s *LookupAccountCreatedApplications) ApplicationID(ApplicationID uint64) *LookupAccountCreatedApplications {
 	s.p.ApplicationID = ApplicationID
+
 	return s
 }
 
@@ -49,6 +50,7 @@ func (s *LookupAccountCreatedApplications) ApplicationID(ApplicationID uint64) *
 // localstates.
 func (s *LookupAccountCreatedApplications) IncludeAll(IncludeAll bool) *LookupAccountCreatedApplications {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
@@ -56,6 +58,7 @@ func (s *LookupAccountCreatedApplications) IncludeAll(IncludeAll bool) *LookupAc
 // if the limit is not reached.
 func (s *LookupAccountCreatedApplications) Limit(Limit uint64) *LookupAccountCreatedApplications {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -63,6 +66,7 @@ func (s *LookupAccountCreatedApplications) Limit(Limit uint64) *LookupAccountCre
 // results.
 func (s *LookupAccountCreatedApplications) Next(Next string) *LookupAccountCreatedApplications {
 	s.p.Next = Next
+
 	return s
 }
 
