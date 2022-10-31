@@ -28,3 +28,6 @@ coverage.html
 # Testing files
 *.feature
 temp
+
+# asdf
+.tool-versions
