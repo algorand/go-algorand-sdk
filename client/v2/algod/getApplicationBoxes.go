@@ -16,8 +16,9 @@ type GetApplicationBoxesParams struct {
 	Max uint64 `url:"max,omitempty"`
 }
 
-// GetApplicationBoxes given an application ID, it returns the box names of that
-// application. No particular ordering is guaranteed.
+// GetApplicationBoxes given an application ID, return all Box names. No particular
+// ordering is guaranteed. Request fails when client or server-side configured
+// limits prevent returning all Box names.
 type GetApplicationBoxes struct {
 	c *Client
 
