@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  go: circleci/go@1.7.0
+  go: circleci/go@1.7.1
 
 workflows:
   circleci_build_and_test:
