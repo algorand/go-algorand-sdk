@@ -29,6 +29,7 @@ import (
 	algodV2 "github.com/algorand/go-algorand-sdk/client/v2/algod"
 	commonV2 "github.com/algorand/go-algorand-sdk/client/v2/common"
 	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	indexerV2 "github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
@@ -60,6 +61,7 @@ var msigsig types.MultisigSig
 var kcl kmd.Client
 var acl algod.Client
 var aclv2 *algodV2.Client
+var iclv2 *indexerV2.Client
 var walletName string
 var walletPswd string
 var walletID string
@@ -335,6 +337,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^base64 encoded program "([^"]*)"$`, baseEncodedProgram)
 	s.Step(`^base64 encoded private key "([^"]*)"$`, baseEncodedPrivateKey)
 	s.Step("an algod v2 client$", algodClientV2)
+	s.Step("an indexer v2 client$", indexerClientV2)
 	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
 	s.Step(`^base64 decoding the response is the same as the binary "([^"]*)"$`, tealCheckCompileAgainstFile)
@@ -898,6 +901,14 @@ func algodClientV2() error {
 		return err
 	}
 	_, err = aclv2.StatusAfterBlock(1).Do(context.Background())
+	return err
+}
+
+func indexerClientV2() error {
+	indexerAddress := "http://localhost:" + "59999"
+	var err error
+	iclv2, err = indexerV2.MakeClient(indexerAddress, "")
+	indexerV2client = iclv2
 	return err
 }
 

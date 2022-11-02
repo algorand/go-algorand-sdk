@@ -1,7 +1,9 @@
 package test
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -307,6 +309,21 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 
 	default:
 		return fmt.Errorf("unhandled type %v at %s", keyType, field)
+	}
+
+	return nil
+}
+
+func sliceOfBytesEqual(expected [][]byte, actual [][]byte) error {
+	if len(expected) != len(actual) {
+		return fmt.Errorf("expected length (%d) does not match actual length (%d)", len(expected), len(actual))
+	}
+
+	for i, expectedElement := range expected {
+		actualElement := actual[i]
+		if !bytes.Equal(expectedElement, actualElement) {
+			return fmt.Errorf("elements at index %d are unequal. Expected %s, got %s", i, hex.EncodeToString(expectedElement), hex.EncodeToString(actualElement))
+		}
 	}
 
 	return nil

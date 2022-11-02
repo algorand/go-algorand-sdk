@@ -11,6 +11,24 @@ type ApplicationFields struct {
 // AppParams
 type AppIndex uint64
 
+type AppBoxReference struct {
+	// The ID of the app that owns the box. Must be converted to BoxReference during transaction submission.
+	AppID uint64
+
+	// The Name of the box unique to the app it belongs to
+	Name []byte
+}
+
+type BoxReference struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// The index of the app in the foreign app array.
+	ForeignAppIdx uint64 `codec:"i"`
+
+	// The name of the box unique to the app it belongs to
+	Name []byte `codec:"n"`
+}
+
 const (
 	// encodedMaxApplicationArgs sets the allocation bound for the maximum
 	// number of ApplicationArgs that a transaction decoded off of the wire
@@ -35,6 +53,12 @@ const (
 	// can contain. Its value is verified against consensus parameters in
 	// TestEncodedAppTxnAllocationBounds
 	encodedMaxForeignAssets = 32
+
+	// encodedMaxBoxReferences sets the allocation bound for the maximum
+	// number of BoxReferences that a transaction decoded off of the wire
+	// can contain. Its value is verified against consensus parameters in
+	// TestEncodedAppTxnAllocationBounds
+	encodedMaxBoxReferences = 32
 )
 
 // OnCompletion is an enum representing some layer 1 side effect that an
@@ -75,12 +99,13 @@ const (
 type ApplicationCallTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	ApplicationID   AppIndex     `codec:"apid"`
-	OnCompletion    OnCompletion `codec:"apan"`
-	ApplicationArgs [][]byte     `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
-	Accounts        []Address    `codec:"apat,allocbound=encodedMaxAccounts"`
-	ForeignApps     []AppIndex   `codec:"apfa,allocbound=encodedMaxForeignApps"`
-	ForeignAssets   []AssetIndex `codec:"apas,allocbound=encodedMaxForeignAssets"`
+	ApplicationID   AppIndex       `codec:"apid"`
+	OnCompletion    OnCompletion   `codec:"apan"`
+	ApplicationArgs [][]byte       `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
+	Accounts        []Address      `codec:"apat,allocbound=encodedMaxAccounts"`
+	ForeignApps     []AppIndex     `codec:"apfa,allocbound=encodedMaxForeignApps"`
+	ForeignAssets   []AssetIndex   `codec:"apas,allocbound=encodedMaxForeignAssets"`
+	BoxReferences   []BoxReference `codec:"apbx,allocbound=encodedMaxBoxReferences"`
 
 	LocalStateSchema  StateSchema `codec:"apls"`
 	GlobalStateSchema StateSchema `codec:"apgs"`
@@ -119,6 +144,9 @@ func (ac *ApplicationCallTxnFields) Empty() bool {
 		return false
 	}
 	if ac.ForeignAssets != nil {
+		return false
+	}
+	if ac.BoxReferences != nil {
 		return false
 	}
 	if ac.LocalStateSchema != (StateSchema{}) {

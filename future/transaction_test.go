@@ -57,6 +57,7 @@ func TestMakePaymentTxn(t *testing.T) {
 	require.NoError(t, err)
 
 	id, bytes, err := crypto.SignTransaction(key, txn)
+	require.NoError(t, err)
 
 	stxBytes := byteFromBase64(golden)
 	require.Equal(t, stxBytes, bytes)
@@ -102,6 +103,7 @@ func TestMakePaymentTxnWithLease(t *testing.T) {
 	require.NoError(t, err)
 
 	id, stxBytes, err := crypto.SignTransaction(key, txn)
+	require.NoError(t, err)
 
 	goldenBytes := byteFromBase64(golden)
 	require.Equal(t, goldenBytes, stxBytes)
@@ -293,6 +295,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQEDd1OMRoQI/rzNlU4iiF50XQXmup3k5czI9hEsNqHT7K4KsfmA/0DUVkbzOwtJdRsHS8trm3Arjpy9r7AXlbAujdHhuh6RhcGFyiaJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bqN0c3SjZmVlzQ+0omZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -352,6 +355,7 @@ func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQCj5xLqNozR5ahB+LNBlTG+d0gl0vWBrGdAXj1ibsCkvAwOsXs5KHZK1YdLgkdJecQiWm4oiZ+pm5Yg0m3KFqgqjdHhuh6RhcGFyiqJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aJkYwGhZsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hbcQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hcsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hdGSidW6jdHN0o2ZlZc0P3KJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -401,6 +405,7 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQBBkfw5n6UevuIMDo2lHyU4dS80JCCQ/vTRUcTx5m0ivX68zTKyuVRrHaTbxbRRc3YpJ4zeVEnC9Fiw3Wf4REwejdHhuiKRhcGFyhKFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRjYWlkzQTSo2ZlZc0NSKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -463,6 +468,7 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQBSP7HtzD/Lvn4aVvaNpeR4T93dQgo4LvywEwcZgDEoc/WVl3aKsZGcZkcRFoiWk8AidhfOZzZYutckkccB8RgGjdHhuh6RjYWlkAaNmZWXNB1iiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -508,6 +514,7 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQAhru5V2Xvr19s4pGnI0aslqwY4lA2skzpYtDTAN9DKSH5+qsfQQhm4oq+9VHVj7e1rQC49S28vQZmzDTVnYDQGjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkAaNmZWXNCRqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -613,6 +620,7 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQJ7q2rOT8Sb/wB0F87ld+1zMprxVlYqbUbe+oz0WM63FctIi+K9eYFSqT26XBZ4Rr3+VTJpBE+JLKs8nctl9hgijdHhuiKRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCOiiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -670,6 +678,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	private, err := mnemonic.ToPrivateKey(addrSK)
 	require.NoError(t, err)
 	_, newStxBytes, err := crypto.SignTransaction(private, tx)
+	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQHsgfEAmEHUxLLLR9s+Y/yq5WeoGo/jAArCbany+7ZYwExMySzAhmV7M7S8+LBtJalB4EhzEUMKmt3kNKk6+vAWjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCqqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -698,15 +707,76 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	foreignAssets := foreignApps
 	gSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
 	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	extraPages := uint32(2)
 	addr := make([]string, 1)
 	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	boxReferences := make([]types.AppBoxReference, 3)
+	boxReferences[0] = types.AppBoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.AppBoxReference{AppID: 10, Name: []byte("box_name2")}
 
-	tx, err := MakeApplicationCallTx(0, args, addr, foreignApps, foreignAssets, types.NoOpOC, program, program, gSchema, lSchema, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
-	require.NoError(t, err)
-	require.EqualValues(t, 0, tx.ExtraProgramPages)
-	tx, err = MakeApplicationCallTxWithExtraPages(tx, 2)
+	tx, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 2, tx.ExtraProgramPages)
+
+	// verify that the correct app index was calculated
+	require.EqualValues(t, 0, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+
+	// the current app can also be referenced with AppID = 0
+	boxReferences[0].AppID = 0
+	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 0, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+
+	// if the current app's ID is provided explicitly AND is present in the foreignApps array
+	// then the index in the array should be returned rather than the usual value of 0
+	boxReferences[0].AppID = 2
+	foreignApps = append(foreignApps, 2)
+	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 2, tx.BoxReferences[0].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
+	require.EqualValues(t, 1, tx.BoxReferences[2].ForeignAppIdx)
+}
+
+func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+	note := byteFromBase64("8xMCTuLQ810=")
+	program := []byte{1, 32, 1, 1, 34}
+	args := make([][]byte, 2)
+	args[0] = []byte("123")
+	args[1] = []byte("456")
+	foreignApps := make([]uint64, 1)
+	foreignApps[0] = 10
+	foreignAssets := foreignApps
+	gSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	extraPages := uint32(2)
+	addr := make([]string, 1)
+	addr[0] = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	boxReferences := make([]types.AppBoxReference, 3)
+	boxReferences[0] = types.AppBoxReference{AppID: 2, Name: []byte("box_name")}
+	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
+	boxReferences[2] = types.AppBoxReference{AppID: 11, Name: []byte("box_name")}
+
+	_, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.Error(t, err, "the app id 10 provided for this box is not in the foreignApps array")
 }
 
 func TestComputeGroupID(t *testing.T) {
@@ -755,6 +825,7 @@ func TestComputeGroupID(t *testing.T) {
 	require.Equal(t, byteFromBase64(goldenTx2), msgpack.Encode(stx2))
 
 	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
+	require.NoError(t, err)
 
 	// goal clerk group sets Group to every transaction and concatenate them in output file
 	// simulating that behavior here
@@ -909,4 +980,87 @@ func TestFee(t *testing.T) {
 			require.Equal(t, testcase.expected, tx.Fee)
 		})
 	}
+}
+
+func TestParseBoxReferences(t *testing.T) {
+
+	genWithAppId := func(appId uint64) types.AppBoxReference {
+		return types.AppBoxReference{appId, []byte("example")}
+	}
+
+	genWithNewAppId := func() types.AppBoxReference {
+		return types.AppBoxReference{0, []byte("example")}
+	}
+
+	t.Run("appIndexExists", func(t *testing.T) {
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4, appId},
+			appId-1)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(4),
+				Name:          abr.Name}},
+			brs)
+	})
+
+	t.Run("appIndexDoesNotExist", func(t *testing.T) {
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		_, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4},
+			appId-1)
+		require.Error(t, err)
+	})
+
+	t.Run("newAppId", func(t *testing.T) {
+		abr := genWithNewAppId()
+
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{},
+			uint64(1))
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(0),
+				Name:          abr.Name}},
+			brs)
+	})
+
+	t.Run("fallbackToCurrentApp", func(t *testing.T) {
+		// Mirrors priority search in goal from `cmd/goal/application.go::translateBoxRefs`.
+		appId := uint64(7)
+		abr := genWithAppId(appId)
+
+		// Prefer foreign apps index when present.
+		brs, err := parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4, appId},
+			appId)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(4),
+				Name:          abr.Name}},
+			brs)
+
+		// Fallback to current app when absent from foreign apps.
+		brs, err = parseBoxReferences(
+			[]types.AppBoxReference{abr},
+			[]uint64{1, 3, 4},
+			appId)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]types.BoxReference{{
+				ForeignAppIdx: uint64(0),
+				Name:          abr.Name}},
+			brs)
+	})
 }
