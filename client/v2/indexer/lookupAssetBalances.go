@@ -49,6 +49,7 @@ type LookupAssetBalances struct {
 // case the asset will be used.
 func (s *LookupAssetBalances) CurrencyGreaterThan(CurrencyGreaterThan uint64) *LookupAssetBalances {
 	s.p.CurrencyGreaterThan = CurrencyGreaterThan
+
 	return s
 }
 
@@ -57,6 +58,7 @@ func (s *LookupAssetBalances) CurrencyGreaterThan(CurrencyGreaterThan uint64) *L
 // will be used.
 func (s *LookupAssetBalances) CurrencyLessThan(CurrencyLessThan uint64) *LookupAssetBalances {
 	s.p.CurrencyLessThan = CurrencyLessThan
+
 	return s
 }
 
@@ -65,6 +67,7 @@ func (s *LookupAssetBalances) CurrencyLessThan(CurrencyLessThan uint64) *LookupA
 // localstates.
 func (s *LookupAssetBalances) IncludeAll(IncludeAll bool) *LookupAssetBalances {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
@@ -72,6 +75,7 @@ func (s *LookupAssetBalances) IncludeAll(IncludeAll bool) *LookupAssetBalances {
 // if the limit is not reached.
 func (s *LookupAssetBalances) Limit(Limit uint64) *LookupAssetBalances {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -79,6 +83,7 @@ func (s *LookupAssetBalances) Limit(Limit uint64) *LookupAssetBalances {
 // results.
 func (s *LookupAssetBalances) NextToken(NextToken string) *LookupAssetBalances {
 	s.p.NextToken = NextToken
+
 	return s
 }
 

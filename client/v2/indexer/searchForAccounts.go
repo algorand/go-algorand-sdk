@@ -66,18 +66,21 @@ type SearchAccounts struct {
 // ApplicationId application ID
 func (s *SearchAccounts) ApplicationId(ApplicationId uint64) *SearchAccounts {
 	s.p.ApplicationId = ApplicationId
+
 	return s
 }
 
 // AssetID asset ID
 func (s *SearchAccounts) AssetID(AssetID uint64) *SearchAccounts {
 	s.p.AssetID = AssetID
+
 	return s
 }
 
 // AuthAddress include accounts configured to use this spending key.
 func (s *SearchAccounts) AuthAddress(AuthAddress string) *SearchAccounts {
 	s.p.AuthAddress = AuthAddress
+
 	return s
 }
 
@@ -86,6 +89,7 @@ func (s *SearchAccounts) AuthAddress(AuthAddress string) *SearchAccounts {
 // case the asset will be used.
 func (s *SearchAccounts) CurrencyGreaterThan(CurrencyGreaterThan uint64) *SearchAccounts {
 	s.p.CurrencyGreaterThan = CurrencyGreaterThan
+
 	return s
 }
 
@@ -94,6 +98,7 @@ func (s *SearchAccounts) CurrencyGreaterThan(CurrencyGreaterThan uint64) *Search
 // will be used.
 func (s *SearchAccounts) CurrencyLessThan(CurrencyLessThan uint64) *SearchAccounts {
 	s.p.CurrencyLessThan = CurrencyLessThan
+
 	return s
 }
 
@@ -102,6 +107,7 @@ func (s *SearchAccounts) CurrencyLessThan(CurrencyLessThan uint64) *SearchAccoun
 // application parameters created by this account.
 func (s *SearchAccounts) Exclude(Exclude []string) *SearchAccounts {
 	s.p.Exclude = Exclude
+
 	return s
 }
 
@@ -110,6 +116,7 @@ func (s *SearchAccounts) Exclude(Exclude []string) *SearchAccounts {
 // localstates.
 func (s *SearchAccounts) IncludeAll(IncludeAll bool) *SearchAccounts {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
@@ -117,6 +124,7 @@ func (s *SearchAccounts) IncludeAll(IncludeAll bool) *SearchAccounts {
 // if the limit is not reached.
 func (s *SearchAccounts) Limit(Limit uint64) *SearchAccounts {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -124,6 +132,7 @@ func (s *SearchAccounts) Limit(Limit uint64) *SearchAccounts {
 // results.
 func (s *SearchAccounts) NextToken(NextToken string) *SearchAccounts {
 	s.p.NextToken = NextToken
+
 	return s
 }
 
@@ -135,6 +144,7 @@ func (s *SearchAccounts) NextToken(NextToken string) *SearchAccounts {
 // used.
 func (s *SearchAccounts) Round(Round uint64) *SearchAccounts {
 	s.p.Round = Round
+
 	return s
 }
 

@@ -54,7 +54,8 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Lookup Account by ID call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeALookupAccountByIDCallAgainstAccountWithExclude)
 	s.Step(`^we make a SearchForApplications call with creator "([^"]*)"$`, weMakeASearchForApplicationsCallWithCreator)
 	s.Step(`^we make a Lookup Block call against round (\d+) and header "([^"]*)"$`, weMakeALookupBlockCallAgainstRoundAndHeader)
-
+	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeALookupApplicationBoxByIDandName)
+	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`, weMakeASearchForApplicationBoxes)
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
 	})
@@ -368,5 +369,27 @@ func weMakeALookupBlockCallAgainstRoundAndHeader(round int, headerOnly string) e
 	}
 
 	_, globalErrForExamination = indexerClient.LookupBlock(uint64(round)).HeaderOnly(headerOnlyBool).Do(context.Background())
+	return nil
+}
+
+func weMakeALookupApplicationBoxByIDandName(appId int, encodedBoxName string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	decodedBoxNames, err := parseAppArgs(encodedBoxName)
+	if err != nil {
+		return err
+	}
+	indexerClient.LookupApplicationBoxByIDAndName(uint64(appId), decodedBoxNames[0]).Do(context.Background())
+	return nil
+}
+
+func weMakeASearchForApplicationBoxes(appId int, limit int, next string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
 	return nil
 }

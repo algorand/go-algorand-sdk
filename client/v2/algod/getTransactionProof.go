@@ -35,6 +35,7 @@ type GetTransactionProof struct {
 // * sha256
 func (s *GetTransactionProof) Hashtype(Hashtype string) *GetTransactionProof {
 	s.p.Hashtype = Hashtype
+
 	return s
 }
 

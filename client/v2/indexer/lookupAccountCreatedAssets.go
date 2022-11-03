@@ -41,6 +41,7 @@ type LookupAccountCreatedAssets struct {
 // AssetID asset ID
 func (s *LookupAccountCreatedAssets) AssetID(AssetID uint64) *LookupAccountCreatedAssets {
 	s.p.AssetID = AssetID
+
 	return s
 }
 
@@ -49,6 +50,7 @@ func (s *LookupAccountCreatedAssets) AssetID(AssetID uint64) *LookupAccountCreat
 // localstates.
 func (s *LookupAccountCreatedAssets) IncludeAll(IncludeAll bool) *LookupAccountCreatedAssets {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
@@ -56,6 +58,7 @@ func (s *LookupAccountCreatedAssets) IncludeAll(IncludeAll bool) *LookupAccountC
 // if the limit is not reached.
 func (s *LookupAccountCreatedAssets) Limit(Limit uint64) *LookupAccountCreatedAssets {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -63,6 +66,7 @@ func (s *LookupAccountCreatedAssets) Limit(Limit uint64) *LookupAccountCreatedAs
 // results.
 func (s *LookupAccountCreatedAssets) Next(Next string) *LookupAccountCreatedAssets {
 	s.p.Next = Next
+
 	return s
 }
 
