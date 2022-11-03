@@ -84,6 +84,7 @@ type LookupAccountTransactions struct {
 // formatted string.
 func (s *LookupAccountTransactions) AfterTimeString(AfterTime string) *LookupAccountTransactions {
 	s.p.AfterTime = AfterTime
+
 	return s
 }
 
@@ -98,6 +99,7 @@ func (s *LookupAccountTransactions) AfterTime(AfterTime time.Time) *LookupAccoun
 // AssetID asset ID
 func (s *LookupAccountTransactions) AssetID(AssetID uint64) *LookupAccountTransactions {
 	s.p.AssetID = AssetID
+
 	return s
 }
 
@@ -105,6 +107,7 @@ func (s *LookupAccountTransactions) AssetID(AssetID uint64) *LookupAccountTransa
 // formatted string.
 func (s *LookupAccountTransactions) BeforeTimeString(BeforeTime string) *LookupAccountTransactions {
 	s.p.BeforeTime = BeforeTime
+
 	return s
 }
 
@@ -121,6 +124,7 @@ func (s *LookupAccountTransactions) BeforeTime(BeforeTime time.Time) *LookupAcco
 // case the asset will be used.
 func (s *LookupAccountTransactions) CurrencyGreaterThan(CurrencyGreaterThan uint64) *LookupAccountTransactions {
 	s.p.CurrencyGreaterThan = CurrencyGreaterThan
+
 	return s
 }
 
@@ -129,6 +133,7 @@ func (s *LookupAccountTransactions) CurrencyGreaterThan(CurrencyGreaterThan uint
 // will be used.
 func (s *LookupAccountTransactions) CurrencyLessThan(CurrencyLessThan uint64) *LookupAccountTransactions {
 	s.p.CurrencyLessThan = CurrencyLessThan
+
 	return s
 }
 
@@ -136,18 +141,21 @@ func (s *LookupAccountTransactions) CurrencyLessThan(CurrencyLessThan uint64) *L
 // if the limit is not reached.
 func (s *LookupAccountTransactions) Limit(Limit uint64) *LookupAccountTransactions {
 	s.p.Limit = Limit
+
 	return s
 }
 
 // MaxRound include results at or before the specified max-round.
 func (s *LookupAccountTransactions) MaxRound(MaxRound uint64) *LookupAccountTransactions {
 	s.p.MaxRound = MaxRound
+
 	return s
 }
 
 // MinRound include results at or after the specified min-round.
 func (s *LookupAccountTransactions) MinRound(MinRound uint64) *LookupAccountTransactions {
 	s.p.MinRound = MinRound
+
 	return s
 }
 
@@ -155,6 +163,7 @@ func (s *LookupAccountTransactions) MinRound(MinRound uint64) *LookupAccountTran
 // results.
 func (s *LookupAccountTransactions) NextToken(NextToken string) *LookupAccountTransactions {
 	s.p.NextToken = NextToken
+
 	return s
 }
 
@@ -168,12 +177,14 @@ func (s *LookupAccountTransactions) NotePrefix(NotePrefix []byte) *LookupAccount
 // RekeyTo include results which include the rekey-to field.
 func (s *LookupAccountTransactions) RekeyTo(RekeyTo bool) *LookupAccountTransactions {
 	s.p.RekeyTo = RekeyTo
+
 	return s
 }
 
 // Round include results for the specified round.
 func (s *LookupAccountTransactions) Round(Round uint64) *LookupAccountTransactions {
 	s.p.Round = Round
+
 	return s
 }
 
@@ -183,18 +194,21 @@ func (s *LookupAccountTransactions) Round(Round uint64) *LookupAccountTransactio
 // * lsig - LogicSig
 func (s *LookupAccountTransactions) SigType(SigType string) *LookupAccountTransactions {
 	s.p.SigType = SigType
+
 	return s
 }
 
 // TxType
 func (s *LookupAccountTransactions) TxType(TxType string) *LookupAccountTransactions {
 	s.p.TxType = TxType
+
 	return s
 }
 
 // TXID lookup the specific transaction by ID.
 func (s *LookupAccountTransactions) TXID(TXID string) *LookupAccountTransactions {
 	s.p.TXID = TXID
+
 	return s
 }
 

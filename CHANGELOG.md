@@ -1,3 +1,10 @@
+# 1.23.0
+## What's Changed
+### New Features
+* Boxes: Add support for Boxes by @michaeldiamant in https://github.com/algorand/go-algorand-sdk/pull/341
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.22.0...v1.23.0
+
 # 1.22.0
 ## What's Changed
 ## Enhancements

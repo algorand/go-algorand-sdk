@@ -10,14 +10,17 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	sdkJson "github.com/algorand/go-algorand-sdk/encoding/json"
 	"github.com/algorand/go-algorand-sdk/future"
@@ -25,6 +28,7 @@ import (
 )
 
 var algodV2client *algod.Client
+var indexerV2client *indexer.Client
 var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
@@ -123,7 +127,8 @@ func readTealProgram(fileName string) ([]byte, error) {
 func iBuildAnApplicationTransaction(
 	operation, approvalProgram, clearProgram string,
 	globalBytes, globalInts, localBytes, localInts int,
-	appArgs, foreignApps, foreignAssets, appAccounts string, extraPages int) error {
+	appArgs, foreignApps, foreignAssets, appAccounts string,
+	extraPages int, boxes string) error {
 
 	var clearP []byte
 	var approvalP []byte
@@ -169,82 +174,47 @@ func iBuildAnApplicationTransaction(
 		return err
 	}
 
+	staticBoxes, err := parseBoxes(boxes)
+	if err != nil {
+		return err
+	}
+
 	gSchema := types.StateSchema{NumUint: uint64(globalInts), NumByteSlice: uint64(globalBytes)}
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		if extraPages > 0 {
-			tx, err = future.MakeApplicationCreateTxWithExtraPages(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		} else {
-			tx, err = future.MakeApplicationCreateTx(false, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		}
-
-		if err != nil {
-			return err
-		}
-
+		tx, err = future.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
+			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "create_optin":
-		if extraPages > 0 {
-			tx, err = future.MakeApplicationCreateTxWithExtraPages(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{}, uint32(extraPages))
-		} else {
-			tx, err = future.MakeApplicationCreateTx(true, approvalP, clearP,
-				gSchema, lSchema, args, accs, fApp, fAssets,
-				suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		}
-
-		if err != nil {
-			return err
-		}
+		tx, err = future.MakeApplicationCreateTxWithBoxes(true, approvalP, clearP,
+			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
+			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "update":
-		tx, err = future.MakeApplicationUpdateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationUpdateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			approvalP, clearP,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "call":
-		tx, _ = future.MakeApplicationCallTx(applicationId, args, accs,
-			fApp, fAssets, types.NoOpOC, approvalP, clearP, gSchema, lSchema,
+		tx, err = future.MakeApplicationNoOpTxWithBoxes(applicationId, args, accs,
+			fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationOptInTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationClearStateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationCloseOutTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
-
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTx(applicationId, args, accs, fApp, fAssets,
+		tx, err = future.MakeApplicationDeleteTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
-		if err != nil {
-			return err
-		}
 	default:
 		return fmt.Errorf("unsupported tx type: %s", operation)
 	}
 
-	return nil
+	return err
 }
 
 func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr string) error {
@@ -321,11 +291,51 @@ func parseAppArgs(appArgsString string) (appArgs [][]byte, err error) {
 				return nil, fmt.Errorf("failed to convert %s to bytes", arg)
 			}
 			resp[idx] = buf.Bytes()
+		case "b64":
+			d, err := (base64.StdEncoding.DecodeString(typeArg[1]))
+			if err != nil {
+				return nil, fmt.Errorf("failed to b64 decode arg = %s", arg)
+			}
+			resp[idx] = d
 		default:
 			return nil, fmt.Errorf("Applications doesn't currently support argument of type %s", typeArg[0])
 		}
 	}
 	return resp, err
+}
+
+func parseBoxes(boxesStr string) (staticBoxes []types.AppBoxReference, err error) {
+	if boxesStr == "" {
+		return make([]types.AppBoxReference, 0), nil
+	}
+
+	boxesArray := strings.Split(boxesStr, ",")
+
+	for i := 0; i < len(boxesArray); i += 2 {
+		appID, err := strconv.ParseUint(boxesArray[i], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		var nameBytes []byte
+		nameArray := strings.Split(boxesArray[i+1], ":")
+		if nameArray[0] == "str" {
+			nameBytes = []byte(nameArray[1])
+		} else {
+			nameBytes, err = base64.StdEncoding.DecodeString(nameArray[1])
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		staticBoxes = append(staticBoxes,
+			types.AppBoxReference{
+				AppID: appID,
+				Name:  nameBytes,
+			})
+	}
+
+	return
 }
 
 func splitUint64(uint64s string) ([]uint64, error) {
@@ -756,11 +766,150 @@ func checkRandomElementResult(resultIndex int, input string) error {
 	return nil
 }
 
-//@applications.verified
+func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encodedBoxName, boxContents, errStr string) error {
+	var box models.Box
+	decodedBoxNames, err := parseAppArgs(encodedBoxName)
+	if err != nil {
+		return err
+	}
+	decodedBoxName := decodedBoxNames[0]
+	if fromClient == "algod" {
+		box, err = algodV2client.GetApplicationBoxByName(applicationId, decodedBoxName).Do(context.Background())
+	} else if fromClient == "indexer" {
+		box, err = indexerV2client.LookupApplicationBoxByIDAndName(applicationId, decodedBoxName).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		if strings.Contains(err.Error(), errStr) {
+			return nil
+		}
+		return err
+	}
+
+	b64Value := base64.StdEncoding.EncodeToString(box.Value)
+	if b64Value != boxContents {
+		return fmt.Errorf("expected box value %s is not equal to actual box value %s", boxContents, b64Value)
+	}
+
+	return nil
+}
+
+func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw string) error {
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := base64.StdEncoding.DecodeString(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+	sort.Slice(expectedNames, func(i, j int) bool {
+		return bytes.Compare(expectedNames[i], expectedNames[j]) < 0
+	})
+
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+	sort.Slice(actualNames, func(i, j int) bool {
+		return bytes.Compare(actualNames[i], actualNames[j]) < 0
+	})
+
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
+	}
+
+	return nil
+}
+
+func sleptForNMilliSecsForIndexer(n int) error {
+	time.Sleep(time.Duration(n) * time.Millisecond)
+	return nil
+}
+
+func currentApplicationShouldHaveBoxNum(fromClient string, max int, expectedNum int) error {
+	var r models.BoxesResponse
+	var err error
+
+	if fromClient == "algod" {
+		r, err = algodV2client.GetApplicationBoxes(applicationId).Max(uint64(max)).Do(context.Background())
+	} else if fromClient == "indexer" {
+		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Do(context.Background())
+	} else {
+		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+	}
+	if err != nil {
+		return err
+	}
+
+	if len(r.Boxes) != expectedNum {
+		return fmt.Errorf("expected and actual box number do not match: %v != %v", expectedNum, len(r.Boxes))
+	}
+	return nil
+}
+
+func indexerSaysCurrentAppShouldHaveTheseBoxes(max int, next string, encodedBoxesRaw string) error {
+	r, err := indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Next(next).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	actualNames := make([][]byte, len(r.Boxes))
+	for i, b := range r.Boxes {
+		actualNames[i] = b.Name
+	}
+	sort.Slice(actualNames, func(i, j int) bool {
+		return bytes.Compare(actualNames[i], actualNames[j]) < 0
+	})
+
+	var expectedNames [][]byte
+	if len(encodedBoxesRaw) > 0 {
+		encodedBoxes := strings.Split(encodedBoxesRaw, ":")
+		expectedNames = make([][]byte, len(encodedBoxes))
+		for i, b := range encodedBoxes {
+			expected, err := base64.StdEncoding.DecodeString(b)
+			if err != nil {
+				return err
+			}
+			expectedNames[i] = expected
+		}
+	}
+	sort.Slice(expectedNames, func(i, j int) bool {
+		return bytes.Compare(expectedNames[i], expectedNames[j]) < 0
+	})
+
+	err = sliceOfBytesEqual(expectedNames, actualNames)
+	if err != nil {
+		return fmt.Errorf("expected and actual box names do not match: %w", err)
+	}
+
+	return nil
+}
+
+// @applications.verified and @applications.boxes
 func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^an algod v(\d+) client connected to "([^"]*)" port (\d+) with token "([^"]*)"$`, anAlgodVClientConnectedToPortWithToken)
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
-	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+)$`, iBuildAnApplicationTransaction)
+	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+), boxes "([^"]*)"$`, iBuildAnApplicationTransaction)
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
@@ -783,4 +932,10 @@ func ApplicationsContext(s *godog.Suite) {
 
 	s.Step(`^The (\d+)th atomic result for randomInt\((\d+)\) proves correct$`, checkRandomIntResult)
 	s.Step(`^The (\d+)th atomic result for randElement\("([^"]*)"\) proves correct$`, checkRandomElementResult)
+
+	s.Step(`^according to "([^"]*)", the contents of the box with name "([^"]*)" in the current application should be "([^"]*)"\. If there is an error it is "([^"]*)"\.$`, theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs)
+	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
+	s.Step(`^according to "([^"]*)", with (\d+) being the parameter that limits results, the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
+	s.Step(`^according to indexer, with (\d+) being the parameter that limits results, and "([^"]*)" being the parameter that sets the next result, the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
+	s.Step(`^I sleep for (\d+) milliseconds for indexer to digest things down\.$`, sleptForNMilliSecsForIndexer)
 }

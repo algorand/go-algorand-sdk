@@ -32,6 +32,7 @@ type PendingTransactions struct {
 // txns.
 func (s *PendingTransactions) Max(Max uint64) *PendingTransactions {
 	s.p.Max = Max
+
 	return s
 }
 

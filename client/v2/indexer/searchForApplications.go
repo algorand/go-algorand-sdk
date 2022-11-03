@@ -40,12 +40,14 @@ type SearchForApplications struct {
 // ApplicationId application ID
 func (s *SearchForApplications) ApplicationId(ApplicationId uint64) *SearchForApplications {
 	s.p.ApplicationId = ApplicationId
+
 	return s
 }
 
 // Creator filter just applications with the given creator address.
 func (s *SearchForApplications) Creator(Creator string) *SearchForApplications {
 	s.p.Creator = Creator
+
 	return s
 }
 
@@ -54,6 +56,7 @@ func (s *SearchForApplications) Creator(Creator string) *SearchForApplications {
 // localstates.
 func (s *SearchForApplications) IncludeAll(IncludeAll bool) *SearchForApplications {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
@@ -61,6 +64,7 @@ func (s *SearchForApplications) IncludeAll(IncludeAll bool) *SearchForApplicatio
 // if the limit is not reached.
 func (s *SearchForApplications) Limit(Limit uint64) *SearchForApplications {
 	s.p.Limit = Limit
+
 	return s
 }
 
@@ -68,6 +72,7 @@ func (s *SearchForApplications) Limit(Limit uint64) *SearchForApplications {
 // results.
 func (s *SearchForApplications) Next(Next string) *SearchForApplications {
 	s.p.Next = Next
+
 	return s
 }
 

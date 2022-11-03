@@ -39,6 +39,7 @@ type LookupAccountByID struct {
 // application parameters created by this account.
 func (s *LookupAccountByID) Exclude(Exclude []string) *LookupAccountByID {
 	s.p.Exclude = Exclude
+
 	return s
 }
 
@@ -47,12 +48,14 @@ func (s *LookupAccountByID) Exclude(Exclude []string) *LookupAccountByID {
 // localstates.
 func (s *LookupAccountByID) IncludeAll(IncludeAll bool) *LookupAccountByID {
 	s.p.IncludeAll = IncludeAll
+
 	return s
 }
 
 // Round include results for the specified round.
 func (s *LookupAccountByID) Round(Round uint64) *LookupAccountByID {
 	s.p.Round = Round
+
 	return s
 }
 
