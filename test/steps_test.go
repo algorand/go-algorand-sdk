@@ -906,7 +906,7 @@ func algodClientV2() error {
 	algodAddress := "http://localhost:" + "60000"
 	var err error
 	aclv2, err = algodV2.MakeClient(algodAddress, algodToken)
-	aclv2 = aclv2
+	algodV2client = aclv2
 	if err != nil {
 		return err
 	}
