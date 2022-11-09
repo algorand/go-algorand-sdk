@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -23,8 +22,6 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/auction"
-	"github.com/algorand/go-algorand-sdk/client/algod"
-	"github.com/algorand/go-algorand-sdk/client/algod/models"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
 	algodV2 "github.com/algorand/go-algorand-sdk/client/v2/algod"
 	commonV2 "github.com/algorand/go-algorand-sdk/client/v2/common"
@@ -59,7 +56,6 @@ var a types.Address
 var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
 var kcl kmd.Client
-var acl algod.Client
 var aclv2 *algodV2.Client
 var iclv2 *indexerV2.Client
 var walletName string
@@ -67,8 +63,6 @@ var walletPswd string
 var walletID string
 var handle string
 var versions []string
-var status models.NodeStatus
-var statusAfter models.NodeStatus
 var msigExp kmd.ExportMultisigResponse
 var pk string
 var rekey string
@@ -76,7 +70,6 @@ var accounts []string
 var e bool
 var lastRound uint64
 var sugParams types.SuggestedParams
-var sugFee models.TransactionFee
 var bid types.Bid
 var sbid types.NoteField
 var oldBid types.NoteField
@@ -92,7 +85,6 @@ var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var backupTxnSender string
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
@@ -178,30 +170,6 @@ func initializeAccount(accountAddress string) error {
 	return err
 }
 
-func selfPayTransaction() error {
-	params, err := aclv2.SuggestedParams().Do(context.Background())
-	if err != nil {
-		return err
-	}
-
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
-	if err != nil {
-		return err
-	}
-
-	res, err := kcl.SignTransaction(handle, walletPswd, txn)
-	if err != nil {
-		return err
-	}
-
-	_, err = aclv2.SendRawTransaction(res.SignedTransaction).Do(context.Background())
-	if err != nil {
-		return err
-	}
-	waitForAlgodInDevMode()
-	return err
-}
-
 func init() {
 	godog.BindFlags("godog.", flag.CommandLine, &opt)
 }
@@ -253,9 +221,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("v1 should be in the versions", v1InVersions)
 	s.Step("v2 should be in the versions", v2InVersions)
 	s.Step("I get versions with kmd", kclV)
-	s.Step("I get the status", getStatus)
-	s.Step(`^I get status after this block`, statusAfterBlock)
-	s.Step("I can get the block info", block)
 	s.Step("I import the multisig", importMsig)
 	s.Step("the multisig should be in the wallet", msigInWallet)
 	s.Step("I export the multisig", expMsig)
@@ -271,7 +236,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I import the key", importKey)
 	s.Step("the private key should be equal to the exported private key", skEqExport)
 	s.Step("a kmd client", kmdClient)
-	s.Step("an algod client", algodClient)
 	s.Step("wallet information", walletInfo)
 	s.Step(`default transaction with parameters (\d+) "([^"]*)"`, defaultTxn)
 	s.Step(`default multisig transaction with parameters (\d+) "([^"]*)"`, defaultMsigTxn)
@@ -280,19 +244,13 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I send the kmd-signed transaction", sendTxnKmd)
 	s.Step("I send the bogus kmd-signed transaction", sendTxnKmdFailureExpected)
 	s.Step("I send the multisig transaction", sendMsigTxn)
-	s.Step("the transaction should go through", checkTxn)
 	s.Step("the transaction should not go through", txnFail)
 	s.Step("I sign the transaction with kmd", signKmd)
 	s.Step("the signed transaction should equal the kmd signed transaction", signBothEqual)
 	s.Step("I sign the multisig transaction with kmd", signMsigKmd)
 	s.Step("the multisig transaction should equal the kmd signed multisig transaction", signMsigBothEqual)
 	s.Step(`^the node should be healthy`, nodeHealth)
-	s.Step(`^I get the ledger supply`, ledger)
-	s.Step(`^I get transactions by address and round`, txnsByAddrRound)
-	s.Step(`^I get pending transactions`, txnsPending)
 	s.Step(`^I get the suggested params`, suggestedParams)
-	s.Step(`^I get the suggested fee`, suggestedFee)
-	s.Step(`^the fee in the suggested params should equal the suggested fee`, checkSuggested)
 	s.Step(`^I create a bid`, createBid)
 	s.Step(`^I encode and decode the bid`, encDecBid)
 	s.Step(`^the bid should still be the same`, checkBid)
@@ -702,28 +660,6 @@ func kclV() error {
 	return err
 }
 
-func getStatus() error {
-	var err error
-	status, err = acl.Status()
-	lastRound = status.LastRound
-	return err
-}
-
-func statusAfterBlock() error {
-	var err error
-	selfPayTransaction()
-	statusAfter, err = acl.StatusAfterBlock(lastRound)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func block() error {
-	_, err := acl.Block(status.LastRound)
-	return err
-}
-
 func importMsig() error {
 	_, err := kcl.ImportMultisig(handle, msig.Version, msig.Threshold, msig.Pks)
 	return err
@@ -886,18 +822,6 @@ func kmdClient() error {
 	kmdAddress := "http://localhost:" + "60001"
 	var err error
 	kcl, err = kmd.MakeClient(kmdAddress, kmdToken)
-	return err
-}
-
-func algodClient() error {
-	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-	algodAddress := "http://localhost:" + "60000"
-	var err error
-	acl, err = algod.MakeClient(algodAddress, algodToken)
-	if err != nil {
-		return err
-	}
-	_, err = acl.StatusAfterBlock(1)
 	return err
 }
 
@@ -1065,27 +989,6 @@ func sendMsigTxn() error {
 	return nil
 }
 
-// TODO: this needs to be modified/removed when v1 is no longer supported
-func checkTxn() error {
-	waitForAlgodInDevMode()
-	_, err := acl.PendingTransactionInformation(txid)
-	if err != nil {
-		return err
-	}
-	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
-		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
-	} else {
-		_, err = acl.TransactionInformation(backupTxnSender, txid)
-	}
-	if err != nil {
-		return err
-	}
-	// v1 indexer dependency:
-	// _, err = acl.TransactionByID(txid)
-	// return err
-	return nil
-}
-
 func txnFail() error {
 	if e {
 		return nil
@@ -1145,42 +1048,10 @@ func nodeHealth() error {
 	return err
 }
 
-func ledger() error {
-	_, err := acl.LedgerSupply()
-	return err
-}
-
-func txnsByAddrRound() error {
-	lr, err := acl.Status()
-	if err != nil {
-		return err
-	}
-	_, err = acl.TransactionsByAddr(accounts[0], 1, lr.LastRound)
-	return err
-}
-
-func txnsPending() error {
-	_, err := acl.GetPendingTransactions(10)
-	return err
-}
-
 func suggestedParams() error {
 	var err error
 	sugParams, err = aclv2.SuggestedParams().Do(context.Background())
 	return err
-}
-
-func suggestedFee() error {
-	var err error
-	sugFee, err = acl.SuggestedFee()
-	return err
-}
-
-func checkSuggested() error {
-	if uint64(sugParams.Fee) != sugFee.Fee {
-		return fmt.Errorf("suggested fee from params should be equal to suggested fee")
-	}
-	return nil
 }
 
 func createBid() error {
