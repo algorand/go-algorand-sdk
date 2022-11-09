@@ -328,6 +328,10 @@ func parseBoxes(boxesStr string) (staticBoxes []types.AppBoxReference, err error
 			}
 		}
 
+		if len(nameBytes) == 0 {
+			nameBytes = nil
+		}
+
 		staticBoxes = append(staticBoxes,
 			types.AppBoxReference{
 				AppID: appID,

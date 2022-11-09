@@ -377,7 +377,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I build a payment transaction with sender "([^"]*)", receiver "([^"]*)", amount (\d+), close remainder to "([^"]*)"$`, iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo)
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
-	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 	s.Step(`^I append to my Method objects list in the case of a non-empty signature "([^"]*)"$`, iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature)
@@ -2505,7 +2504,13 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 		return err
 	}
 
-	// direct tx equality checking isn't fully implemented in go-sdk so this test is incomplete
+	// This test isn't perfect as it's sensitive to non-meaningful changes (e.g. nil slice vs 0
+	// length slice), but it's good enough for now. We may want a Transaction.Equals method in the
+	// future.
+	if !reflect.DeepEqual(tx, decodedTx.Txn) {
+		return fmt.Errorf("Transactions unequal: %#v != %#v", tx, decodedTx.Txn)
+	}
+
 	return nil
 }
 
