@@ -2504,7 +2504,7 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 		return err
 	}
 
-	// This test isn't perfect as it's sensative to non-meaningfil changes (e.g. nil slice vs 0
+	// This test isn't perfect as it's sensitive to non-meaningful changes (e.g. nil slice vs 0
 	// length slice), but it's good enough for now. We may want a Transaction.Equals method in the
 	// future.
 	if !reflect.DeepEqual(tx, decodedTx.Txn) {
