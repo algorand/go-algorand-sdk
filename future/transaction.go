@@ -1,9 +1,12 @@
 package future
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 
+	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -13,7 +16,7 @@ const MinTxnFee = transaction.MinTxnFee
 
 func setFee(tx types.Transaction, params types.SuggestedParams) (types.Transaction, error) {
 	if !params.FlatFee {
-		eSize, err := transaction.EstimateSize(tx)
+		eSize, err := EstimateSize(tx)
 		if err != nil {
 			return types.Transaction{}, err
 		}
@@ -1271,6 +1274,36 @@ func MakeApplicationCallTxWithBoxes(
 
 	// Update fee
 	return setFee(tx, sp)
+}
+
+// AssignGroupID computes and return list of transactions with Group field set.
+// - txns is a list of transactions to process
+// - account specifies a sender field of transaction to return. Set to empty string to return all of them
+func AssignGroupID(txns []types.Transaction, account string) (result []types.Transaction, err error) {
+	gid, err := crypto.ComputeGroupID(txns)
+	if err != nil {
+		return
+	}
+	var decoded types.Address
+	if account != "" {
+		decoded, err = types.DecodeAddress(account)
+		if err != nil {
+			return
+		}
+	}
+	for _, tx := range txns {
+		if account == "" || bytes.Compare(tx.Sender[:], decoded[:]) == 0 {
+			tx.Group = gid
+			result = append(result, tx)
+		}
+	}
+	return result, nil
+}
+
+// EstimateSize returns the estimated length of the encoded transaction
+func EstimateSize(txn types.Transaction) (uint64, error) {
+	const NumOfAdditionalBytesAfterSigning = 75
+	return uint64(len(msgpack.Encode(txn))) + NumOfAdditionalBytesAfterSigning, nil
 }
 
 func parseTxnAccounts(accounts []string) (parsed []types.Address, err error) {
