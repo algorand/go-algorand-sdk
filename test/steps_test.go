@@ -250,6 +250,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I sign the multisig transaction with kmd", signMsigKmd)
 	s.Step("the multisig transaction should equal the kmd signed multisig transaction", signMsigBothEqual)
 	s.Step(`^the node should be healthy`, nodeHealth)
+	s.Step(`^I get the ledger supply`, ledger)
 	s.Step(`^I get the suggested params`, suggestedParams)
 	s.Step(`^I create a bid`, createBid)
 	s.Step(`^I encode and decode the bid`, encDecBid)
@@ -1045,6 +1046,11 @@ func signMsigBothEqual() error {
 
 func nodeHealth() error {
 	err := aclv2.HealthCheck().Do(context.Background())
+	return err
+}
+
+func ledger() error {
+	_, err := aclv2.Supply().Do(context.Background())
 	return err
 }
 
