@@ -251,7 +251,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the multisig transaction should equal the kmd signed multisig transaction", signMsigBothEqual)
 	s.Step(`^the node should be healthy`, nodeHealth)
 	s.Step(`^I get the ledger supply`, ledger)
-	s.Step(`^I get the suggested params`, suggestedParams)
 	s.Step(`^I create a bid`, createBid)
 	s.Step(`^I encode and decode the bid`, encDecBid)
 	s.Step(`^the bid should still be the same`, checkBid)
@@ -269,7 +268,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I merge the multisig transactions`, mergeMsig)
 	s.Step(`^I convert (\d+) microalgos to algos and back`, microToAlgos)
 	s.Step(`^it should still be the same amount of microalgos (\d+)`, checkAlgos)
-	s.Step(`I get account information`, accInfo)
 	s.Step("I sign the bid", signBid)
 	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
 	s.Step(`^I can get account information`, newAccInfo)
@@ -1054,12 +1052,6 @@ func ledger() error {
 	return err
 }
 
-func suggestedParams() error {
-	var err error
-	sugParams, err = aclv2.SuggestedParams().Do(context.Background())
-	return err
-}
-
 func createBid() error {
 	var err error
 	account = crypto.GenerateAccount()
@@ -1203,11 +1195,6 @@ func checkAlgos(ma int) error {
 		return fmt.Errorf("Converting to and from algos should not change the value")
 	}
 	return nil
-}
-
-func accInfo() error {
-	_, err := aclv2.AccountInformation(accounts[0]).Do(context.Background())
-	return err
 }
 
 func newAccInfo() error {
