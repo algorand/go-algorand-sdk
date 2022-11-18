@@ -17,9 +17,10 @@ import (
 
 // rawRequestPaths is a set of paths where the body should not be urlencoded
 var rawRequestPaths = map[string]bool{
-	"/v2/transactions": true,
-	"/v2/teal/compile": true,
-	"/v2/teal/dryrun":  true,
+	"/v2/transactions":     true,
+	"/v2/teal/compile":     true,
+	"/v2/teal/disassemble": true,
+	"/v2/teal/dryrun":      true,
 }
 
 // Header is a struct for custom headers.
