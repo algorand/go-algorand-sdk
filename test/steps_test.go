@@ -1446,19 +1446,12 @@ func checkExpectedVsActualAssetParams() error {
 }
 
 func findAssetID(assets []modelsV2.AssetHolding, assetID uint64) (foundAsset modelsV2.AssetHolding, err error) {
-	found := false
 	for _, asset := range assets {
-		idx := asset.AssetId
-		if idx == assetID {
-			found = true
-			foundAsset = asset
-			break
+		if asset.AssetId == assetID {
+			return asset, nil
 		}
 	}
-	if !found {
-		return modelsV2.AssetHolding{}, fmt.Errorf("asset ID %d was not found", assetID)
-	}
-	return foundAsset, nil
+	return modelsV2.AssetHolding{}, fmt.Errorf("asset ID %d was not found", assetID)
 }
 
 func theCreatorShouldHaveAssetsRemaining(expectedBal int) error {
