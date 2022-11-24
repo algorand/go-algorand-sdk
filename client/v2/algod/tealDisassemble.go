@@ -18,6 +18,6 @@ type TealDisassemble struct {
 
 // Do performs the HTTP request
 func (s *TealDisassemble) Do(ctx context.Context, headers ...*common.Header) (response models.DisassembleResponse, err error) {
-	err = s.c.post(ctx, &response, "/v2/teal/disassemble", nil, headers, s.source)
+	err = s.c.get(ctx, &response, "/v2/teal/disassemble", nil, headers)
 	return
 }
