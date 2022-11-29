@@ -3,7 +3,7 @@ module github.com/algorand/go-algorand-sdk
 go 1.17
 
 require (
-	github.com/algorand/avm-abi v0.1.0
+	github.com/algorand/avm-abi v0.1.1-0.20221129165117-755a940a008c
 	github.com/algorand/go-codec/codec v1.1.8
 	github.com/cucumber/godog v0.8.1
 	github.com/google/go-querystring v1.0.0
@@ -17,5 +17,3 @@ require (
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
-
-replace github.com/algorand/avm-abi => github.com/ahangsu/avm-abi v0.0.0-20221128194709-35d99fb716a2

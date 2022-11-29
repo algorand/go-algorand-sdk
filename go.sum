@@ -1,5 +1,5 @@
-github.com/ahangsu/avm-abi v0.0.0-20221128194709-35d99fb716a2 h1:zD0+8GmX23UNNfeCZiGbJX1BhIAmJmH99i/OICWg4Dw=
-github.com/ahangsu/avm-abi v0.0.0-20221128194709-35d99fb716a2/go.mod h1:+CgwM46dithy850bpTeHh9MC99zpn2Snirb3QTl2O/g=
+github.com/algorand/avm-abi v0.1.1-0.20221129165117-755a940a008c h1:V+35lUsUNOOfF+ZFhMGVTmcYrKk4Mz79uDK3zzkquww=
+github.com/algorand/avm-abi v0.1.1-0.20221129165117-755a940a008c/go.mod h1:+CgwM46dithy850bpTeHh9MC99zpn2Snirb3QTl2O/g=
 github.com/algorand/go-codec v1.1.8 h1:XDSreeeZY8gMst6Edz4RBkl08/DGMJOeHYkoXL2B7wI=
 github.com/algorand/go-codec v1.1.8/go.mod h1:XhzVs6VVyWMLu6cApb9/192gBjGRVGm5cX5j203Heg4=
 github.com/algorand/go-codec/codec v1.1.8 h1:lsFuhcOH2LiEhpBH3BVUUkdevVmwCRyvb7FCAAPeY6U=
