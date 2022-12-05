@@ -190,7 +190,7 @@ type (
 		// are a multiple of ConsensusParams.StateProofRounds.  For blocks
 		// that are not a multiple of ConsensusParams.StateProofRounds,
 		// this value is zero.
-		StateProofVotersCommitment []byte `codec:"v"`
+		StateProofVotersCommitment GenericDigest `codec:"v"`
 
 		// StateProofOnlineTotalWeight is the total number of microalgos held by the online accounts
 		// during the StateProof round (or zero, if the merkle root is zero - no commitment for StateProof voters).
