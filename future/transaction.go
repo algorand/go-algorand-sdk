@@ -14,6 +14,9 @@ import (
 // MinTxnFee is v5 consensus params, in microAlgos
 const MinTxnFee = transaction.MinTxnFee
 
+// NumOfAdditionalBytesAfterSigning is the number of bytes added to a txn after signing it
+const NumOfAdditionalBytesAfterSigning = 75
+
 func setFee(tx types.Transaction, params types.SuggestedParams) (types.Transaction, error) {
 	if !params.FlatFee {
 		eSize, err := EstimateSize(tx)
@@ -1302,7 +1305,6 @@ func AssignGroupID(txns []types.Transaction, account string) (result []types.Tra
 
 // EstimateSize returns the estimated length of the encoded transaction
 func EstimateSize(txn types.Transaction) (uint64, error) {
-	const NumOfAdditionalBytesAfterSigning = 75
 	return uint64(len(msgpack.Encode(txn))) + NumOfAdditionalBytesAfterSigning, nil
 }
 
