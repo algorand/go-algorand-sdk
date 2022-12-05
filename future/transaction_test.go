@@ -7,7 +7,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/transaction"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -841,15 +840,15 @@ func TestComputeGroupID(t *testing.T) {
 	require.Equal(t, byteFromBase64(goldenTxg), txg)
 
 	// check transaction.AssignGroupID, do not validate correctness of Group field calculation
-	result, err := transaction.AssignGroupID([]types.Transaction{tx1, tx2}, "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4")
+	result, err := AssignGroupID([]types.Transaction{tx1, tx2}, "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4")
 	require.NoError(t, err)
 	require.Equal(t, 0, len(result))
 
-	result, err = transaction.AssignGroupID([]types.Transaction{tx1, tx2}, address)
+	result, err = AssignGroupID([]types.Transaction{tx1, tx2}, address)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(result))
 
-	result, err = transaction.AssignGroupID([]types.Transaction{tx1, tx2}, "")
+	result, err = AssignGroupID([]types.Transaction{tx1, tx2}, "")
 	require.NoError(t, err)
 	require.Equal(t, 2, len(result))
 }
