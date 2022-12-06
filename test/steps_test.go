@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -23,8 +22,6 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/auction"
-	"github.com/algorand/go-algorand-sdk/client/algod"
-	"github.com/algorand/go-algorand-sdk/client/algod/models"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
 	algodV2 "github.com/algorand/go-algorand-sdk/client/v2/algod"
 	commonV2 "github.com/algorand/go-algorand-sdk/client/v2/common"
@@ -59,7 +56,6 @@ var a types.Address
 var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
 var kcl kmd.Client
-var acl algod.Client
 var aclv2 *algodV2.Client
 var iclv2 *indexerV2.Client
 var walletName string
@@ -67,8 +63,6 @@ var walletPswd string
 var walletID string
 var handle string
 var versions []string
-var status models.NodeStatus
-var statusAfter models.NodeStatus
 var msigExp kmd.ExportMultisigResponse
 var pk string
 var rekey string
@@ -76,7 +70,6 @@ var accounts []string
 var e bool
 var lastRound uint64
 var sugParams types.SuggestedParams
-var sugFee models.TransactionFee
 var bid types.Bid
 var sbid types.NoteField
 var oldBid types.NoteField
@@ -92,7 +85,6 @@ var votefst uint64
 var votelst uint64
 var votekd uint64
 var nonpart bool
-var backupTxnSender string
 var data []byte
 var sig types.Signature
 var abiMethod abi.Method
@@ -119,8 +111,8 @@ var assetTestFixture struct {
 	AssetUnitName         string
 	AssetURL              string
 	AssetMetadataHash     string
-	ExpectedParams        models.AssetParams
-	QueriedParams         models.AssetParams
+	ExpectedParams        modelsV2.AssetParams
+	QueriedParams         modelsV2.AssetParams
 	LastTransactionIssued types.Transaction
 }
 
@@ -155,7 +147,7 @@ func waitForAlgodInDevMode() {
 }
 
 func initializeAccount(accountAddress string) error {
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -170,31 +162,7 @@ func initializeAccount(accountAddress string) error {
 		return err
 	}
 
-	_, err = acl.SendRawTransaction(res.SignedTransaction)
-	if err != nil {
-		return err
-	}
-	waitForAlgodInDevMode()
-	return err
-}
-
-func selfPayTransaction() error {
-	params, err := acl.BuildSuggestedParams()
-	if err != nil {
-		return err
-	}
-
-	txn, err = future.MakePaymentTxn(accounts[0], accounts[0], uint64(rand.Intn(devModeInitialAmount*0.01)), []byte{}, "", params)
-	if err != nil {
-		return err
-	}
-
-	res, err := kcl.SignTransaction(handle, walletPswd, txn)
-	if err != nil {
-		return err
-	}
-
-	_, err = acl.SendRawTransaction(res.SignedTransaction)
+	_, err = aclv2.SendRawTransaction(res.SignedTransaction).Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -251,10 +219,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`the multisig address should equal the golden "([^"]*)"`, equalMsigAddrGolden)
 	s.Step("I get versions with algod", aclV)
 	s.Step("v1 should be in the versions", v1InVersions)
+	s.Step("v2 should be in the versions", v2InVersions)
 	s.Step("I get versions with kmd", kclV)
-	s.Step("I get the status", getStatus)
-	s.Step(`^I get status after this block`, statusAfterBlock)
-	s.Step("I can get the block info", block)
 	s.Step("I import the multisig", importMsig)
 	s.Step("the multisig should be in the wallet", msigInWallet)
 	s.Step("I export the multisig", expMsig)
@@ -270,7 +236,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I import the key", importKey)
 	s.Step("the private key should be equal to the exported private key", skEqExport)
 	s.Step("a kmd client", kmdClient)
-	s.Step("an algod client", algodClient)
 	s.Step("wallet information", walletInfo)
 	s.Step(`default transaction with parameters (\d+) "([^"]*)"`, defaultTxn)
 	s.Step(`default multisig transaction with parameters (\d+) "([^"]*)"`, defaultMsigTxn)
@@ -279,7 +244,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("I send the kmd-signed transaction", sendTxnKmd)
 	s.Step("I send the bogus kmd-signed transaction", sendTxnKmdFailureExpected)
 	s.Step("I send the multisig transaction", sendMsigTxn)
-	s.Step("the transaction should go through", checkTxn)
 	s.Step("the transaction should not go through", txnFail)
 	s.Step("I sign the transaction with kmd", signKmd)
 	s.Step("the signed transaction should equal the kmd signed transaction", signBothEqual)
@@ -287,11 +251,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step("the multisig transaction should equal the kmd signed multisig transaction", signMsigBothEqual)
 	s.Step(`^the node should be healthy`, nodeHealth)
 	s.Step(`^I get the ledger supply`, ledger)
-	s.Step(`^I get transactions by address and round`, txnsByAddrRound)
-	s.Step(`^I get pending transactions`, txnsPending)
-	s.Step(`^I get the suggested params`, suggestedParams)
-	s.Step(`^I get the suggested fee`, suggestedFee)
-	s.Step(`^the fee in the suggested params should equal the suggested fee`, checkSuggested)
 	s.Step(`^I create a bid`, createBid)
 	s.Step(`^I encode and decode the bid`, encDecBid)
 	s.Step(`^the bid should still be the same`, checkBid)
@@ -309,7 +268,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I merge the multisig transactions`, mergeMsig)
 	s.Step(`^I convert (\d+) microalgos to algos and back`, microToAlgos)
 	s.Step(`^it should still be the same amount of microalgos (\d+)`, checkAlgos)
-	s.Step(`I get account information`, accInfo)
 	s.Step("I sign the bid", signBid)
 	s.Step(`default V2 key registration transaction "([^"]*)"`, createKeyregWithStateProof)
 	s.Step(`^I can get account information`, newAccInfo)
@@ -377,7 +335,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I build a payment transaction with sender "([^"]*)", receiver "([^"]*)", amount (\d+), close remainder to "([^"]*)"$`, iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo)
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
-	s.Step(`^the decoded transaction should equal the original$`, theDecodedTransactionShouldEqualTheOriginal)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 	s.Step(`^I append to my Method objects list in the case of a non-empty signature "([^"]*)"$`, iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature)
@@ -669,7 +626,7 @@ func equalMsigGolden(golden string) error {
 }
 
 func aclV() error {
-	v, err := acl.Versions()
+	v, err := aclv2.Versions().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -686,31 +643,18 @@ func v1InVersions() error {
 	return fmt.Errorf("v1 not found")
 }
 
+func v2InVersions() error {
+	for _, b := range versions {
+		if b == "v2" {
+			return nil
+		}
+	}
+	return fmt.Errorf("v2 not found")
+}
+
 func kclV() error {
 	v, err := kcl.Version()
 	versions = v.Versions
-	return err
-}
-
-func getStatus() error {
-	var err error
-	status, err = acl.Status()
-	lastRound = status.LastRound
-	return err
-}
-
-func statusAfterBlock() error {
-	var err error
-	selfPayTransaction()
-	statusAfter, err = acl.StatusAfterBlock(lastRound)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func block() error {
-	_, err := acl.Block(status.LastRound)
 	return err
 }
 
@@ -879,18 +823,6 @@ func kmdClient() error {
 	return err
 }
 
-func algodClient() error {
-	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-	algodAddress := "http://localhost:" + "60000"
-	var err error
-	acl, err = algod.MakeClient(algodAddress, algodToken)
-	if err != nil {
-		return err
-	}
-	_, err = acl.StatusAfterBlock(1)
-	return err
-}
-
 func algodClientV2() error {
 	algodToken := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	algodAddress := "http://localhost:" + "60000"
@@ -951,7 +883,7 @@ func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
 
 	amt = uint64(iamt)
 	pk = senderAddress
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -995,7 +927,7 @@ func defaultMsigTxn(iamt int, inote string) error {
 	if err != nil {
 		return err
 	}
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1021,62 +953,37 @@ func getSk() error {
 }
 
 func sendTxn() error {
-	tx, err := acl.SendRawTransaction(stx)
+	tx, err := aclv2.SendRawTransaction(stx).Do(context.Background())
 	if err != nil {
 		return err
 	}
-	txid = tx.TxID
+	txid = tx
 	return nil
 }
 
 func sendTxnKmd() error {
-	tx, err := acl.SendRawTransaction(stxKmd)
-	if err != nil {
-		e = true
-	}
-	txid = tx.TxID
-	return nil
+	var err error
+	txid, err = aclv2.SendRawTransaction(stxKmd).Do(context.Background())
+	return err
 }
 
 func sendTxnKmdFailureExpected() error {
-	tx, err := acl.SendRawTransaction(stxKmd)
+	tx, err := aclv2.SendRawTransaction(stxKmd).Do(context.Background())
 	if err == nil {
 		e = false
 		return fmt.Errorf("expected an error when sending kmd-signed transaction but no error occurred")
 	}
 	e = true
-	txid = tx.TxID
+	txid = tx
 	return nil
 }
 
 func sendMsigTxn() error {
-	_, err := acl.SendRawTransaction(stx)
-
+	_, err := aclv2.SendRawTransaction(stx).Do(context.Background())
 	if err != nil {
 		e = true
 	}
 
-	return nil
-}
-
-// TODO: this needs to be modified/removed when v1 is no longer supported
-func checkTxn() error {
-	waitForAlgodInDevMode()
-	_, err := acl.PendingTransactionInformation(txid)
-	if err != nil {
-		return err
-	}
-	if txn.Sender.String() != "" && txn.Sender.String() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" {
-		_, err = acl.TransactionInformation(txn.Sender.String(), txid)
-	} else {
-		_, err = acl.TransactionInformation(backupTxnSender, txid)
-	}
-	if err != nil {
-		return err
-	}
-	// v1 indexer dependency:
-	// _, err = acl.TransactionByID(txid)
-	// return err
 	return nil
 }
 
@@ -1135,46 +1042,13 @@ func signMsigBothEqual() error {
 }
 
 func nodeHealth() error {
-	err := acl.HealthCheck()
+	err := aclv2.HealthCheck().Do(context.Background())
 	return err
 }
 
 func ledger() error {
-	_, err := acl.LedgerSupply()
+	_, err := aclv2.Supply().Do(context.Background())
 	return err
-}
-
-func txnsByAddrRound() error {
-	lr, err := acl.Status()
-	if err != nil {
-		return err
-	}
-	_, err = acl.TransactionsByAddr(accounts[0], 1, lr.LastRound)
-	return err
-}
-
-func txnsPending() error {
-	_, err := acl.GetPendingTransactions(10)
-	return err
-}
-
-func suggestedParams() error {
-	var err error
-	sugParams, err = acl.BuildSuggestedParams()
-	return err
-}
-
-func suggestedFee() error {
-	var err error
-	sugFee, err = acl.SuggestedFee()
-	return err
-}
-
-func checkSuggested() error {
-	if uint64(sugParams.Fee) != sugFee.Fee {
-		return fmt.Errorf("suggested fee from params should be equal to suggested fee")
-	}
-	return nil
 }
 
 func createBid() error {
@@ -1322,19 +1196,14 @@ func checkAlgos(ma int) error {
 	return nil
 }
 
-func accInfo() error {
-	_, err := acl.AccountInformation(accounts[0])
-	return err
-}
-
 func newAccInfo() error {
-	_, err := acl.AccountInformation(pk)
+	_, err := aclv2.AccountInformation(pk).Do(context.Background())
 	_, _ = kcl.DeleteKey(handle, walletPswd, pk)
 	return err
 }
 
 func createKeyregWithStateProof(keyregType string) (err error) {
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1381,24 +1250,24 @@ func createAssetTestFixture() error {
 	assetTestFixture.AssetUnitName = "coins"
 	assetTestFixture.AssetURL = "http://test"
 	assetTestFixture.AssetMetadataHash = "fACPO4nRgO55j1ndAK3W6Sgc4APkcyFh"
-	assetTestFixture.ExpectedParams = models.AssetParams{}
-	assetTestFixture.QueriedParams = models.AssetParams{}
+	assetTestFixture.ExpectedParams = modelsV2.AssetParams{}
+	assetTestFixture.QueriedParams = modelsV2.AssetParams{}
 	assetTestFixture.LastTransactionIssued = types.Transaction{}
 	return nil
 }
 
-func convertTransactionAssetParamsToModelsAssetParam(input types.AssetParams) models.AssetParams {
-	result := models.AssetParams{
+func convertTransactionAssetParamsToModelsAssetParam(input types.AssetParams) modelsV2.AssetParams {
+	result := modelsV2.AssetParams{
 		Total:         input.Total,
-		Decimals:      input.Decimals,
+		Decimals:      uint64(input.Decimals),
 		DefaultFrozen: input.DefaultFrozen,
-		ManagerAddr:   input.Manager.String(),
-		ReserveAddr:   input.Reserve.String(),
-		FreezeAddr:    input.Freeze.String(),
-		ClawbackAddr:  input.Clawback.String(),
+		Manager:       input.Manager.String(),
+		Reserve:       input.Reserve.String(),
+		Freeze:        input.Freeze.String(),
+		Clawback:      input.Clawback.String(),
 		UnitName:      input.UnitName,
-		AssetName:     input.AssetName,
-		URL:           input.URL,
+		Name:          input.AssetName,
+		Url:           input.URL,
 		MetadataHash:  input.MetadataHash[:],
 	}
 	// input doesn't have Creator so that will remain empty
@@ -1409,7 +1278,7 @@ func assetCreateTxnHelper(issuance int, frozenState bool) error {
 	accountToUse := accounts[0]
 	assetTestFixture.Creator = accountToUse
 	creator := assetTestFixture.Creator
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1443,7 +1312,7 @@ func defaultAssetCreateTxnWithDefaultFrozen(issuance int) error {
 
 func createNoManagerAssetReconfigure() error {
 	creator := assetTestFixture.Creator
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1457,15 +1326,15 @@ func createNoManagerAssetReconfigure() error {
 	assetTestFixture.LastTransactionIssued = assetReconfigureTxn
 	txn = assetReconfigureTxn
 	// update expected params
-	assetTestFixture.ExpectedParams.ReserveAddr = reserve
-	assetTestFixture.ExpectedParams.FreezeAddr = freeze
-	assetTestFixture.ExpectedParams.ClawbackAddr = clawback
+	assetTestFixture.ExpectedParams.Reserve = reserve
+	assetTestFixture.ExpectedParams.Freeze = freeze
+	assetTestFixture.ExpectedParams.Clawback = clawback
 	return err
 }
 
 func createAssetDestroy() error {
 	creator := assetTestFixture.Creator
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1475,46 +1344,43 @@ func createAssetDestroy() error {
 	assetTestFixture.LastTransactionIssued = assetDestroyTxn
 	txn = assetDestroyTxn
 	// update expected params
-	assetTestFixture.ExpectedParams.ReserveAddr = ""
-	assetTestFixture.ExpectedParams.FreezeAddr = ""
-	assetTestFixture.ExpectedParams.ClawbackAddr = ""
-	assetTestFixture.ExpectedParams.ManagerAddr = ""
+	assetTestFixture.ExpectedParams.Reserve = ""
+	assetTestFixture.ExpectedParams.Freeze = ""
+	assetTestFixture.ExpectedParams.Clawback = ""
+	assetTestFixture.ExpectedParams.Manager = ""
 	return err
 }
 
 // used in getAssetIndex and similar to get the index of the most recently operated on asset
-func getMaxKey(numbers map[uint64]models.AssetParams) uint64 {
-	var maxNumber uint64
-	for n := range numbers {
-		maxNumber = n
-		break
-	}
-	for n := range numbers {
-		if n > maxNumber {
-			maxNumber = n
+func getMaxKey(numbers []modelsV2.Asset) uint64 {
+	var maxNumber uint64 = 0
+	for _, asset := range numbers {
+		idx := asset.Index
+		if idx > maxNumber {
+			maxNumber = idx
 		}
 	}
 	return maxNumber
 }
 
 func getAssetIndex() error {
-	accountResp, err := acl.AccountInformation(assetTestFixture.Creator)
+	accountResp, err := aclv2.AccountInformation(assetTestFixture.Creator).Do(context.Background())
 	if err != nil {
 		return err
 	}
 	// get most recent asset index
-	assetTestFixture.AssetIndex = getMaxKey(accountResp.AssetParams)
+	assetTestFixture.AssetIndex = getMaxKey(accountResp.CreatedAssets)
 	return nil
 }
 
 func getAssetInfo() error {
-	response, err := acl.AssetInformation(assetTestFixture.AssetIndex)
-	assetTestFixture.QueriedParams = response
+	response, err := aclv2.GetAssetByID(assetTestFixture.AssetIndex).Do(context.Background())
+	assetTestFixture.QueriedParams = response.Params
 	return err
 }
 
 func failToGetAssetInfo() error {
-	_, err := acl.AssetInformation(assetTestFixture.AssetIndex)
+	_, err := aclv2.GetAssetByID(assetTestFixture.AssetIndex).Do(context.Background())
 	if err != nil {
 		return nil
 	}
@@ -1525,20 +1391,20 @@ func failToGetAssetInfo() error {
 func checkExpectedVsActualAssetParams() error {
 	expectedParams := assetTestFixture.ExpectedParams
 	actualParams := assetTestFixture.QueriedParams
-	nameMatch := expectedParams.AssetName == actualParams.AssetName
+	nameMatch := expectedParams.Name == actualParams.Name
 	if !nameMatch {
 		return fmt.Errorf("expected asset name was %v but actual asset name was %v",
-			expectedParams.AssetName, actualParams.AssetName)
+			expectedParams.Name, actualParams.Name)
 	}
 	unitMatch := expectedParams.UnitName == actualParams.UnitName
 	if !unitMatch {
 		return fmt.Errorf("expected unit name was %v but actual unit name was %v",
 			expectedParams.UnitName, actualParams.UnitName)
 	}
-	urlMatch := expectedParams.URL == actualParams.URL
+	urlMatch := expectedParams.Url == actualParams.Url
 	if !urlMatch {
 		return fmt.Errorf("expected URL was %v but actual URL was %v",
-			expectedParams.URL, actualParams.URL)
+			expectedParams.Url, actualParams.Url)
 	}
 	hashMatch := reflect.DeepEqual(expectedParams.MetadataHash, actualParams.MetadataHash)
 	if !hashMatch {
@@ -1555,37 +1421,47 @@ func checkExpectedVsActualAssetParams() error {
 		return fmt.Errorf("expected default frozen state %v but actual default frozen state was %v",
 			expectedParams.DefaultFrozen, actualParams.DefaultFrozen)
 	}
-	managerMatch := expectedParams.ManagerAddr == actualParams.ManagerAddr
+	managerMatch := expectedParams.Manager == actualParams.Manager
 	if !managerMatch {
 		return fmt.Errorf("expected asset manager was %v but actual asset manager was %v",
-			expectedParams.ManagerAddr, actualParams.ManagerAddr)
+			expectedParams.Manager, actualParams.Manager)
 	}
-	reserveMatch := expectedParams.ReserveAddr == actualParams.ReserveAddr
+	reserveMatch := expectedParams.Reserve == actualParams.Reserve
 	if !reserveMatch {
 		return fmt.Errorf("expected asset reserve was %v but actual asset reserve was %v",
-			expectedParams.ReserveAddr, actualParams.ReserveAddr)
+			expectedParams.Reserve, actualParams.Reserve)
 	}
-	freezeMatch := expectedParams.FreezeAddr == actualParams.FreezeAddr
+	freezeMatch := expectedParams.Freeze == actualParams.Freeze
 	if !freezeMatch {
 		return fmt.Errorf("expected freeze manager was %v but actual freeze manager was %v",
-			expectedParams.FreezeAddr, actualParams.FreezeAddr)
+			expectedParams.Freeze, actualParams.Freeze)
 	}
-	clawbackMatch := expectedParams.ClawbackAddr == actualParams.ClawbackAddr
+	clawbackMatch := expectedParams.Clawback == actualParams.Clawback
 	if !clawbackMatch {
 		return fmt.Errorf("expected revocation (clawback) manager was %v but actual revocation manager was %v",
-			expectedParams.ClawbackAddr, actualParams.ClawbackAddr)
+			expectedParams.Clawback, actualParams.Clawback)
 	}
 	return nil
 }
 
+func findAssetID(assets []modelsV2.AssetHolding, assetID uint64) (foundAsset modelsV2.AssetHolding, err error) {
+	for _, asset := range assets {
+		if asset.AssetId == assetID {
+			return asset, nil
+		}
+	}
+	return modelsV2.AssetHolding{}, fmt.Errorf("asset ID %d was not found", assetID)
+}
+
 func theCreatorShouldHaveAssetsRemaining(expectedBal int) error {
 	expectedBalance := uint64(expectedBal)
-	accountResp, err := acl.AccountInformation(assetTestFixture.Creator)
+	accountResp, err := aclv2.AccountInformation(assetTestFixture.Creator).Do(context.Background())
 	if err != nil {
 		return err
 	}
-	holding, ok := accountResp.Assets[assetTestFixture.AssetIndex]
-	if !ok {
+	// Find asset ID
+	holding, err := findAssetID(accountResp.Assets, assetTestFixture.AssetIndex)
+	if err != nil {
 		return fmt.Errorf("attempted to get balance of account %v for creator %v and index %v, but no balance was found for that index", assetTestFixture.Creator, assetTestFixture.Creator, assetTestFixture.AssetIndex)
 	}
 	if holding.Amount != expectedBalance {
@@ -1596,7 +1472,7 @@ func theCreatorShouldHaveAssetsRemaining(expectedBal int) error {
 
 func createAssetAcceptanceForSecondAccount() error {
 	accountToUse := accounts[1]
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1611,7 +1487,7 @@ func createAssetAcceptanceForSecondAccount() error {
 func createAssetTransferTransactionToSecondAccount(amount int) error {
 	recipient := accounts[1]
 	creator := assetTestFixture.Creator
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1628,7 +1504,7 @@ func createAssetTransferTransactionToSecondAccount(amount int) error {
 func createAssetTransferTransactionFromSecondAccountToCreator(amount int) error {
 	recipient := assetTestFixture.Creator
 	sender := accounts[1]
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1645,7 +1521,7 @@ func createAssetTransferTransactionFromSecondAccountToCreator(amount int) error 
 // sets up a freeze transaction, with freeze state `setting` against target account `target`
 // assumes creator is asset freeze manager
 func freezeTransactionHelper(target string, setting bool) error {
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1666,7 +1542,7 @@ func createUnfreezeTransactionTargetingSecondAccount() error {
 }
 
 func createRevocationTransaction(amount int) error {
-	params, err := acl.BuildSuggestedParams()
+	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -2505,7 +2381,13 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 		return err
 	}
 
-	// direct tx equality checking isn't fully implemented in go-sdk so this test is incomplete
+	// This test isn't perfect as it's sensitive to non-meaningful changes (e.g. nil slice vs 0
+	// length slice), but it's good enough for now. We may want a Transaction.Equals method in the
+	// future.
+	if !reflect.DeepEqual(tx, decodedTx.Txn) {
+		return fmt.Errorf("Transactions unequal: %#v != %#v", tx, decodedTx.Txn)
+	}
+
 	return nil
 }
 

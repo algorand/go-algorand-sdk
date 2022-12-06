@@ -13,6 +13,10 @@ type NodeStatusResponse struct {
 	// that have been processed so far as part of the catchup
 	CatchpointProcessedAccounts uint64 `json:"catchpoint-processed-accounts,omitempty"`
 
+	// CatchpointProcessedKvs the number of key-values (KVs) from the current
+	// catchpoint that have been processed so far as part of the catchup
+	CatchpointProcessedKvs uint64 `json:"catchpoint-processed-kvs,omitempty"`
+
 	// CatchpointTotalAccounts the total number of accounts included in the current
 	// catchpoint
 	CatchpointTotalAccounts uint64 `json:"catchpoint-total-accounts,omitempty"`
@@ -21,9 +25,17 @@ type NodeStatusResponse struct {
 	// the current catchpoint catchup
 	CatchpointTotalBlocks uint64 `json:"catchpoint-total-blocks,omitempty"`
 
+	// CatchpointTotalKvs the total number of key-values (KVs) included in the current
+	// catchpoint
+	CatchpointTotalKvs uint64 `json:"catchpoint-total-kvs,omitempty"`
+
 	// CatchpointVerifiedAccounts the number of accounts from the current catchpoint
 	// that have been verified so far as part of the catchup
 	CatchpointVerifiedAccounts uint64 `json:"catchpoint-verified-accounts,omitempty"`
+
+	// CatchpointVerifiedKvs the number of key-values (KVs) from the current catchpoint
+	// that have been verified so far as part of the catchup
+	CatchpointVerifiedKvs uint64 `json:"catchpoint-verified-kvs,omitempty"`
 
 	// CatchupTime catchupTime in nanoseconds
 	CatchupTime uint64 `json:"catchup-time"`

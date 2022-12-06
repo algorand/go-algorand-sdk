@@ -40,6 +40,7 @@ func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token 
 	portAsString := strconv.Itoa(port)
 	fullHost := "http://" + host + ":" + portAsString
 	algodV2client, err = algod.MakeClient(fullHost, token)
+	aclv2 = algodV2client
 	gh = []byte("MLWBXKMRJ5W3USARAFOHPQJAF4DN6KY3ZJVPIXKODKNN5ZXSZ2DQ")
 
 	return err
@@ -326,6 +327,10 @@ func parseBoxes(boxesStr string) (staticBoxes []types.AppBoxReference, err error
 			if err != nil {
 				return nil, err
 			}
+		}
+
+		if len(nameBytes) == 0 {
+			nameBytes = nil
 		}
 
 		staticBoxes = append(staticBoxes,
