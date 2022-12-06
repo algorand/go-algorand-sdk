@@ -18,11 +18,22 @@ type Genesis struct {
 	Proto string `codec:"proto"`
 
 	// Allocation determines the initial accounts and their state.
-	Allocation []interface{} `codec:"alloc,allocbound=MaxInitialGenesisAllocationSize"`
+	Allocation []GenesisAllocation `codec:"alloc,allocbound=MaxInitialGenesisAllocationSize"`
 
 	// RewardsPool is the address of the rewards pool.
 	RewardsPool string `codec:"rwd"`
 
 	// FeeSink is the address of the fee sink.
 	FeeSink string `codec:"fees"`
+}
+
+type GenesisAllocation struct {
+	// Unfortunately we forgot to specify omitempty, and now
+	// this struct must be encoded without omitempty for the
+	// Address, Comment, and State fields..
+	_struct struct{} `codec:""`
+
+	Address string  `codec:"addr"`
+	Comment string  `codec:"comment"`
+	State   Account `codec:"state"`
 }

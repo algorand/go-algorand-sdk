@@ -166,3 +166,46 @@ func (ac *ApplicationCallTxnFields) Empty() bool {
 	}
 	return true
 }
+
+// AppLocalState stores the LocalState associated with an application. It also
+// stores a cached copy of the application's LocalStateSchema so that
+// MinBalance requirements may be computed 1. without looking up the
+// AppParams and 2. even if the application has been deleted
+type AppLocalState struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Schema   StateSchema  `codec:"hsch"`
+	KeyValue TealKeyValue `codec:"tkv"`
+}
+
+type TealKeyValue map[string]TealValue
+
+// TealValue contains type information and a value, representing a value in a
+// TEAL program
+type TealValue struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Type  string `codec:"tt"`
+	Bytes string `codec:"tb"`
+	Uint  uint64 `codec:"ui"`
+}
+
+// AppParams stores the global information associated with an application
+type AppParams struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	ApprovalProgram   []byte       `codec:"approv,allocbound=config.MaxAvailableAppProgramLen"`
+	ClearStateProgram []byte       `codec:"clearp,allocbound=config.MaxAvailableAppProgramLen"`
+	GlobalState       TealKeyValue `codec:"gs"`
+	StateSchemas
+	ExtraProgramPages uint32 `codec:"epp"`
+}
+
+// StateSchemas is a thin wrapper around the LocalStateSchema and the
+// GlobalStateSchema, since they are often needed together
+type StateSchemas struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	LocalStateSchema  StateSchema `codec:"lsch"`
+	GlobalStateSchema StateSchema `codec:"gsch"`
+}
