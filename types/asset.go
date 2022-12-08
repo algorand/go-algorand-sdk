@@ -77,11 +77,3 @@ var zeroAP = AssetParams{}
 func (ap AssetParams) IsZero() bool {
 	return ap == zeroAP
 }
-
-// AssetHolding describes an asset held by an account.
-type AssetHolding struct {
-	_struct struct{} `codec:",omitempty,omitemptyarray"`
-
-	Amount uint64 `codec:"a"`
-	Frozen bool   `codec:"f"`
-}
