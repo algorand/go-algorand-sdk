@@ -53,6 +53,7 @@ type Account struct {
 	MicroAlgos      uint64   `codec:"algo"`
 	VoteID          [32]byte `codec:"vote"`
 	SelectionID     [32]byte `codec:"sel"`
+	StateProofID    [64]byte `codec:"stprf"`
 	VoteLastValid   uint64   `codec:"voteLst"`
 	VoteKeyDilution uint64   `codec:"voteKD"`
 }
