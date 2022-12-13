@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -792,6 +793,9 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 			return nil
 		}
 		return err
+	}
+	if len(errStr) != 0 {
+		return errors.New("expected an error but none was reported")
 	}
 
 	b64Value := base64.StdEncoding.EncodeToString(box.Value)
