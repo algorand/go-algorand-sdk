@@ -1,9 +1,9 @@
 # Configs for testing repo download:
 SDK_TESTING_URL="https://github.com/algorand/algorand-sdk-testing"
-SDK_TESTING_BRANCH="master"
+SDK_TESTING_BRANCH="will/state-delta-endpoint"
 SDK_TESTING_HARNESS="test-harness"
 
-INSTALL_ONLY=0
+INSTALL_ONLY=1
 
 VERBOSE_HARNESS=0
 
