@@ -11,6 +11,11 @@ const authHeader = "X-Algo-API-Token"
 
 type Client common.Client
 
+// delete performs a DELETE request to the specific path against the server, assumes JSON response
+func (c *Client) delete(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).Delete(ctx, response, path, body, headers)
+}
+
 // get performs a GET request to the specific path against the server, assumes JSON response
 func (c *Client) get(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
 	return (*common.Client)(c).Get(ctx, response, path, body, headers)
