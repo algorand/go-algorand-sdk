@@ -788,7 +788,7 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	if err != nil {
 		// If the expected error string is not empty, check if it is a substring of the actual error string.
 		// Note that if the expected error string is empty, then the second condition will always return true.
-		if errStr != "" && strings.Contains(err.Error(), errStr) {
+		if len(errStr) != 0 && strings.Contains(err.Error(), errStr) {
 			return nil
 		}
 		return err
