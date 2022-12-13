@@ -785,15 +785,10 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	} else {
 		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
 	}
-<<<<<<< HEAD
 	if err != nil {
 		// If the expected error string is not empty, check if it is a substring of the actual error string.
 		// Note that if the expected error string is empty, then the second condition will always return true.
 		if len(errStr) != 0 && strings.Contains(err.Error(), errStr) {
-=======
-	if err != nil && len(errStr) != 0 {
-		if strings.Contains(err.Error(), errStr) {
->>>>>>> 2d2fb97fd783d3ca5b727270679909b694765c8e
 			return nil
 		}
 		return err
