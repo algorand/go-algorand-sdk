@@ -175,6 +175,15 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetLedgerStateDelta":
 			response, err =
 				algodC.GetLedgerStateDelta(123).Do(context.Background())
+		case "UnsetSyncRound":
+			response, err =
+				algodC.UnsetSyncRound().Do(context.Background())
+		case "SetSyncRound":
+			response, err =
+				algodC.SetSyncRound(123).Do(context.Background())
+		case "GetSyncRound":
+			response, err =
+				algodC.GetSyncRound().Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response

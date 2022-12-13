@@ -36,6 +36,8 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
+	s.Step(`^expect the request to be "([^"]*)" "([^"]*)"$`, expectTheRequestToBe)
+	s.Step(`^expect the request to be to be "([^"]*)" "([^"]*)"$`, expectTheRequestToBe)
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
 	s.Step(`^we make an Account Information call against account "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccount)
 	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
@@ -55,6 +57,9 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a GetTransactionProof call for round (\d+) txid "([^"]*)" and hashtype "([^"]*)"$`, weMakeAGetTransactionProofCallForRoundTxidAndHashtype)
 	s.Step(`^we make a Lookup Block Hash call against round (\d+)$`, weMakeALookupBlockHashCallAgainstRound)
 	s.Step(`^we make a GetLedgerStateDelta call against round (\d+)$`, weMakeAGetLedgerStateDeltaCallAgainstRound)
+	s.Step(`^we make a SetSyncRound call against round (\d+)$`, weMakeASetSyncRoundCallAgainstRound)
+	s.Step(`^we make a GetSyncRound call$`, weMakeAGetSyncRoundCall)
+	s.Step(`^we make a UnsetSyncRound call$`, weMakeAUnsetSyncRoundCall)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -312,5 +317,32 @@ func weMakeAGetLedgerStateDeltaCallAgainstRound(round int) error {
 		return err
 	}
 	algodClient.GetLedgerStateDelta(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeASetSyncRoundCallAgainstRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.SetSyncRound(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetSyncRoundCall() error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetSyncRound().Do(context.Background())
+	return nil
+}
+
+func weMakeAUnsetSyncRoundCall() error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.UnsetSyncRound().Do(context.Background())
 	return nil
 }
