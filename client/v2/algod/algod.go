@@ -144,6 +144,18 @@ func (c *Client) GetAssetByID(assetId uint64) *GetAssetByID {
 	return &GetAssetByID{c: c, assetId: assetId}
 }
 
+func (c *Client) UnsetSyncRound() *UnsetSyncRound {
+	return &UnsetSyncRound{c: c}
+}
+
+func (c *Client) GetSyncRound() *GetSyncRound {
+	return &GetSyncRound{c: c}
+}
+
+func (c *Client) SetSyncRound(round uint64) *SetSyncRound {
+	return &SetSyncRound{c: c, round: round}
+}
+
 func (c *Client) TealCompile(source []byte) *TealCompile {
 	return &TealCompile{c: c, source: source}
 }
