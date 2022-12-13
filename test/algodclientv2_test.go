@@ -54,6 +54,7 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
 	s.Step(`^we make a GetTransactionProof call for round (\d+) txid "([^"]*)" and hashtype "([^"]*)"$`, weMakeAGetTransactionProofCallForRoundTxidAndHashtype)
 	s.Step(`^we make a Lookup Block Hash call against round (\d+)$`, weMakeALookupBlockHashCallAgainstRound)
+	s.Step(`^we make a GetLedgerStateDelta call against round (\d+)$`, weMakeAGetLedgerStateDeltaCallAgainstRound)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -302,5 +303,14 @@ func weMakeALookupBlockHashCallAgainstRound(round int) error {
 		return err
 	}
 	algodClient.GetBlockHash(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetLedgerStateDeltaCallAgainstRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetLedgerStateDelta(uint64(round)).Do(context.Background())
 	return nil
 }
