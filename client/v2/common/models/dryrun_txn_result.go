@@ -15,10 +15,6 @@ type DryrunTxnResult struct {
 	// BudgetConsumed budget consumed during execution of app call transaction.
 	BudgetConsumed uint64 `json:"budget-consumed,omitempty"`
 
-	// Cost net cost of app execution. Field is DEPRECATED and is subject for removal.
-	// Instead, use `budget-added` and `budget-consumed.
-	Cost uint64 `json:"cost,omitempty"`
-
 	// Disassembly disassembled program line by line.
 	Disassembly []string `json:"disassembly"`
 
