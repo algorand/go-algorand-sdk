@@ -37,7 +37,6 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
 	s.Step(`^expect the request to be "([^"]*)" "([^"]*)"$`, expectTheRequestToBe)
-	s.Step(`^expect the request to be to be "([^"]*)" "([^"]*)"$`, expectTheRequestToBe)
 	s.Step(`^we make a Status after Block call with round (\d+)$`, weMakeAStatusAfterBlockCallWithRound)
 	s.Step(`^we make an Account Information call against account "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccount)
 	s.Step(`^the parsed Pending Transactions Information response should contain an array of len (\d+) and element number (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
