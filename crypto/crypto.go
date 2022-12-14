@@ -577,7 +577,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 	return
 }
 
-// SignLogicsigTransaction takes LogicSig object and a transaction and returns the
+// SignLogicSigTransaction takes LogicSig object and a transaction and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
 // Note, LogicSig actually can be attached to any transaction and it is a
 // program's responsibility to approve/decline the transaction
@@ -586,7 +586,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 // the LogicSig's address, EXCEPT IF the LogicSig is delegated to a non-multisig
 // account. In order to properly handle that case, create a LogicSigAccount and
 // use SignLogicSigAccountTransaction instead.
-func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()
 

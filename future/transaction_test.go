@@ -886,12 +886,11 @@ func TestLogicSig(t *testing.T) {
 	args[0] = []byte("123")
 	args[1] = []byte("456")
 	key, err := mnemonic.ToPrivateKey(mn)
-	var pk crypto.MultisigAccount
 	require.NoError(t, err)
-	lsig, err := crypto.MakeLogicSigAccountDelegatedMsig(program, args, pk, key)
+	lsig, err := crypto.MakeLogicSigAccountDelegated(program, args, key)
 	require.NoError(t, err)
 
-	_, stxBytes, err := crypto.SignLogicsigTransaction(lsig.Lsig, tx)
+	_, stxBytes, err := crypto.SignLogicSigAccountTransaction(lsig, tx)
 	require.NoError(t, err)
 
 	require.Equal(t, byteFromBase64(golden), stxBytes)

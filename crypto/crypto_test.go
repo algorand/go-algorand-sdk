@@ -455,7 +455,7 @@ func TestSignLogicsigTransaction(t *testing.T) {
 			},
 		}
 
-		txid, stxnBytes, err := SignLogicsigTransaction(lsig, txn)
+		txid, stxnBytes, err := SignLogicSigTransaction(lsig, txn)
 		require.NoError(t, err)
 		require.EqualValues(t, expectedBytes, stxnBytes)
 		require.Equal(t, expectedTxid, txid)
@@ -533,7 +533,7 @@ func TestSignLogicsigTransaction(t *testing.T) {
 				},
 			}
 
-			_, _, err := SignLogicsigTransaction(lsig, txn)
+			_, _, err := SignLogicSigTransaction(lsig, txn)
 			require.Error(t, err, errLsigInvalidSignature)
 		})
 	})
