@@ -1,3 +1,9 @@
+# 2.0.0
+
+## What's Changed
+### Breaking Changes
+* Remove `MakeLogicSigAccount` and replace with `MakeLogicSigAccountEscrow`. Mark `MakeLogicSig` as a private function as well, only intended for internal use.
+
 # 1.24.0
 ## What's Changed
 ### Bugfixes
