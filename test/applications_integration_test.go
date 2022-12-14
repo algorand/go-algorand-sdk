@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -786,10 +787,15 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
 	}
 	if err != nil {
-		if strings.Contains(err.Error(), errStr) {
+		// If the expected error string is not empty, check if it is a substring of the actual error string.
+		// Note that if the expected error string is empty, then the second condition will always return true.
+		if len(errStr) != 0 && strings.Contains(err.Error(), errStr) {
 			return nil
 		}
 		return err
+	}
+	if len(errStr) != 0 {
+		return errors.New("expected an error but none was reported")
 	}
 
 	b64Value := base64.StdEncoding.EncodeToString(box.Value)
