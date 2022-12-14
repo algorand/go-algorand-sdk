@@ -640,18 +640,13 @@ func AddressFromProgram(program []byte) types.Address {
 	return types.Address(hash)
 }
 
-// MakeLogicSig produces a new LogicSig signature.
-//
-// Deprecated: THIS FUNCTION IS DEPRECATED.
-// It will be removed in v2 of this library.
-// Use one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
-// MakeLogicSigAccountDelegatedMsig instead.
+// makeLogicSig produces a new LogicSig signature.
 //
 // The function can work in three modes:
 // 1. If no sk and ma provided then it returns contract-only LogicSig
 // 2. If no ma provides, it returns Sig delegated LogicSig
 // 3. If both sk and ma specified the function returns Multisig delegated LogicSig
-func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
+func makeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
 	if err = sanityCheckProgram(program); err != nil {
 		return
 	}

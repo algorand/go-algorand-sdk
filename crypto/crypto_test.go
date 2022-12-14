@@ -288,7 +288,7 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	var pk MultisigAccount
 
 	// check empty LogicSig
-	lsig, err := MakeLogicSig(program, args, sk, pk)
+	lsig, err := makeLogicSig(program, args, sk, pk)
 	require.Error(t, err)
 	require.Equal(t, types.LogicSig{}, lsig)
 	require.True(t, lsig.Blank())
@@ -298,7 +298,7 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	contractSender, err := types.DecodeAddress(programHash)
 	require.NoError(t, err)
 
-	lsig, err = MakeLogicSig(program, args, sk, pk)
+	lsig, err = makeLogicSig(program, args, sk, pk)
 	require.NoError(t, err)
 	require.Equal(t, program, lsig.Logic)
 	require.Equal(t, args, lsig.Args)
@@ -312,7 +312,7 @@ func TestMakeLogicSigBasic(t *testing.T) {
 	args = make([][]byte, 2)
 	args[0] = []byte{1, 2, 3}
 	args[1] = []byte{4, 5, 6}
-	lsig, err = MakeLogicSig(program, args, sk, pk)
+	lsig, err = makeLogicSig(program, args, sk, pk)
 	require.NoError(t, err)
 	require.Equal(t, program, lsig.Logic)
 	require.Equal(t, args, lsig.Args)
@@ -339,7 +339,7 @@ func TestMakeLogicSigSingle(t *testing.T) {
 	require.NoError(t, err)
 	program = []byte{1, 32, 1, 1, 34}
 	sk = acc.PrivateKey
-	lsig, err := MakeLogicSig(program, args, sk, pk)
+	lsig, err := makeLogicSig(program, args, sk, pk)
 	require.NoError(t, err)
 	expectedSig := types.Signature{0x3e, 0x5, 0x3d, 0x39, 0x4d, 0xfb, 0x12, 0xbc, 0x65, 0x79, 0x9f, 0xea, 0x31, 0x8a, 0x7b, 0x8e, 0xa2, 0x51, 0x8b, 0x55, 0x2c, 0x8a, 0xbe, 0x6c, 0xd7, 0xa7, 0x65, 0x2d, 0xd8, 0xb0, 0x18, 0x7e, 0x21, 0x5, 0x2d, 0xb9, 0x24, 0x62, 0x89, 0x16, 0xe5, 0x61, 0x74, 0xcd, 0xf, 0x19, 0xac, 0xb9, 0x6c, 0x45, 0xa4, 0x29, 0x91, 0x99, 0x11, 0x1d, 0xe4, 0x7c, 0xe4, 0xfc, 0x12, 0xec, 0xce, 0x2}
 	require.Equal(t, expectedSig, lsig.Sig)
@@ -351,7 +351,7 @@ func TestMakeLogicSigSingle(t *testing.T) {
 	// check that a modified program fails verification
 	modProgram := make([]byte, len(program))
 	copy(modProgram, program)
-	lsigModified, err := MakeLogicSig(modProgram, args, sk, pk)
+	lsigModified, err := makeLogicSig(modProgram, args, sk, pk)
 	require.NoError(t, err)
 	modProgram[3] = 2
 	verified = VerifyLogicSig(lsigModified, acc.Address)
@@ -378,7 +378,7 @@ func TestMakeLogicSigMulti(t *testing.T) {
 	acc := GenerateAccount()
 	sk = acc.PrivateKey
 
-	lsig, err := MakeLogicSig(program, args, sk1, ma)
+	lsig, err := makeLogicSig(program, args, sk1, ma)
 	require.NoError(t, err)
 	require.Equal(t, program, lsig.Logic)
 	require.Equal(t, args, lsig.Args)
@@ -400,14 +400,14 @@ func TestMakeLogicSigMulti(t *testing.T) {
 	// check that a modified program fails verification
 	modProgram := make([]byte, len(program))
 	copy(modProgram, program)
-	lsigModified, err := MakeLogicSig(modProgram, args, sk1, ma)
+	lsigModified, err := makeLogicSig(modProgram, args, sk1, ma)
 	require.NoError(t, err)
 	modProgram[3] = 2
 	verified = VerifyLogicSig(lsigModified, sender)
 	require.False(t, verified)
 
 	// combine sig and multisig, ensure it fails
-	lsigf, err := MakeLogicSig(program, args, sk, pk)
+	lsigf, err := makeLogicSig(program, args, sk, pk)
 	require.NoError(t, err)
 	lsig.Sig = lsigf.Sig
 
@@ -477,7 +477,7 @@ func TestSignLogicsigTransaction(t *testing.T) {
 	t.Run("no sig", func(t *testing.T) {
 		var sk ed25519.PrivateKey
 		var ma MultisigAccount
-		lsig, err := MakeLogicSig(program, args, sk, ma)
+		lsig, err := makeLogicSig(program, args, sk, ma)
 		require.NoError(t, err)
 
 		programHash := "6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY"
@@ -505,7 +505,7 @@ func TestSignLogicsigTransaction(t *testing.T) {
 		var ma MultisigAccount
 		acc, err := AccountFromPrivateKey(ed25519.PrivateKey{0xd2, 0xdc, 0x4c, 0xcc, 0xe9, 0x98, 0x62, 0xff, 0xcf, 0x8c, 0xeb, 0x93, 0x6, 0xc4, 0x8d, 0xa6, 0x80, 0x50, 0x82, 0xa, 0xbb, 0x29, 0x95, 0x7a, 0xac, 0x82, 0x68, 0x9a, 0x8c, 0x49, 0x5a, 0x38, 0x5e, 0x67, 0x4f, 0x1c, 0xa, 0xee, 0xec, 0x37, 0x71, 0x89, 0x8f, 0x61, 0xc7, 0x6f, 0xf5, 0xd2, 0x4a, 0x19, 0x79, 0x3e, 0x2c, 0x91, 0xfa, 0x8, 0x51, 0x62, 0x63, 0xe3, 0x85, 0x73, 0xea, 0x42})
 		require.NoError(t, err)
-		lsig, err := MakeLogicSig(program, args, acc.PrivateKey, ma)
+		lsig, err := makeLogicSig(program, args, acc.PrivateKey, ma)
 		require.NoError(t, err)
 
 		t.Run("sender is contract addr", func(t *testing.T) {
@@ -543,7 +543,7 @@ func TestSignLogicsigTransaction(t *testing.T) {
 		maAddr, err := ma.Address()
 		require.NoError(t, err)
 
-		lsig, err := MakeLogicSig(program, args, sk1, ma)
+		lsig, err := makeLogicSig(program, args, sk1, ma)
 		require.NoError(t, err)
 
 		err = AppendMultisigToLogicSig(&lsig, sk2)
@@ -618,7 +618,8 @@ func TestSignLogicSigAccountTransaction(t *testing.T) {
 	}
 
 	t.Run("no sig", func(t *testing.T) {
-		lsigAccount := MakeLogicSigAccountEscrow(program, args)
+		lsigAccount, err := MakeLogicSigAccountEscrowChecked(program, args)
+		require.NoError(t, err)
 
 		programAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
 		require.NoError(t, err)
