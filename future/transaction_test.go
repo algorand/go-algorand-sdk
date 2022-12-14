@@ -853,6 +853,50 @@ func TestComputeGroupID(t *testing.T) {
 	require.Equal(t, 2, len(result))
 }
 
+func TestLogicSig(t *testing.T) {
+	// validate LogicSig signed transaction against goal
+	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
+	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
+	const mn = "advice pudding treat near rule blouse same whisper inner electric quit surface sunny dismiss leader blood seat clown cost exist hospital century reform able sponsor"
+	const fee = 1000
+	const amount = 2000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+	note := byteFromBase64("8xMCTuLQ810=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+	tx, err := MakePaymentTxn(fromAddress, toAddress, amount, note, "", params)
+	require.NoError(t, err)
+
+	// goal clerk send -o tx3 -a 2000 --fee 1000 -d ~/.algorand -w test -L sig.lsig --argb64 MTIz --argb64 NDU2 \
+	// -f 47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU \
+	// -t PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI
+	const golden = "gqRsc2lng6NhcmeSxAMxMjPEAzQ1NqFsxAUBIAEBIqNzaWfEQE6HXaI5K0lcq50o/y3bWOYsyw9TLi/oorZB4xaNdn1Z14351u2f6JTON478fl+JhIP4HNRRAIh/I8EWXBPpJQ2jdHhuiqNhbXTNB9CjZmVlzQPoomZ2zgAfeyGjZ2Vuq2Rldm5ldC12MS4womdoxCCwLc/t7ZJ1uookrS1uIJ0r211Klt7pd4IYp2g3OaWPQaJsds4AH38JpG5vdGXECPMTAk7i0PNdo3JjdsQge2ziT+tbrMCxZOKcIixX9fY9w4fUOQSCWEEcX+EPfAKjc25kxCDn8PhNBoEd+fMcjYeLEVX0Zx1RoYXCAJCGZ/RJWHBooaR0eXBlo3BheQ=="
+
+	program := []byte{1, 32, 1, 1, 34}
+	args := make([][]byte, 2)
+	args[0] = []byte("123")
+	args[1] = []byte("456")
+	key, err := mnemonic.ToPrivateKey(mn)
+	var pk crypto.MultisigAccount
+	require.NoError(t, err)
+	lsig, err := crypto.MakeLogicSigAccountDelegatedMsig(program, args, pk, key)
+	require.NoError(t, err)
+
+	_, stxBytes, err := crypto.SignLogicsigTransaction(lsig.Lsig, tx)
+	require.NoError(t, err)
+
+	require.Equal(t, byteFromBase64(golden), stxBytes)
+}
+
 func TestFee(t *testing.T) {
 	testcases := []struct {
 		name     string
