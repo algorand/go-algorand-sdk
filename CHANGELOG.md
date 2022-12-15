@@ -1,3 +1,9 @@
+# 2.0.0
+
+## What's Changed
+### Breaking Changes
+* Remove `DryrunTxnResult.Cost` in favor of 2 fields: `BudgetAdded` and `BudgetConsumed`. `cost` can be derived by `BudgetConsumed - BudgetAdded`.
+
 # 1.24.0
 ## What's Changed
 ### Bugfixes
