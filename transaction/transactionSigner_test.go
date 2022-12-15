@@ -1,4 +1,4 @@
-package future
+package transaction
 
 import (
 	"crypto/ed25519"

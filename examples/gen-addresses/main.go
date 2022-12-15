@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/transaction"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/kmd"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
@@ -119,7 +119,7 @@ func main() {
 		return
 	}
 
-	tx, err := future.MakePaymentTxn(addresses[0], addresses[1], 100, nil, "", txParams)
+	tx, err := transaction.MakePaymentTxn(addresses[0], addresses[1], 100, nil, "", txParams)
 	if err != nil {
 		fmt.Printf("Error creating transaction: %s\n", err)
 		return
