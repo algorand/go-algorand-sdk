@@ -6,6 +6,7 @@
 * Rename `SignLogicsigTransaction` to `SignLogicSigTransaction`.
 * Remove logicsig templates, `logic/langspec.json`, and all methods depending on it.
 * Remove `DryrunTxnResult.Cost` in favor of 2 fields: `BudgetAdded` and `BudgetConsumed`. `cost` can be derived by `BudgetConsumed - BudgetAdded`.
+* Remove v1 algod API (client/algod) due to API end-of-life (2022-12-01). Instead, use v2 algod API (client/v2/algod).
 
 # 1.24.0
 ## What's Changed
