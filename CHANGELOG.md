@@ -4,6 +4,7 @@
 ### Breaking Changes
 * Remove `MakeLogicSigAccount` and replace with `MakeLogicSigAccountEscrow`. Mark `MakeLogicSig` as a private function as well, only intended for internal use.
 * Rename `SignLogicsigTransaction` to `SignLogicSigTransaction`.
+* Remove logicsig templates, `logic/langspec.json`, and all methods depending on it.
 
 # 1.24.0
 ## What's Changed
