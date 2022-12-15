@@ -857,7 +857,6 @@ func TestLogicSig(t *testing.T) {
 	// validate LogicSig signed transaction against goal
 	const fromAddress = "47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU"
 	const toAddress = "PNWOET7LLOWMBMLE4KOCELCX6X3D3Q4H2Q4QJASYIEOF7YIPPQBG3YQ5YI"
-	const referenceTxID = "5FJDJD5LMZC3EHUYYJNH5I23U4X6H2KXABNDGPIL557ZMJ33GZHQ"
 	const mn = "advice pudding treat near rule blouse same whisper inner electric quit surface sunny dismiss leader blood seat clown cost exist hospital century reform able sponsor"
 	const fee = 1000
 	const amount = 2000
@@ -887,21 +886,14 @@ func TestLogicSig(t *testing.T) {
 	args[0] = []byte("123")
 	args[1] = []byte("456")
 	key, err := mnemonic.ToPrivateKey(mn)
-	var pk crypto.MultisigAccount
 	require.NoError(t, err)
-	lsig, err := crypto.MakeLogicSig(program, args, key, pk)
+	lsig, err := crypto.MakeLogicSigAccountDelegated(program, args, key)
 	require.NoError(t, err)
 
-	_, stxBytes, err := crypto.SignLogicsigTransaction(lsig, tx)
+	_, stxBytes, err := crypto.SignLogicSigAccountTransaction(lsig, tx)
 	require.NoError(t, err)
 
 	require.Equal(t, byteFromBase64(golden), stxBytes)
-
-	sender, err := types.DecodeAddress(fromAddress)
-	require.NoError(t, err)
-
-	verified := crypto.VerifyLogicSig(lsig, sender)
-	require.True(t, verified)
 }
 
 func TestFee(t *testing.T) {

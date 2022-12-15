@@ -2,6 +2,9 @@
 
 ## What's Changed
 ### Breaking Changes
+* Remove `MakeLogicSigAccount` and replace with `MakeLogicSigAccountEscrow`. Mark `MakeLogicSig` as a private function as well, only intended for internal use.
+* Rename `SignLogicsigTransaction` to `SignLogicSigTransaction`.
+* Remove logicsig templates, `logic/langspec.json`, and all methods depending on it.
 * Remove `DryrunTxnResult.Cost` in favor of 2 fields: `BudgetAdded` and `BudgetConsumed`. `cost` can be derived by `BudgetConsumed - BudgetAdded`.
 
 # 1.24.0
