@@ -187,23 +187,10 @@ type LogicSigAccount struct {
 	SigningKey ed25519.PublicKey `codec:"sigkey"`
 }
 
-// MakeLogicSigAccountEscrow creates a new escrow LogicSigAccount. The address
-// of this account will be a hash of its program.
-// Deprecated: This method is deprecated for not applying basic sanity check over program bytes,
-// use `MakeLogicSigAccountEscrowChecked` instead.
-func MakeLogicSigAccountEscrow(program []byte, args [][]byte) LogicSigAccount {
-	return LogicSigAccount{
-		Lsig: types.LogicSig{
-			Logic: program,
-			Args:  args,
-		},
-	}
-}
-
-// MakeLogicSigAccountEscrowChecked creates a new escrow LogicSigAccount.
+// MakeLogicSigAccountEscrow creates a new escrow LogicSigAccount.
 // The address of this account will be a hash of its program.
-func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAccount, error) {
-	lsig, err := MakeLogicSig(program, args, nil, MultisigAccount{})
+func MakeLogicSigAccountEscrow(program []byte, args [][]byte) (LogicSigAccount, error) {
+	lsig, err := makeLogicSig(program, args, nil, MultisigAccount{})
 	if err != nil {
 		return LogicSigAccount{}, err
 	}
@@ -218,7 +205,7 @@ func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAc
 // The parameter signer is the private key of the delegating account.
 func MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
 	var ma MultisigAccount
-	lsig, err := MakeLogicSig(program, args, signer, ma)
+	lsig, err := makeLogicSig(program, args, signer, ma)
 	if err != nil {
 		return
 	}
@@ -248,7 +235,7 @@ func MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer ed25519.
 // delegating multisig account. Use the method AppendMultisigSignature on the
 // returned LogicSigAccount to add additional signatures from other members.
 func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
-	lsig, err := MakeLogicSig(program, args, signer, msigAccount)
+	lsig, err := makeLogicSig(program, args, signer, msigAccount)
 	if err != nil {
 		return
 	}
