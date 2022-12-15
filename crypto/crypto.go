@@ -577,7 +577,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 	return
 }
 
-// SignLogicsigTransaction takes LogicSig object and a transaction and returns the
+// SignLogicSigTransaction takes LogicSig object and a transaction and returns the
 // bytes of a signed transaction ready to be broadcasted to the network
 // Note, LogicSig actually can be attached to any transaction and it is a
 // program's responsibility to approve/decline the transaction
@@ -586,7 +586,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 // the LogicSig's address, EXCEPT IF the LogicSig is delegated to a non-multisig
 // account. In order to properly handle that case, create a LogicSigAccount and
 // use SignLogicSigAccountTransaction instead.
-func SignLogicsigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()
 
@@ -640,18 +640,13 @@ func AddressFromProgram(program []byte) types.Address {
 	return types.Address(hash)
 }
 
-// MakeLogicSig produces a new LogicSig signature.
-//
-// Deprecated: THIS FUNCTION IS DEPRECATED.
-// It will be removed in v2 of this library.
-// Use one of MakeLogicSigAccountEscrow, MakeLogicSigAccountDelegated, or
-// MakeLogicSigAccountDelegatedMsig instead.
+// makeLogicSig produces a new LogicSig signature.
 //
 // The function can work in three modes:
 // 1. If no sk and ma provided then it returns contract-only LogicSig
 // 2. If no ma provides, it returns Sig delegated LogicSig
 // 3. If both sk and ma specified the function returns Multisig delegated LogicSig
-func MakeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
+func makeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma MultisigAccount) (lsig types.LogicSig, err error) {
 	if err = sanityCheckProgram(program); err != nil {
 		return
 	}
