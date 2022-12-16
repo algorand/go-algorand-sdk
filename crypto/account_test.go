@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func TestGenerateAccount(t *testing.T) {

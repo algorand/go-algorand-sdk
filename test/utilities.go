@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	sdk_json "github.com/algorand/go-algorand-sdk/encoding/json"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	sdk_json "github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 )
 
 func VerifyResponse(expectedFile string, actual string) error {

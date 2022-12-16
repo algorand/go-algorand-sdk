@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algorand/go-algorand-sdk/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 )
 
 // SetSyncRound sets the minimum sync round on the ledger.

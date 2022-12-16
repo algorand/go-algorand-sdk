@@ -1,4 +1,4 @@
-module github.com/algorand/go-algorand-sdk
+module github.com/algorand/go-algorand-sdk/v2
 
 go 1.17
 
