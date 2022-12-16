@@ -2543,7 +2543,7 @@ func takeB64encodedBytes(b64encodedBytes string) error {
 }
 
 func heuristicCheckOverBytes() error {
-	_, sanityCheckError = crypto.MakeLogicSigAccountEscrow(seeminglyProgram, nil)
+	_, sanityCheckError = crypto.MakeLogicSigAccountEscrowChecked(seeminglyProgram, nil)
 	return nil
 }
 
