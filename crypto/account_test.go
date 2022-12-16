@@ -167,7 +167,7 @@ func TestMakeLogicSigAccount(t *testing.T) {
 	}
 
 	t.Run("Escrow", func(t *testing.T) {
-		lsigAccount, err := MakeLogicSigAccountEscrow(program, args)
+		lsigAccount, err := MakeLogicSigAccountEscrowChecked(program, args)
 		require.NoError(t, err)
 
 		require.Equal(t, program, lsigAccount.Lsig.Logic)
@@ -351,7 +351,7 @@ func TestLogicSigAccount_Address(t *testing.T) {
 	}
 
 	t.Run("no sig", func(t *testing.T) {
-		lsigAccount, err := MakeLogicSigAccountEscrow(program, args)
+		lsigAccount, err := MakeLogicSigAccountEscrowChecked(program, args)
 		require.NoError(t, err)
 
 		expectedAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")

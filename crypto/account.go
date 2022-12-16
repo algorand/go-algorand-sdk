@@ -187,9 +187,9 @@ type LogicSigAccount struct {
 	SigningKey ed25519.PublicKey `codec:"sigkey"`
 }
 
-// MakeLogicSigAccountEscrow creates a new escrow LogicSigAccount.
+// MakeLogicSigAccountEscrowChecked creates a new escrow LogicSigAccount.
 // The address of this account will be a hash of its program.
-func MakeLogicSigAccountEscrow(program []byte, args [][]byte) (LogicSigAccount, error) {
+func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAccount, error) {
 	lsig, err := makeLogicSig(program, args, nil, MultisigAccount{})
 	if err != nil {
 		return LogicSigAccount{}, err
