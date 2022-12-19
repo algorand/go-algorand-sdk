@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
 // LookupAssetTransactionsParams contains all of the query parameters for url serialization.

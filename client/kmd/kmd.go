@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/json"
 )
 
 const (

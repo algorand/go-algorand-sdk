@@ -3,7 +3,7 @@ package kmd
 import (
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // DefaultWalletDriver is the wallet backend that kmd will use by default

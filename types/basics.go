@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"math"
 
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 
 	"golang.org/x/crypto/ed25519"
 )
