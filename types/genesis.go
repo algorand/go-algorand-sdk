@@ -4,7 +4,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 )
 
 // GenesisHashID is the Genesis HashID defined in go-algorand/protocol/hash.go
