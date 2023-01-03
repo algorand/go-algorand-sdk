@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func TestGenerateAccount(t *testing.T) {
@@ -126,7 +126,7 @@ func TestLogicSigAddress(t *testing.T) {
 		var sk ed25519.PrivateKey
 		var ma MultisigAccount
 
-		lsig, err := MakeLogicSig(program, args, sk, ma)
+		lsig, err := makeLogicSig(program, args, sk, ma)
 		require.NoError(t, err)
 
 		actualAddr := LogicSigAddress(lsig)
@@ -139,7 +139,7 @@ func TestLogicSigAddress(t *testing.T) {
 
 		var ma MultisigAccount
 
-		lsig, err := MakeLogicSig(program, args, account.PrivateKey, ma)
+		lsig, err := makeLogicSig(program, args, account.PrivateKey, ma)
 		require.NoError(t, err)
 
 		// for backwards compatibility, we still expect the hashed program bytes address
@@ -150,7 +150,7 @@ func TestLogicSigAddress(t *testing.T) {
 	t.Run("multi sig", func(t *testing.T) {
 		ma, sk1, _, _ := makeTestMultisigAccount(t)
 
-		lsig, err := MakeLogicSig(program, args, sk1, ma)
+		lsig, err := makeLogicSig(program, args, sk1, ma)
 		require.NoError(t, err)
 
 		// for backwards compatibility, we still expect the hashed program bytes address
@@ -167,7 +167,8 @@ func TestMakeLogicSigAccount(t *testing.T) {
 	}
 
 	t.Run("Escrow", func(t *testing.T) {
-		lsigAccount := MakeLogicSigAccountEscrow(program, args)
+		lsigAccount, err := MakeLogicSigAccountEscrowChecked(program, args)
+		require.NoError(t, err)
 
 		require.Equal(t, program, lsigAccount.Lsig.Logic)
 		require.Equal(t, args, lsigAccount.Lsig.Args)
@@ -261,7 +262,7 @@ func TestLogicSigAccountFromLogicSig(t *testing.T) {
 		var sk ed25519.PrivateKey
 		var ma MultisigAccount
 
-		lsig, err := MakeLogicSig(program, args, sk, ma)
+		lsig, err := makeLogicSig(program, args, sk, ma)
 		require.NoError(t, err)
 
 		t.Run("with public key", func(t *testing.T) {
@@ -286,7 +287,7 @@ func TestLogicSigAccountFromLogicSig(t *testing.T) {
 
 		var ma MultisigAccount
 
-		lsig, err := MakeLogicSig(program, args, account.PrivateKey, ma)
+		lsig, err := makeLogicSig(program, args, account.PrivateKey, ma)
 		require.NoError(t, err)
 
 		t.Run("with correct public key", func(t *testing.T) {
@@ -316,7 +317,7 @@ func TestLogicSigAccountFromLogicSig(t *testing.T) {
 	t.Run("multi sig", func(t *testing.T) {
 		ma, sk1, _, _ := makeTestMultisigAccount(t)
 
-		lsig, err := MakeLogicSig(program, args, sk1, ma)
+		lsig, err := makeLogicSig(program, args, sk1, ma)
 		require.NoError(t, err)
 
 		t.Run("with public key", func(t *testing.T) {
@@ -350,7 +351,8 @@ func TestLogicSigAccount_Address(t *testing.T) {
 	}
 
 	t.Run("no sig", func(t *testing.T) {
-		lsigAccount := MakeLogicSigAccountEscrow(program, args)
+		lsigAccount, err := MakeLogicSigAccountEscrowChecked(program, args)
+		require.NoError(t, err)
 
 		expectedAddr, err := types.DecodeAddress("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
 		require.NoError(t, err)

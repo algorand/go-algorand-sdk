@@ -1,11 +1,11 @@
-package future
+package transaction
 
 import (
 	"testing"
 
-	"github.com/algorand/go-algorand-sdk/abi"
-	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/abi"
+	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/stretchr/testify/require"
 )
 

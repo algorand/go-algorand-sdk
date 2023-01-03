@@ -7,7 +7,9 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"reflect"
 	"regexp"
 	"sort"
@@ -17,14 +19,13 @@ import (
 
 	"github.com/cucumber/godog"
 
-	"github.com/algorand/go-algorand-sdk/abi"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
-	"github.com/algorand/go-algorand-sdk/crypto"
-	sdkJson "github.com/algorand/go-algorand-sdk/encoding/json"
-	"github.com/algorand/go-algorand-sdk/future"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/abi"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
+	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	sdkJson "github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 var algodV2client *algod.Client
@@ -33,7 +34,7 @@ var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
 var applicationIds []uint64
-var txComposerResult future.ExecuteResult
+var txComposerResult transaction.ExecuteResult
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -57,7 +58,7 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	}
 
 	params.Fee = types.MicroAlgos(fee)
-	ltxn, err := future.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, params)
+	ltxn, err := transaction.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, params)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	_, err = future.WaitForConfirmation(algodV2client, ltxid, 1, context.Background())
+	_, err = transaction.WaitForConfirmation(algodV2client, ltxid, 1, context.Background())
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func iFundTheCurrentApplicationsAddress(microalgos int) error {
 		return err
 	}
 
-	txn, err := future.MakePaymentTxn(accounts[0], address.String(), uint64(microalgos), nil, "", params)
+	txn, err := transaction.MakePaymentTxn(accounts[0], address.String(), uint64(microalgos), nil, "", params)
 	if err != nil {
 		return err
 	}
@@ -103,7 +104,7 @@ func iFundTheCurrentApplicationsAddress(microalgos int) error {
 		return err
 	}
 
-	_, err = future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
+	_, err = transaction.WaitForConfirmation(algodV2client, txid, 1, context.Background())
 	return err
 }
 
@@ -184,32 +185,32 @@ func iBuildAnApplicationTransaction(
 	lSchema := types.StateSchema{NumUint: uint64(localInts), NumByteSlice: uint64(localBytes)}
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
+		tx, err = transaction.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
 			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "create_optin":
-		tx, err = future.MakeApplicationCreateTxWithBoxes(true, approvalP, clearP,
+		tx, err = transaction.MakeApplicationCreateTxWithBoxes(true, approvalP, clearP,
 			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "update":
-		tx, err = future.MakeApplicationUpdateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = transaction.MakeApplicationUpdateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			approvalP, clearP,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
-		tx, err = future.MakeApplicationNoOpTxWithBoxes(applicationId, args, accs,
+		tx, err = transaction.MakeApplicationNoOpTxWithBoxes(applicationId, args, accs,
 			fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = transaction.MakeApplicationOptInTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = transaction.MakeApplicationClearStateTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = transaction.MakeApplicationCloseOutTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
+		tx, err = transaction.MakeApplicationDeleteTxWithBoxes(applicationId, args, accs, fApp, fAssets, staticBoxes,
 			suggestedParams, transientAccount.Address, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		return fmt.Errorf("unsupported tx type: %s", operation)
@@ -236,7 +237,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr s
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	_, err := future.WaitForConfirmation(algodV2client, txid, 1, context.Background())
+	_, err := transaction.WaitForConfirmation(algodV2client, txid, 1, context.Background())
 	if err != nil {
 		return err
 	}
@@ -786,10 +787,15 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
 	}
 	if err != nil {
-		if strings.Contains(err.Error(), errStr) {
+		// If the expected error string is not empty, check if it is a substring of the actual error string.
+		// Note that if the expected error string is empty, then the second condition will always return true.
+		if len(errStr) != 0 && strings.Contains(err.Error(), errStr) {
 			return nil
 		}
 		return err
+	}
+	if len(errStr) != 0 {
+		return errors.New("expected an error but none was reported")
 	}
 
 	b64Value := base64.StdEncoding.EncodeToString(box.Value)

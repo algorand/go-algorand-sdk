@@ -8,11 +8,11 @@ import (
 
 	"github.com/cucumber/godog"
 
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
-	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
-	"github.com/algorand/go-algorand-sdk/encoding/json"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 var algodC *algod.Client
@@ -172,6 +172,18 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetBlockHash":
 			response, err =
 				algodC.GetBlockHash(123).Do(context.Background())
+		case "GetLedgerStateDelta":
+			response, err =
+				algodC.GetLedgerStateDelta(123).Do(context.Background())
+		case "UnsetSyncRound":
+			response, err =
+				algodC.UnsetSyncRound().Do(context.Background())
+		case "SetSyncRound":
+			response, err =
+				algodC.SetSyncRound(123).Do(context.Background())
+		case "GetSyncRound":
+			response, err =
+				algodC.GetSyncRound().Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response

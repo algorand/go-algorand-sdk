@@ -63,14 +63,24 @@ func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string, status int
 	return err
 }
 
+var receivedMethod string
 var receivedPath string
 
 func mockServerRecordingRequestPaths() error {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod = r.Method
 		receivedPath = r.URL.String()
 	}))
 	return nil
 }
+
+func expectTheRequestToBe(expectedMethod, expectedPath string) error {
+	if strings.ToLower(expectedMethod) != strings.ToLower(receivedMethod) {
+		return fmt.Errorf("method used to access mock server was %s but expected %s", receivedMethod, expectedMethod)
+	}
+	return expectThePathUsedToBe(expectedPath)
+}
+
 func expectThePathUsedToBe(expectedPath string) error {
 	if receivedPath != expectedPath {
 		return fmt.Errorf("path used to access mock server was %s but expected path %s", receivedPath, expectedPath)

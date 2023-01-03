@@ -1,3 +1,32 @@
+# 2.0.0
+
+## What's Changed
+### Breaking Changes
+* Remove `future` package.  Move package contents to `transaction`.
+* Remove `MakeLogicSigAccount` and replace with `MakeLogicSigAccountEscrow`. Mark `MakeLogicSig` as a private function as well, only intended for internal use.
+* Rename `SignLogicsigTransaction` to `SignLogicSigTransaction`.
+* Remove logicsig templates, `logic/langspec.json`, and all methods depending on it.
+* Remove `DryrunTxnResult.Cost` in favor of 2 fields: `BudgetAdded` and `BudgetConsumed`. `cost` can be derived by `BudgetConsumed - BudgetAdded`.
+* Remove v1 algod API (client/algod) due to API end-of-life (2022-12-01). Instead, use v2 algod API (client/v2/algod).
+* Remove unused generated types:  `CatchpointAbortResponse`, `CatchpointStartResponse`.
+
+# 1.24.0
+## What's Changed
+### Bugfixes
+* BugFix: Fix disassemble endpoint by @zyablitsev in https://github.com/algorand/go-algorand-sdk/pull/436
+### Enhancements
+* Tests: Support for new cucumber app call txn decoding test by @jasonpaulos in https://github.com/algorand/go-algorand-sdk/pull/433
+* Tests: Migrate v1 algod dependencies to v2 in cucumber tests by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/434
+* REST API:  Add KV counts to NodeStatusResponse by @michaeldiamant in https://github.com/algorand/go-algorand-sdk/pull/437
+* Enhancement: allowing zero length static array by @ahangsu in https://github.com/algorand/go-algorand-sdk/pull/438
+* Enhancement: revert generic StateProof txn field by @shiqizng in https://github.com/algorand/go-algorand-sdk/pull/439
+* Refactoring: Move old transaction dependencies to future.transaction by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/435
+
+## New Contributors
+* @zyablitsev made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/436
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.23.0...v1.24.0
+
 # 1.23.0
 ## What's Changed
 ### New Features

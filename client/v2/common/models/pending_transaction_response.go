@@ -1,6 +1,6 @@
 package models
 
-import "github.com/algorand/go-algorand-sdk/types"
+import "github.com/algorand/go-algorand-sdk/v2/types"
 
 // PendingTransactionResponse details about a pending transaction. If the
 // transaction was recently confirmed, includes confirmation details like the round
