@@ -10,6 +10,8 @@
 * Remove v1 algod API (client/algod) due to API end-of-life (2022-12-01). Instead, use v2 algod API (client/v2/algod).
 * Remove unused generated types:  `CatchpointAbortResponse`, `CatchpointStartResponse`.
 
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.24.0...v2.0.0
+
 # 1.24.0
 ## What's Changed
 ### Bugfixes
