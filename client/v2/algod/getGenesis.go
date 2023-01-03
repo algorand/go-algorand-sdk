@@ -3,7 +3,7 @@ package algod
 import (
 	"context"
 
-	"github.com/algorand/go-algorand-sdk/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 )
 
 // GetGenesis returns the entire genesis file in json.

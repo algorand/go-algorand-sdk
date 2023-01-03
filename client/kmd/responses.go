@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // APIV1Response is the interface that all API V1 responses must satisfy

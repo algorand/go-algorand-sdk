@@ -1,6 +1,6 @@
 package models
 
-import "github.com/algorand/go-algorand-sdk/types"
+import "github.com/algorand/go-algorand-sdk/v2/types"
 
 // PendingTransactionsResponse a potentially truncated list of transactions
 // currently in the node's transaction pool. You can compute whether or not the

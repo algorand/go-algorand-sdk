@@ -43,6 +43,8 @@ func (msig MultisigSig) Blank() bool {
 // LogicSig is signed by an account, allowing delegation of operations.
 // OR
 // LogicSig defines a contract account.
+//
+// LogicSig cannot sign transactions in all cases.  Instead, use LogicSigAccount as a safe, general purpose signing mechanism.  Since LogicSig does not track the provided signature's public key, LogicSig cannot sign transactions when delegated to a non-multisig account _and_ the sender is not the delegating account.
 type LogicSig struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"strconv"
 	"strings"
 
-	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/future"
-	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/cucumber/godog"
 
 	"golang.org/x/crypto/ed25519"
@@ -67,7 +67,7 @@ func buildKeyregTransaction(sender, nonparticipation string,
 		return fmt.Errorf("Could not parse nonparticipation value: %v", err)
 	}
 
-	tx, err = future.MakeKeyRegTxnWithStateProofKey(sender, nil, sugParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonPartValue)
+	tx, err = transaction.MakeKeyRegTxnWithStateProofKey(sender, nil, sugParams, votePkB64, selectionPkB64, stateProofPkB64, uint64(voteFirst), uint64(voteLast), uint64(keyDilution), nonPartValue)
 	return err
 }
 
@@ -153,28 +153,28 @@ func buildLegacyAppCallTransaction(
 
 	switch operation {
 	case "create":
-		tx, err = future.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
+		tx, err = transaction.MakeApplicationCreateTxWithBoxes(false, approvalP, clearP,
 			gSchema, lSchema, uint32(extraPages), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "update":
-		tx, err = future.MakeApplicationUpdateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = transaction.MakeApplicationUpdateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			approvalP, clearP,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "call":
-		tx, err = future.MakeApplicationNoOpTxWithBoxes(uint64(applicationId), args, accs,
+		tx, err = transaction.MakeApplicationNoOpTxWithBoxes(uint64(applicationId), args, accs,
 			fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "optin":
-		tx, err = future.MakeApplicationOptInTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = transaction.MakeApplicationOptInTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "clear":
-		tx, err = future.MakeApplicationClearStateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = transaction.MakeApplicationClearStateTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "closeout":
-		tx, err = future.MakeApplicationCloseOutTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = transaction.MakeApplicationCloseOutTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	case "delete":
-		tx, err = future.MakeApplicationDeleteTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
+		tx, err = transaction.MakeApplicationDeleteTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
 		err = fmt.Errorf("Unknown opperation: %s", operation)

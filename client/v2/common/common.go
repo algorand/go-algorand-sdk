@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/algorand/go-algorand-sdk/encoding/json"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/google/go-querystring/query"
 )
 
@@ -191,6 +191,11 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 		return responseErr
 	}
 	return err
+}
+
+// Delete performs a DELETE request to the specific path against the server
+func (client *Client) Delete(ctx context.Context, response interface{}, path string, params interface{}, headers []*Header) error {
+	return client.submitForm(ctx, response, path, params, "DELETE", false /* encodeJSON */, headers, nil)
 }
 
 // Get performs a GET request to the specific path against the server

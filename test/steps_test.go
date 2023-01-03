@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"os"
 	"path"
 	"reflect"
@@ -20,19 +21,18 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/algorand/go-algorand-sdk/abi"
-	"github.com/algorand/go-algorand-sdk/auction"
-	"github.com/algorand/go-algorand-sdk/client/kmd"
-	algodV2 "github.com/algorand/go-algorand-sdk/client/v2/algod"
-	commonV2 "github.com/algorand/go-algorand-sdk/client/v2/common"
-	modelsV2 "github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	indexerV2 "github.com/algorand/go-algorand-sdk/client/v2/indexer"
-	"github.com/algorand/go-algorand-sdk/crypto"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	"github.com/algorand/go-algorand-sdk/future"
-	"github.com/algorand/go-algorand-sdk/logic"
-	"github.com/algorand/go-algorand-sdk/mnemonic"
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/abi"
+	"github.com/algorand/go-algorand-sdk/v2/auction"
+	"github.com/algorand/go-algorand-sdk/v2/client/kmd"
+	algodV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	commonV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
+	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
+	indexerV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
+	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/logic"
+	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
@@ -92,12 +92,12 @@ var abiMethods []abi.Method
 var abiJsonString string
 var abiInterface abi.Interface
 var abiContract abi.Contract
-var txComposer future.AtomicTransactionComposer
-var accountTxSigner future.BasicAccountTransactionSigner
+var txComposer transaction.AtomicTransactionComposer
+var accountTxSigner transaction.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
-var accountTxAndSigner future.TransactionWithSigner
-var txTrace future.DryrunTxnResult
+var accountTxAndSigner transaction.TransactionWithSigner
+var txTrace transaction.DryrunTxnResult
 var trace string
 var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
@@ -152,7 +152,7 @@ func initializeAccount(accountAddress string) error {
 		return err
 	}
 
-	txn, err = future.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
+	txn, err = transaction.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
 	if err != nil {
 		return err
 	}
@@ -540,7 +540,7 @@ func createMsigTxn() error {
 		FlatFee:         false,
 	}
 	msigaddr, _ := msig.Address()
-	txn, err = future.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
+	txn, err = transaction.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
 	if err != nil {
 		return err
 	}
@@ -559,7 +559,7 @@ func createMsigTxnZeroFee() error {
 		FlatFee:         true,
 	}
 	msigaddr, _ := msig.Address()
-	txn, err = future.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
+	txn, err = transaction.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
 	if err != nil {
 		return err
 	}
@@ -888,7 +888,7 @@ func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
 		return err
 	}
 	lastRound = uint64(params.FirstRoundValid)
-	txn, err = future.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
+	txn, err = transaction.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
 	return err
 }
 
@@ -936,7 +936,7 @@ func defaultMsigTxn(iamt int, inote string) error {
 	if err != nil {
 		return err
 	}
-	txn, err = future.MakePaymentTxn(addr.String(), accounts[1], amt, note, "", params)
+	txn, err = transaction.MakePaymentTxn(addr.String(), accounts[1], amt, note, "", params)
 	if err != nil {
 		return err
 	}
@@ -1138,7 +1138,7 @@ func createTxnFlat() error {
 		LastRoundValid:  types.Round(lv),
 		FlatFee:         true,
 	}
-	txn, err = future.MakePaymentTxn(a.String(), to, amt, note, close, paramsToUse)
+	txn, err = transaction.MakePaymentTxn(a.String(), to, amt, note, close, paramsToUse)
 	if err != nil {
 		return err
 	}
@@ -1235,7 +1235,7 @@ func createKeyregWithStateProof(keyregType string) (err error) {
 		stateProofPK = ""
 	}
 
-	txn, err = future.MakeKeyRegTxnWithStateProofKey(accounts[0], note, params, votekey, selkey, stateProofPK, votefst, votelst, votekd, nonpart)
+	txn, err = transaction.MakeKeyRegTxnWithStateProofKey(accounts[0], note, params, votekey, selkey, stateProofPK, votefst, votelst, votekd, nonpart)
 	if err != nil {
 		return err
 	}
@@ -1293,7 +1293,7 @@ func assetCreateTxnHelper(issuance int, frozenState bool) error {
 	assetName := assetTestFixture.AssetName
 	url := assetTestFixture.AssetURL
 	metadataHash := assetTestFixture.AssetMetadataHash
-	assetCreateTxn, err := future.MakeAssetCreateTxn(creator, assetNote, params, assetIssuance, 0, frozenState, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
+	assetCreateTxn, err := transaction.MakeAssetCreateTxn(creator, assetNote, params, assetIssuance, 0, frozenState, manager, reserve, freeze, clawback, unitName, assetName, url, metadataHash)
 	assetTestFixture.LastTransactionIssued = assetCreateTxn
 	txn = assetCreateTxn
 	assetTestFixture.ExpectedParams = convertTransactionAssetParamsToModelsAssetParam(assetCreateTxn.AssetParams)
@@ -1322,7 +1322,7 @@ func createNoManagerAssetReconfigure() error {
 	freeze := ""
 	clawback := ""
 	manager := creator // if this were "" as well, this wouldn't be a reconfigure txn, it would be a destroy txn
-	assetReconfigureTxn, err := future.MakeAssetConfigTxn(creator, assetNote, params, assetTestFixture.AssetIndex, manager, reserve, freeze, clawback, false)
+	assetReconfigureTxn, err := transaction.MakeAssetConfigTxn(creator, assetNote, params, assetTestFixture.AssetIndex, manager, reserve, freeze, clawback, false)
 	assetTestFixture.LastTransactionIssued = assetReconfigureTxn
 	txn = assetReconfigureTxn
 	// update expected params
@@ -1340,7 +1340,7 @@ func createAssetDestroy() error {
 	}
 	lastRound = uint64(params.FirstRoundValid)
 	assetNote := []byte(nil)
-	assetDestroyTxn, err := future.MakeAssetDestroyTxn(creator, assetNote, params, assetTestFixture.AssetIndex)
+	assetDestroyTxn, err := transaction.MakeAssetDestroyTxn(creator, assetNote, params, assetTestFixture.AssetIndex)
 	assetTestFixture.LastTransactionIssued = assetDestroyTxn
 	txn = assetDestroyTxn
 	// update expected params
@@ -1478,7 +1478,7 @@ func createAssetAcceptanceForSecondAccount() error {
 	}
 	lastRound = uint64(params.FirstRoundValid)
 	assetNote := []byte(nil)
-	assetAcceptanceTxn, err := future.MakeAssetAcceptanceTxn(accountToUse, assetNote, params, assetTestFixture.AssetIndex)
+	assetAcceptanceTxn, err := transaction.MakeAssetAcceptanceTxn(accountToUse, assetNote, params, assetTestFixture.AssetIndex)
 	assetTestFixture.LastTransactionIssued = assetAcceptanceTxn
 	txn = assetAcceptanceTxn
 	return err
@@ -1495,7 +1495,7 @@ func createAssetTransferTransactionToSecondAccount(amount int) error {
 	closeAssetsTo := ""
 	lastRound = uint64(params.FirstRoundValid)
 	assetNote := []byte(nil)
-	assetAcceptanceTxn, err := future.MakeAssetTransferTxn(creator, recipient, sendAmount, assetNote, params, closeAssetsTo, assetTestFixture.AssetIndex)
+	assetAcceptanceTxn, err := transaction.MakeAssetTransferTxn(creator, recipient, sendAmount, assetNote, params, closeAssetsTo, assetTestFixture.AssetIndex)
 	assetTestFixture.LastTransactionIssued = assetAcceptanceTxn
 	txn = assetAcceptanceTxn
 	return err
@@ -1512,7 +1512,7 @@ func createAssetTransferTransactionFromSecondAccountToCreator(amount int) error 
 	closeAssetsTo := ""
 	lastRound = uint64(params.FirstRoundValid)
 	assetNote := []byte(nil)
-	assetAcceptanceTxn, err := future.MakeAssetTransferTxn(sender, recipient, sendAmount, assetNote, params, closeAssetsTo, assetTestFixture.AssetIndex)
+	assetAcceptanceTxn, err := transaction.MakeAssetTransferTxn(sender, recipient, sendAmount, assetNote, params, closeAssetsTo, assetTestFixture.AssetIndex)
 	assetTestFixture.LastTransactionIssued = assetAcceptanceTxn
 	txn = assetAcceptanceTxn
 	return err
@@ -1527,7 +1527,7 @@ func freezeTransactionHelper(target string, setting bool) error {
 	}
 	lastRound = uint64(params.FirstRoundValid)
 	assetNote := []byte(nil)
-	assetFreezeOrUnfreezeTxn, err := future.MakeAssetFreezeTxn(assetTestFixture.Creator, assetNote, params, assetTestFixture.AssetIndex, target, setting)
+	assetFreezeOrUnfreezeTxn, err := transaction.MakeAssetFreezeTxn(assetTestFixture.Creator, assetNote, params, assetTestFixture.AssetIndex, target, setting)
 	assetTestFixture.LastTransactionIssued = assetFreezeOrUnfreezeTxn
 	txn = assetFreezeOrUnfreezeTxn
 	return err
@@ -1549,7 +1549,7 @@ func createRevocationTransaction(amount int) error {
 	lastRound = uint64(params.FirstRoundValid)
 	revocationAmount := uint64(amount)
 	assetNote := []byte(nil)
-	assetRevokeTxn, err := future.MakeAssetRevocationTxn(assetTestFixture.Creator, accounts[1], revocationAmount, assetTestFixture.Creator, assetNote, params, assetTestFixture.AssetIndex)
+	assetRevokeTxn, err := transaction.MakeAssetRevocationTxn(assetTestFixture.Creator, accounts[1], revocationAmount, assetTestFixture.Creator, assetNote, params, assetTestFixture.AssetIndex)
 	assetTestFixture.LastTransactionIssued = assetRevokeTxn
 	txn = assetRevokeTxn
 	return err
@@ -2034,7 +2034,7 @@ func deserializeContractJson() error {
 }
 
 func aNewAtomicTransactionComposer() error {
-	txComposer = future.AtomicTransactionComposer{}
+	txComposer = transaction.AtomicTransactionComposer{}
 	return nil
 }
 
@@ -2071,11 +2071,11 @@ func anApplicationId(id int) error {
 
 func iMakeATransactionSignerForTheAccount(accountType string) error {
 	if accountType == "signing" {
-		accountTxSigner = future.BasicAccountTransactionSigner{
+		accountTxSigner = transaction.BasicAccountTransactionSigner{
 			Account: account,
 		}
 	} else if accountType == "transient" {
-		accountTxSigner = future.BasicAccountTransactionSigner{
+		accountTxSigner = transaction.BasicAccountTransactionSigner{
 			Account: transientAccount,
 		}
 	}
@@ -2242,7 +2242,7 @@ func addMethodCallHelper(accountType, strOnComplete, approvalProgram, clearProgr
 		preparedArgs = append(preparedArgs, decodedArg)
 	}
 
-	methodCallParams := future.AddMethodCallParams{
+	methodCallParams := transaction.AddMethodCallParams{
 		AppID:           applicationId,
 		Method:          abiMethod,
 		MethodArgs:      preparedArgs,
@@ -2293,18 +2293,18 @@ func buildTheTransactionGroupWithTheComposer(errorType string) error {
 }
 
 func theComposerShouldHaveAStatusOf(strStatus string) error {
-	var status future.AtomicTransactionComposerStatus
+	var status transaction.AtomicTransactionComposerStatus
 	switch strStatus {
 	case "BUILDING":
-		status = future.BUILDING
+		status = transaction.BUILDING
 	case "BUILT":
-		status = future.BUILT
+		status = transaction.BUILT
 	case "SIGNED":
-		status = future.SIGNED
+		status = transaction.SIGNED
 	case "SUBMITTED":
-		status = future.SUBMITTED
+		status = transaction.SUBMITTED
 	case "COMMITTED":
-		status = future.COMMITTED
+		status = transaction.COMMITTED
 	default:
 		return fmt.Errorf("invalid status provided")
 	}
@@ -2356,13 +2356,13 @@ func iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo(sender, r
 	}
 
 	var err error
-	txn, err = future.MakePaymentTxn(sender, receiver, uint64(amount), nil, closeTo, sugParams)
+	txn, err = transaction.MakePaymentTxn(sender, receiver, uint64(amount), nil, closeTo, sugParams)
 	tx = txn
 	return err
 }
 
 func iCreateATransactionWithSignerWithTheCurrentTransaction() error {
-	accountTxAndSigner = future.TransactionWithSigner{
+	accountTxAndSigner = transaction.TransactionWithSigner{
 		Signer: accountTxSigner,
 		Txn:    txn,
 	}
@@ -2396,7 +2396,7 @@ func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
 	if err != nil {
 		return err
 	}
-	dr, err := future.NewDryrunResponseFromJson(data)
+	dr, err := transaction.NewDryrunResponseFromJson(data)
 	if err != nil {
 		return err
 	}
@@ -2409,7 +2409,7 @@ func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
 }
 
 func callingAppTraceProduces(arg1 string) error {
-	cfg := future.DefaultStackPrinterConfig()
+	cfg := transaction.DefaultStackPrinterConfig()
 	cfg.TopOfStackFirst = false
 	trace = txTrace.GetAppCallTrace(cfg)
 

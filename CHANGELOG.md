@@ -1,3 +1,17 @@
+# 2.0.0
+
+## What's Changed
+### Breaking Changes
+* Remove `future` package.  Move package contents to `transaction`.
+* Remove `MakeLogicSigAccount` and replace with `MakeLogicSigAccountEscrow`. Mark `MakeLogicSig` as a private function as well, only intended for internal use.
+* Rename `SignLogicsigTransaction` to `SignLogicSigTransaction`.
+* Remove logicsig templates, `logic/langspec.json`, and all methods depending on it.
+* Remove `DryrunTxnResult.Cost` in favor of 2 fields: `BudgetAdded` and `BudgetConsumed`. `cost` can be derived by `BudgetConsumed - BudgetAdded`.
+* Remove v1 algod API (client/algod) due to API end-of-life (2022-12-01). Instead, use v2 algod API (client/v2/algod).
+* Remove unused generated types:  `CatchpointAbortResponse`, `CatchpointStartResponse`.
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v1.24.0...v2.0.0
+
 # 1.24.0
 ## What's Changed
 ### Bugfixes
