@@ -11,7 +11,7 @@ The Algorand golang SDK provides:
 
 # Documentation
 
-Full documentation is available [on godoc](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
+Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
 
 Additional developer documentation and examples can be found on [developer.algorand.org](https://developer.algorand.org/docs/sdks/go/)
 
