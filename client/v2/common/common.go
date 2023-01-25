@@ -181,7 +181,7 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	// The caller wants a string
 	if strResponse, ok := response.(*string); ok {
 		*strResponse = string(bodyBytes)
-		return err
+		return responseErr
 	}
 
 	// Attempt to unmarshal a response regardless of whether or not there was an error.
