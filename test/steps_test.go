@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"os"
 	"path"
 	"reflect"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 
 	"golang.org/x/crypto/ed25519"
 
@@ -352,6 +353,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^a base64 encoded program bytes for heuristic sanity check "([^"]*)"$`, takeB64encodedBytes)
 	s.Step(`^I start heuristic sanity check over the bytes$`, heuristicCheckOverBytes)
 	s.Step(`^if the heuristic sanity check throws an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
+	s.Step(`^disassembly of "([^"]*)" matches "([^"]*)"$`, disassemblyMatches)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2556,6 +2558,26 @@ func checkErrorIfMatching(errMsg string) error {
 		if sanityCheckError == nil || !strings.Contains(sanityCheckError.Error(), errMsg) {
 			return fmt.Errorf("expected err to contain %s, but sanity check error not matching: %w", errMsg, sanityCheckError)
 		}
+	}
+	return nil
+}
+
+func disassemblyMatches(bytecodeFilename, sourceFilename string) error {
+	disassembledBytes, err := loadResource(bytecodeFilename)
+	if err != nil {
+		return err
+	}
+	actualResult, err := aclv2.TealDisassemble(disassembledBytes).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	expectedBytes, err := loadResource(sourceFilename)
+	if err != nil {
+		return err
+	}
+	expectedResult := string(expectedBytes)
+	if actualResult.Result != expectedResult {
+		return fmt.Errorf("Actual program does not match expected: %s != %s", actualResult.Result, expectedResult)
 	}
 	return nil
 }
