@@ -34,10 +34,10 @@ func (a Address) IsZero() bool {
 	return a == ZeroAddress
 }
 
-// MarshalText returns the address string as an array of bytes
-func (addr Address) MarshalText() ([]byte, error) {
-	return []byte(addr.String()), nil
-}
+//// MarshalText returns the address string as an array of bytes
+//func (addr Address) MarshalText() ([]byte, error) {
+//	return []byte(addr.String()), nil
+//}
 
 // UnmarshalText initializes the Address from an array of bytes.
 func (addr *Address) UnmarshalText(text []byte) error {

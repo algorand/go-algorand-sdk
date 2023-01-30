@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/base32"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"math"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -104,4 +106,32 @@ func (block *Block) FromBase64String(b64string string) error {
 // String returns the digest in a human-readable Base32 string
 func (d Digest) String() string {
 	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(d[:])
+}
+
+// DigestFromString converts a string to a Digest
+func DigestFromString(str string) (d Digest, err error) {
+	decoded, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(str)
+	if err != nil {
+		return d, err
+	}
+	if len(decoded) != len(d) {
+		msg := fmt.Sprintf(`Attempted to decode a string which was not a Digest: "%v"`, str)
+		return d, errors.New(msg)
+	}
+	copy(d[:], decoded[:])
+	return d, err
+}
+
+//func (d Digest) MarshalText() ([]byte, error) {
+//	return []byte(d.String()), nil
+//}
+
+// UnmarshalText initializes the Address from an array of bytes.
+func (d *Digest) UnmarshalText(text []byte) error {
+	digest, err := DigestFromString(string(text))
+	if err == nil {
+		*d = digest
+		return nil
+	}
+	return err
 }
