@@ -34,6 +34,21 @@ func (a Address) IsZero() bool {
 	return a == ZeroAddress
 }
 
+// MarshalText returns the address string as an array of bytes
+func (addr Address) MarshalText() ([]byte, error) {
+	return []byte(addr.String()), nil
+}
+
+// UnmarshalText initializes the Address from an array of bytes.
+func (addr *Address) UnmarshalText(text []byte) error {
+	address, err := DecodeAddress(string(text))
+	if err == nil {
+		*addr = address
+		return nil
+	}
+	return err
+}
+
 // DecodeAddress turns a checksum address string into an Address object. It
 // checks that the checksum is correct, and returns an error if it's not.
 func DecodeAddress(addr string) (a Address, err error) {
