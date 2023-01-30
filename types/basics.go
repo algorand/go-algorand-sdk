@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/base32"
 	"encoding/base64"
 	"math"
 
@@ -98,4 +99,9 @@ func (block *Block) FromBase64String(b64string string) error {
 		return err
 	}
 	return nil
+}
+
+// String returns the digest in a human-readable Base32 string
+func (d Digest) String() string {
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(d[:])
 }
