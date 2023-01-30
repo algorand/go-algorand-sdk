@@ -122,9 +122,9 @@ func DigestFromString(str string) (d Digest, err error) {
 	return d, err
 }
 
-//func (d Digest) MarshalText() ([]byte, error) {
-//	return []byte(d.String()), nil
-//}
+func (d Digest) MarshalText() ([]byte, error) {
+	return []byte(d.String()), nil
+}
 
 // UnmarshalText initializes the Address from an array of bytes.
 func (d *Digest) UnmarshalText(text []byte) error {
