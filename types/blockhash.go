@@ -1,26 +1,40 @@
 package types
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
+	"encoding/base64"
+	"strings"
 )
 
-func (b BlockHash) String() string {
-	return fmt.Sprintf("blk-%v", Digest(b))
-}
-
 // MarshalText returns the BlockHash string as an array of bytes
-func (b BlockHash) MarshalText() ([]byte, error) {
-	return []byte(b.String()), nil
+func (b *BlockHash) MarshalText() ([]byte, error) {
+	result := base64.StdEncoding.EncodeToString(b[:])
+	return []byte(result), nil
 }
 
 // UnmarshalText initializes the BlockHash from an array of bytes.
 func (b *BlockHash) UnmarshalText(text []byte) error {
-	if len(text) < 4 || !bytes.Equal(text[0:4], []byte("blk-")) {
-		return errors.New("unrecognized blockhash format")
+	// Remove the blk- prefix if it is present to allow decoding either format.
+	if strings.HasPrefix(string(text), "blk-") {
+		text = text[4:]
 	}
-	d, err := DigestFromString(string(text[4:]))
-	*b = BlockHash(d)
+
+	// Attempt to decode base32 format
+	d, err := DigestFromString(string(text))
+	if err == nil {
+		*b = BlockHash(d)
+		return nil
+	}
+	// ignore the DigestFromString error because it isn't the native MarshalText format.
+
+	// Attempt to decode base64 format
+	var data BlockHash
+	n, err := base64.StdEncoding.Decode(data[:], text)
+	if err == nil {
+		if n != len(b[:]) {
+			return errWrongBlockHashLen
+		}
+		copy(b[:], data[:])
+		return nil
+	}
 	return err
 }
