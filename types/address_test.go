@@ -89,7 +89,6 @@ func TestUnmarshalAddress(t *testing.T) {
 			actual, err := addr.MarshalText()
 			require.NoError(t, err)
 			require.Equal(t, tc.output, string(actual))
-			fmt.Println(string(actual))
 		})
 	}
 }
