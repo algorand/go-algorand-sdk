@@ -3,6 +3,29 @@ package types
 // TealType is an enum of the types in a TEAL program: Bytes and Uint
 type TealType uint64
 
+const (
+	// TealBytesType represents the type of a byte slice in a TEAL program
+	TealBytesType TealType = 1
+
+	// TealUintType represents the type of a uint in a TEAL program
+	TealUintType TealType = 2
+)
+
+// Status is the delegation status of an account's MicroAlgos
+type Status byte
+
+const (
+	// Offline indicates that the associated account receives rewards but does not participate in the consensus.
+	Offline Status = iota
+	// Online indicates that the associated account participates in the consensus and receive rewards.
+	Online
+	// NotParticipating indicates that the associated account neither participates in the consensus, nor receives rewards.
+	// Accounts that are marked as NotParticipating cannot change their status, but can receive and send Algos to other accounts.
+	// Two special accounts that are defined as NotParticipating are the incentive pool (also know as rewards pool) and the fee sink.
+	// These two accounts also have additional Algo transfer restrictions.
+	NotParticipating
+)
+
 // TealValue contains type information and a value, representing a value in a
 // TEAL program
 type TealValue struct {
@@ -127,9 +150,6 @@ type VotingData struct {
 	VoteLastValid   Round
 	VoteKeyDilution uint64
 }
-
-// Status is the delegation status of an account's MicroAlgos
-type Status byte
 
 // AccountBaseData contains base account info like balance, status and total number of resources
 type AccountBaseData struct {
