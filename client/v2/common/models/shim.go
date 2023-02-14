@@ -1,5 +1,7 @@
 package models
 
+import "github.com/algorand/go-algorand-sdk/v2/types"
+
 // Types in this file are used to help convert between hand written code
 // that doesn't quite match the spec, and code generated from the spec.
 
@@ -17,3 +19,6 @@ type Supply SupplyResponse
 
 // VersionBuild
 type VersionBuild BuildVersion
+
+// LedgerStateDelta aliases to the manually defined type.
+type LedgerStateDelta types.LedgerStateDelta
