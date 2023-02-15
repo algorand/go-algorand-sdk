@@ -125,9 +125,6 @@ func getType(val interface{}) ValueType {
 // * Address is sometimes B32 encoded and sometimes B64 encoded.
 // * BlockHash is sometimes B32 encoded (with a blk prefix) and sometimes B64 encoded.
 func binaryOrStringEqual(s1, s2 string) bool {
-	if strings.HasPrefix(s1, "blk-") || strings.HasPrefix(s2, "blk-") {
-		fmt.Println("block...")
-	}
 	if s1 == s2 {
 		return true
 	}
