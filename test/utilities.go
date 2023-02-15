@@ -15,6 +15,7 @@ import (
 
 	sdk_json "github.com/algorand/go-algorand-sdk/v2/encoding/json"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func VerifyResponse(expectedFile string, actual string) error {
@@ -60,10 +61,16 @@ func VerifyResponse(expectedFile string, actual string) error {
 // For reference: j1 is the baseline, j2 is the test
 func EqualJson2(j1, j2 string) (err error) {
 	var expected map[string]interface{}
-	json.Unmarshal([]byte(j1), &expected)
+	err = json.Unmarshal([]byte(j1), &expected)
+	if err != nil {
+		return err
+	}
 
 	var actual map[string]interface{}
-	json.Unmarshal([]byte(j2), &actual)
+	err = json.Unmarshal([]byte(j2), &actual)
+	if err != nil {
+		return err
+	}
 
 	err = recursiveCompare("root", expected, actual)
 
@@ -113,18 +120,60 @@ func getType(val interface{}) ValueType {
 // The decoding process doesn't seem to distinguish between string and binary, but the encoding process
 // does. So sometimes the string will be base64 encoded and need to compare against the decoded string
 // value.
+// There are some discrepancies in different algod / SDK types that causes
+// encodings that need special handling:
+// * Address is sometimes B32 encoded and sometimes B64 encoded.
+// * BlockHash is sometimes B32 encoded (with a blk prefix) and sometimes B64 encoded.
 func binaryOrStringEqual(s1, s2 string) bool {
+	if strings.HasPrefix(s1, "blk-") || strings.HasPrefix(s2, "blk-") {
+		fmt.Println("block...")
+	}
 	if s1 == s2 {
 		return true
 	}
-	if val, err := base64.StdEncoding.DecodeString(s1); err == nil {
-		if string(val) == s2 {
-			return true
+	// S1 convert to S2
+	{
+		if val, err := base64.StdEncoding.DecodeString(s1); err == nil {
+			if string(val) == s2 {
+				return true
+			}
+			var addr types.Address
+			if len(val) == len(addr[:]) {
+				copy(addr[:], val)
+				if addr.String() == s2 {
+					return true
+				}
+			}
+
+		}
+		// parse blockhash
+		var bh types.BlockHash
+		if bh.UnmarshalText([]byte(s1)) == nil {
+			if base64.StdEncoding.EncodeToString(bh[:]) == s2 {
+				return true
+			}
 		}
 	}
-	if val, err := base64.StdEncoding.DecodeString(s2); err == nil {
-		if string(val) == s1 {
-			return true
+
+	// S2 convert to S1
+	{
+		if val, err := base64.StdEncoding.DecodeString(s2); err == nil {
+			if string(val) == s1 {
+				return true
+			}
+			var addr types.Address
+			if len(val) == len(addr[:]) {
+				copy(addr[:], val)
+				if addr.String() == s1 {
+					return true
+				}
+			}
+		}
+		var bh types.BlockHash
+		if bh.UnmarshalText([]byte(s2)) == nil {
+			if base64.StdEncoding.EncodeToString(bh[:]) == s1 {
+				return true
+			}
 		}
 	}
 	return false

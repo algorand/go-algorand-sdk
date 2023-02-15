@@ -216,7 +216,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		if responseStr, ok := response.(string); ok {
 			responseJson = responseStr
 		} else {
-			responseJson = string(json.Encode(response))
+			responseJson = string(json.EncodeStrict(response))
 		}
 	}
 
