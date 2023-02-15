@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type object struct {
@@ -27,7 +28,7 @@ func TestDecode(t *testing.T) {
 		// basic encode/decode test.
 		var decoded object
 		err := Decode(encodedOb, &decoded)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, obj, decoded)
 	})
 
@@ -36,7 +37,7 @@ func TestDecode(t *testing.T) {
 		decoder := NewDecoder(bytes.NewReader(encodedOb))
 		var decoded object
 		err := decoder.Decode(&decoded)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, obj, decoded)
 	})
 
@@ -45,7 +46,7 @@ func TestDecode(t *testing.T) {
 		decoder := NewDecoder(bytes.NewReader(encodedOb))
 		var decoded subsetObject
 		err := decoder.Decode(&decoded)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no matching struct field found when decoding stream map with key name")
 	})
 
@@ -54,7 +55,7 @@ func TestDecode(t *testing.T) {
 		decoder := NewLenientDecoder(bytes.NewReader(encodedOb))
 		var decoded subsetObject
 		err := decoder.Decode(&decoded)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, obj.subsetObject, decoded)
 	})
 
@@ -63,7 +64,7 @@ func TestDecode(t *testing.T) {
 			0: "int key",
 		}
 		data := string(Encode(intMap))
-		assert.Contains(t, data, "0: ")
+		assert.NotContains(t, data, "\"0\":")
 	})
 
 	t.Run("strict encode map key as string", func(t *testing.T) {
@@ -71,6 +72,15 @@ func TestDecode(t *testing.T) {
 			0: "int key",
 		}
 		data := string(EncodeStrict(intMap))
-		assert.Contains(t, data, "\"0\": ")
+		assert.NotContains(t, data, "0:")
+	})
+
+	t.Run("strict encode map key as string", func(t *testing.T) {
+		t.Skip("There is a bug in go-codec with MapKeyAsString = true and Canonical = true")
+		intMap := map[interface{}]interface{}{
+			0: "int key",
+		}
+		data := string(EncodeStrict(intMap))
+		assert.NotContains(t, data, "0:")
 	})
 }

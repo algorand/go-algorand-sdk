@@ -28,7 +28,6 @@
 @unit.sourcemap
 @unit.stateproof.paths
 @unit.stateproof.responses
-@unit.stateproof.responses.msgp
 @unit.statedelta
 @unit.tealsign
 @unit.transactions

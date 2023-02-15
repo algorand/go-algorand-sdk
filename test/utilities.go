@@ -44,7 +44,7 @@ func VerifyResponse(expectedFile string, actual string) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode '%s' from message pack: %v", expectedFile, err)
 		}
-		expectedString = string(sdk_json.Encode(generic))
+		expectedString = string(sdk_json.EncodeStrict(generic))
 	}
 
 	err = EqualJson2(expectedString, actual)
@@ -63,13 +63,13 @@ func EqualJson2(j1, j2 string) (err error) {
 	var expected map[string]interface{}
 	err = json.Unmarshal([]byte(j1), &expected)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal expected: %w", err)
 	}
 
 	var actual map[string]interface{}
 	err = json.Unmarshal([]byte(j2), &actual)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal actual: %w", err)
 	}
 
 	err = recursiveCompare("root", expected, actual)
