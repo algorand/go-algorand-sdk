@@ -57,4 +57,20 @@ func TestDecode(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, obj.subsetObject, decoded)
 	})
+
+	t.Run("original encode map key as string", func(t *testing.T) {
+		intMap := map[int]string{
+			0: "int key",
+		}
+		data := string(Encode(intMap))
+		assert.Contains(t, data, "0: ")
+	})
+
+	t.Run("strict encode map key as string", func(t *testing.T) {
+		intMap := map[int]string{
+			0: "int key",
+		}
+		data := string(EncodeStrict(intMap))
+		assert.Contains(t, data, "\"0\": ")
+	})
 }
