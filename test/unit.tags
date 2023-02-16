@@ -24,11 +24,9 @@
 @unit.responses.messagepack.231
 @unit.responses.participationupdates
 @unit.responses.unlimited_assets
-@unit.responses.statedelta
 @unit.sourcemap
 @unit.stateproof.paths
 @unit.stateproof.responses
-@unit.stateproof.responses.msgp
 @unit.statedelta
 @unit.tealsign
 @unit.transactions
