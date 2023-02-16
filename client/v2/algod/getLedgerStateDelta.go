@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // GetLedgerStateDeltaParams contains all of the query parameters for url serialization.
@@ -25,7 +25,7 @@ type GetLedgerStateDelta struct {
 }
 
 // Do performs the HTTP request
-func (s *GetLedgerStateDelta) Do(ctx context.Context, headers ...*common.Header) (response models.LedgerStateDelta, err error) {
+func (s *GetLedgerStateDelta) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/deltas/%s", common.EscapeParams(s.round)...), s.p, headers)
 	return
 }
