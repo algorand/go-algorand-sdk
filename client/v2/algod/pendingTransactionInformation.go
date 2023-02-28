@@ -12,7 +12,8 @@ import (
 // PendingTransactionInformationParams contains all of the query parameters for url serialization.
 type PendingTransactionInformationParams struct {
 
-	// Format configures whether the response object is JSON or MessagePack encoded.
+	// Format configures whether the response object is JSON or MessagePack encoded. If
+	// not provided, defaults to JSON.
 	Format string `url:"format,omitempty"`
 }
 
