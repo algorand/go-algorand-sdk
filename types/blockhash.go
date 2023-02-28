@@ -24,13 +24,13 @@ func (b *BlockHash) UnmarshalText(text []byte) error {
 		*b = BlockHash(d)
 		return nil
 	}
+
 	// ignore the DigestFromString error because it isn't the native MarshalText format.
 
 	// Attempt to decode base64 format
-	var data BlockHash
-	n, err := base64.StdEncoding.Decode(data[:], text)
+	data, err := base64.StdEncoding.DecodeString(string(text))
 	if err == nil {
-		if n != len(b[:]) {
+		if len(data) != len(b[:]) {
 			return errWrongBlockHashLen
 		}
 		copy(b[:], data[:])

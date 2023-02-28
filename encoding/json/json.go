@@ -13,6 +13,10 @@ var CodecHandle *codec.JsonHandle
 // LenientCodecHandle is used to instantiate msgpack encoders for the REST API.
 var LenientCodecHandle *codec.JsonHandle
 
+// JSONStrictHandle is the same as CodecHandle but with MapKeyAsString=true
+// for correct maps[int]interface{} encoding
+var JSONStrictHandle *codec.JsonHandle
+
 // init configures our json encoder and decoder
 func init() {
 	CodecHandle = new(codec.JsonHandle)
@@ -30,12 +34,30 @@ func init() {
 	LenientCodecHandle.RecursiveEmptyCheck = true
 	LenientCodecHandle.Indent = 2
 	LenientCodecHandle.HTMLCharsAsIs = true
+
+	JSONStrictHandle = new(codec.JsonHandle)
+	JSONStrictHandle.ErrorIfNoField = CodecHandle.ErrorIfNoField
+	JSONStrictHandle.ErrorIfNoArrayExpand = CodecHandle.ErrorIfNoArrayExpand
+	JSONStrictHandle.Canonical = CodecHandle.Canonical
+	JSONStrictHandle.RecursiveEmptyCheck = CodecHandle.RecursiveEmptyCheck
+	JSONStrictHandle.Indent = CodecHandle.Indent
+	JSONStrictHandle.HTMLCharsAsIs = CodecHandle.HTMLCharsAsIs
+	JSONStrictHandle.MapKeyAsString = true
 }
 
 // Encode returns a json-encoded byte buffer for a given object
 func Encode(obj interface{}) []byte {
 	var b []byte
 	enc := codec.NewEncoderBytes(&b, CodecHandle)
+	enc.MustEncode(obj)
+	return b
+}
+
+// EncodeStrict returns a JSON-encoded byte buffer for a given object
+// It is the same Encode but encodes map's int keys as strings
+func EncodeStrict(obj interface{}) []byte {
+	var b []byte
+	enc := codec.NewEncoderBytes(&b, JSONStrictHandle)
 	enc.MustEncode(obj)
 	return b
 }

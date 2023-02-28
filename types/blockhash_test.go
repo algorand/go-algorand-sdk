@@ -36,6 +36,10 @@ func TestUnmarshalBlockHash(t *testing.T) {
 			name:  "B64-err-illegal",
 			input: "bogus",
 			err:   "illegal base64 data at input byte 4",
+		}, {
+			name:  "Overflow does not panic",
+			input: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+			err:   "illegal base64 data at input byte 56",
 		},
 	}
 
