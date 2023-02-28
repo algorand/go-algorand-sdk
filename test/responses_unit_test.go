@@ -172,9 +172,6 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetBlockHash":
 			response, err =
 				algodC.GetBlockHash(123).Do(context.Background())
-		case "GetLedgerStateDelta":
-			response, err =
-				algodC.GetLedgerStateDelta(123).Do(context.Background())
 		case "UnsetSyncRound":
 			response, err =
 				algodC.UnsetSyncRound().Do(context.Background())
