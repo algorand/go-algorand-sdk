@@ -248,6 +248,18 @@ type (
 		ConfigAsset   uint64 `codec:"caid"`
 		ApplicationID uint64 `codec:"apid"`
 	}
+
+	EncodedBlockCert struct {
+		_struct struct{} `codec:""`
+
+		Block       Block                  `codec:"block"`
+		Certificate map[string]interface{} `codec:"cert"`
+	}
+
+	ValidatedBlock struct {
+		Block Block `codec:"Blk"`
+		Delta LedgerStateDelta
+	}
 )
 
 type EvalDelta struct {
