@@ -13,4 +13,64 @@ REMOVE_LOCAL_FEATURES=0
 
 # WARNING: Be careful when turning on the next variable.
 # In that case you'll need to provide all variables expected by `algorand-sdk-testing`'s `.env`
-OVERWRITE_TESTING_ENVIRONMENT=0
+OVERWRITE_TESTING_ENVIRONMENT=1
+
+SANDBOX_CLEAN_CACHE=1
+
+
+# Used to determine sandbox build type:
+TYPE="source" # OR "source"
+
+# Used when TYPE==channel:
+ALGOD_CHANNEL="nightly"
+
+# Used when TYPE==source:
+ALGOD_URL="https://github.com/Eric-Warehime/go-algorand"
+ALGOD_BRANCH="fix-devmode-networking"
+
+# FIX
+ALGOD_SHA="c3e2ca6835eb9a7545bfc7d41e61d798121bc28b"
+
+# BAD - devmode: Allow DevMode + Follower configurations.
+# ALGOD_SHA="51d592515f03ea46b942b97c85b540c79b73defa"
+
+# GOOD - tests: guard addPeer from adding peers who are closing
+# ALGOD_SHA="60c5a7a4e600a3ca2ffe0de8d6b8a7a2d2d18641"
+
+# GOOD - update state delta type, handler
+#ALGOD_SHA="4bc725070054b81816ff2c1da5f347dd152b879c"
+
+# Used regardless of TYPE:
+NETWORK_TEMPLATE="images/algod/DevModeNetwork.json"  # refers to the ./images directory in the sandbox repo
+NETWORK_NUM_ROUNDS=30000
+NODE_ARCHIVAL="False"
+INDEXER_URL="https://github.com/algorand/indexer"
+INDEXER_BRANCH="master"
+#INDEXER_URL="https://github.com/Eric-Warehime/indexer"
+#INDEXER_BRANCH="plugin-update"
+
+INDEXER_SHA=""
+#BAD - algod importer: Combines algod and algod_follower
+#INDEXER_SHA="d37f82841df640081cb097c5ae117cdcfe1bc51e"
+#good - Bump github.com/prometheus/client_golang from 1.10.0 to 1.11.1
+#INDEXER_SHA="d8188a5f7bffc6138e7d73e6e3814571af18ddf1"
+#good - filter-processor: move reflection into generated code
+#INDEXER_SHA="1ed87ae9b289f895de049b9cb781cdd115211fc8"
+#good - idb: update AddBlock method signature
+#INDEXER_SHA="e4412d646b5fd6842f4fed61ed6a4bf026df36fe"
+#good - e2e-test: E2e sync mode test
+#INDEXER_SHA="cb4581c975afe6f7be8950b717444677b2cfafb1"
+
+# Sandbox configuration:
+SANDBOX_URL="https://github.com/algorand/sandbox"
+SANDBOX_BRANCH="master"
+LOCAL_SANDBOX_DIR=".sandbox"
+
+# replacement values for Sandbox's docker-compose:
+ALGOD_CONTAINER=sdk-harness-algod
+KMD_PORT=60001
+ALGOD_PORT=60000
+INDEXER_CONTAINER=sdk-harness-indexer
+INDEXER_PORT=59999
+POSTGRES_CONTAINER=sdk-harness-postgres
+POSTGRES_PORT=65432
