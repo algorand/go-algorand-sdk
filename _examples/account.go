@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
@@ -10,18 +10,30 @@ import (
 func main() {
 	// example: GOSDK_ACCOUNT_GENERATE
 	account := crypto.GenerateAccount()
-	passphrase, err := mnemonic.FromPrivateKey(account.PrivateKey)
+	mn, err := mnemonic.FromPrivateKey(account.PrivateKey)
 
 	if err != nil {
-		fmt.Printf("Error with private key: %s\n", err)
-	} else {
-		fmt.Printf("My address: %s\n", account.Address)
-		fmt.Printf("My passphrase: %s\n", passphrase)
+		log.Fatalf("failed to generate account: %s", err)
 	}
+
+	log.Printf("Address: %s\n", account.Address)
+	log.Printf("Mnemonic: %s\n", mn)
 	// example: GOSDK_ACCOUNT_GENERATE
+
+	// example: ACCOUNT_RECOVER_MNEMONIC
+	k, err := mnemonic.ToPrivateKey(mn)
+	if err != nil {
+		log.Fatalf("failed to parse mnemonic: %s", err)
+	}
+
+	recovered, err := crypto.AccountFromPrivateKey(k)
+	if err != nil {
+		log.Fatalf("failed to recover account from key: %s", err)
+	}
+
+	log.Printf("%+v", recovered)
+	// example: ACCOUNT_RECOVER_MNEMONIC
+
 }
 
-// Missing CONST_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:71)
-// Missing SP_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:106)
-// Missing ACCOUNT_RECOVER_MNEMONIC in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/frontend/apps.md:283)
-// Missing ACCOUNT_RECOVER_MNEMONIC in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/frontend/apps.md:511)
+// Missing ACCOUNT_REKEY in GOSDK examples (in ../docs/get-details/accounts/rekey.md:391)

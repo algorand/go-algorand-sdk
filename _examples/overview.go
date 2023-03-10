@@ -51,4 +51,5 @@ func main() {
 // Missing MULTISIG_SIGN in GOSDK examples (in ../docs/get-details/transactions/signatures.md:317)
 // Missing TRANSACTION_FEE_OVERRIDE in GOSDK examples (in ../docs/get-details/transactions/index.md:786)
 // Missing TRANSACTION_KEYREG_OFFLINE_CREATE in GOSDK examples (in ../docs/run-a-node/participate/offline.md:38)
-// Missing ACCOUNT_REKEY in GOSDK examples (in ../docs/get-details/accounts/rekey.md:391)
+// Missing CONST_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:71)
+// Missing SP_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:106)
