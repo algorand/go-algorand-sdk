@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algorand/go-algorand-sdk/v2/client/v2/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // Missing APP_SCHEMA in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/frontend/apps.md:163)

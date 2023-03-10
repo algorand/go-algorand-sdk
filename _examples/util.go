@@ -5,15 +5,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/algorand/go-algorand-sdk/client/kmd"
+	"github.com/algorand/go-algorand-sdk/v2/client/kmd"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 )
 
 // add sandbox and other stuff
 var (
-	ALGOD_ADDRESS       = "http://localhost:4001"
-	ALGOD_TOKEN         = strings.Repeat("a", 64)
+	ALGOD_ADDRESS = "http://localhost:4001"
+	ALGOD_TOKEN   = strings.Repeat("a", 64)
+
 	KMD_ADDRESS         = "http://localhost:4002"
 	KMD_TOKEN           = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	KMD_WALLET_NAME     = "unencrypted-default-wallet"

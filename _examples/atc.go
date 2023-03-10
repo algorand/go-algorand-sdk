@@ -6,3 +6,7 @@ package main
 // Missing ATC_ADD_METHOD_CALL in GOSDK examples (in ../docs/get-details/atc.md:267)
 // Missing ATC_RESULTS in GOSDK examples (in ../docs/get-details/atc.md:366)
 // Missing ATC_BOX_REF in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/apps/index.md:937)
+
+func main() {
+
+}
