@@ -8,6 +8,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 )
 
 func main() {
@@ -29,10 +30,14 @@ func main() {
 	}
 	// example: SP_MIN_FEE
 
+	// example: CONST_MIN_FEE
+	log.Printf("Min fee const: %d", transaction.MinTxnFee)
+	// example: CONST_MIN_FEE
+
 	// example: TRANSACTION_FEE_OVERRIDE
 	// by using fee pooling and setting our fee to 2x min tx fee
 	// we can cover the fee for another transaction in the group
-	sp.Fee = 2000
+	sp.Fee = 2 * transaction.MinTxnFee
 	sp.FlatFee = true
 	// ...
 	// example: TRANSACTION_FEE_OVERRIDE
@@ -63,8 +68,3 @@ func exampleAlgod() {
 	_ = algodClientWithHeaders
 	_ = algodClient
 }
-
-// Missing MULTISIG_SIGN in GOSDK examples (in ../docs/get-details/transactions/signatures.md:317)
-// Missing TRANSACTION_FEE_OVERRIDE in GOSDK examples (in ../docs/get-details/transactions/index.md:786)
-// Missing TRANSACTION_KEYREG_OFFLINE_CREATE in GOSDK examples (in ../docs/run-a-node/participate/offline.md:38)
-// Missing CONST_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:71)

@@ -11,33 +11,30 @@ import (
 )
 
 func main() {
-
 	algodClient := getAlgodClient()
-	sp, err := algodClient.SuggestedParams().Do(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to get suggested params: %s", err)
-	}
-
 	accts, err := getSandboxAccounts()
 	if err != nil {
-		log.Fatalf("Failed to get sandbox accounts: %s", err)
+		log.Fatalf("failed to get sandbox accounts: %s", err)
 	}
 
 	acct1 := accts[0]
 	acct2 := accts[1]
 
 	// example: ATOMIC_CREATE_TXNS
+	sp, err := algodClient.SuggestedParams().Do(context.Background())
+	if err != nil {
+		log.Fatalf("failed to get suggested params: %s", err)
+	}
+
 	tx1, err := transaction.MakePaymentTxn(acct1.Address.String(), acct2.Address.String(), 100000, nil, "", sp)
 	if err != nil {
-		fmt.Printf("Error creating transaction: %s\n", err)
-		return
+		log.Fatalf("failed creating transaction: %s", err)
 	}
 
 	// from account 2 to account 1
 	tx2, err := transaction.MakePaymentTxn(acct2.Address.String(), acct1.Address.String(), 100000, nil, "", sp)
 	if err != nil {
-		fmt.Printf("Error creating transaction: %s\n", err)
-		return
+		log.Fatalf("failed creating transaction: %s", err)
 	}
 	// example: ATOMIC_CREATE_TXNS
 
