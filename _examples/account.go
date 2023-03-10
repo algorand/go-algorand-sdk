@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// example: GOSDK_ACCOUNT_GENERATE
+	// example: ACCOUNT_GENERATE
 	account := crypto.GenerateAccount()
 	mn, err := mnemonic.FromPrivateKey(account.PrivateKey)
 
@@ -18,7 +18,7 @@ func main() {
 
 	log.Printf("Address: %s\n", account.Address)
 	log.Printf("Mnemonic: %s\n", mn)
-	// example: GOSDK_ACCOUNT_GENERATE
+	// example: ACCOUNT_GENERATE
 
 	// example: ACCOUNT_RECOVER_MNEMONIC
 	k, err := mnemonic.ToPrivateKey(mn)

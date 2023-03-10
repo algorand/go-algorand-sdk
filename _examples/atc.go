@@ -121,6 +121,7 @@ func deployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 		clearBinary    = make([]byte, 1000)
 	)
 
+	// Compile approval program
 	approvalTeal, err := ioutil.ReadFile("calculator/approval.teal")
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
@@ -136,6 +137,7 @@ func deployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 		log.Fatalf("failed to decode compiled program: %s", err)
 	}
 
+	// Compile clear program
 	clearTeal, err := ioutil.ReadFile("calculator/clear.teal")
 	if err != nil {
 		log.Fatalf("failed to read clear program: %s", err)
@@ -151,6 +153,7 @@ func deployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 		log.Fatalf("failed to decode compiled program: %s", err)
 	}
 
+	// Create application
 	sp, err := algodClient.SuggestedParams().Do(context.Background())
 	if err != nil {
 		log.Fatalf("error getting suggested tx params: %s", err)

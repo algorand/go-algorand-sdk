@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 
@@ -82,4 +85,22 @@ func getSandboxAccounts() ([]crypto.Account, error) {
 	}
 
 	return accts, nil
+}
+
+func compileTeal(algodClient *algod.Client, path string) []byte {
+	teal, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("failed to read approval program: %s", err)
+	}
+
+	result, err := algodClient.TealCompile(teal).Do(context.Background())
+	if err != nil {
+		log.Fatalf("failed to compile program: %s", err)
+	}
+
+	bin, err := base64.StdEncoding.DecodeString(result.Result)
+	if err != nil {
+		log.Fatalf("failed to decode compiled program: %s", err)
+	}
+	return bin
 }
