@@ -20,3 +20,8 @@ func main() {
 	}
 	// example: GOSDK_ACCOUNT_GENERATE
 }
+
+// Missing CONST_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:71)
+// Missing SP_MIN_FEE in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/guidelines.md:106)
+// Missing ACCOUNT_RECOVER_MNEMONIC in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/frontend/apps.md:283)
+// Missing ACCOUNT_RECOVER_MNEMONIC in GOSDK examples (in ../docs/get-details/dapps/smart-contracts/frontend/apps.md:511)
