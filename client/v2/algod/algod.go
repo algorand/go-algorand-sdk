@@ -109,6 +109,10 @@ func (c *Client) SendRawTransaction(rawtxn []byte) *SendRawTransaction {
 	return &SendRawTransaction{c: c, rawtxn: rawtxn}
 }
 
+func (c *Client) SimulateTransaction(rawtxn []byte) *SimulateTransaction {
+	return &SimulateTransaction{c: c, rawtxn: rawtxn}
+}
+
 func (c *Client) SuggestedParams() *SuggestedParams {
 	return &SuggestedParams{c: c}
 }
