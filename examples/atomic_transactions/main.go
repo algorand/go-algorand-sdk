@@ -6,13 +6,14 @@ import (
 	"log"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func main() {
-	algodClient := getAlgodClient()
-	accts, err := getSandboxAccounts()
+	algodClient := examples.GetAlgodClient()
+	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
 		log.Fatalf("failed to get sandbox accounts: %s", err)
 	}
@@ -40,7 +41,7 @@ func main() {
 
 	// example: ATOMIC_GROUP_TXNS
 	// compute group id and put it into each transaction
-	gid, err := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
+	gid, _ := crypto.ComputeGroupID([]types.Transaction{tx1, tx2})
 	tx1.Group = gid
 	tx2.Group = gid
 	// example: ATOMIC_GROUP_TXNS

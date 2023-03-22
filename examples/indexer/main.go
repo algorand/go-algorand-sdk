@@ -15,7 +15,7 @@ func main() {
 	// Create a new indexer client, configured to connect to out local sandbox
 	var indexerAddress = "http://localhost:8980"
 	var indexerToken = strings.Repeat("a", 64)
-	indexerClient, err := indexer.MakeClient(
+	indexerClient, _ := indexer.MakeClient(
 		indexerAddress,
 		indexerToken,
 	)
@@ -54,13 +54,13 @@ func main() {
 	var minBalance uint64 = 50
 
 	// Lookup accounts with minimum balance of asset
-	assetResult, err := indexerClient.
+	assetResult, _ := indexerClient.
 		LookupAssetBalances(assetId).
 		CurrencyGreaterThan(minBalance).
 		Do(context.Background())
 
 	// Print the results
-	assetJson, err := json.MarshalIndent(assetResult, "", "\t")
+	assetJson, _ := json.MarshalIndent(assetResult, "", "\t")
 	fmt.Printf(string(assetJson) + "\n")
 	// example: INDEXER_LOOKUP_ASSET
 
@@ -71,13 +71,13 @@ func main() {
 	var transactionMinAmount uint64 = 10
 
 	// Query
-	transactionResult, err := indexerClient.
+	transactionResult, _ := indexerClient.
 		SearchForTransactions().
 		CurrencyGreaterThan(transactionMinAmount).
 		Do(context.Background())
 
 	// Print results
-	transactionJson, err := json.MarshalIndent(transactionResult, "", "\t")
+	transactionJson, _ := json.MarshalIndent(transactionResult, "", "\t")
 	fmt.Printf(string(transactionJson) + "\n")
 	// example: INDEXER_SEARCH_MIN_AMOUNT
 
@@ -123,13 +123,13 @@ func main() {
 	var notePrefix = "showing prefix"
 
 	// Query
-	prefixResult, err := indexerClient.
+	prefixResult, _ := indexerClient.
 		SearchForTransactions().
 		NotePrefix([]byte(notePrefix)).
 		Do(context.Background())
 
 	// Print results
-	prefixJson, err := json.MarshalIndent(prefixResult, "", "\t")
+	prefixJson, _ := json.MarshalIndent(prefixResult, "", "\t")
 	fmt.Printf(string(prefixJson) + "\n")
 	// example: INDEXER_PREFIX_SEARCH
 }

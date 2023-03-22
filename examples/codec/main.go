@@ -10,13 +10,14 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/abi"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func main() {
-	algodClient := getAlgodClient()
-	accts, err := getSandboxAccounts()
+	algodClient := examples.GetAlgodClient()
+	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
 		log.Fatalf("failed to get sandbox accounts: %s", err)
 	}

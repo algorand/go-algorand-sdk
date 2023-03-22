@@ -1,4 +1,4 @@
-package main
+package examples
 
 import (
 	"context"
@@ -26,7 +26,7 @@ var (
 	KMD_WALLET_PASSWORD = ""
 )
 
-func getAlgodClient() *algod.Client {
+func GetAlgodClient() *algod.Client {
 	algodClient, err := algod.MakeClient(
 		ALGOD_ADDRESS,
 		ALGOD_TOKEN,
@@ -39,7 +39,7 @@ func getAlgodClient() *algod.Client {
 	return algodClient
 }
 
-func getSandboxAccounts() ([]crypto.Account, error) {
+func GetSandboxAccounts() ([]crypto.Account, error) {
 	client, err := kmd.MakeClient(KMD_ADDRESS, KMD_TOKEN)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create client: %+v", err)
@@ -89,7 +89,7 @@ func getSandboxAccounts() ([]crypto.Account, error) {
 	return accts, nil
 }
 
-func compileTeal(algodClient *algod.Client, path string) []byte {
+func CompileTeal(algodClient *algod.Client, path string) []byte {
 	teal, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
@@ -107,7 +107,7 @@ func compileTeal(algodClient *algod.Client, path string) []byte {
 	return bin
 }
 
-func deployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
+func DeployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 
 	var (
 		approvalBinary = make([]byte, 1000)

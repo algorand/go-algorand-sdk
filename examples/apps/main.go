@@ -9,16 +9,17 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 func main() {
 
-	algodClient := getAlgodClient()
-	accts, err := getSandboxAccounts()
+	algodClient := examples.GetAlgodClient()
+	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
-		log.Fatal("failed to get sandbox accounts: %s", err)
+		log.Fatalf("failed to get sandbox accounts: %s", err)
 	}
 	acct1 := accts[0]
 	appID := appCreate(algodClient, acct1)
@@ -220,8 +221,8 @@ func appNoOp(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 }
 
 func appUpdate(algodClient *algod.Client, appID uint64, caller crypto.Account) {
-	approvalBinary := compileTeal(algodClient, "application/approval_refactored.teal")
-	clearBinary := compileTeal(algodClient, "application/clear.teal")
+	approvalBinary := examples.CompileTeal(algodClient, "application/approval_refactored.teal")
+	clearBinary := examples.CompileTeal(algodClient, "application/clear.teal")
 
 	// example: APP_UPDATE
 	sp, err := algodClient.SuggestedParams().Do(context.Background())

@@ -9,13 +9,37 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 )
 
 func main() {
 
-	algodClient := getAlgodClient()
-	accts, err := getSandboxAccounts()
+	// example: ALGOD_CREATE_CLIENT
+	// Create a new algod client, configured to connect to out local sandbox
+	var algodAddress = "http://localhost:4001"
+	var algodToken = strings.Repeat("a", 64)
+	algodClient, _ := algod.MakeClient(
+		algodAddress,
+		algodToken,
+	)
+
+	// Or, if necessary, pass alternate headers
+
+	var algodHeader common.Header
+	algodHeader.Key = "X-API-Key"
+	algodHeader.Value = algodToken
+	algodClientWithHeaders, _ := algod.MakeClientWithHeaders(
+		algodAddress,
+		algodToken,
+		[]*common.Header{&algodHeader},
+	)
+	// example: ALGOD_CREATE_CLIENT
+
+	_ = algodClientWithHeaders
+	_ = algodClient
+
+	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
 		log.Fatalf("failed to get accounts: %s", err)
 	}
@@ -85,27 +109,4 @@ func main() {
 
 }
 func exampleAlgod() {
-	// example: ALGOD_CREATE_CLIENT
-	// Create a new algod client, configured to connect to out local sandbox
-	var algodAddress = "http://localhost:4001"
-	var algodToken = strings.Repeat("a", 64)
-	algodClient, _ := algod.MakeClient(
-		algodAddress,
-		algodToken,
-	)
-
-	// Or, if necessary, pass alternate headers
-
-	var algodHeader common.Header
-	algodHeader.Key = "X-API-Key"
-	algodHeader.Value = algodToken
-	algodClientWithHeaders, _ := algod.MakeClientWithHeaders(
-		algodAddress,
-		algodToken,
-		[]*common.Header{&algodHeader},
-	)
-	// example: ALGOD_CREATE_CLIENT
-
-	_ = algodClientWithHeaders
-	_ = algodClient
 }

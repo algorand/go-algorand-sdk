@@ -72,7 +72,7 @@ func main() {
 
 	// example: KMD_EXPORT_ACCOUNT
 	// Extract the account sk
-	accountKeyResponse, err := kmdClient.ExportKey(
+	accountKeyResponse, _ := kmdClient.ExportKey(
 		exampleWalletHandleToken,
 		"password",
 		accountAddress,
@@ -96,7 +96,7 @@ func main() {
 		return
 	}
 	fmt.Printf("Account Mnemonic: %s\n", mn)
-	importedAccount, err := kmdClient.ImportKey(
+	importedAccount, _ := kmdClient.ImportKey(
 		exampleWalletHandleToken,
 		account.PrivateKey,
 	)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 )
@@ -37,11 +38,11 @@ func main() {
 
 	log.Printf("%+v", recovered)
 	// example: ACCOUNT_RECOVER_MNEMONIC
-	accts, err := getSandboxAccounts()
+	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
 		log.Fatalf("failed to get sandbox accounts: %s", err)
 	}
-	rekeyAccount(getAlgodClient(), accts[0], accts[1])
+	rekeyAccount(examples.GetAlgodClient(), accts[0], accts[1])
 }
 
 func rekeyAccount(algodClient *algod.Client, acct crypto.Account, rekeyTarget crypto.Account) {
