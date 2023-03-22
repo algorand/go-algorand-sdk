@@ -60,6 +60,10 @@ func main() {
 	}
 	// example: CODEC_TRANSACTION_SIGNED
 
+	// cleanup
+	os.Remove("pay.stxn")
+	os.Remove("pay.txn")
+
 	// example: CODEC_ADDRESS
 	address := "4H5UNRBJ2Q6JENAXQ6HNTGKLKINP4J4VTQBEPK5F3I6RDICMZBPGNH6KD4"
 	pk, _ := types.DecodeAddress(address)

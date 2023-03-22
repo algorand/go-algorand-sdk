@@ -78,4 +78,5 @@ func main() {
 		log.Printf("%+v", txn.AppCallTrace)
 	}
 	// example: DEBUG_DRYRUN_SUBMIT
+	os.Remove("dryrun.msgp")
 }
