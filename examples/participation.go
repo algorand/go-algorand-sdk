@@ -64,4 +64,7 @@ func markOnline() {
 		return
 	}
 	_ = tx
+
+	// disabled example: TRANSACTION_KEYREG_OFFLINE_CREATE
+	// disabled example: TRANSACTION_KEYREG_OFFLINE_CREATE
 }

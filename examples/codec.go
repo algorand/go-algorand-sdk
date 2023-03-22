@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/algorand/go-algorand-sdk/v2/abi"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
@@ -83,6 +84,22 @@ func main() {
 	// example: CODEC_UINT64
 	_ = decodedInt
 
-	// example: CODEC_BLOCK
-	// example: CODEC_BLOCK
+	// example: CODEC_ABI
+	tupleCodec, _ := abi.TypeOf("(string,string)")
+
+	tupleVal := []string{"hello", "world"}
+	encodedTuple, _ := tupleCodec.Encode(tupleVal)
+	log.Printf("%x", encodedTuple)
+
+	decodedTuple, _ := tupleCodec.Decode(encodedTuple)
+	log.Printf("%v", decodedTuple) // [hello world]
+
+	arrCodec, _ := abi.TypeOf("uint64[]")
+	arrVal := []uint64{1, 2, 3, 4, 5}
+	encodedArr, _ := arrCodec.Encode(arrVal)
+	log.Printf("%x", encodedArr)
+
+	decodedArr, _ := arrCodec.Decode(encodedArr)
+	log.Printf("%v", decodedArr) // [1 2 3 4 5]
+	// example: CODEC_ABI
 }

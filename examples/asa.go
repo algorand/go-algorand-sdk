@@ -179,6 +179,41 @@ func optInAsset(algodClient *algod.Client, assetID uint64, user crypto.Account) 
 	// example: ASSET_OPTIN
 }
 
+func optOutAsset(algodClient *algod.Client, assetID uint64, creator, user crypto.Account) {
+	// example: ASSET_OPT_OUT
+	userAddr := user.Address.String()
+
+	sp, err := algodClient.SuggestedParams().Do(context.Background())
+	if err != nil {
+		log.Fatalf("error getting suggested tx params: %s", err)
+	}
+
+	txn, err := transaction.MakeAssetTransferTxn(userAddr, creator.Address.String(), 0, nil, sp, creator.Address.String(), assetID)
+	if err != nil {
+		log.Fatalf("failed to make txn: %s", err)
+	}
+	// sign the transaction
+	txid, stx, err := crypto.SignTransaction(user.PrivateKey, txn)
+	if err != nil {
+		log.Fatalf("failed to sign transaction: %s", err)
+	}
+
+	// Broadcast the transaction to the network
+	_, err = algodClient.SendRawTransaction(stx).Do(context.Background())
+	if err != nil {
+		log.Fatalf("failed to send transaction: %s", err)
+	}
+
+	// Wait for confirmation
+	confirmedTxn, err := transaction.WaitForConfirmation(algodClient, txid, 4, context.Background())
+	if err != nil {
+		log.Fatalf("error waiting for confirmation:  %s", err)
+	}
+
+	log.Printf("OptOut Transaction: %s confirmed in Round %d\n", txid, confirmedTxn.ConfirmedRound)
+	// example: ASSET_OPT_OUT
+}
+
 func xferAsset(algodClient *algod.Client, assetID uint64, creator crypto.Account, user crypto.Account) {
 	// example: ASSET_XFER
 	var (
