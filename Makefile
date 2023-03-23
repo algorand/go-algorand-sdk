@@ -45,7 +45,10 @@ docker-gosdk-run:
 	docker ps -a
 	docker run -it --network host go-sdk-testing:latest
 
-docker-test: harness docker-gosdk-build docker-gosdk-run
+smoke-test-examples:
+	cd "$(SRCPATH)/examples" && bash smoke_test.sh && cd -
+
+docker-test: harness docker-gosdk-build docker-gosdk-run smoke-test-examples
 
 
 .PHONY: test fmt
