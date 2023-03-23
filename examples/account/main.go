@@ -81,4 +81,11 @@ func rekeyAccount(algodClient *algod.Client, acct crypto.Account, rekeyTarget cr
 
 	fmt.Printf("Confirmed Transaction: %s in Round %d\n", txID, result.ConfirmedRound)
 	// example: ACCOUNT_REKEY
+
+	// rekey back
+	rktxn, _ = transaction.MakePaymentTxn(addr, addr, 0, nil, "", sp)
+	rktxn.RekeyTo = acct.Address
+	_, stxn, _ = crypto.SignTransaction(rekeyTarget.PrivateKey, rktxn)
+	txID, _ = algodClient.SendRawTransaction(stxn).Do(context.Background())
+	result, _ = transaction.WaitForConfirmation(algodClient, txID, 4, context.Background())
 }
