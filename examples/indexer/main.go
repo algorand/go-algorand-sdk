@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	// example: CREATE_INDEXER_CLIENT
+	// example: INDEXER_CREATE_CLIENT
 	// Create a new indexer client, configured to connect to out local sandbox
 	var indexerAddress = "http://localhost:8980"
 	var indexerToken = strings.Repeat("a", 64)
@@ -30,7 +30,7 @@ func main() {
 		indexerToken,
 		[]*common.Header{&indexerHeader},
 	)
-	// example: CREATE_INDEXER_CLIENT
+	// example: INDEXER_CREATE_CLIENT
 
 	// Suppress `indexerClientWithHeaders declared but not used`
 	_ = indexerClientWithHeaders
