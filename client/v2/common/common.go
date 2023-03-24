@@ -73,7 +73,7 @@ type InternalError error
 // If so, it returns the error.
 // Otherwise, it returns nil.
 func extractError(code int, errorBuf []byte) error {
-	if code == 200 {
+	if code >= 200 && code < 300 {
 		return nil
 	}
 
