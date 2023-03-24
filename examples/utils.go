@@ -6,29 +6,57 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/kmd"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
-// add sandbox and other stuff
 var (
-	ALGOD_ADDRESS = "http://localhost:4001"
+	ALGOD_ADDRESS = "http://localhost"
+	ALGOD_PORT    = "4001"
+	ALGOD_URL     = ""
 	ALGOD_TOKEN   = strings.Repeat("a", 64)
 
-	KMD_ADDRESS         = "http://localhost:4002"
-	KMD_TOKEN           = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	INDEXER_ADDRESS = "http://localhost"
+	INDEXER_PORT    = "8980"
+	INDEXER_TOKEN   = strings.Repeat("a", 64)
+	INDEXER_URL     = ""
+
+	KMD_ADDRESS = "http://localhost"
+	KMD_PORT    = "4002"
+	KMD_TOKEN   = strings.Repeat("a", 64)
+	KMD_URL     = ""
+
 	KMD_WALLET_NAME     = "unencrypted-default-wallet"
 	KMD_WALLET_PASSWORD = ""
 )
 
+func init() {
+	if aport, ok := os.LookupEnv("ALGOD_PORT"); ok {
+		ALGOD_PORT = aport
+	}
+	ALGOD_URL = fmt.Sprintf("%s:%s", ALGOD_ADDRESS, ALGOD_PORT)
+
+	if iport, ok := os.LookupEnv("INDEXER_PORT"); ok {
+		INDEXER_PORT = iport
+	}
+	INDEXER_URL = fmt.Sprintf("%s:%s", INDEXER_ADDRESS, INDEXER_PORT)
+
+	if kport, ok := os.LookupEnv("KMD_PORT"); ok {
+		KMD_PORT = kport
+	}
+	KMD_URL = fmt.Sprintf("%s:%s", KMD_ADDRESS, KMD_PORT)
+}
+
 func GetAlgodClient() *algod.Client {
 	algodClient, err := algod.MakeClient(
-		ALGOD_ADDRESS,
+		ALGOD_URL,
 		ALGOD_TOKEN,
 	)
 
@@ -39,11 +67,34 @@ func GetAlgodClient() *algod.Client {
 	return algodClient
 }
 
-func GetSandboxAccounts() ([]crypto.Account, error) {
-	client, err := kmd.MakeClient(KMD_ADDRESS, KMD_TOKEN)
+func GetKmdClient() kmd.Client {
+	kmdClient, err := kmd.MakeClient(
+		KMD_URL,
+		KMD_TOKEN,
+	)
+
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create client: %+v", err)
+		log.Fatalf("Failed to create kmd client: %s", err)
 	}
+
+	return kmdClient
+}
+
+func GetIndexerClient() *indexer.Client {
+	indexerClient, err := indexer.MakeClient(
+		INDEXER_URL,
+		INDEXER_TOKEN,
+	)
+
+	if err != nil {
+		log.Fatalf("Failed to create indexer client: %s", err)
+	}
+
+	return indexerClient
+}
+
+func GetSandboxAccounts() ([]crypto.Account, error) {
+	client := GetKmdClient()
 
 	resp, err := client.ListWallets()
 	if err != nil {

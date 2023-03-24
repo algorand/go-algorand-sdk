@@ -39,6 +39,9 @@ func main() {
 	_ = algodClientWithHeaders
 	_ = algodClient
 
+	// Override with the version that has correct port
+	algodClient = examples.GetAlgodClient()
+
 	accts, err := examples.GetSandboxAccounts()
 	if err != nil {
 		log.Fatalf("failed to get accounts: %s", err)

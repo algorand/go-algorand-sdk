@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export ALGOD_PORT="60000"
+export INDEXER_PORT="59999"
+export KMD_PORT="60001"
+
 go run account/main.go
 go run apps/main.go
 go run asa/main.go

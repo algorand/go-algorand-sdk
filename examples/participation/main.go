@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 )
 
@@ -13,21 +12,9 @@ func main() {
 	markOnline()
 }
 
-func setupConnection() (c *algod.Client, err error) {
-	algod_token := strings.Repeat("a", 64)
-	algod_server := "http://127.0.0.1:4001"
-	algod_client, err := algod.MakeClient(algod_server, algod_token)
-	c = (*algod.Client)(algod_client)
-	return
-}
-
 func markOnline() {
 	// setup connection
-	algodClient, err := setupConnection()
-	if err != nil {
-		fmt.Printf("error getting suggested tx params: %s\n", err)
-		return
-	}
+	algodClient := examples.GetAlgodClient()
 
 	// get network suggested parameters
 	sp, err := algodClient.SuggestedParams().Do(context.Background())

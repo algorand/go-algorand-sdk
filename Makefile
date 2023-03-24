@@ -48,7 +48,7 @@ docker-gosdk-run:
 smoke-test-examples:
 	cd "$(SRCPATH)/examples" && bash smoke_test.sh && cd -
 
-docker-test: harness docker-gosdk-build docker-gosdk-run smoke-test-examples
+docker-test: harness docker-gosdk-build docker-gosdk-run
 
 
 .PHONY: test fmt

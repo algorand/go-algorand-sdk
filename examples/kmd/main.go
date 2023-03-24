@@ -7,6 +7,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/kmd"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
@@ -28,6 +29,8 @@ func main() {
 		kmdToken,
 	)
 	// example: KMD_CREATE_CLIENT
+	_ = kmdClient
+	kmdClient = examples.GetKmdClient()
 
 	if err != nil {
 		fmt.Printf("failed to make kmd client: %s\n", err)

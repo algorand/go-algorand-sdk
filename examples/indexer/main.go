@@ -8,6 +8,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
+	"github.com/algorand/go-algorand-sdk/v2/examples"
 )
 
 func main() {
@@ -32,8 +33,11 @@ func main() {
 	)
 	// example: INDEXER_CREATE_CLIENT
 
-	// Suppress `indexerClientWithHeaders declared but not used`
+	// Suppress X declared but not used
 	_ = indexerClientWithHeaders
+	_ = indexerClient
+
+	indexerClient = examples.GetIndexerClient()
 
 	if err != nil {
 		fmt.Printf("failed to make indexer client: %s\n", err)
