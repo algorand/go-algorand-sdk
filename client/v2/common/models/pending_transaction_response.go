@@ -26,18 +26,18 @@ type PendingTransactionResponse struct {
 	// ConfirmedRound the round where this transaction was confirmed, if present.
 	ConfirmedRound uint64 `json:"confirmed-round,omitempty"`
 
-	// GlobalStateDelta (gd) Global state key/value changes for the application being
+	// GlobalStateDelta global state key/value changes for the application being
 	// executed by this transaction.
 	GlobalStateDelta []EvalDeltaKeyValue `json:"global-state-delta,omitempty"`
 
 	// InnerTxns inner transactions produced by application execution.
 	InnerTxns []PendingTransactionResponse `json:"inner-txns,omitempty"`
 
-	// LocalStateDelta (ld) Local state key/value changes for the application being
-	// executed by this transaction.
+	// LocalStateDelta local state key/value changes for the application being executed
+	// by this transaction.
 	LocalStateDelta []AccountStateDelta `json:"local-state-delta,omitempty"`
 
-	// Logs (lg) Logs for the application being executed by this transaction.
+	// Logs logs for the application being executed by this transaction.
 	Logs [][]byte `json:"logs,omitempty"`
 
 	// PoolError indicates that the transaction was kicked out of this node's
