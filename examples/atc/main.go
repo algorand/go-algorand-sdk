@@ -20,6 +20,7 @@ func main() {
 	}
 
 	acct1 := accts[0]
+	acct2 := accts[1]
 
 	appID := examples.DeployApp(algodClient, acct1)
 	log.Printf("%d", appID)
@@ -110,4 +111,22 @@ func main() {
 	// ...
 	// example: ATC_BOX_REF
 
+	// example: ATC_FOREIGN_REFS
+	mcp = transaction.AddMethodCallParams{
+		AppID:           appID,
+		Sender:          acct1.Address,
+		SuggestedParams: sp,
+		OnComplete:      types.NoOpOC,
+		Signer:          signer,
+		Method:          addMethod,
+		MethodArgs:      []interface{}{1, 1},
+		// Pass foreign references to the app
+		ForeignAccounts: []string{acct2.Address.String()},
+		ForeignApps:     []uint64{1337},
+		ForeignAssets:   []uint64{42},
+		BoxReferences: []types.AppBoxReference{
+			{AppID: appID, Name: []byte("coolBoxName")},
+		},
+	}
+	// example: ATC_FOREIGN_REFS
 }

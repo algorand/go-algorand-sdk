@@ -28,19 +28,19 @@ func main() {
 	tx1, _ := transaction.MakePaymentTxn(account.Address.String(), account.Address.String(), 100000, nil, "", sp)
 	_, stxn, _ := crypto.SignTransaction(account.PrivateKey, tx1)
 
-	signedPayTxn := types.SignedTxn{}
-	msgpack.Decode(stxn, &signedPayTxn)
+	// example: OFFLINE_VERIFY_SIG
+	signedTxn := types.SignedTxn{}
+	msgpack.Decode(stxn, &signedTxn)
 
-	log.Printf("Valid? %t", VerifySignedTransaction(signedPayTxn))
-}
+	from := signedTxn.Txn.Sender[:]
 
-func VerifySignedTransaction(stxn types.SignedTxn) bool {
-	from := stxn.Txn.Sender[:]
-
-	encodedTx := msgpack.Encode(stxn.Txn)
+	encodedTx := msgpack.Encode(signedTxn.Txn)
 
 	msgParts := [][]byte{txidPrefix, encodedTx}
 	msg := bytes.Join(msgParts, nil)
 
-	return ed25519.Verify(from, msg, stxn.Sig[:])
+	valid := ed25519.Verify(from, msg, signedTxn.Sig[:])
+
+	log.Printf("Valid? %t", valid)
+	// example: OFFLINE_VERIFY_SIG
 }
