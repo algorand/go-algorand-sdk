@@ -57,6 +57,10 @@ func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
 
+func (c *Client) GetReady() *GetReady {
+	return &GetReady{c: c}
+}
+
 func (c *Client) GetGenesis() *GetGenesis {
 	return &GetGenesis{c: c}
 }
@@ -107,6 +111,10 @@ func (c *Client) StatusAfterBlock(round uint64) *StatusAfterBlock {
 
 func (c *Client) SendRawTransaction(rawtxn []byte) *SendRawTransaction {
 	return &SendRawTransaction{c: c, rawtxn: rawtxn}
+}
+
+func (c *Client) SimulateTransaction(rawtxn []byte) *SimulateTransaction {
+	return &SimulateTransaction{c: c, rawtxn: rawtxn}
 }
 
 func (c *Client) SuggestedParams() *SuggestedParams {
