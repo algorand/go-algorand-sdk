@@ -18,6 +18,6 @@ type SetBlockTimeStampOffset struct {
 
 // Do performs the HTTP request
 func (s *SetBlockTimeStampOffset) Do(ctx context.Context, headers ...*common.Header) (response string, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/devmode/blocks/offset/%s", common.EscapeParams(s.offset)...), nil, headers)
+	err = s.c.post(ctx, &response, fmt.Sprintf("/v2/devmode/blocks/offset/%s", common.EscapeParams(s.offset)...), nil, headers, nil)
 	return
 }
