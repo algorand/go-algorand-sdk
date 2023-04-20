@@ -169,6 +169,14 @@ func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 	return &TealDryrun{c: c, request: request}
 }
 
+func (c *Client) GetBlockTimeStampOffset() *GetBlockTimeStampOffset {
+	return &GetBlockTimeStampOffset{c: c}
+}
+
+func (c *Client) SetBlockTimeStampOffset(offset uint64) *SetBlockTimeStampOffset {
+	return &SetBlockTimeStampOffset{c: c, offset: offset}
+}
+
 func (c *Client) BlockRaw(round uint64) *BlockRaw {
 	return &BlockRaw{c: c, round: round}
 }
