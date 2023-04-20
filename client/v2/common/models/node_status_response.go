@@ -66,4 +66,28 @@ type NodeStatusResponse struct {
 
 	// TimeSinceLastRound timeSinceLastRound in nanoseconds
 	TimeSinceLastRound uint64 `json:"time-since-last-round"`
+
+	// UpgradeDelay upgrade delay
+	UpgradeDelay uint64 `json:"upgrade-delay,omitempty"`
+
+	// UpgradeNextProtocolVoteBefore next protocol round
+	UpgradeNextProtocolVoteBefore uint64 `json:"upgrade-next-protocol-vote-before,omitempty"`
+
+	// UpgradeNoVotes no votes cast for consensus upgrade
+	UpgradeNoVotes uint64 `json:"upgrade-no-votes,omitempty"`
+
+	// UpgradeNodeVote this node's upgrade vote
+	UpgradeNodeVote bool `json:"upgrade-node-vote,omitempty"`
+
+	// UpgradeVoteRounds total voting ounds for current upgrade
+	UpgradeVoteRounds uint64 `json:"upgrade-vote-rounds,omitempty"`
+
+	// UpgradeVotes total votes cast for consensus upgrade
+	UpgradeVotes uint64 `json:"upgrade-votes,omitempty"`
+
+	// UpgradeVotesRequired yes votes required for consensus upgrade
+	UpgradeVotesRequired uint64 `json:"upgrade-votes-required,omitempty"`
+
+	// UpgradeYesVotes yes votes cast for consensus upgrade
+	UpgradeYesVotes uint64 `json:"upgrade-yes-votes,omitempty"`
 }

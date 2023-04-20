@@ -8,7 +8,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
-// SendRawTransaction broadcasts a raw transaction to the network.
+// SendRawTransaction broadcasts a raw transaction or transaction group to the
+// network.
 type SendRawTransaction struct {
 	c *Client
 

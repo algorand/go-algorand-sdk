@@ -12,7 +12,8 @@ import (
 // PendingTransactionsByAddressParams contains all of the query parameters for url serialization.
 type PendingTransactionsByAddressParams struct {
 
-	// Format configures whether the response object is JSON or MessagePack encoded.
+	// Format configures whether the response object is JSON or MessagePack encoded. If
+	// not provided, defaults to JSON.
 	Format string `url:"format,omitempty"`
 
 	// Max truncated number of transactions to display. If max=0, returns all pending
