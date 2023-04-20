@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base32"
+	"encoding/base64"
 )
 
 const (
@@ -32,6 +33,34 @@ var ZeroAddress Address = [hashLenBytes]byte{}
 // IsZero returs true if the Address is all zero bytes.
 func (a Address) IsZero() bool {
 	return a == ZeroAddress
+}
+
+// MarshalText returns the address string as an array of bytes
+func (addr *Address) MarshalText() ([]byte, error) {
+	result := base64.StdEncoding.EncodeToString(addr[:])
+	return []byte(result), nil
+}
+
+// UnmarshalText initializes the Address from an array of bytes.
+// The bytes may be in the base32 checksum format, or the raw bytes base64 encoded.
+func (addr *Address) UnmarshalText(text []byte) error {
+	address, err := DecodeAddress(string(text))
+	if err == nil {
+		*addr = address
+		return nil
+	}
+	// ignore the DecodeAddress error because it isn't the native MarshalText format.
+
+	// Check if its b64 encoded
+	data, err := base64.StdEncoding.DecodeString(string(text))
+	if err == nil {
+		if len(data) != len(addr[:]) {
+			return errWrongAddressLen
+		}
+		copy(addr[:], data[:])
+		return nil
+	}
+	return err
 }
 
 // DecodeAddress turns a checksum address string into an Address object. It

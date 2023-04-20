@@ -1,7 +1,10 @@
 package types
 
 import (
+	"encoding/base32"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"math"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -98,4 +101,18 @@ func (block *Block) FromBase64String(b64string string) error {
 		return err
 	}
 	return nil
+}
+
+// DigestFromString converts a string to a Digest
+func DigestFromString(str string) (d Digest, err error) {
+	decoded, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(str)
+	if err != nil {
+		return d, err
+	}
+	if len(decoded) != len(d) {
+		msg := fmt.Sprintf(`Attempted to decode a string which was not a Digest: "%v"`, str)
+		return d, errors.New(msg)
+	}
+	copy(d[:], decoded[:])
+	return d, err
 }

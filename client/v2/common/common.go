@@ -73,7 +73,7 @@ type InternalError error
 // If so, it returns the error.
 // Otherwise, it returns nil.
 func extractError(code int, errorBuf []byte) error {
-	if code == 200 {
+	if code >= 200 && code < 300 {
 		return nil
 	}
 
@@ -181,7 +181,7 @@ func (client *Client) submitForm(ctx context.Context, response interface{}, path
 	// The caller wants a string
 	if strResponse, ok := response.(*string); ok {
 		*strResponse = string(bodyBytes)
-		return err
+		return responseErr
 	}
 
 	// Attempt to unmarshal a response regardless of whether or not there was an error.
