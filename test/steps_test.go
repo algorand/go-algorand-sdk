@@ -104,6 +104,7 @@ var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
 var seeminglyProgram []byte
 var sanityCheckError error
+var timeStampOffset int
 
 var assetTestFixture struct {
 	Creator               string
@@ -354,6 +355,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I start heuristic sanity check over the bytes$`, heuristicCheckOverBytes)
 	s.Step(`^if the heuristic sanity check throws an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
 	s.Step(`^disassembly of "([^"]*)" matches "([^"]*)"$`, disassemblyMatches)
+	s.Step(`^I set the timestamp offset to be (\d+)$`, setTimestampOffset)
+	s.Step(`^I get the timestamp offset$`, getTimestampOffset)
+	s.Step(`^the timestamp offset should be (\d+)$`, checkTimestampOffset)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2578,6 +2582,30 @@ func disassemblyMatches(bytecodeFilename, sourceFilename string) error {
 	expectedResult := string(expectedBytes)
 	if actualResult.Result != expectedResult {
 		return fmt.Errorf("Actual program does not match expected: %s != %s", actualResult.Result, expectedResult)
+	}
+	return nil
+}
+
+func setTimestampOffset(offset int) error {
+	_, err := aclv2.SetBlockTimeStampOffset(uint64(offset)).Do(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getTimestampOffset() error {
+	resp, err := aclv2.GetBlockTimeStampOffset().Do(context.Background())
+	if err != nil {
+		return err
+	}
+	timeStampOffset = int(resp.Offset)
+	return nil
+}
+
+func checkTimestampOffset(expectedOffset int) error {
+	if expectedOffset != timeStampOffset {
+		return fmt.Errorf("expected timestamp offset was %d, but actual timestamp offset was: %d", expectedOffset, timeStampOffset)
 	}
 	return nil
 }
