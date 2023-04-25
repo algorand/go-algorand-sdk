@@ -57,6 +57,10 @@ func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
 
+func (c *Client) GetReady() *GetReady {
+	return &GetReady{c: c}
+}
+
 func (c *Client) GetGenesis() *GetGenesis {
 	return &GetGenesis{c: c}
 }
