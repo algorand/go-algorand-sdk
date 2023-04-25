@@ -181,6 +181,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetSyncRound":
 			response, err =
 				algodC.GetSyncRound().Do(context.Background())
+		case "GetBlockTimeStampOffset":
+			response, err =
+				algodC.GetBlockTimeStampOffset().Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
