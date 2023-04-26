@@ -29,6 +29,7 @@
 @unit.sourcemap
 @unit.stateproof.paths
 @unit.stateproof.responses
+@unit.sync
 @unit.tealsign
 @unit.timestamp
 @unit.transactions
