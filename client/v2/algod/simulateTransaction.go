@@ -5,7 +5,6 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 )
 
 // SimulateTransactionParams contains all of the query parameters for url serialization.
