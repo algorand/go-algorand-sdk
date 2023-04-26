@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"log"
 	"os"
 
@@ -71,6 +72,14 @@ func main() {
 	addr := pk.String()
 	// example: CODEC_ADDRESS
 	_ = addr
+
+	// example: CODEC_APPLICATION_ACCOUNT
+	var appId uint64 = 123
+	var appAddr types.Address = crypto.GetApplicationAddress(appId)
+
+	fmt.Println("Application ID:      ", appId)
+	fmt.Println("Application Address: ", appAddr)
+	// example: CODEC_APPLICATION_ACCOUNT
 
 	// example: CODEC_BASE64
 	encoded := "SGksIEknbSBkZWNvZGVkIGZyb20gYmFzZTY0"
