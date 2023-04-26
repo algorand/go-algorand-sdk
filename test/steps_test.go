@@ -104,7 +104,6 @@ var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
 var seeminglyProgram []byte
 var sanityCheckError error
-var timeStampOffset int
 
 var assetTestFixture struct {
 	Creator               string
