@@ -16,9 +16,4 @@ type SimulateResponse struct {
 
 	// Version the version of this response object.
 	Version uint64 `json:"version"`
-
-	// WouldSucceed indicates whether the simulated transactions would have succeeded
-	// during an actual submission. If any transaction fails or is missing a signature,
-	// this will be false.
-	WouldSucceed bool `json:"would-succeed"`
 }

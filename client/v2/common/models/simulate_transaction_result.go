@@ -9,10 +9,6 @@ type SimulateTransactionResult struct {
 	// LogicSigBudgetConsumed budget used during execution of a logic sig transaction.
 	LogicSigBudgetConsumed uint64 `json:"logic-sig-budget-consumed,omitempty"`
 
-	// MissingSignature a boolean indicating whether this transaction is missing
-	// signatures
-	MissingSignature bool `json:"missing-signature,omitempty"`
-
 	// TxnResult details about a pending transaction. If the transaction was recently
 	// confirmed, includes confirmation details like the round and reward details.
 	TxnResult PendingTransactionResponse `json:"txn-result"`

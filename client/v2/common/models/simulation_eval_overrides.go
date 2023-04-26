@@ -4,6 +4,10 @@ package models
 // simulation. If this set of parameters is present, then evaluation parameters may
 // differ from standard evaluation in certain ways.
 type SimulationEvalOverrides struct {
+	// AllowEmptySignatures if true, transactions without signatures are allowed and
+	// simulated as if they were properly signed.
+	AllowEmptySignatures bool `json:"allow-empty-signatures,omitempty"`
+
 	// MaxLogCalls the maximum log calls one can make during simulation
 	MaxLogCalls uint64 `json:"max-log-calls,omitempty"`
 
