@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
@@ -34,8 +35,24 @@ func main() {
 		algodToken,
 		[]*common.Header{&algodHeader},
 	)
+
+	// Or, for better performance, pass a custom Transport, in this case allowing
+	// up to 100 simultaneous connections to the same host (ie: an algod node)
+	// Clone Go's default transport settings but increase connection values
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.MaxIdleConns = 100
+	customTransport.MaxConnsPerHost = 100
+	customTransport.MaxIdleConnsPerHost = 100
+
+	algodClientWithCustomTransport, _ := algod.MakeClientWithTransport(
+		algodAddress,
+		algodToken,
+		nil, // accepts additional headers like MakeClientWithHeaders
+		customTransport,
+	)
 	// example: ALGOD_CREATE_CLIENT
 
+	_ = algodClientWithCustomTransport
 	_ = algodClientWithHeaders
 	_ = algodClient
 
