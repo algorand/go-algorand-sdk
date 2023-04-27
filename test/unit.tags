@@ -24,6 +24,7 @@
 @unit.responses.messagepack
 @unit.responses.messagepack.231
 @unit.responses.participationupdates
+@unit.responses.sync
 @unit.responses.timestamp
 @unit.responses.unlimited_assets
 @unit.sourcemap

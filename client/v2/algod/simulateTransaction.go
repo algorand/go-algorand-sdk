@@ -28,6 +28,6 @@ type SimulateTransaction struct {
 
 // Do performs the HTTP request
 func (s *SimulateTransaction) Do(ctx context.Context, headers ...*common.Header) (response models.SimulateResponse, err error) {
-	err = s.c.get(ctx, &response, "/v2/transactions/simulate", s.p, headers)
+	err = s.c.post(ctx, &response, "/v2/transactions/simulate", s.p, headers, s.request)
 	return
 }
