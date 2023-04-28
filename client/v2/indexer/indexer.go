@@ -52,6 +52,14 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*common.He
 	return
 }
 
+// MakeClientWithTransport is the factory for constructing a Client for a given endpoint with a
+// custom HTTP Transport as well as optional additional user defined headers.
+func MakeClientWithTransport(address string, apiToken string, headers []*common.Header, transport http.RoundTripper) (c *Client, err error) {
+	commonClientWithTransport, err := common.MakeClientWithTransport(address, authHeader, apiToken, headers, transport)
+	c = (*Client)(commonClientWithTransport)
+	return
+}
+
 func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
