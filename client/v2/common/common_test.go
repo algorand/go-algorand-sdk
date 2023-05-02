@@ -86,17 +86,19 @@ func TestClient_Verbs(t *testing.T) {
 func TestClientWithTransport(t *testing.T) {
 	var receivedMethod string
 	var receivedPath string
-	// var receivedTransport http.RoundTripper
 	var receivedHeaderValue string
 	path := "/some/path"
+
+	const headerKey string = "hello"
+	const headerValue string = "world"
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedMethod = r.Method
 		receivedPath = r.URL.String()
-		receivedHeaderValue = r.Header.Get("hello")
+		receivedHeaderValue = r.Header.Get(headerKey)
 	}))
 
-	var header []*Header = []*Header{{Key: "hello", Value: "world"}}
+	var header []*Header = []*Header{{Key: headerKey, Value: headerValue}}
 	var customTransport http.RoundTripper = &http.Transport{
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
@@ -111,7 +113,6 @@ func TestClientWithTransport(t *testing.T) {
 	err = c.Get(context.Background(), nil, path, nil, nil)
 	assert.Equal(t, "GET", receivedMethod)
 	assert.Equal(t, path, receivedPath)
+	assert.Equal(t, headerValue, receivedHeaderValue)
 	assert.Equal(t, c.transport, customTransport)
-	assert.Equal(t, header[0].Value, receivedHeaderValue)
-
 }
