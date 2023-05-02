@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -80,4 +81,37 @@ func TestClient_Verbs(t *testing.T) {
 			assert.Equal(t, path, receivedPath)
 		})
 	}
+}
+
+func TestClientWithTransport(t *testing.T) {
+	var receivedMethod string
+	var receivedPath string
+	// var receivedTransport http.RoundTripper
+	var receivedHeaderValue string
+	path := "/some/path"
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod = r.Method
+		receivedPath = r.URL.String()
+		receivedHeaderValue = r.Header.Get("hello")
+	}))
+
+	var header []*Header = []*Header{{Key: "hello", Value: "world"}}
+	var customTransport http.RoundTripper = &http.Transport{
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	c, err := MakeClientWithTransport(mockServer.URL, "API-Header", "ASDF", header, customTransport)
+	require.NoError(t, err)
+
+	// Call the test function.
+	err = c.Get(context.Background(), nil, path, nil, nil)
+	assert.Equal(t, "GET", receivedMethod)
+	assert.Equal(t, path, receivedPath)
+	assert.Equal(t, c.transport, customTransport)
+	assert.Equal(t, header[0].Value, receivedHeaderValue)
+
 }
