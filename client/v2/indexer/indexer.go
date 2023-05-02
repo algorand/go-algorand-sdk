@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 )
