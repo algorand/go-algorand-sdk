@@ -1,11 +1,11 @@
 @unit.abijson
 @unit.abijson.byname
 @unit.algod
-@unit.blocksummary
 @unit.algod.ledger_refactoring
 @unit.applications
 @unit.applications.boxes
 @unit.atomic_transaction_composer
+@unit.blocksummary
 @unit.dryrun
 @unit.dryrun.trace.application
 @unit.feetest
@@ -15,6 +15,7 @@
 @unit.indexer.rekey
 @unit.offline
 @unit.program_sanity_check
+@unit.ready
 @unit.rekey
 @unit.responses
 @unit.responses.231
@@ -23,11 +24,15 @@
 @unit.responses.messagepack
 @unit.responses.messagepack.231
 @unit.responses.participationupdates
+@unit.responses.sync
+@unit.responses.timestamp
 @unit.responses.unlimited_assets
 @unit.sourcemap
 @unit.stateproof.paths
 @unit.stateproof.responses
+@unit.sync
 @unit.tealsign
+@unit.timestamp
 @unit.transactions
 @unit.transactions.keyreg
 @unit.transactions.payment

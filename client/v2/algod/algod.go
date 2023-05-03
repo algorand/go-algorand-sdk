@@ -66,6 +66,10 @@ func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
 }
 
+func (c *Client) GetReady() *GetReady {
+	return &GetReady{c: c}
+}
+
 func (c *Client) GetGenesis() *GetGenesis {
 	return &GetGenesis{c: c}
 }
@@ -116,6 +120,10 @@ func (c *Client) StatusAfterBlock(round uint64) *StatusAfterBlock {
 
 func (c *Client) SendRawTransaction(rawtxn []byte) *SendRawTransaction {
 	return &SendRawTransaction{c: c, rawtxn: rawtxn}
+}
+
+func (c *Client) SimulateTransaction(request models.SimulateRequest) *SimulateTransaction {
+	return &SimulateTransaction{c: c, request: request}
 }
 
 func (c *Client) SuggestedParams() *SuggestedParams {
@@ -176,6 +184,14 @@ func (c *Client) TealDisassemble(source []byte) *TealDisassemble {
 
 func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 	return &TealDryrun{c: c, request: request}
+}
+
+func (c *Client) GetBlockTimeStampOffset() *GetBlockTimeStampOffset {
+	return &GetBlockTimeStampOffset{c: c}
+}
+
+func (c *Client) SetBlockTimeStampOffset(offset uint64) *SetBlockTimeStampOffset {
+	return &SetBlockTimeStampOffset{c: c, offset: offset}
 }
 
 func (c *Client) BlockRaw(round uint64) *BlockRaw {
