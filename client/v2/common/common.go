@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"context"
-
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -35,6 +34,7 @@ type Client struct {
 	apiHeader string
 	apiToken  string
 	headers   []*Header
+	transport http.RoundTripper
 }
 
 // MakeClient is the factory for constructing a Client for a given endpoint.
@@ -60,6 +60,19 @@ func MakeClientWithHeaders(address string, apiHeader, apiToken string, headers [
 	}
 
 	c.headers = append(c.headers, headers...)
+
+	return
+}
+
+// MakeClientWithTransport is the factory for constructing a Client for a given endpoint with a
+// custom HTTP Transport as well as optional additional user defined headers.
+func MakeClientWithTransport(address string, apiHeader, apiToken string, headers []*Header, transport http.RoundTripper) (c *Client, err error) {
+	c, err = MakeClientWithHeaders(address, apiHeader, apiToken, headers)
+	if err != nil {
+		return
+	}
+
+	c.transport = transport
 
 	return
 }
@@ -108,9 +121,11 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, params int
 	queryURL := client.serverURL
 	queryURL.Path += path
 
-	var req *http.Request
-	var bodyReader io.Reader
-	var v url.Values
+	var (
+		req        *http.Request
+		bodyReader io.Reader
+		v          url.Values
+	)
 
 	if params != nil {
 		v, err = query.Values(params)
@@ -148,7 +163,7 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, params int
 		req.Header.Add(header.Key, header.Value)
 	}
 
-	httpClient := &http.Client{}
+	httpClient := &http.Client{Transport: client.transport}
 	req = req.WithContext(ctx)
 	resp, err = httpClient.Do(req)
 
