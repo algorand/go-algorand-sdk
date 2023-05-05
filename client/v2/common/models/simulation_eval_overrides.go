@@ -8,6 +8,10 @@ type SimulationEvalOverrides struct {
 	// simulated as if they were properly signed.
 	AllowEmptySignatures bool `json:"allow-empty-signatures,omitempty"`
 
+	// ExtraOpcodeBudget the extra opcode budget added to each transaction group during
+	// simulation
+	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
+
 	// MaxLogCalls the maximum log calls one can make during simulation
 	MaxLogCalls uint64 `json:"max-log-calls,omitempty"`
 
