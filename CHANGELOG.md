@@ -1,3 +1,33 @@
+# 2.1.0
+
+## What's Changed
+
+Supports new devmode block timestamp offset endpoints.
+
+### Bugfixes
+* bugfix: Fix wrong response error type. by @winder in https://github.com/algorand/go-algorand-sdk/pull/461
+* debug: Remove debug output. by @winder in https://github.com/algorand/go-algorand-sdk/pull/465
+* bug: Fix extractError parsing by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/492
+### Enhancements
+* enhancement: add genesis type by @shiqizng in https://github.com/algorand/go-algorand-sdk/pull/443
+* docs: Update README.md by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/460
+* tests: Add disassembly test for Go SDK by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/462
+* marshaling: Lenient Address and BlockHash go-codec unmarshalers. by @winder in https://github.com/algorand/go-algorand-sdk/pull/464
+* API: Add types for ledgercore.StateDelta. by @winder in https://github.com/algorand/go-algorand-sdk/pull/467
+* docs: Create runnable examples to be pulled into docs by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/480
+* Docs: Examples by @barnjamin in https://github.com/algorand/go-algorand-sdk/pull/491
+* api: Regenerate client interfaces for timestamp, ready, and simulate endpoints by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/513
+* Performance: Add MakeClientWithTransport client override that allows the user to pass a custom http transport by @pbennett in https://github.com/algorand/go-algorand-sdk/pull/520
+* DevOps: Add CODEOWNERS to restrict workflow editing by @onetechnical in https://github.com/algorand/go-algorand-sdk/pull/524
+* Performance: Add custom http transport to MakeClientWithTransport  by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/523
+### Other
+* Regenerate code with the latest specification file (c90fd645) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/522
+
+## New Contributors
+* @pbennett made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/520
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.0.0...v2.1.0
+
 # 2.0.0
 
 ## What's Changed
