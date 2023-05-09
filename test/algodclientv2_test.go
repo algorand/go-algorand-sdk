@@ -55,10 +55,12 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
 	s.Step(`^we make a GetTransactionProof call for round (\d+) txid "([^"]*)" and hashtype "([^"]*)"$`, weMakeAGetTransactionProofCallForRoundTxidAndHashtype)
 	s.Step(`^we make a Lookup Block Hash call against round (\d+)$`, weMakeALookupBlockHashCallAgainstRound)
-	s.Step(`^we make a GetLedgerStateDelta call against round (\d+)$`, weMakeAGetLedgerStateDeltaCallAgainstRound)
+	s.Step(`^we make a Ready call$`, weMakeAReadyCall)
 	s.Step(`^we make a SetSyncRound call against round (\d+)$`, weMakeASetSyncRoundCallAgainstRound)
 	s.Step(`^we make a GetSyncRound call$`, weMakeAGetSyncRoundCall)
 	s.Step(`^we make a UnsetSyncRound call$`, weMakeAUnsetSyncRoundCall)
+	s.Step(`^we make a SetBlockTimeStampOffset call against offset (\d+)$`, weMakeASetBlockTimeStampOffsetCallAgainstOffset)
+	s.Step(`^we make a GetBlockTimeStampOffset call$`, weMakeAGetBlockTimeStampOffsetCall)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -310,12 +312,12 @@ func weMakeALookupBlockHashCallAgainstRound(round int) error {
 	return nil
 }
 
-func weMakeAGetLedgerStateDeltaCallAgainstRound(round int) error {
+func weMakeAReadyCall() error {
 	algodClient, err := algod.MakeClient(mockServer.URL, "")
 	if err != nil {
 		return err
 	}
-	algodClient.GetLedgerStateDelta(uint64(round)).Do(context.Background())
+	algodClient.GetReady().Do(context.Background())
 	return nil
 }
 
@@ -343,5 +345,22 @@ func weMakeAUnsetSyncRoundCall() error {
 		return err
 	}
 	algodClient.UnsetSyncRound().Do(context.Background())
+	return nil
+}
+func weMakeASetBlockTimeStampOffsetCallAgainstOffset(offset int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.SetBlockTimeStampOffset(uint64(offset)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetBlockTimeStampOffsetCall() error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetBlockTimeStampOffset().Do(context.Background())
 	return nil
 }

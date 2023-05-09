@@ -2,6 +2,7 @@ package algod
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
@@ -53,8 +54,20 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*common.He
 	return
 }
 
+// MakeClientWithTransport is the factory for constructing a Client for a given endpoint with a
+// custom HTTP Transport as well as optional additional user defined headers.
+func MakeClientWithTransport(address string, apiToken string, headers []*common.Header, transport http.RoundTripper) (c *Client, err error) {
+	commonClientWithTransport, err := common.MakeClientWithTransport(address, authHeader, apiToken, headers, transport)
+	c = (*Client)(commonClientWithTransport)
+	return
+}
+
 func (c *Client) HealthCheck() *HealthCheck {
 	return &HealthCheck{c: c}
+}
+
+func (c *Client) GetReady() *GetReady {
+	return &GetReady{c: c}
 }
 
 func (c *Client) GetGenesis() *GetGenesis {
@@ -109,6 +122,10 @@ func (c *Client) SendRawTransaction(rawtxn []byte) *SendRawTransaction {
 	return &SendRawTransaction{c: c, rawtxn: rawtxn}
 }
 
+func (c *Client) SimulateTransaction(request models.SimulateRequest) *SimulateTransaction {
+	return &SimulateTransaction{c: c, request: request}
+}
+
 func (c *Client) SuggestedParams() *SuggestedParams {
 	return &SuggestedParams{c: c}
 }
@@ -119,10 +136,6 @@ func (c *Client) PendingTransactions() *PendingTransactions {
 
 func (c *Client) PendingTransactionInformation(txid string) *PendingTransactionInformation {
 	return &PendingTransactionInformation{c: c, txid: txid}
-}
-
-func (c *Client) GetLedgerStateDelta(round uint64) *GetLedgerStateDelta {
-	return &GetLedgerStateDelta{c: c, round: round}
 }
 
 func (c *Client) GetStateProof(round uint64) *GetStateProof {
@@ -171,6 +184,14 @@ func (c *Client) TealDisassemble(source []byte) *TealDisassemble {
 
 func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
 	return &TealDryrun{c: c, request: request}
+}
+
+func (c *Client) GetBlockTimeStampOffset() *GetBlockTimeStampOffset {
+	return &GetBlockTimeStampOffset{c: c}
+}
+
+func (c *Client) SetBlockTimeStampOffset(offset uint64) *SetBlockTimeStampOffset {
+	return &SetBlockTimeStampOffset{c: c, offset: offset}
 }
 
 func (c *Client) BlockRaw(round uint64) *BlockRaw {

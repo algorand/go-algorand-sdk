@@ -11,7 +11,7 @@ The Algorand golang SDK provides:
 
 # Documentation
 
-Full documentation is available [on godoc](https://godoc.org/github.com/algorand/go-algorand-sdk). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
+Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
 
 Additional developer documentation and examples can be found on [developer.algorand.org](https://developer.algorand.org/docs/sdks/go/)
 
@@ -21,7 +21,7 @@ In `client/`, the `kmd` packages provide HTTP clients for the Key Management Dae
 In `client/v2` the `algod` package contains a client for the Algorand protocol daemon HTTP API. You can use it to check the status of the blockchain, read a block, look at transactions, or submit a signed transaction.
 In `client/v2` the `indexer` package contains a client for the Algorand Indexer API. You can use it to query historical transactions or make queries about the current state of the chain. 
 
-`future` package contains Transaction building utility functions.
+`transaction` package contains Transaction building utility functions.
 
 `types` contains the data structures you'll use when interacting with the network, including addresses, transactions, multisig signatures, etc. 
 

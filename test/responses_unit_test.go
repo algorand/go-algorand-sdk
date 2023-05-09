@@ -172,9 +172,6 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetBlockHash":
 			response, err =
 				algodC.GetBlockHash(123).Do(context.Background())
-		case "GetLedgerStateDelta":
-			response, err =
-				algodC.GetLedgerStateDelta(123).Do(context.Background())
 		case "UnsetSyncRound":
 			response, err =
 				algodC.UnsetSyncRound().Do(context.Background())
@@ -184,6 +181,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetSyncRound":
 			response, err =
 				algodC.GetSyncRound().Do(context.Background())
+		case "GetBlockTimeStampOffset":
+			response, err =
+				algodC.GetBlockTimeStampOffset().Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
@@ -216,7 +216,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 		if responseStr, ok := response.(string); ok {
 			responseJson = responseStr
 		} else {
-			responseJson = string(json.Encode(response))
+			responseJson = string(json.EncodeStrict(response))
 		}
 	}
 

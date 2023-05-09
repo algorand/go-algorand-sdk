@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 )
@@ -9,6 +10,11 @@ import (
 const authHeader = "X-Indexer-API-Token"
 
 type Client common.Client
+
+// delete performs a DELETE request to the specific path against the server, assumes JSON response
+func (c *Client) delete(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+	return (*common.Client)(c).Delete(ctx, response, path, body, headers)
+}
 
 // get performs a GET request to the specific path against the server, assumes JSON response
 func (c *Client) get(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
@@ -44,6 +50,14 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
 func MakeClientWithHeaders(address string, apiToken string, headers []*common.Header) (c *Client, err error) {
 	commonClientWithHeaders, err := common.MakeClientWithHeaders(address, authHeader, apiToken, headers)
 	c = (*Client)(commonClientWithHeaders)
+	return
+}
+
+// MakeClientWithTransport is the factory for constructing a Client for a given endpoint with a
+// custom HTTP Transport as well as optional additional user defined headers.
+func MakeClientWithTransport(address string, apiToken string, headers []*common.Header, transport http.RoundTripper) (c *Client, err error) {
+	commonClientWithTransport, err := common.MakeClientWithTransport(address, authHeader, apiToken, headers, transport)
+	c = (*Client)(commonClientWithTransport)
 	return
 }
 
