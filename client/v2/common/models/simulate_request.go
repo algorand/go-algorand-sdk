@@ -9,6 +9,10 @@ type SimulateRequest struct {
 	// AllowMoreLogging lifts limits on log opcode usage during simulation.
 	AllowMoreLogging bool `json:"allow-more-logging,omitempty"`
 
+	// ExtraOpcodeBudget applies extra opcode budget during simulation for each
+	// transaction group.
+	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
+
 	// TxnGroups the transaction groups to simulate.
 	TxnGroups []SimulateRequestTransactionGroup `json:"txn-groups"`
 }
