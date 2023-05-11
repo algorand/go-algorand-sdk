@@ -259,6 +259,11 @@ type EvalDelta struct {
 	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
 	LocalDeltas map[uint64]StateDelta `codec:"ld,allocbound=config.MaxEvalDeltaAccounts"`
 
+	// If a program modifies the local of an account that is not the Sender, or
+	// in txn.Accounts, it must be recorded here, so that the key in LocalDeltas
+	// can refer to it.
+	SharedAccts []Address `codec:"sa,allocbound=config.MaxEvalDeltaAccounts"`
+
 	Logs []string `codec:"lg"`
 
 	InnerTxns []SignedTxnWithAD `codec:"itx"`
@@ -266,6 +271,7 @@ type EvalDelta struct {
 
 // StateDelta is a map from key/value store keys to ValueDeltas, indicating
 // what should happen for that key
+//
 //msgp:allocbound StateDelta config.MaxStateDeltaKeys
 type StateDelta map[string]ValueDelta
 
