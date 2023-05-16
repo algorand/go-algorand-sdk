@@ -976,11 +976,11 @@ func TestFee(t *testing.T) {
 func TestParseBoxReferences(t *testing.T) {
 
 	genWithAppId := func(appId uint64) types.AppBoxReference {
-		return types.AppBoxReference{appId, []byte("example")}
+		return types.AppBoxReference{AppID: appId, Name: []byte("example")}
 	}
 
 	genWithNewAppId := func() types.AppBoxReference {
-		return types.AppBoxReference{0, []byte("example")}
+		return types.AppBoxReference{AppID: 0, Name: []byte("example")}
 	}
 
 	t.Run("appIndexExists", func(t *testing.T) {
