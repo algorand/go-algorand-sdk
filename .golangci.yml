@@ -37,9 +37,7 @@ severity:
   default-severity: error
 
 issues:
-  # Work our way back over time to be clean against all these
-  # checkers.  If you'd like to contribute, raise the number after ~,
-  # run the linter and dig in.
+  # Currently checks lint errors that were committed after v2.1
   new-from-rev: e85d1961c86009482306497313a2e0fea5bc3dbd
 
   # Disable default exclude rules listed in `golangci-lint run --help` (selectively re-enable some below)

@@ -6,7 +6,8 @@ INTEGRATIONS_TAGS := "$(shell awk '{print $2}' test/integration.tags | paste -s 
 GO_IMAGE := golang:$(subst go,,$(shell go version | cut -d' ' -f 3 | cut -d'.' -f 1,2))-stretch
 
 lint:
-	golint `go list ./... | grep -v /vendor/`
+	golangci-lint run -c .golangci.yml
+	go vet ./...
 
 fmt:
 	go fmt ./...
