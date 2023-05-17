@@ -33,6 +33,8 @@ In `client/v2` the `indexer` package contains a client for the Algorand Indexer 
 
 Run tests with `make docker-test`. To set up the sandbox-based test harness without standing up the go-algorand docker image use `make harness`.
 
+We use golangci-lint to run linters on our codebase. Please run `make lint` before you submit a PR to make sure it conforms to linter standards.
+
 # Quick Start
 
 To download the SDK, open a terminal and use the `go get` command.

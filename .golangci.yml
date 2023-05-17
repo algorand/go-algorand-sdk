@@ -9,12 +9,15 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - exportloopref
     - gci
     - gofmt
     - gosimple
     - govet
     - ineffassign
     - misspell
+    - nilerr
+    - nolintlint
     - revive
     - staticcheck
     - structcheck
