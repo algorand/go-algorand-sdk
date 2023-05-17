@@ -197,7 +197,7 @@ func getFirstField(ob interface{}) string {
 	if ob == nil || getType(ob) != OBJECT {
 		return ""
 	}
-	for k, _ := range ob.(map[string]interface{}) {
+	for k := range ob.(map[string]interface{}) {
 		return k
 	}
 	return ""
@@ -288,17 +288,17 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		keys := make(map[string]bool)
 		if expectedType != MISSING {
 			expectedObject = expected.(map[string]interface{})
-			for k, _ := range expectedObject {
+			for k := range expectedObject {
 				keys[k] = true
 			}
 		}
 		if actualType != MISSING {
 			actualObject = actual.(map[string]interface{})
-			for k, _ := range actualObject {
+			for k := range actualObject {
 				keys[k] = true
 			}
 		}
-		for k, _ := range keys {
+		for k := range keys {
 			var err error
 			err = recursiveCompare(fmt.Sprintf("%s.%s", field, k), expectedObject[k], actualObject[k])
 			if err != nil {
