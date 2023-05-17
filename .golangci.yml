@@ -2,7 +2,10 @@ run:
   timeout: 5m
   tests: false
   skip-dirs:
-    - client/v2/common
+    # Don't run linter on generated files
+    - client/v2
+    # These files are often copied directly from go-algorand and covered by cross repo type checker
+    - types
   
 linters:
   disable-all: true
@@ -40,9 +43,6 @@ severity:
   default-severity: error
 
 issues:
-  # Currently checks lint errors that were committed after v2.1
-  # new-from-rev: e85d1961c86009482306497313a2e0fea5bc3dbd
-
   # Disable default exclude rules listed in `golangci-lint run --help` (selectively re-enable some below)
   exclude-use-default: false
 
@@ -69,7 +69,7 @@ issues:
     # Disable some rules that will break backwards-compatibility in our existing code
     # Allow context to be used as the last parameter of a function
     - "context.Context should be the first parameter of a function"
-    # Allow naming interfaces, structs and functions with the same prefix as the pacakge name
+    # Allow naming interfaces, structs and functions with the same prefix as the package name
     - "by other packages, and that stutters; consider calling this"
 
   exclude-rules:
@@ -77,4 +77,6 @@ issues:
     - path: test/helpers.go
       text: "is unused"
     - path: test/utilities.go
+      text: "is unused"
+    - path: crypto/errors.go
       text: "is unused"

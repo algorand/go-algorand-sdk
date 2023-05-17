@@ -65,6 +65,7 @@ func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 	return a, nil
 }
 
+// GetTxID returns the txid of a transaction
 func GetTxID(tx types.Transaction) string {
 	rawTx := rawTransactionBytesToSign(tx)
 	return txIDFromRawTxnBytesToSign(rawTx)
@@ -427,11 +428,7 @@ func VerifyMultisig(addr types.Address, message []byte, msig types.MultisigSig) 
 		}
 	}
 
-	if verifiedCount < msig.Threshold {
-		return false
-	}
-
-	return true
+	return verifiedCount >= msig.Threshold
 }
 
 // ComputeGroupID returns group ID for a group of transactions
@@ -461,15 +458,15 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 /* LogicSig support */
 
-func isAsciiPrintableByte(symbol byte) bool {
+func isASCIIPrintableByte(symbol byte) bool {
 	isBreakLine := symbol == '\n'
 	isStdPrintable := symbol >= ' ' && symbol <= '~'
 	return isBreakLine || isStdPrintable
 }
 
-func isAsciiPrintable(program []byte) bool {
+func isASCIIPrintable(program []byte) bool {
 	for _, b := range program {
-		if !isAsciiPrintableByte(b) {
+		if !isASCIIPrintableByte(b) {
 			return false
 		}
 	}
@@ -482,7 +479,7 @@ func sanityCheckProgram(program []byte) error {
 	if len(program) == 0 {
 		return fmt.Errorf("empty program")
 	}
-	if isAsciiPrintable(program) {
+	if isASCIIPrintable(program) {
 		if _, err := types.DecodeAddress(string(program)); err == nil {
 			return fmt.Errorf("requesting program bytes, get Algorand address")
 		}
@@ -759,6 +756,7 @@ func GetApplicationAddress(appID uint64) types.Address {
 	return types.Address(hash)
 }
 
+// HashStateProofMessage returns the hash of a state proof message.
 func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
 	msgPackedStateProofMessage := msgpack.Encode(stateProofMessage)
 
@@ -769,6 +767,7 @@ func HashStateProofMessage(stateProofMessage *types.Message) types.MessageHash {
 	return sha256.Sum256(stateProofMessageData)
 }
 
+// HashLightBlockHeader returns the hash of a light block header.
 func HashLightBlockHeader(lightBlockHeader types.LightBlockHeader) types.Digest {
 	msgPackedLightBlockHeader := msgpack.Encode(lightBlockHeader)
 
