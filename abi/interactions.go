@@ -169,6 +169,8 @@ func (method *Method) GetTxCount() int {
 	return cnt
 }
 
+// GetMethodByName returns the method with the given name from the given list.
+// Returns an error if there are multiple or no methods with the same name.
 func GetMethodByName(methods []Method, name string) (Method, error) {
 	var filteredMethods []Method
 	for _, method := range methods {
@@ -204,6 +206,7 @@ type Interface struct {
 	Methods []Method `json:"methods"`
 }
 
+// GetMethodByName returns the method with the given name
 func (i *Interface) GetMethodByName(name string) (Method, error) {
 	return GetMethodByName(i.Methods, name)
 }
@@ -228,6 +231,7 @@ type Contract struct {
 	Methods []Method `json:"methods"`
 }
 
+// GetMethodByName returns the method with the given name
 func (c *Contract) GetMethodByName(name string) (Method, error) {
 	return GetMethodByName(c.Methods, name)
 }

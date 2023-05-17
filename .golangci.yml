@@ -38,7 +38,7 @@ severity:
 
 issues:
   # Currently checks lint errors that were committed after v2.1
-  new-from-rev: e85d1961c86009482306497313a2e0fea5bc3dbd
+  # new-from-rev: e85d1961c86009482306497313a2e0fea5bc3dbd
 
   # Disable default exclude rules listed in `golangci-lint run --help` (selectively re-enable some below)
   exclude-use-default: false
@@ -62,3 +62,9 @@ issues:
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
     # "EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore"
     - ineffective break statement. Did you mean to break out of the outer loop
+    
+    # Disable some rules that will break backwards-compatibility in our existing code
+    # Allow context to be used as the last parameter of a function
+    - context.Context should be the first parameter of a function 
+    # Allow naming interfaces, structs and functions with the same prefix as the pacakge name
+    - by other packages, and that stutters; consider calling this

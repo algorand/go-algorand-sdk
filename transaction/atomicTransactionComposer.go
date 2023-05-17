@@ -118,19 +118,19 @@ type ExecuteResult struct {
 type AtomicTransactionComposerStatus = int
 
 const (
-	// The atomic group is still under construction.
+	// BUILDING means the atomic group is still under construction.
 	BUILDING AtomicTransactionComposerStatus = iota
 
-	// The atomic group has been finalized, but not yet signed.
+	// BUILT means the atomic group has been finalized, but not yet signed.
 	BUILT
 
-	// The atomic group has been finalized and signed, but not yet submitted to the network.
+	// SIGNED means the atomic group has been finalized and signed, but not yet submitted to the network.
 	SIGNED
 
-	// The atomic group has been finalized, signed, and submitted to the network.
+	// SUBMITTED means the atomic group has been finalized, signed, and submitted to the network.
 	SUBMITTED
 
-	// The atomic group has been finalized, signed, submitted, and successfully committed to a block.
+	// COMMITTED means the atomic group has been finalized, signed, submitted, and successfully committed to a block.
 	COMMITTED
 )
 
@@ -162,7 +162,7 @@ func (txContext *transactionContext) isMethodCallTx() bool {
 	return txContext.method != nil
 }
 
-// The maximum size of an atomic transaction group.
+// MaxAtomicGroupSize is the maximum size of an atomic transaction group.
 const MaxAtomicGroupSize = 16
 
 // AtomicTransactionComposer is a helper class used to construct and execute atomic transaction groups
@@ -605,7 +605,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			if numMethodCalls == 0 {
 				indexToWaitFor = i
 			}
-			numMethodCalls += 1
+			numMethodCalls++
 		}
 	}
 
