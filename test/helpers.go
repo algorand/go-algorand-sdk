@@ -42,7 +42,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 var mockServer *httptest.Server
 var responseRing *ring.Ring
 
-func mockHttpResponsesInLoadedFromHelper(jsonfiles, directory string, status int) error {
+func mockHTTPResponsesInLoadedFromHelper(jsonfiles, directory string, status int) error {
 	jsons, err := loadMockJsons(jsonfiles, directory)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func mockServerRecordingRequestPaths() error {
 }
 
 func expectTheRequestToBe(expectedMethod, expectedPath string) error {
-	if strings.ToLower(expectedMethod) != strings.ToLower(receivedMethod) {
+	if !strings.EqualFold(expectedMethod, receivedMethod) {
 		return fmt.Errorf("method used to access mock server was %s but expected %s", receivedMethod, expectedMethod)
 	}
 	return expectThePathUsedToBe(expectedPath)

@@ -29,7 +29,7 @@ func mockHttpResponsesInLoadedFromWithStatus(jsonfile, loadedFrom string, status
 	baselinePath = path.Join(directory, jsonfile)
 	var err error
 	expectedStatus = status
-	err = mockHttpResponsesInLoadedFromHelper(jsonfile, directory, status)
+	err = mockHTTPResponsesInLoadedFromHelper(jsonfile, directory, status)
 	if err != nil {
 		return err
 	}
