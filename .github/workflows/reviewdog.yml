@@ -28,4 +28,3 @@ jobs:
           level: "error"
           fail_on_error: true
           filter_mode: "nofilter"
-      
