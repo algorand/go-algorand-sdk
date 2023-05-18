@@ -28,6 +28,7 @@
 @unit.responses.timestamp
 @unit.responses.unlimited_assets
 @unit.sourcemap
+@unit.statedelta
 @unit.stateproof.paths
 @unit.stateproof.responses
 @unit.sync
@@ -36,3 +37,4 @@
 @unit.transactions
 @unit.transactions.keyreg
 @unit.transactions.payment
+@unit.txngroupdeltas
