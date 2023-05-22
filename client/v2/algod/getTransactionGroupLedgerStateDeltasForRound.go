@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
 // GetTransactionGroupLedgerStateDeltasForRoundParams contains all of the query parameters for url serialization.
@@ -27,7 +27,7 @@ type GetTransactionGroupLedgerStateDeltasForRound struct {
 }
 
 // Do performs the HTTP request
-func (s *GetTransactionGroupLedgerStateDeltasForRound) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
+func (s *GetTransactionGroupLedgerStateDeltasForRound) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionGroupLedgerStateDeltasForRoundResponse, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/deltas/%s/txn/group", common.EscapeParams(s.round)...), s.p, headers)
 	return
 }
