@@ -4,8 +4,8 @@ package models
 // transaction group
 type LedgerStateDeltaForTransactionGroup struct {
 	// Delta ledger StateDelta object
-	Delta *map[string]interface{} `json:"delta"`
+	Delta *map[string]interface{} `json:"Delta"`
 
 	// Ids
-	Ids []string `json:"ids"`
+	Ids []string `json:"Ids"`
 }
