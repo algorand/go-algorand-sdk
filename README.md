@@ -19,7 +19,7 @@ Additional developer documentation and examples can be found on [developer.algor
 
 In `client/`, the `kmd` packages provide HTTP clients for the Key Management Daemon. It is responsible for managing spending key material, signing transactions, and managing wallets.
 In `client/v2` the `algod` package contains a client for the Algorand protocol daemon HTTP API. You can use it to check the status of the blockchain, read a block, look at transactions, or submit a signed transaction.
-In `client/v2` the `indexer` package contains a client for the Algorand Indexer API. You can use it to query historical transactions or make queries about the current state of the chain. 
+In `client/v2` the `indexer` package contains a client for the Algorand Indexer API. You can use it to query historical transactions or make queries about the current state of the chain.
 
 `transaction` package contains Transaction building utility functions.
 
