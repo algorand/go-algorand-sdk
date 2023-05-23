@@ -39,6 +39,6 @@ We use golangci-lint to run linters on our codebase. Please run `make lint` befo
 
 To download the SDK, open a terminal and use the `go get` command.
 
-```sh
+```command
 go get -u github.com/algorand/go-algorand-sdk/...
 ```
