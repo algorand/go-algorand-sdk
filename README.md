@@ -15,7 +15,7 @@ Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/al
 
 Additional developer documentation and examples can be found on [developer.algorand.org](https://developer.algorand.org/docs/sdks/go/)
 
-## Package overview
+## Package Overview
 
 In `client/`, the `kmd` packages provide HTTP clients for the Key Management Daemon. It is responsible for managing spending key material, signing transactions, and managing wallets.
 In `client/v2` the `algod` package contains a client for the Algorand protocol daemon HTTP API. You can use it to check the status of the blockchain, read a block, look at transactions, or submit a signed transaction.
