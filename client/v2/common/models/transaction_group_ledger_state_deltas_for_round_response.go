@@ -5,5 +5,5 @@ package models
 // round.
 type TransactionGroupLedgerStateDeltasForRoundResponse struct {
 	// Deltas
-	Deltas []LedgerStateDeltaForTransactionGroup `json:"Deltas"`
+	Deltas []LedgerStateDeltaForTransactionGroup `json:"deltas"`
 }
