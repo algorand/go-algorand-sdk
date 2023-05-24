@@ -652,22 +652,6 @@ func (cp ConsensusProtocols) Merge(configurableConsensus ConsensusProtocols) Con
 	return staticConsensus
 }
 
-// LoadConfigurableConsensusProtocols loads the configurable protocols from the data directory
-func LoadConfigurableConsensusProtocols(dataDirectory string) error {
-	newConsensus, err := PreloadConfigurableConsensusProtocols(dataDirectory)
-	if err != nil {
-		return err
-	}
-	if newConsensus != nil {
-		Consensus = newConsensus
-		// Set allocation limits
-		for _, p := range Consensus {
-			checkSetAllocBounds(p)
-		}
-	}
-	return nil
-}
-
 func initConsensusProtocols() {
 	// WARNING: copying a ConsensusParams by value into a new variable
 	// does not copy the ApprovedUpgrades map.  Make sure that each new
