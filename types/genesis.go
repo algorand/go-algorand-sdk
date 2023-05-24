@@ -48,6 +48,11 @@ type Genesis struct {
 	DevMode bool `codec:"devmode"`
 }
 
+// GenesisAllocation object represents an allocation of algos to
+// an address in the genesis block.  Address is the checksummed
+// short address.  Comment is a note about what this address is
+// representing, and is purely informational.  State is the initial
+// account state.
 type GenesisAllocation struct {
 	_struct struct{} `codec:""`
 
@@ -56,6 +61,9 @@ type GenesisAllocation struct {
 	State   Account `codec:"state"`
 }
 
+// Account contains the data associated with a given address.
+// This includes the account balance, cryptographic public keys,
+// consensus delegation status.
 type Account struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 

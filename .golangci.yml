@@ -4,8 +4,6 @@ run:
   skip-dirs:
     # Don't run linter on generated files
     - client/v2
-    # These files are often copied directly from go-algorand and covered by cross repo type checker
-    - types
   
 linters:
   disable-all: true
@@ -78,5 +76,6 @@ issues:
       text: "is unused"
     - path: test/utilities.go
       text: "is unused"
-    - path: crypto/errors.go
+    # Ignore unused fields in types that are copied from go-algorand
+    - path: types/
       text: "is unused"
