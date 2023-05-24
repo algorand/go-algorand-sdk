@@ -1,9 +1,6 @@
 package config
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
@@ -669,31 +666,6 @@ func LoadConfigurableConsensusProtocols(dataDirectory string) error {
 		}
 	}
 	return nil
-}
-
-// PreloadConfigurableConsensusProtocols loads the configurable protocols from the data directory
-// and merge it with a copy of the Consensus map. Then, it returns it to the caller.
-func PreloadConfigurableConsensusProtocols(dataDirectory string) (ConsensusProtocols, error) {
-	consensusProtocolPath := filepath.Join(dataDirectory, ConfigurableConsensusProtocolsFilename)
-	file, err := os.Open(consensusProtocolPath)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			// this file is not required, only optional. if it's missing, no harm is done.
-			return Consensus, nil
-		}
-		return nil, err
-	}
-	defer file.Close()
-
-	configurableConsensus := make(ConsensusProtocols)
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&configurableConsensus)
-	if err != nil {
-		return nil, err
-	}
-	return Consensus.Merge(configurableConsensus), nil
 }
 
 func initConsensusProtocols() {
