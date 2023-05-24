@@ -2,7 +2,7 @@ run:
   timeout: 5m
   tests: false
   skip-dirs:
-    - client/v2/common
+    - client/v2
   
 linters:
   disable-all: true

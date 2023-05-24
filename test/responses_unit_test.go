@@ -184,6 +184,15 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetBlockTimeStampOffset":
 			response, err =
 				algodC.GetBlockTimeStampOffset().Do(context.Background())
+		case "GetLedgerStateDelta":
+			response, err =
+				algodC.GetLedgerStateDelta(123).Do(context.Background())
+		case "GetTransactionGroupLedgerStateDeltaForRound":
+			response, err =
+				algodC.GetTransactionGroupLedgerStateDeltasForRound(123).Do(context.Background())
+		case "GetLedgerStateDeltaForTransactionGroup":
+			response, err =
+				algodC.GetLedgerStateDeltaForTransactionGroup("someID").Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
