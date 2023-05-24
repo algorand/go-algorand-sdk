@@ -35,6 +35,8 @@ Run tests with `make docker-test`. To set up the sandbox-based test harness with
 
 We use golangci-lint to run linters on our codebase. Please run `make lint` before you submit a PR to make sure it conforms to linter standards.
 
+We use cucumber testing for all of our SDKs, including this one. Please refer to [algorand-sdk-testing](https://github.com/algorand/algorand-sdk-testing#readme) for guidance and existing tests that you may need to update. Depending on the type of update you with to contribute, you may also need to have corresponding updates in the other SDKs (Java, JS, and Python). Feel welcome to ask for collaboration on that front. 
+
 ## Quick Start
 
 To download the SDK, open a terminal and use the `go get` command.
