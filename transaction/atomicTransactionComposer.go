@@ -26,7 +26,7 @@ const methodArgsTupleThreshold = maxAppArgs - 2
 
 // TransactionWithSigner represents an unsigned transactions and a signer that can authorize that
 // transaction.
-type TransactionWithSigner struct {
+type TransactionWithSigner struct { //nolint:revive
 	// An unsigned transaction
 	Txn types.Transaction
 	// A transaction signer that can authorize the transaction
@@ -549,7 +549,7 @@ func (atc *AtomicTransactionComposer) getTxIDs() []string {
 // Note: a group can only be submitted again if it fails.
 //
 // Returns a list of TxIDs of the submitted transactions.
-func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) {
+func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) { //nolint:revive
 	if atc.status > SUBMITTED {
 		return nil, errors.New("status must be SUBMITTED or lower in order to call Submit()")
 	}
@@ -584,7 +584,7 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 //
 // Returns the confirmed round for this transaction, the txIDs of the submitted transactions, and an
 // ABIResult for each method call in this group.
-func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (ExecuteResult, error) {
+func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (ExecuteResult, error) { //nolint:revive
 	if atc.status == COMMITTED {
 		return ExecuteResult{}, errors.New("status is already committed")
 	}

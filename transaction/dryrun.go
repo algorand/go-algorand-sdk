@@ -24,7 +24,7 @@ const (
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
 // Passed in as a pointer to a DryrunRequest object to use for extra parameters
-func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest, ctx context.Context) (drr models.DryrunRequest, err error) {
+func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest, ctx context.Context) (drr models.DryrunRequest, err error) { //nolint:revive
 	var (
 		apps   []types.AppIndex
 		assets []types.AssetIndex

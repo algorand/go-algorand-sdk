@@ -64,12 +64,6 @@ issues:
     # "EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore"
     - ineffective break statement. Did you mean to break out of the outer loop
     
-    # Disable some rules that will break backwards-compatibility in our existing code
-    # Allow context to be used as the last parameter of a function
-    - "context.Context should be the first parameter of a function"
-    # Allow naming interfaces, structs and functions with the same prefix as the package name
-    - "by other packages, and that stutters; consider calling this"
-
   exclude-rules:
     # Test utilities and helpers may have code that look unused, but is being used in another file
     - path: test/helpers.go
