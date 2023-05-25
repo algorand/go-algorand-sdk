@@ -18,7 +18,7 @@ type TransactionSigner interface { //nolint:revive
 	Equals(other TransactionSigner) bool
 }
 
-//BasicAccountTransactionSigner that can sign transactions for the provided basic Account.
+// BasicAccountTransactionSigner that can sign transactions for the provided basic Account.
 type BasicAccountTransactionSigner struct {
 	Account crypto.Account
 }
