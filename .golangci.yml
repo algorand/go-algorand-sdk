@@ -33,9 +33,13 @@ linters-settings:
       - default
       - prefix(github.com/algorand)
       - prefix(github.com/algorand/go-algorand-sdk)
-
     section-separators:
       - newLine
+  nolintlint:
+    # require naming a specific linter X using //nolint:X
+    require-specific: true
+    # require comments like "//nolint:errcheck // Explanation of why we are ignoring linter here..."
+    require-explanation: true
 
 severity:
   default-severity: error

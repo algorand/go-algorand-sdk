@@ -13,7 +13,7 @@ import (
 // @returns An array of encoded signed transactions. The length of the
 //   array will be the same as the length of indexesToSign, and each index i in the array
 //   corresponds to the signed transaction from txnGroup[indexesToSign[i]]
-type TransactionSigner interface { //nolint:revive
+type TransactionSigner interface { //nolint:revive // Ignore stuttering for backwards compatibility
 	SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error)
 	Equals(other TransactionSigner) bool
 }
