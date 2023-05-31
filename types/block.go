@@ -250,6 +250,9 @@ type (
 	}
 )
 
+// EvalDelta stores StateDeltas for an application's global key/value store, as
+// well as StateDeltas for some number of accounts holding local state for that
+// application
 type EvalDelta struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 

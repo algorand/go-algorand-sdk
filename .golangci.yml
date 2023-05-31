@@ -2,6 +2,7 @@ run:
   timeout: 5m
   tests: false
   skip-dirs:
+    # Don't run linter on generated files
     - client/v2
   
 linters:
@@ -32,17 +33,18 @@ linters-settings:
       - default
       - prefix(github.com/algorand)
       - prefix(github.com/algorand/go-algorand-sdk)
-
     section-separators:
       - newLine
+  nolintlint:
+    # require naming a specific linter X using //nolint:X
+    require-specific: true
+    # require comments like "//nolint:errcheck // Explanation of why we are ignoring linter here..."
+    require-explanation: true
 
 severity:
   default-severity: error
 
 issues:
-  # Currently checks lint errors that were committed after v2.1
-  new-from-rev: e85d1961c86009482306497313a2e0fea5bc3dbd
-
   # Disable default exclude rules listed in `golangci-lint run --help` (selectively re-enable some below)
   exclude-use-default: false
 
@@ -65,3 +67,13 @@ issues:
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
     # "EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore"
     - ineffective break statement. Did you mean to break out of the outer loop
+    
+  exclude-rules:
+    # Test utilities and helpers may have code that look unused, but is being used in another file
+    - path: test/helpers.go
+      text: "is unused"
+    - path: test/utilities.go
+      text: "is unused"
+    # Ignore unused fields in types that are copied from go-algorand
+    - path: types/
+      text: "is unused"

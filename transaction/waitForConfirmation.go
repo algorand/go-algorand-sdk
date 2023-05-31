@@ -9,10 +9,10 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
-// `WaitForConfirmation` waits for a pending transaction to be accepted by the network
-// `txid`: The ID of the pending transaction to wait for
-// `waitRounds`: The number of rounds to block before exiting with an error.
-func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx context.Context, headers ...*common.Header) (txInfo models.PendingTransactionInfoResponse, err error) {
+// WaitForConfirmation waits for a pending transaction to be accepted by the network
+// txid: The ID of the pending transaction to wait for
+// waitRounds: The number of rounds to block before exiting with an error.
+func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx context.Context, headers ...*common.Header) (txInfo models.PendingTransactionInfoResponse, err error) { //nolint:revive // Ignore Context order for backwards compatibility
 	response, err := c.Status().Do(ctx, headers...)
 	if err != nil {
 		return
@@ -53,6 +53,6 @@ func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx co
 		}
 
 		// Increment the `currentRound`
-		currentRound += 1
+		currentRound++
 	}
 }

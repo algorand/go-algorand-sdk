@@ -2,6 +2,7 @@ package types
 
 // This file has the applications specific structures
 
+// ApplicationFields are the fields that are common to all application
 type ApplicationFields struct {
 	ApplicationCallTxnFields
 }
@@ -11,6 +12,7 @@ type ApplicationFields struct {
 // AppParams
 type AppIndex uint64
 
+// AppBoxReference names a box by the app ID
 type AppBoxReference struct {
 	// The ID of the app that owns the box. Must be converted to BoxReference during transaction submission.
 	AppID uint64
@@ -19,6 +21,7 @@ type AppBoxReference struct {
 	Name []byte
 }
 
+// BoxReference names a box by the index in the foreign app array
 type BoxReference struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 

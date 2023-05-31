@@ -4,8 +4,10 @@ import (
 	avm_abi "github.com/algorand/avm-abi/abi"
 )
 
+// Type is an ABI type
 type Type = avm_abi.Type
 
+// TypeOf returns the ABI type of a string representation of a type.
 func TypeOf(str string) (Type, error) {
 	return avm_abi.TypeOf(str)
 }

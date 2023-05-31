@@ -26,7 +26,7 @@ const methodArgsTupleThreshold = maxAppArgs - 2
 
 // TransactionWithSigner represents an unsigned transactions and a signer that can authorize that
 // transaction.
-type TransactionWithSigner struct {
+type TransactionWithSigner struct { //nolint:revive // Ignore stuttering for backwards compatibility
 	// An unsigned transaction
 	Txn types.Transaction
 	// A transaction signer that can authorize the transaction
@@ -118,19 +118,19 @@ type ExecuteResult struct {
 type AtomicTransactionComposerStatus = int
 
 const (
-	// The atomic group is still under construction.
+	// BUILDING means the atomic group is still under construction.
 	BUILDING AtomicTransactionComposerStatus = iota
 
-	// The atomic group has been finalized, but not yet signed.
+	// BUILT means the atomic group has been finalized, but not yet signed.
 	BUILT
 
-	// The atomic group has been finalized and signed, but not yet submitted to the network.
+	// SIGNED means the atomic group has been finalized and signed, but not yet submitted to the network.
 	SIGNED
 
-	// The atomic group has been finalized, signed, and submitted to the network.
+	// SUBMITTED means the atomic group has been finalized, signed, and submitted to the network.
 	SUBMITTED
 
-	// The atomic group has been finalized, signed, submitted, and successfully committed to a block.
+	// COMMITTED means the atomic group has been finalized, signed, submitted, and successfully committed to a block.
 	COMMITTED
 )
 
@@ -162,7 +162,7 @@ func (txContext *transactionContext) isMethodCallTx() bool {
 	return txContext.method != nil
 }
 
-// The maximum size of an atomic transaction group.
+// MaxAtomicGroupSize is the maximum size of an atomic transaction group.
 const MaxAtomicGroupSize = 16
 
 // AtomicTransactionComposer is a helper class used to construct and execute atomic transaction groups
@@ -549,7 +549,7 @@ func (atc *AtomicTransactionComposer) getTxIDs() []string {
 // Note: a group can only be submitted again if it fails.
 //
 // Returns a list of TxIDs of the submitted transactions.
-func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) {
+func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.Context) ([]string, error) { //nolint:revive // Ignore Context order for backwards compatibility
 	if atc.status > SUBMITTED {
 		return nil, errors.New("status must be SUBMITTED or lower in order to call Submit()")
 	}
@@ -584,7 +584,7 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 //
 // Returns the confirmed round for this transaction, the txIDs of the submitted transactions, and an
 // ABIResult for each method call in this group.
-func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (ExecuteResult, error) {
+func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.Context, waitRounds uint64) (ExecuteResult, error) { //nolint:revive // Ignore Context order for backwards compatibility
 	if atc.status == COMMITTED {
 		return ExecuteResult{}, errors.New("status is already committed")
 	}
@@ -605,7 +605,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			if numMethodCalls == 0 {
 				indexToWaitFor = i
 			}
-			numMethodCalls += 1
+			numMethodCalls++
 		}
 	}
 
