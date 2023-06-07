@@ -6,6 +6,10 @@ type SimulateTransactionResult struct {
 	// value includes budged used by inner app calls spawned by this transaction.
 	AppBudgetConsumed uint64 `json:"app-budget-consumed,omitempty"`
 
+	// ExecTrace the execution trace of calling an app or a logic sig, containing the
+	// inner app call trace in a recursive way.
+	ExecTrace SimulationTransactionExecTrace `json:"exec-trace,omitempty"`
+
 	// LogicSigBudgetConsumed budget used during execution of a logic sig transaction.
 	LogicSigBudgetConsumed uint64 `json:"logic-sig-budget-consumed,omitempty"`
 
