@@ -48,6 +48,15 @@ func VerifyResponse(expectedFile string, actual string) error {
 		expectedString = string(sdk_json.EncodeStrict(generic))
 	}
 
+	if strings.HasSuffix(expectedFile, ".msgp") {
+		generic := make(map[string]interface{})
+		err = msgpack.Decode(fileBytes, generic)
+		if err != nil {
+			return fmt.Errorf("failed to decode '%s' from message pack: %v", expectedFile, err)
+		}
+		expectedString = string(sdk_json.EncodeStrict(generic))
+	}
+
 	err = EqualJSON2(expectedString, actual)
 	if err != nil {
 		fmt.Printf("EXPECTED:\n%v\n", expectedString)
