@@ -31,7 +31,7 @@ jobs:
               echo "release-tag: $RELEASE_VERSION-$PRE_RELEASE_VERSION"
               echo "release-tag=$RELEASE_VERSION-$PRE_RELEASE_VERSION" >> $GITHUB_OUTPUT
             elif [[ -n $PRE_RELEASE_VERSION ]]; then
-              echo "Input pre_release_version is not empty, but does not match the regex pattern ^[a-z.0-9]+$"
+              echo "Input pre_release_version is not empty, but does not match the regex pattern ^[-a-z.0-9]+$"
               exit 1
             else
               echo "release-tag: $RELEASE_VERSION"
