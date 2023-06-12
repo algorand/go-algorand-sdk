@@ -27,6 +27,7 @@ type GetLedgerStateDelta struct {
 
 // Do performs the HTTP request
 func (s *GetLedgerStateDelta) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/deltas/%s", common.EscapeParams(s.round)...), s.p, headers)
+	s.p.Format = "msgpack"
+	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/deltas/%s", common.EscapeParams(s.round)...), s.p, headers)
 	return
 }
