@@ -76,11 +76,10 @@ func TestDecode(t *testing.T) {
 	})
 
 	t.Run("strict encode map interface key as string", func(t *testing.T) {
-		t.Skip("There is a bug in go-codec with MapKeyAsString = true and Canonical = true")
 		intMap := map[interface{}]interface{}{
 			0: "int key",
 		}
 		data := string(EncodeStrict(intMap))
-		assert.NotContains(t, data, "0:")
+		assert.Contains(t, data, `"0"`)
 	})
 }
