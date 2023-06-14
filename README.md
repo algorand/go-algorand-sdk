@@ -1,8 +1,7 @@
 # go-algorand-sdk
 
-[![Build Status](https://travis-ci.com/algorand/go-algorand-sdk.svg?branch=master)](https://travis-ci.com/algorand/go-algorand-sdk)
-[![Go Report Card](https://goreportcard.com/badge/github.com/algorand/go-algorand-sdk)](https://goreportcard.com/report/github.com/algorand/go-algorand-sdk)
-[![GoDoc](https://godoc.org/github.com/algorand/go-algorand-sdk?status.svg)](https://godoc.org/github.com/algorand/go-algorand-sdk)
+[![Go Report Card](https://goreportcard.com/badge/github.com/algorand/go-algorand-sdk)](https://goreportcard.com/report/github.com/algorand/go-algorand-sdk/v2)
+[![GoDoc](https://godoc.org/github.com/algorand/go-algorand-sdk?status.svg)](https://godoc.org/github.com/algorand/go-algorand-sdk/v2)
 
 The Algorand golang SDK provides:
 
@@ -11,7 +10,7 @@ The Algorand golang SDK provides:
 
 ## Documentation
 
-Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk` in your web browser.
+Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk/v2` in your web browser.
 
 Additional developer documentation and examples can be found on [developer.algorand.org](https://developer.algorand.org/docs/sdks/go/)
 
