@@ -34,6 +34,7 @@ const (
 )
 
 // GenericDigest is a digest that implements CustomSizeDigest, and can be used as hash output.
+//
 //msgp:allocbound GenericDigest MaxHashDigestSize
 type GenericDigest []byte
 
@@ -72,6 +73,7 @@ const (
 )
 
 // HashFactory is responsible for generating new hashes accordingly to the type it stores.
+//
 //msgp:postunmarshalcheck HashFactory Validate
 type HashFactory struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
@@ -129,6 +131,7 @@ type Participant struct {
 }
 
 // MerkleSignature represents a Falcon signature in a compressed-form
+//
 //msgp:allocbound MerkleSignature FalconMaxSignatureSize
 type MerkleSignature []byte
 

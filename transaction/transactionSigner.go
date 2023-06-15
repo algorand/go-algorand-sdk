@@ -11,8 +11,9 @@ import (
 // @param txnGroup - The atomic group containing transactions to be signed
 // @param indexesToSign - An array of indexes in the atomic transaction group that should be signed
 // @returns An array of encoded signed transactions. The length of the
-//   array will be the same as the length of indexesToSign, and each index i in the array
-//   corresponds to the signed transaction from txnGroup[indexesToSign[i]]
+//
+//	array will be the same as the length of indexesToSign, and each index i in the array
+//	corresponds to the signed transaction from txnGroup[indexesToSign[i]]
 type TransactionSigner interface { //nolint:revive // Ignore stuttering for backwards compatibility
 	SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error)
 	Equals(other TransactionSigner) bool
