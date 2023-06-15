@@ -3,7 +3,6 @@ package json
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -97,7 +96,7 @@ func TestStructKeyEncode(t *testing.T) {
 
 	data := TestStruct{
 		Complex: map[KeyStruct]string{
-			KeyStruct{
+			{
 				Key1: "key1",
 				Key2: "key2",
 			}: "value",
@@ -105,7 +104,6 @@ func TestStructKeyEncode(t *testing.T) {
 	}
 
 	encoded := Encode(data)
-	fmt.Println(string(encoded))
 
 	var data2 TestStruct
 	err := Decode(encoded, &data2)
