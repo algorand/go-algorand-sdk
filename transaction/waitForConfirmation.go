@@ -41,10 +41,9 @@ func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx co
 				return
 			}
 		}
-		// ignore errors from PendingTransactionInformation, since it may return 404 if the algod
-		// instance is behind a load balancer and the request goes to a different algod than the
-		// one we submitted the transaction to
-		err = nil
+		// Note that we intentionally ignore errors from PendingTransactionInformation, since it
+		// may return 404 if the algod instance is behind a load balancer and the request goes
+		// to a different algod than the one we submitted the transaction to
 
 		// Wait until the block for the `currentRound` is confirmed
 		response, err = c.StatusAfterBlock(currentRound).Do(ctx, headers...)
