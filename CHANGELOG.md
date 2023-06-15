@@ -1,3 +1,24 @@
+# v2.2.0
+
+## Enhancements
+
+- DevOps: Update CODEOWNERS to only refer to the devops group by @onetechnical in #533
+- lint: Add `golangci-lint` to CI process by @algochoi in #534
+- algod: State delta endpoints  by @algochoi in #538
+- enhancement: Verbose Test Harness by @tzaffi in #540
+- types: add consensus protocol and types. by @winder in #543
+- lint: Fix lint errors  by @algochoi in #535
+- clients: Regenerate client. by @winder in #553
+- API: Regenerate code with the latest specification file (d559cb2f) by @github-actions[bot] in #556
+- docs: Readme fixes by @algochoi in #559
+- encoder: Update go-codec version. by @winder in #560
+
+## Bug Fixes
+
+- bugfix: adding EvalDelta.SharedAccts by @tzaffi in #531
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.1.0...v2.2.0
+
 # 2.1.0
 
 ## What's Changed
