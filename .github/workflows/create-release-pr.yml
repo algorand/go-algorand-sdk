@@ -96,7 +96,7 @@ jobs:
                         ]
                     },
                     {
-                        "title": "## Enhancement",
+                        "title": "## Enhancements",
                         "labels": [
                             "Enhancement"
                         ]
@@ -122,7 +122,7 @@ jobs:
                     "on_property": "mergedAt"
                 },
                 "template": "#{{CHANGELOG}}",
-                "pr_template": "- #{{TITLE}} by #{{AUTHOR}} in ##{{NUMBER}}"
+                "pr_template": "- #{{TITLE}} by @#{{AUTHOR}} in ##{{NUMBER}}"
             }
 
       - name: Update Changelog
@@ -131,8 +131,7 @@ jobs:
           CHANGELOG_CONTENT: ${{ steps.build-changelog.outputs.changelog }}
           PREVIOUS_VERSION: ${{ steps.get-release.outputs.latest-tag }}
         run: |
-          echo "$(tail -n +2 CHANGELOG.md)" > CHANGELOG.md
-          echo -e "# Changelog\n\n# ${RELEASE_VERSION}\n\n${CHANGELOG_CONTENT}**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_VERSION}...${RELEASE_VERSION}" | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
+          echo -e "# ${RELEASE_VERSION}\n\n${CHANGELOG_CONTENT}**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_VERSION}...${RELEASE_VERSION}\n" | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
 
       - name: Commit Changes
         uses: EndBug/add-and-commit@v9.1.3
@@ -148,18 +147,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.set-release.outputs.release-tag }}
         run: |
-          echo -e "# ${RELEASE_TAG}\n\n${CHANGELOG_CONTENT}**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_VERSION}...${RELEASE_TAG}" > msg_body.txt
-          export msg_body=$(cat msg_body.txt)
+          echo -e "# What's Changed\n\n${CHANGELOG_CONTENT}**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_VERSION}...${RELEASE_TAG}" > tmp_msg_body.txt
+          export msg_body=$(cat tmp_msg_body.txt)
+          rm tmp_msg_body.txt
+          # Note: There's an issue adding teams as reviewers, see https://github.com/cli/cli/issues/6395
           PULL_REQUEST_URL=$(gh pr create --base "master" \
             --title "FOR REVIEW ONLY: ${{ github.event.repository.name }} $RELEASE_TAG" \
             --label "Skip-Release-Notes" \
-            --reviewer algorand/scytale \
-            --reviewer algorand/devops \
+            --label "Team Hyper Flow" \
             --body "$msg_body" | tail -n 1)
-          PULL_REQUEST_NUM=$(echo $PULL_REQUEST_URL | sed 's:.*/::')
-          echo "pull-request-master=$PULL_REQUEST_URL" >> $GITHUB_ENV
-          echo "pull-request-master-num=$PULL_REQUEST_NUM" >> $GITHUB_ENV
-          echo "Pull request to Master created: $PULL_REQUEST_URL"
+          if [[ $PULL_REQUEST_URL =~ ^https://github.com/${{ github.repository }}/pull/[0-9]+$ ]]; then
+            PULL_REQUEST_NUM=$(echo $PULL_REQUEST_URL | sed 's:.*/::')
+            echo "pull-request-master=$PULL_REQUEST_URL" >> $GITHUB_ENV
+            echo "pull-request-master-num=$PULL_REQUEST_NUM" >> $GITHUB_ENV
+            echo "Pull request to Master created: $PULL_REQUEST_URL"
+          else
+            echo "There was an issue creating the pull request to master branch."
+            exit 1
+          fi
 
       - name: Create Pull Request to Develop
         if: ${{ env.PRE_RELEASE_VERSION == '' }}
@@ -167,15 +172,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.set-release.outputs.release-tag }}
         run: |
+          # Note: There's an issue adding teams as reviewers, see https://github.com/cli/cli/issues/6395
           PULL_REQUEST_URL=$(gh pr create --base "develop" \
             --title "FOR REVIEW ONLY: Merge back ${{ github.event.repository.name }} $RELEASE_TAG to develop" \
             --label "Skip-Release-Notes" \
-            --reviewer algorand/scytale \
-            --reviewer algorand/devops \
+            --label "Team Hyper Flow" \
             --body "Merge back version changes to develop." | tail -n 1)
-          echo "Pull request to Develop created: $PULL_REQUEST_URL"
-          DEVELOP_PR_MESSAGE="\nPull Request to develop: $PULL_REQUEST_URL"
-          echo "pull-request-develop-message=$DEVELOP_PR_MESSAGE" >> $GITHUB_ENV
+          if [[ $PULL_REQUEST_URL =~ ^https://github.com/${{ github.repository }}/pull/[0-9]+$ ]]; then
+            echo "Pull request to Develop created: $PULL_REQUEST_URL"
+            DEVELOP_PR_MESSAGE="\nPull Request to develop: $PULL_REQUEST_URL"
+            echo "pull-request-develop-message=$DEVELOP_PR_MESSAGE" >> $GITHUB_ENV
+          else
+            echo "There was an issue creating the pull request to develop branch."
+            exit 1
+          fi
 
       - name: Send Slack Message
         id: slack
