@@ -19,6 +19,7 @@ type SourceMap struct {
 	PcToLine map[int]int
 }
 
+// DecodeSourceMap decodes a source map
 func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	var sm SourceMap
 
@@ -62,11 +63,13 @@ func DecodeSourceMap(ism map[string]interface{}) (SourceMap, error) {
 	return sm, nil
 }
 
+// GetLineForPc returns the line number for the given pc
 func (s *SourceMap) GetLineForPc(pc int) (int, bool) {
 	line, ok := s.PcToLine[pc]
 	return line, ok
 }
 
+// GetPcsForLine returns the program counter for the given line
 func (s *SourceMap) GetPcsForLine(line int) []int {
 	return s.LineToPc[line]
 }

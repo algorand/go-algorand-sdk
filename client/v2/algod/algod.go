@@ -138,6 +138,18 @@ func (c *Client) PendingTransactionInformation(txid string) *PendingTransactionI
 	return &PendingTransactionInformation{c: c, txid: txid}
 }
 
+func (c *Client) GetLedgerStateDelta(round uint64) *GetLedgerStateDelta {
+	return &GetLedgerStateDelta{c: c, round: round}
+}
+
+func (c *Client) GetTransactionGroupLedgerStateDeltasForRound(round uint64) *GetTransactionGroupLedgerStateDeltasForRound {
+	return &GetTransactionGroupLedgerStateDeltasForRound{c: c, round: round}
+}
+
+func (c *Client) GetLedgerStateDeltaForTransactionGroup(id string) *GetLedgerStateDeltaForTransactionGroup {
+	return &GetLedgerStateDeltaForTransactionGroup{c: c, id: id}
+}
+
 func (c *Client) GetStateProof(round uint64) *GetStateProof {
 	return &GetStateProof{c: c, round: round}
 }

@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultAppId uint64 = 1380011588
+	defaultAppID uint64 = 1380011588
 
 	rejectMsg       = "REJECT"
 	defaultMaxWidth = 30
@@ -24,7 +24,7 @@ const (
 
 // CreateDryrun creates a DryrunRequest object from a client and slice of SignedTxn objects and a default configuration
 // Passed in as a pointer to a DryrunRequest object to use for extra parameters
-func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest, ctx context.Context) (drr models.DryrunRequest, err error) {
+func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.DryrunRequest, ctx context.Context) (drr models.DryrunRequest, err error) { //nolint:revive // Ignore Context order for backwards compatibility
 	var (
 		apps   []types.AppIndex
 		assets []types.AssetIndex
@@ -58,7 +58,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 
 		if t.Txn.ApplicationID == 0 {
 			drr.Apps = append(drr.Apps, models.Application{
-				Id: defaultAppId,
+				Id: defaultAppID,
 				Params: models.ApplicationParams{
 					Creator:           t.Txn.Sender.String(),
 					ApprovalProgram:   t.Txn.ApprovalProgram,
@@ -80,14 +80,14 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 	}
 
 	seenAssets := map[types.AssetIndex]bool{}
-	for _, assetId := range assets {
-		if _, ok := seenAssets[assetId]; ok {
+	for _, assetID := range assets {
+		if _, ok := seenAssets[assetID]; ok {
 			continue
 		}
 
-		assetInfo, err := client.GetAssetByID(uint64(assetId)).Do(ctx)
+		assetInfo, err := client.GetAssetByID(uint64(assetID)).Do(ctx)
 		if err != nil {
-			return drr, fmt.Errorf("failed to get asset %d: %+v", assetId, err)
+			return drr, fmt.Errorf("failed to get asset %d: %+v", assetID, err)
 		}
 
 		addr, err := types.DecodeAddress(assetInfo.Params.Creator)
@@ -96,18 +96,18 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		}
 
 		accts = append(accts, addr)
-		seenAssets[assetId] = true
+		seenAssets[assetID] = true
 	}
 
 	seenApps := map[types.AppIndex]bool{}
-	for _, appId := range apps {
-		if _, ok := seenApps[appId]; ok {
+	for _, appID := range apps {
+		if _, ok := seenApps[appID]; ok {
 			continue
 		}
 
-		appInfo, err := client.GetApplicationByID(uint64(appId)).Do(ctx)
+		appInfo, err := client.GetApplicationByID(uint64(appID)).Do(ctx)
 		if err != nil {
-			return drr, fmt.Errorf("failed to get application %d: %+v", appId, err)
+			return drr, fmt.Errorf("failed to get application %d: %+v", appID, err)
 		}
 		drr.Apps = append(drr.Apps, appInfo)
 
@@ -117,7 +117,7 @@ func CreateDryrun(client *algod.Client, txns []types.SignedTxn, dr *models.Dryru
 		}
 		accts = append(accts, creator)
 
-		seenApps[appId] = true
+		seenApps[appID] = true
 	}
 
 	seenAccts := map[types.Address]bool{}
@@ -147,27 +147,31 @@ func DefaultStackPrinterConfig() StackPrinterConfig {
 	return StackPrinterConfig{MaxValueWidth: defaultMaxWidth, TopOfStackFirst: true}
 }
 
+// DryrunResponse represents the response from a dryrun call
 type DryrunResponse struct {
 	Error           string            `json:"error"`
 	ProtocolVersion string            `json:"protocol-version"`
 	Txns            []DryrunTxnResult `json:"txns"`
 }
 
+// NewDryrunResponse creates a new DryrunResponse from a models.DryrunResponse
 func NewDryrunResponse(d models.DryrunResponse) (DryrunResponse, error) {
 	// Marshal and unmarshal to fix integer types.
 	b, err := json.Marshal(d)
 	if err != nil {
 		return DryrunResponse{}, err
 	}
-	return NewDryrunResponseFromJson(b)
+	return NewDryrunResponseFromJSON(b)
 }
 
-func NewDryrunResponseFromJson(js []byte) (DryrunResponse, error) {
+// NewDryrunResponseFromJSON creates a new DryrunResponse from a JSON byte array
+func NewDryrunResponseFromJSON(js []byte) (DryrunResponse, error) {
 	dr := DryrunResponse{}
 	err := json.Unmarshal(js, &dr)
 	return dr, err
 }
 
+// DryrunTxnResult is a wrapper around models.DryrunTxnResult
 type DryrunTxnResult struct {
 	models.DryrunTxnResult
 }

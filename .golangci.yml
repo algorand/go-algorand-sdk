@@ -1,0 +1,79 @@
+run:
+  timeout: 5m
+  tests: false
+  skip-dirs:
+    # Don't run linter on generated files
+    - client/v2
+  
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - exportloopref
+    - gci
+    - gofmt
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nilerr
+    - nolintlint
+    - revive
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/algorand)
+      - prefix(github.com/algorand/go-algorand-sdk)
+    section-separators:
+      - newLine
+  nolintlint:
+    # require naming a specific linter X using //nolint:X
+    require-specific: true
+    # require comments like "//nolint:errcheck // Explanation of why we are ignoring linter here..."
+    require-explanation: true
+
+severity:
+  default-severity: error
+
+issues:
+  # Disable default exclude rules listed in `golangci-lint run --help` (selectively re-enable some below)
+  exclude-use-default: false
+
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+  exclude:
+    # ignore govet false positive fixed in https://github.com/golang/go/issues/45043
+    - "sigchanyzer: misuse of unbuffered os.Signal channel as argument to signal.Notify"
+    # ignore golint false positive fixed in https://github.com/golang/lint/pull/487
+    - "exported method (.*).Unwrap` should have comment or be unexported"
+    # ignore issues about the way we use _struct fields to define encoding settings
+    - "`_struct` is unused"
+
+    # Enable some golangci-lint default exception rules:
+    # "EXC0001 errcheck: Almost all programs ignore errors on these functions and in most cases it's ok"
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
+    # "EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore"
+    - ineffective break statement. Did you mean to break out of the outer loop
+    
+  exclude-rules:
+    # Test utilities and helpers may have code that look unused, but is being used in another file
+    - path: test/helpers.go
+      text: "is unused"
+    - path: test/utilities.go
+      text: "is unused"
+    # Ignore unused fields in types that are copied from go-algorand
+    - path: types/
+      text: "is unused"

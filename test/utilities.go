@@ -18,6 +18,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
+// VerifyResponse compares the actual response to the expected response.
 func VerifyResponse(expectedFile string, actual string) error {
 	jsonfile, err := os.Open(expectedFile)
 	if err != nil {
@@ -47,7 +48,16 @@ func VerifyResponse(expectedFile string, actual string) error {
 		expectedString = string(sdk_json.EncodeStrict(generic))
 	}
 
-	err = EqualJson2(expectedString, actual)
+	if strings.HasSuffix(expectedFile, ".msgp") {
+		generic := make(map[string]interface{})
+		err = msgpack.Decode(fileBytes, generic)
+		if err != nil {
+			return fmt.Errorf("failed to decode '%s' from message pack: %v", expectedFile, err)
+		}
+		expectedString = string(sdk_json.EncodeStrict(generic))
+	}
+
+	err = EqualJSON2(expectedString, actual)
 	if err != nil {
 		fmt.Printf("EXPECTED:\n%v\n", expectedString)
 		fmt.Printf("ACTUAL:\n%v\n", actual)
@@ -55,11 +65,11 @@ func VerifyResponse(expectedFile string, actual string) error {
 	return err
 }
 
-// EqualJson2 compares two json strings.
+// EqualJSON2 compares two json strings.
 // returns true if considered equal, false otherwise.
 // The error returns the difference.
 // For reference: j1 is the baseline, j2 is the test
-func EqualJson2(j1, j2 string) (err error) {
+func EqualJSON2(j1, j2 string) (err error) {
 	var expected map[string]interface{}
 	err = json.Unmarshal([]byte(j1), &expected)
 	if err != nil {
@@ -81,37 +91,38 @@ func EqualJson2(j1, j2 string) (err error) {
 	return err
 }
 
+// ValueType is the type of the value as an enum.
 type ValueType int
 
 const (
-	OBJECT ValueType = iota
-	ARRAY
-	VALUE
-	NUMBER
-	BOOL
-	STRING
-	MISSING
+	objectType ValueType = iota
+	arrayType
+	valueType
+	numberType
+	boolType
+	stringType
+	missingType
 )
 
 func getType(val interface{}) ValueType {
 	if val == nil {
-		return MISSING
+		return missingType
 	}
 	switch val.(type) {
 	case map[string]interface{}:
-		return OBJECT
+		return objectType
 	case []interface{}:
-		return ARRAY
+		return arrayType
 	case string:
-		return STRING
+		return stringType
 	case bool:
-		return BOOL
+		return boolType
 	case float64:
-		return NUMBER
+		return numberType
 	case nil:
-		return MISSING
+		return missingType
 	default:
-		return VALUE
+		return valueType
 	}
 }
 
@@ -194,10 +205,10 @@ func sortArray(arr []interface{}, field string) {
 }
 
 func getFirstField(ob interface{}) string {
-	if ob == nil || getType(ob) != OBJECT {
+	if ob == nil || getType(ob) != objectType {
 		return ""
 	}
-	for k, _ := range ob.(map[string]interface{}) {
+	for k := range ob.(map[string]interface{}) {
 		return k
 	}
 	return ""
@@ -208,17 +219,17 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 	actualType := getType(actual)
 
 	// If both were nil, just return
-	if expectedType == MISSING && actualType == MISSING {
+	if expectedType == missingType && actualType == missingType {
 		return nil
 	}
 
 	var keyType ValueType
 
-	if expectedType == MISSING || actualType == MISSING {
-		if expectedType == MISSING {
+	if expectedType == missingType || actualType == missingType {
+		if expectedType == missingType {
 			keyType = actualType
 		}
-		if actualType == MISSING {
+		if actualType == missingType {
 			keyType = expectedType
 		}
 	} else {
@@ -230,17 +241,17 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 	}
 
 	switch keyType {
-	case ARRAY:
+	case arrayType:
 		var expectedArr []interface{}
 		var actualArr []interface{}
 
 		expectedSize := 0
-		if expectedType != MISSING {
+		if expectedType != missingType {
 			expectedArr = expected.([]interface{})
 			expectedSize = len(expectedArr)
 		}
 		actualSize := 0
-		if actualType != MISSING {
+		if actualType != missingType {
 			actualArr = actual.([]interface{})
 			actualSize = len(actualArr)
 		}
@@ -269,7 +280,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		}
 		return err
 
-	case OBJECT:
+	case objectType:
 		//log.Printf("%s{...} - object\n", field)
 
 		// Recursively compare each key value
@@ -278,7 +289,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		// Go happily creates complex zero value objects, so go ahead and recursively compare nil against defaults
 
 		// If they are both missing what are we even doing here. Return with no error.
-		if expectedType == MISSING && actualType == MISSING {
+		if expectedType == missingType && actualType == missingType {
 			return nil
 		}
 
@@ -286,34 +297,33 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 		var actualObject map[string]interface{}
 
 		keys := make(map[string]bool)
-		if expectedType != MISSING {
+		if expectedType != missingType {
 			expectedObject = expected.(map[string]interface{})
-			for k, _ := range expectedObject {
+			for k := range expectedObject {
 				keys[k] = true
 			}
 		}
-		if actualType != MISSING {
+		if actualType != missingType {
 			actualObject = actual.(map[string]interface{})
-			for k, _ := range actualObject {
+			for k := range actualObject {
 				keys[k] = true
 			}
 		}
-		for k, _ := range keys {
-			var err error
-			err = recursiveCompare(fmt.Sprintf("%s.%s", field, k), expectedObject[k], actualObject[k])
+		for k := range keys {
+			err := recursiveCompare(fmt.Sprintf("%s.%s", field, k), expectedObject[k], actualObject[k])
 			if err != nil {
 				return err
 			}
 		}
 
-	case NUMBER:
+	case numberType:
 		// Compare numbers, if missing treat as zero
 		expectedNum := float64(0)
-		if expectedType != MISSING {
+		if expectedType != missingType {
 			expectedNum = expected.(float64)
 		}
 		actualNum := float64(0)
-		if actualType != MISSING {
+		if actualType != missingType {
 			actualNum = actual.(float64)
 		}
 		//log.Printf("%s - number %f == %f\n", field, expectedNum, actualNum)
@@ -321,14 +331,14 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 			return fmt.Errorf("failed to match field %s, %f != %f", field, expectedNum, actualNum)
 		}
 
-	case BOOL:
+	case boolType:
 		// Compare bools, if missing treat as false
 		expectedBool := false
-		if expectedType != MISSING {
+		if expectedType != missingType {
 			expectedBool = expected.(bool)
 		}
 		actualBool := false
-		if actualType != MISSING {
+		if actualType != missingType {
 			actualBool = actual.(bool)
 		}
 		//log.Printf("%s - bool %t == %t\n", field, expectedBool, actualBool)
@@ -336,15 +346,15 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 			return fmt.Errorf("failed to match field %s, %t != %t", field, expectedBool, actualBool)
 		}
 
-	case STRING:
+	case stringType:
 		// Compare strings, if missing treat as an empty string.
 		// Note: I think binary ends up in here, it may need some special handling.
 		expectedStr := ""
-		if expectedType != MISSING {
+		if expectedType != missingType {
 			expectedStr = expected.(string)
 		}
 		actualStr := ""
-		if actualType != MISSING {
+		if actualType != missingType {
 			actualStr = actual.(string)
 		}
 

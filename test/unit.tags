@@ -28,11 +28,13 @@
 @unit.responses.timestamp
 @unit.responses.unlimited_assets
 @unit.sourcemap
+@unit.statedelta
 @unit.stateproof.paths
 @unit.stateproof.responses
 @unit.sync
 @unit.tealsign
-@unit.timestamp
+@unit.responses.timestamp
 @unit.transactions
 @unit.transactions.keyreg
 @unit.transactions.payment
+@unit.txngroupdeltas

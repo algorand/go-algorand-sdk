@@ -1,0 +1,9 @@
+# .git-blame-ignore-revs
+# Formatting fixes for transaction/ and abi/
+09351b56fff3459b5d4701ae681ec45b4b62d945
+# Formatting fixes in test/
+23c3faf0701b0d5c07c57dd7fca4ed77449f3209
+# Formatting fixes in logic/ and crypto/
+ebccd4939d84d3233e6fbb5fddb2332549a0f323
+# Formatting fixes in types/
+f99ffb34b9955fdaa366326fe97da49e761e9367

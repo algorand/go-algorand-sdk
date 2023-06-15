@@ -36,17 +36,17 @@ func (a Address) IsZero() bool {
 }
 
 // MarshalText returns the address string as an array of bytes
-func (addr *Address) MarshalText() ([]byte, error) {
-	result := base64.StdEncoding.EncodeToString(addr[:])
+func (a *Address) MarshalText() ([]byte, error) {
+	result := base64.StdEncoding.EncodeToString(a[:])
 	return []byte(result), nil
 }
 
 // UnmarshalText initializes the Address from an array of bytes.
 // The bytes may be in the base32 checksum format, or the raw bytes base64 encoded.
-func (addr *Address) UnmarshalText(text []byte) error {
+func (a *Address) UnmarshalText(text []byte) error {
 	address, err := DecodeAddress(string(text))
 	if err == nil {
-		*addr = address
+		*a = address
 		return nil
 	}
 	// ignore the DecodeAddress error because it isn't the native MarshalText format.
@@ -54,10 +54,10 @@ func (addr *Address) UnmarshalText(text []byte) error {
 	// Check if its b64 encoded
 	data, err := base64.StdEncoding.DecodeString(string(text))
 	if err == nil {
-		if len(data) != len(addr[:]) {
+		if len(data) != len(a[:]) {
 			return errWrongAddressLen
 		}
-		copy(addr[:], data[:])
+		copy(a[:], data[:])
 		return nil
 	}
 	return err

@@ -53,7 +53,7 @@ func (d GenericDigest) IsEmpty() bool {
 // Sumhash512DigestSize  The size in bytes of the sumhash checksum
 const Sumhash512DigestSize = 64
 
-//size of each hash
+// Sizes of each hash
 const (
 	Sha512_256Size    = sha512.Size256
 	SumhashDigestSize = Sumhash512DigestSize
@@ -95,6 +95,7 @@ type Proof struct {
 	TreeDepth uint8 `codec:"td"`
 }
 
+// MerkleSignatureSchemeRootSize is the size of the root of the merkle tree.
 const MerkleSignatureSchemeRootSize = SumhashDigestSize
 
 // Commitment represents the root of the vector commitment tree built upon the MSS keys.

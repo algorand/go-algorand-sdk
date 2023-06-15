@@ -250,6 +250,9 @@ type (
 	}
 )
 
+// EvalDelta stores StateDeltas for an application's global key/value store, as
+// well as StateDeltas for some number of accounts holding local state for that
+// application
 type EvalDelta struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
@@ -257,7 +260,14 @@ type EvalDelta struct {
 
 	// When decoding EvalDeltas, the integer key represents an offset into
 	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
-	LocalDeltas map[uint64]StateDelta `codec:"ld,allocbound=config.MaxEvalDeltaAccounts"`
+	//msgp:allocbound LocalDeltas config.MaxEvalDeltaAccounts
+	LocalDeltas map[uint64]StateDelta `codec:"ld"`
+
+	// If a program modifies the local of an account that is not the Sender, or
+	// in txn.Accounts, it must be recorded here, so that the key in LocalDeltas
+	// can refer to it.
+	//msgp:allocbound SharedAccts config.MaxEvalDeltaAccounts
+	SharedAccts []Address `codec:"sa"`
 
 	Logs []string `codec:"lg"`
 

@@ -11,7 +11,7 @@ type TransactionAssetTransfer struct {
 	// AssetId (xaid) ID of the asset being transferred.
 	AssetId uint64 `json:"asset-id"`
 
-	// CloseAmount number of assets transfered to the close-to account as part of the
+	// CloseAmount number of assets transferred to the close-to account as part of the
 	// transaction.
 	CloseAmount uint64 `json:"close-amount,omitempty"`
 

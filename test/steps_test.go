@@ -2398,7 +2398,7 @@ func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
 	if err != nil {
 		return err
 	}
-	dr, err := transaction.NewDryrunResponseFromJson(data)
+	dr, err := transaction.NewDryrunResponseFromJSON(data)
 	if err != nil {
 		return err
 	}

@@ -1294,7 +1294,7 @@ func AssignGroupID(txns []types.Transaction, account string) (result []types.Tra
 		}
 	}
 	for _, tx := range txns {
-		if account == "" || bytes.Compare(tx.Sender[:], decoded[:]) == 0 {
+		if account == "" || bytes.Equal(tx.Sender[:], decoded[:]) {
 			tx.Group = gid
 			result = append(result, tx)
 		}

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
-
 	"golang.org/x/crypto/ed25519"
+
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 )
 
 // TxType identifies the type of the transaction
@@ -79,6 +79,7 @@ func ToMicroAlgos(algos float64) MicroAlgos {
 	return MicroAlgos(math.Round(algos * microAlgoConversionFactor))
 }
 
+// FromBase64String converts a base64 string to a SignedTxn
 func (signedTxn *SignedTxn) FromBase64String(b64string string) error {
 	txnBytes, err := base64.StdEncoding.DecodeString(b64string)
 	if err != nil {
@@ -91,6 +92,7 @@ func (signedTxn *SignedTxn) FromBase64String(b64string string) error {
 	return nil
 }
 
+// FromBase64String converts a base64 string to a Block
 func (block *Block) FromBase64String(b64string string) error {
 	txnBytes, err := base64.StdEncoding.DecodeString(b64string)
 	if err != nil {

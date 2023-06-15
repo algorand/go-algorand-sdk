@@ -61,6 +61,9 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a UnsetSyncRound call$`, weMakeAUnsetSyncRoundCall)
 	s.Step(`^we make a SetBlockTimeStampOffset call against offset (\d+)$`, weMakeASetBlockTimeStampOffsetCallAgainstOffset)
 	s.Step(`^we make a GetBlockTimeStampOffset call$`, weMakeAGetBlockTimeStampOffsetCall)
+	s.Step(`^we make a GetLedgerStateDelta call against round (\d+)$`, weMakeAGetLedgerStateDeltaCallAgainstRound)
+	s.Step(`^we make a LedgerStateDeltaForTransactionGroupResponse call for ID "([^"]*)"$`, weMakeALedgerStateDeltaForTransactionGroupResponseCallForID)
+	s.Step(`^we make a TransactionGroupLedgerStateDeltaForRoundResponse call for round (\d+)$`, weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound)
 
 	s.BeforeScenario(func(interface{}) {
 		globalErrForExamination = nil
@@ -362,5 +365,32 @@ func weMakeAGetBlockTimeStampOffsetCall() error {
 		return err
 	}
 	algodClient.GetBlockTimeStampOffset().Do(context.Background())
+	return nil
+}
+
+func weMakeAGetLedgerStateDeltaCallAgainstRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetLedgerStateDelta(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeALedgerStateDeltaForTransactionGroupResponseCallForID(id string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetLedgerStateDeltaForTransactionGroup(id).Do(context.Background())
+	return nil
+}
+
+func weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound(round int) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	algodClient.GetTransactionGroupLedgerStateDeltasForRound(uint64(round)).Do(context.Background())
 	return nil
 }
