@@ -98,6 +98,10 @@ func (c *Client) Block(round uint64) *Block {
 	return &Block{c: c, round: round}
 }
 
+func (c *Client) GetBlockTxids(round uint64) *GetBlockTxids {
+	return &GetBlockTxids{c: c, round: round}
+}
+
 func (c *Client) GetBlockHash(round uint64) *GetBlockHash {
 	return &GetBlockHash{c: c, round: round}
 }
