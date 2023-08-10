@@ -9,7 +9,9 @@ import (
 )
 
 // StatusAfterBlock waits for a block to appear after round {round} and returns the
-// node's status at the time.
+// node's status at the time. There is a 1 minute timeout, when reached the current
+// status is returned regardless of whether or not it is the round after the given
+// round.
 type StatusAfterBlock struct {
 	c *Client
 
