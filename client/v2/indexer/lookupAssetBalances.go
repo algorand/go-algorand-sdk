@@ -14,7 +14,7 @@ type LookupAssetBalancesParams struct {
 	// CurrencyGreaterThan results should have an amount greater than this value.
 	// MicroAlgos are the default currency unless an asset-id is provided, in which
 	// case the asset will be used.
-	CurrencyGreaterThan uint64 `url:"currency-greater-than,omitempty"`
+	CurrencyGreaterThan *uint64 `url:"currency-greater-than,omitempty"`
 
 	// CurrencyLessThan results should have an amount less than this value. MicroAlgos
 	// are the default currency unless an asset-id is provided, in which case the asset
@@ -48,7 +48,7 @@ type LookupAssetBalances struct {
 // MicroAlgos are the default currency unless an asset-id is provided, in which
 // case the asset will be used.
 func (s *LookupAssetBalances) CurrencyGreaterThan(CurrencyGreaterThan uint64) *LookupAssetBalances {
-	s.p.CurrencyGreaterThan = CurrencyGreaterThan
+	s.p.CurrencyGreaterThan = &CurrencyGreaterThan
 
 	return s
 }
