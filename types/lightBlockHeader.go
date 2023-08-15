@@ -11,6 +11,7 @@ type LightBlockHeader struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	Seed                Seed   `codec:"0"`
+	BlockHash           Digest `codec:"1"`
 	RoundNumber         Round  `codec:"r"`
 	GenesisHash         Digest `codec:"gh"`
 	Sha256TxnCommitment Digest `codec:"tc,allocbound=Sha256Size"`
