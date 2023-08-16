@@ -8,6 +8,10 @@ type SimulationEvalOverrides struct {
 	// simulated as if they were properly signed.
 	AllowEmptySignatures bool `json:"allow-empty-signatures,omitempty"`
 
+	// AllowUnnamedResources if true, allows access to unnamed resources during
+	// simulation.
+	AllowUnnamedResources bool `json:"allow-unnamed-resources,omitempty"`
+
 	// ExtraOpcodeBudget the extra opcode budget added to each transaction group during
 	// simulation
 	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
