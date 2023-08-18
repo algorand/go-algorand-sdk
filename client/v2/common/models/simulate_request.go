@@ -2,12 +2,15 @@ package models
 
 // SimulateRequest request type for simulation endpoint.
 type SimulateRequest struct {
-	// AllowEmptySignatures allow transactions without signatures to be simulated as if
-	// they had correct signatures.
+	// AllowEmptySignatures allows transactions without signatures to be simulated as
+	// if they had correct signatures.
 	AllowEmptySignatures bool `json:"allow-empty-signatures,omitempty"`
 
 	// AllowMoreLogging lifts limits on log opcode usage during simulation.
 	AllowMoreLogging bool `json:"allow-more-logging,omitempty"`
+
+	// AllowUnnamedResources allows access to unnamed resources during simulation.
+	AllowUnnamedResources bool `json:"allow-unnamed-resources,omitempty"`
 
 	// ExecTraceConfig an object that configures simulation execution trace.
 	ExecTraceConfig SimulateTraceConfig `json:"exec-trace-config,omitempty"`
