@@ -13,4 +13,8 @@ type SimulateTraceConfig struct {
 	// StackChange a boolean option enabling returning stack changes together with
 	// execution trace during simulation.
 	StackChange bool `json:"stack-change,omitempty"`
+
+	// StateChange a boolean option enabling returning application state changes
+	// (global, local, and box changes) with the execution trace during simulation.
+	StateChange bool `json:"state-change,omitempty"`
 }
