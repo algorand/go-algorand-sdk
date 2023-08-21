@@ -92,3 +92,18 @@ func TestUnmarshalAddress(t *testing.T) {
 		})
 	}
 }
+
+func TestDecodeNonCanonicalAddress(t *testing.T) {
+	// Canonical addresses must end with one of the following: "AEIMQUY4",
+	// e.g. "7HJBGRIWI7GDL42SOJNIAZ7LJ7EBEGKGE5S52QZXAWDXOHDKMDFR6AUXDE"
+	addrs := []string{
+		"7HJBGRIWI7GDL42SOJNIAZ7LJ7EBEGKGE5S52QZXAWDXOHDKMDFR6AUXDF",
+		"7HJBGRIWI7GDL42SOJNIAZ7LJ7EBEGKGE5S52QZXAWDXOHDKMDFR6AUXDG",
+		"7HJBGRIWI7GDL42SOJNIAZ7LJ7EBEGKGE5S52QZXAWDXOHDKMDFR6AUXDH",
+	}
+	for _, addr := range addrs {
+		_, err := DecodeAddress(addr)
+		require.Error(t, err)
+		require.ErrorContains(t, err, fmt.Sprintf("address %s is non-canonical", addr))
+	}
+}

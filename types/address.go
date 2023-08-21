@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
+	"fmt"
 )
 
 const (
@@ -94,6 +95,13 @@ func DecodeAddress(addr string) (a Address, err error) {
 
 	// Checksum is good, copy address bytes into output
 	copy(a[:], addressBytes)
+
+	// Check if address is canonical
+	if a.String() != addr {
+		err = fmt.Errorf("address %s is non-canonical", addr)
+		return
+	}
+
 	return a, nil
 }
 
