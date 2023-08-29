@@ -497,6 +497,12 @@ type ConsensusParams struct {
 	// used by agreement for Circulation, and updates the calculation of StateProofOnlineTotalWeight used
 	// by state proofs to use the same method (rather than excluding stake from the top N stakeholders as before).
 	ExcludeExpiredCirculation bool
+
+	// DynamicFilterTimeout indicates whether the filter timeout is set
+	// dynamically, at run time, according to the recent history of credential
+	// arrival times or is set to a static value. Even if this flag disables the
+	// dynamic filter, it will be calculated and logged (but not used).
+	DynamicFilterTimeout bool
 }
 
 // PaysetCommitType enumerates possible ways for the block header to commit to
