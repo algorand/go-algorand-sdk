@@ -19,6 +19,12 @@ type SimulateRequest struct {
 	// transaction group.
 	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
 
+	// Round if provided, specifies the round preceding the simulation. State changes
+	// through this round will be used to run this simulation. Usually only the 4 most
+	// recent rounds will be available (controlled by the node config value
+	// MaxAcctLookback). If not specified, defaults to the latest available round.
+	Round uint64 `json:"round,omitempty"`
+
 	// TxnGroups the transaction groups to simulate.
 	TxnGroups []SimulateRequestTransactionGroup `json:"txn-groups"`
 }
