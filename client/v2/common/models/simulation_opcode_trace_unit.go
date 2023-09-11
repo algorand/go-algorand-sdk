@@ -18,4 +18,7 @@ type SimulationOpcodeTraceUnit struct {
 
 	// StackPopCount the number of deleted stack values by this opcode.
 	StackPopCount uint64 `json:"stack-pop-count,omitempty"`
+
+	// StateChanges the operations against the current application's states.
+	StateChanges []ApplicationStateOperation `json:"state-changes,omitempty"`
 }
