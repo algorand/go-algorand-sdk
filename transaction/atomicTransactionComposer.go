@@ -592,7 +592,7 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 // The `request` argument can be used to customize the characteristics of the simulation.
 //
 // Returns a models.SimulateResponse and an ABIResult for each method call in this group.
-func (atc *AtomicTransactionComposer) Simulate(client *algod.Client, ctx context.Context, request models.SimulateRequest) (SimulateResult, error) {
+func (atc *AtomicTransactionComposer) Simulate(ctx context.Context, client *algod.Client, request models.SimulateRequest) (SimulateResult, error) {
 	if atc.status > SUBMITTED {
 		return SimulateResult{}, errors.New("status must be SUBMITTED or lower in order to call Simulate()")
 	}
