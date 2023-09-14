@@ -104,6 +104,7 @@ var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
 var seeminglyProgram []byte
 var sanityCheckError error
+var simulateResponse modelsV2.SimulateResponse
 
 var assetTestFixture struct {
 	Creator               string
@@ -335,6 +336,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the base64 encoded signed transactions should equal "([^"]*)"$`, theBaseEncodedSignedTransactionsShouldEqual)
 	s.Step(`^I build a payment transaction with sender "([^"]*)", receiver "([^"]*)", amount (\d+), close remainder to "([^"]*)"$`, iBuildAPaymentTransactionWithSenderReceiverAmountCloseRemainderTo)
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
+	s.Step(`^I create a transaction with an empty signer with the current transaction\.$`, iCreateATransactionWithAnEmptySignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
 	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
 	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
@@ -354,6 +356,10 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I start heuristic sanity check over the bytes$`, heuristicCheckOverBytes)
 	s.Step(`^if the heuristic sanity check throws an error, the error contains "([^"]*)"$`, checkErrorIfMatching)
 	s.Step(`^disassembly of "([^"]*)" matches "([^"]*)"$`, disassemblyMatches)
+	s.Step(`^I simulate the transaction$`, iSimulateTheTransaction)
+	s.Step(`^the simulation should succeed without any failure message$`, theSimulationShouldSucceedWithoutAnyFailureMessage)
+	s.Step(`^I prepare the transaction without signatures for simulation$`, iPrepareTheTransactionWithoutSignaturesForSimulation)
+	s.Step(`^the simulation should report a failure at group "([^"]*)", path "([^"]*)" with message "([^"]*)"$`, theSimulationShouldReportAFailureAtGroupPathWithMessage)
 
 	s.BeforeScenario(func(interface{}) {
 		stxObj = types.SignedTxn{}
@@ -2371,6 +2377,14 @@ func iCreateATransactionWithSignerWithTheCurrentTransaction() error {
 	return nil
 }
 
+func iCreateATransactionWithAnEmptySignerWithTheCurrentTransaction() error {
+	accountTxAndSigner = transaction.TransactionWithSigner{
+		Signer: transaction.EmptyTransactionSigner{},
+		Txn:    txn,
+	}
+	return nil
+}
+
 func iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray() error {
 	methodArgs = append(methodArgs, accountTxAndSigner)
 	return nil
@@ -2579,5 +2593,78 @@ func disassemblyMatches(bytecodeFilename, sourceFilename string) error {
 	if actualResult.Result != expectedResult {
 		return fmt.Errorf("Actual program does not match expected: %s != %s", actualResult.Result, expectedResult)
 	}
+	return nil
+}
+
+func iSimulateTheTransaction() error {
+	var signedTxn types.SignedTxn
+	if err := msgpack.Decode(stx, &signedTxn); err != nil {
+		return err
+	}
+
+	resp, err := algodV2client.SimulateTransaction(modelsV2.SimulateRequest{
+		TxnGroups: []modelsV2.SimulateRequestTransactionGroup{
+			{
+				Txns: []types.SignedTxn{signedTxn},
+			},
+		},
+	}).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	simulateResponse = resp
+	return nil
+}
+
+func theSimulationShouldSucceedWithoutAnyFailureMessage() error {
+	for i, groupResult := range simulateResponse.TxnGroups {
+		if groupResult.FailureMessage != "" {
+			return fmt.Errorf("Simulation group %d failed with message: %s", i, groupResult.FailureMessage)
+		}
+	}
+	return nil
+}
+
+func iPrepareTheTransactionWithoutSignaturesForSimulation() error {
+	stx = msgpack.Encode(&types.SignedTxn{Txn: txn})
+	return nil
+}
+
+func theSimulationShouldReportAFailureAtGroupPathWithMessage(txnGroupIndex, failAt, expectedFailureMsg string) error {
+	// Parse transaction group number
+	groupIndex, err := strconv.Atoi(txnGroupIndex)
+	if err != nil {
+		return err
+	}
+
+	// Parse the path ("0,0") into a list of numbers ([0, 0])
+	path := strings.Split(failAt, ",")
+	expectedPath := make([]uint64, len(path))
+	for i, pathStr := range path {
+		pathNumber, err := strconv.ParseUint(pathStr, 10, 64)
+		if err != nil {
+			return err
+		}
+		expectedPath[i] = pathNumber
+	}
+
+	actualFailureMsg := simulateResponse.TxnGroups[groupIndex].FailureMessage
+	if expectedFailureMsg == "" && actualFailureMsg != "" {
+		return fmt.Errorf("Expected no failure message, but got: '%s'", actualFailureMsg)
+	} else if expectedFailureMsg != "" && !strings.Contains(actualFailureMsg, expectedFailureMsg) {
+		return fmt.Errorf("Expected failure message '%s', but got: '%s'", expectedFailureMsg, actualFailureMsg)
+	}
+
+	actualPath := simulateResponse.TxnGroups[groupIndex].FailedAt
+	if len(expectedPath) != len(actualPath) {
+		return fmt.Errorf("Expected failure path %v, but got: %v", expectedPath, actualPath)
+	}
+	for i := range expectedPath {
+		if expectedPath[i] != actualPath[i] {
+			return fmt.Errorf("Expected failure path %v, but got: %v", expectedPath, actualPath)
+		}
+	}
+
 	return nil
 }

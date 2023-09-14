@@ -9,13 +9,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 
 	"github.com/cucumber/godog"
 
@@ -34,7 +35,7 @@ var tx types.Transaction
 var transientAccount crypto.Account
 var applicationId uint64
 var applicationIds []uint64
-var txComposerResult transaction.ExecuteResult
+var txComposerMethodResults []transaction.ABIMethodResult
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -485,16 +486,29 @@ func iCloneTheComposer() error {
 }
 
 func iExecuteTheCurrentTransactionGroupWithTheComposer() error {
-	var err error
-	txComposerResult, err = txComposer.Execute(algodV2client, context.Background(), 10)
-	return err
+	txComposerResult, err := txComposer.Execute(algodV2client, context.Background(), 10)
+	if err != nil {
+		return err
+	}
+	txComposerMethodResults = txComposerResult.MethodResults
+	return nil
+}
+
+func iSimulateTheCurrentTransactionGroupWithTheComposer() error {
+	result, err := txComposer.Simulate(algodV2client, context.Background(), models.SimulateRequest{})
+	if err != nil {
+		return err
+	}
+	simulateResponse = result.SimulateResponse
+	txComposerMethodResults = result.MethodResults
+	return nil
 }
 
 func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 	b64ExpectedResults := strings.Split(commaSeparatedB64Results, ",")
 
-	if len(b64ExpectedResults) != len(txComposerResult.MethodResults) {
-		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(txComposerResult.MethodResults))
+	if len(b64ExpectedResults) != len(txComposerMethodResults) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(b64ExpectedResults), len(txComposerMethodResults))
 	}
 
 	for i, b64ExpectedResult := range b64ExpectedResults {
@@ -503,7 +517,7 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 			return err
 		}
 
-		actualResult := txComposerResult.MethodResults[i]
+		actualResult := txComposerMethodResults[i]
 		method := actualResult.Method
 
 		if actualResult.DecodeError != nil {
@@ -542,12 +556,12 @@ func theAppShouldHaveReturned(commaSeparatedB64Results string) error {
 func theAppShouldHaveReturnedABITypes(colonSeparatedExpectedTypeStrings string) error {
 	expectedTypeStrings := strings.Split(colonSeparatedExpectedTypeStrings, ":")
 
-	if len(expectedTypeStrings) != len(txComposerResult.MethodResults) {
-		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(expectedTypeStrings), len(txComposerResult.MethodResults))
+	if len(expectedTypeStrings) != len(txComposerMethodResults) {
+		return fmt.Errorf("length of expected results doesn't match actual: %d != %d", len(expectedTypeStrings), len(txComposerMethodResults))
 	}
 
 	for i, expectedTypeString := range expectedTypeStrings {
-		actualResult := txComposerResult.MethodResults[i]
+		actualResult := txComposerMethodResults[i]
 
 		if actualResult.DecodeError != nil {
 			return actualResult.DecodeError
@@ -584,7 +598,7 @@ func theAppShouldHaveReturnedABITypes(colonSeparatedExpectedTypeStrings string) 
 
 func checkAtomicResultAgainstValue(resultIndex int, path, expectedValue string) error {
 	keys := strings.Split(path, ".")
-	info := txComposerResult.MethodResults[resultIndex].TransactionInfo
+	info := txComposerMethodResults[resultIndex].TransactionInfo
 
 	jsonBytes := sdkJson.Encode(&info)
 
@@ -677,7 +691,7 @@ func checkInnerTxnGroupIDs(colonSeparatedPathsString string) error {
 		var current models.PendingTransactionResponse
 		for pathIndex, innerTxnIndex := range path {
 			if pathIndex == 0 {
-				current = models.PendingTransactionResponse(txComposerResult.MethodResults[innerTxnIndex].TransactionInfo)
+				current = models.PendingTransactionResponse(txComposerMethodResults[innerTxnIndex].TransactionInfo)
 			} else {
 				current = current.InnerTxns[innerTxnIndex]
 			}
@@ -704,7 +718,7 @@ func checkSpinResult(resultIndex int, method, r string) error {
 		return fmt.Errorf("Incorrect method name, expected 'spin()', got '%s'", method)
 	}
 
-	result := txComposerResult.MethodResults[resultIndex]
+	result := txComposerMethodResults[resultIndex]
 	decodedResult := result.ReturnValue.([]interface{})
 
 	spin := decodedResult[0].([]interface{})
@@ -731,7 +745,7 @@ func sha512_256AsUint64(preimage []byte) uint64 {
 }
 
 func checkRandomIntResult(resultIndex, input int) error {
-	result := txComposerResult.MethodResults[resultIndex]
+	result := txComposerMethodResults[resultIndex]
 	decodedResult := result.ReturnValue.([]interface{})
 
 	randInt := decodedResult[0].(uint64)
@@ -752,7 +766,7 @@ func checkRandomIntResult(resultIndex, input int) error {
 }
 
 func checkRandomElementResult(resultIndex int, input string) error {
-	result := txComposerResult.MethodResults[resultIndex]
+	result := txComposerMethodResults[resultIndex]
 	decodedResult := result.ReturnValue.([]interface{})
 
 	randElt := decodedResult[0].(byte)
@@ -932,6 +946,7 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^I add the current transaction with signer to the composer\.$`, iAddTheCurrentTransactionWithSignerToTheComposer)
 	s.Step(`^I clone the composer\.$`, iCloneTheComposer)
 	s.Step(`^I execute the current transaction group with the composer\.$`, iExecuteTheCurrentTransactionGroupWithTheComposer)
+	s.Step(`^I simulate the current transaction group with the composer$`, iSimulateTheCurrentTransactionGroupWithTheComposer)
 	s.Step(`^The app should have returned "([^"]*)"\.$`, theAppShouldHaveReturned)
 	s.Step(`^The app should have returned ABI types "([^"]*)"\.$`, theAppShouldHaveReturnedABITypes)
 
