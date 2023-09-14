@@ -584,7 +584,7 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 	return atc.getTxIDs(), nil
 }
 
-// Simulate simulates the transaction group in the network.
+// Simulate simulates the transaction group against the network.
 //
 // The composer's status must be SUBMITTED or lower before calling this method. Simulation will not
 // advance the status of the composer beyond SIGNED.

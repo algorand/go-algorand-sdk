@@ -162,7 +162,7 @@ func (txSigner EmptyTransactionSigner) SignTransactions(txGroup []types.Transact
 		stx := types.SignedTxn{
 			Txn: txGroup[pos],
 		}
-		stxs[i] = msgpack.Encode(stx)
+		stxs[i] = msgpack.Encode(&stx)
 	}
 	return stxs, nil
 }
