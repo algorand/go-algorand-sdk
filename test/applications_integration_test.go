@@ -495,7 +495,7 @@ func iExecuteTheCurrentTransactionGroupWithTheComposer() error {
 }
 
 func iSimulateTheCurrentTransactionGroupWithTheComposer() error {
-	result, err := txComposer.Simulate(algodV2client, context.Background(), models.SimulateRequest{})
+	result, err := txComposer.Simulate(context.Background(), algodV2client, models.SimulateRequest{})
 	if err != nil {
 		return err
 	}
