@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -148,4 +149,26 @@ func (txSigner MultiSigAccountTransactionSigner) Equals(other TransactionSigner)
 		return string(otherJSON) == string(selfJSON)
 	}
 	return false
+}
+
+// EmptyTransactionSigner is a TransactionSigner that produces signed transaction objects without
+// signatures. This is useful for simulating transactions, but it won't work for actual submission.
+type EmptyTransactionSigner struct{}
+
+// SignTransactions returns SignedTxn bytes but does not sign them.
+func (txSigner EmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		stx := types.SignedTxn{
+			Txn: txGroup[pos],
+		}
+		stxs[i] = msgpack.Encode(&stx)
+	}
+	return stxs, nil
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner EmptyTransactionSigner) Equals(other TransactionSigner) bool {
+	_, ok := other.(EmptyTransactionSigner)
+	return ok
 }
