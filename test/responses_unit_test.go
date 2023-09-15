@@ -193,6 +193,9 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetLedgerStateDeltaForTransactionGroup":
 			response, err =
 				algodC.GetLedgerStateDeltaForTransactionGroup("someID").Do(context.Background())
+		case "GetBlockTxids":
+			response, err =
+				algodC.GetBlockTxids(123).Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
