@@ -10,6 +10,9 @@ type SimulateResponse struct {
 	// ExecTraceConfig an object that configures simulation execution trace.
 	ExecTraceConfig SimulateTraceConfig `json:"exec-trace-config,omitempty"`
 
+	// InitialStates initial states of resources that were accessed during simulation.
+	InitialStates SimulateInitialStates `json:"initial-states,omitempty"`
+
 	// LastRound the round immediately preceding this simulation. State changes through
 	// this round were used to run this simulation.
 	LastRound uint64 `json:"last-round"`
