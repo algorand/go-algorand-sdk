@@ -1,7 +1,5 @@
 # v2.3.0
 
-<!-- Release notes generated using configuration in .github/release.yml at release/v2.3.0 -->
-
 ## What's Changed
 ### Bugfixes
 * bug-fix: include currency-greater-than param for 0 value by @shiqizng in https://github.com/algorand/go-algorand-sdk/pull/584
