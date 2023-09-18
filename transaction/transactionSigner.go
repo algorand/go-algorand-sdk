@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -11,8 +12,9 @@ import (
 // @param txnGroup - The atomic group containing transactions to be signed
 // @param indexesToSign - An array of indexes in the atomic transaction group that should be signed
 // @returns An array of encoded signed transactions. The length of the
-//   array will be the same as the length of indexesToSign, and each index i in the array
-//   corresponds to the signed transaction from txnGroup[indexesToSign[i]]
+//
+//	array will be the same as the length of indexesToSign, and each index i in the array
+//	corresponds to the signed transaction from txnGroup[indexesToSign[i]]
 type TransactionSigner interface { //nolint:revive // Ignore stuttering for backwards compatibility
 	SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error)
 	Equals(other TransactionSigner) bool
@@ -147,4 +149,26 @@ func (txSigner MultiSigAccountTransactionSigner) Equals(other TransactionSigner)
 		return string(otherJSON) == string(selfJSON)
 	}
 	return false
+}
+
+// EmptyTransactionSigner is a TransactionSigner that produces signed transaction objects without
+// signatures. This is useful for simulating transactions, but it won't work for actual submission.
+type EmptyTransactionSigner struct{}
+
+// SignTransactions returns SignedTxn bytes but does not sign them.
+func (txSigner EmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		stx := types.SignedTxn{
+			Txn: txGroup[pos],
+		}
+		stxs[i] = msgpack.Encode(&stx)
+	}
+	return stxs, nil
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner EmptyTransactionSigner) Equals(other TransactionSigner) bool {
+	_, ok := other.(EmptyTransactionSigner)
+	return ok
 }

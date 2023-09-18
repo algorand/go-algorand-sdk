@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -100,6 +101,16 @@ type AddMethodCallParams struct {
 
 	// References of the boxes to be accessed by this method call.
 	BoxReferences []types.AppBoxReference
+}
+
+// SimulateResult contains the results of calling the Simulate method on an
+// AtomicTransactionComposer object.
+type SimulateResult struct {
+	// The result of the transaction group simulation
+	SimulateResponse models.SimulateResponse
+	// For each ABI method call in the executed group (created by the AddMethodCall method), this
+	// slice contains information about the method call's return value
+	MethodResults []ABIMethodResult
 }
 
 // ExecuteResult contains the results of successfully calling the Execute method on an
@@ -573,6 +584,64 @@ func (atc *AtomicTransactionComposer) Submit(client *algod.Client, ctx context.C
 	return atc.getTxIDs(), nil
 }
 
+// Simulate simulates the transaction group against the network.
+//
+// The composer's status must be SUBMITTED or lower before calling this method. Simulation will not
+// advance the status of the composer beyond SIGNED.
+//
+// The `request` argument can be used to customize the characteristics of the simulation.
+//
+// Returns a models.SimulateResponse and an ABIResult for each method call in this group.
+func (atc *AtomicTransactionComposer) Simulate(ctx context.Context, client *algod.Client, request models.SimulateRequest) (SimulateResult, error) {
+	if atc.status > SUBMITTED {
+		return SimulateResult{}, errors.New("status must be SUBMITTED or lower in order to call Simulate()")
+	}
+
+	stxs, err := atc.GatherSignatures()
+	if err != nil {
+		return SimulateResult{}, err
+	}
+
+	txnObjects := make([]types.SignedTxn, len(stxs))
+	for i, stx := range stxs {
+		var txnObject types.SignedTxn
+		err = msgpack.Decode(stx, &txnObject)
+		if err != nil {
+			return SimulateResult{}, err
+		}
+		txnObjects[i] = txnObject
+	}
+
+	request.TxnGroups = []models.SimulateRequestTransactionGroup{
+		{Txns: txnObjects},
+	}
+
+	simulateResponse, err := client.SimulateTransaction(request).Do(ctx)
+	if err != nil {
+		return SimulateResult{}, err
+	}
+
+	result := SimulateResult{
+		SimulateResponse: simulateResponse,
+	}
+
+	for i, txContext := range atc.txContexts {
+		// Verify method call is available. This may not be the case if the App Call Tx wasn't created
+		// by AddMethodCall().
+		if !txContext.isMethodCallTx() {
+			continue
+		}
+
+		methodResult := ABIMethodResult{TxID: txContext.txID(), Method: *txContext.method}
+		txnInfo := models.PendingTransactionInfoResponse(simulateResponse.TxnGroups[0].TxnResults[i].TxnResult)
+
+		methodResult = prepareMethodResult(methodResult, txnInfo)
+		result.MethodResults = append(result.MethodResults, methodResult)
+	}
+
+	return result, nil
+}
+
 // Execute sends the transaction group to the network and waits until it's committed to a block. An
 // error will be thrown if submission or execution fails.
 //
@@ -642,39 +711,42 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 			result.TransactionInfo = methodCallInfo
 		}
 
-		if txContext.method.Returns.IsVoid() {
-			result.RawReturnValue = []byte{}
-			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
-			continue
-		}
-
-		if len(result.TransactionInfo.Logs) == 0 {
-			result.DecodeError = errors.New("method call did not log a return value")
-			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
-			continue
-		}
-
-		lastLog := result.TransactionInfo.Logs[len(result.TransactionInfo.Logs)-1]
-		if !bytes.HasPrefix(lastLog, abiReturnHash) {
-			result.DecodeError = errors.New("method call did not log a return value")
-			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
-			continue
-		}
-
-		result.RawReturnValue = lastLog[len(abiReturnHash):]
-
-		abiType, err := txContext.method.Returns.GetTypeObject()
-		if err != nil {
-			result.DecodeError = err
-			executeResponse.MethodResults = append(executeResponse.MethodResults, result)
-			break
-		}
-
-		result.ReturnValue, result.DecodeError = abiType.Decode(result.RawReturnValue)
+		result = prepareMethodResult(result, result.TransactionInfo)
 		executeResponse.MethodResults = append(executeResponse.MethodResults, result)
 	}
 
 	return executeResponse, nil
+}
+
+func prepareMethodResult(result ABIMethodResult, transactionInfo models.PendingTransactionInfoResponse) ABIMethodResult {
+	result.TransactionInfo = transactionInfo
+
+	if result.Method.Returns.IsVoid() {
+		result.RawReturnValue = []byte{}
+		return result
+	}
+
+	if len(result.TransactionInfo.Logs) == 0 {
+		result.DecodeError = errors.New("method call did not log a return value")
+		return result
+	}
+
+	lastLog := result.TransactionInfo.Logs[len(result.TransactionInfo.Logs)-1]
+	if !bytes.HasPrefix(lastLog, abiReturnHash) {
+		result.DecodeError = errors.New("method call did not log a return value")
+		return result
+	}
+
+	result.RawReturnValue = lastLog[len(abiReturnHash):]
+
+	abiType, err := result.Method.Returns.GetTypeObject()
+	if err != nil {
+		result.DecodeError = err
+		return result
+	}
+
+	result.ReturnValue, result.DecodeError = abiType.Decode(result.RawReturnValue)
+	return result
 }
 
 // marshallAbiUint64 converts any value used to represent an ABI "uint64" into

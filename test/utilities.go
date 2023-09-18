@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -24,7 +24,7 @@ func VerifyResponse(expectedFile string, actual string) error {
 	if err != nil {
 		return err
 	}
-	fileBytes, err := ioutil.ReadAll(jsonfile)
+	fileBytes, err := io.ReadAll(jsonfile)
 	if err != nil {
 		return err
 	}

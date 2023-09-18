@@ -38,6 +38,7 @@ type TealValue struct {
 
 // TealKeyValue represents a key/value store for use in an application's
 // LocalState or GlobalState
+//
 //msgp:allocbound TealKeyValue EncodedMaxKeyValueEntries
 type TealKeyValue map[string]TealValue
 

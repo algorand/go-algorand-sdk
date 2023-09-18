@@ -3,7 +3,7 @@ TEST_SOURCES := $(shell cd $(SRCPATH) && go list ./...)
 TEST_SOURCES_NO_CUCUMBER := $(shell cd $(SRCPATH) && go list ./... | grep -v test)
 UNIT_TAGS :=  "$(shell awk '{print $2}' test/unit.tags | paste -s -d, -)"
 INTEGRATIONS_TAGS := "$(shell awk '{print $2}' test/integration.tags | paste -s -d, -)"
-GO_IMAGE := golang:$(subst go,,$(shell go version | cut -d' ' -f 3 | cut -d'.' -f 1,2))-stretch
+GO_IMAGE := golang:$(subst go,,$(shell go version | cut -d' ' -f 3 | cut -d'.' -f 1,2))-bookworm
 
 lint:
 	golangci-lint run -c .golangci.yml

@@ -4,7 +4,7 @@ import (
 	"container/ring"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -21,7 +21,7 @@ func loadMockJsons(commaDelimitedFilenames, pathToJsons string) ([][]byte, error
 		if err != nil {
 			return nil, err
 		}
-		fileBytes, err := ioutil.ReadAll(jsonfile)
+		fileBytes, err := io.ReadAll(jsonfile)
 		if err != nil {
 			return nil, err
 		}
@@ -105,5 +105,5 @@ func expectErrorStringToContain(contains string) error {
 }
 
 func loadResource(filepath string) ([]byte, error) {
-	return ioutil.ReadFile(path.Join("features", "resources", filepath))
+	return os.ReadFile(path.Join("features", "resources", filepath))
 }
