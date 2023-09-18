@@ -1,3 +1,28 @@
+# v2.3.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.3.0 -->
+
+## What's Changed
+### Bugfixes
+* bug-fix: include currency-greater-than param for 0 value by @shiqizng in https://github.com/algorand/go-algorand-sdk/pull/584
+* types: Reject non canonical addresses in DecodeAddress by @algochoi in https://github.com/algorand/go-algorand-sdk/pull/595
+### New Features
+* Build: Go 1.20 and golint-ci 1.52 support by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/566
+* chore: Add new consensus params to vFuture by @Eric-Warehime in https://github.com/algorand/go-algorand-sdk/pull/577
+### Enhancements
+* consensus config: add dynamic filter timeout parameter by @yossigi in https://github.com/algorand/go-algorand-sdk/pull/603
+* Simulate: Fix simulate request error & support ATC simulation by @jasonpaulos in https://github.com/algorand/go-algorand-sdk/pull/611
+* api: Sync client object with latest spec. by @winder in https://github.com/algorand/go-algorand-sdk/pull/613
+### Other
+* Regenerate code with the latest specification file (7276a1b2) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/582
+* Regenerate code with the latest specification file (fb8a5ede) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/585
+
+## New Contributors
+* @gmalouf made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/566
+* @yossigi made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/603
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.2.0...v2.3.0
+
 # v2.2.0
 
 ## Enhancements
