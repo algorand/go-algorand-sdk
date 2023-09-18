@@ -28,6 +28,16 @@ type (
 		// Genesis hash to which this block belongs.
 		GenesisHash Digest `codec:"gh"`
 
+		// Proposer is the proposer of this block. Like the Seed, algod adds
+		// this after the block is built, so that the same block can be prepared
+		// for multiple Players in the same node. Therefore, it can not be used
+		// to influence block evaluation. Populated if proto.EnableMining
+		Proposer Address `codec:"prp"`
+
+		// FeesCollected is the sum of all fees paid by transactions in this
+		// block. Populated if proto.EnableMining.
+		FeesCollected MicroAlgos `codec:"fc"`
+
 		// Rewards.
 		//
 		// When a block is applied, some amount of rewards are accrued to
