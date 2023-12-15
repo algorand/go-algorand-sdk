@@ -1,3 +1,20 @@
+# v2.4.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.4.0 -->
+
+## What's Changed
+### Enhancements
+* protocol: Add block hash to state proof's LightBlockHeader by @zeldovich in https://github.com/algorand/go-algorand-sdk/pull/589
+* Consensus Config: Add period 0 deadline timeout parameter to consensus params. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/618
+* Consensus: Update consensus files for v39 along with types sync. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/621
+### Other
+* Regenerate code with the latest specification file (b5adad95) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/620
+
+## New Contributors
+* @zeldovich made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/589
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.3.0...v2.4.0
+
 # v2.3.0
 
 ## What's Changed
