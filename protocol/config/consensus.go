@@ -143,6 +143,8 @@ type ConsensusParams struct {
 	// time for nodes to wait for block proposal headers for period = 0, value should be configured to suit best case
 	// critical path
 	AgreementFilterTimeoutPeriod0 time.Duration
+	// Duration of the second agreement step for period=0, value should be configured to suit best case critical path
+	AgreementDeadlineTimeoutPeriod0 time.Duration
 
 	FastRecoveryLambda time.Duration // time between fast recovery attempts
 
@@ -400,6 +402,11 @@ type ConsensusParams struct {
 	// their account balances.
 	StateProofExcludeTotalWeightWithRewards bool
 
+	// StateProofBlockHashInLightHeader specifies that the LightBlockHeader
+	// committed to by state proofs should contain the BlockHash of each
+	// block, instead of the seed.
+	StateProofBlockHashInLightHeader bool
+
 	// EnableAssetCloseAmount adds an extra field to the ApplyData. The field contains the amount of the remaining
 	// asset that were sent to the close-to address.
 	EnableAssetCloseAmount bool
@@ -581,6 +588,42 @@ var MaxAvailableAppProgramLen int
 // to be taken offline, that would be proposed to be taken offline.
 var MaxProposedExpiredOnlineAccounts int
 
+// MaxAppTotalArgLen is the maximum number of bytes across all arguments of an application
+// max sum([len(arg) for arg in txn.ApplicationArgs])
+var MaxAppTotalArgLen int
+
+// MaxAssetNameBytes is the maximum asset name length in bytes
+var MaxAssetNameBytes int
+
+// MaxAssetUnitNameBytes is the maximum asset unit name length in bytes
+var MaxAssetUnitNameBytes int
+
+// MaxAssetURLBytes is the maximum asset URL length in bytes
+var MaxAssetURLBytes int
+
+// MaxAppBytesValueLen is the maximum length of a bytes value used in an application's global or
+// local key/value store
+var MaxAppBytesValueLen int
+
+// MaxAppBytesKeyLen is the maximum length of a key used in an application's global or local
+// key/value store
+var MaxAppBytesKeyLen int
+
+// StateProofTopVoters is a bound on how many online accounts get to
+// participate in forming the state proof, by including the
+// top StateProofTopVoters accounts (by normalized balance) into the
+// vector commitment.
+var StateProofTopVoters int
+
+// MaxTxnBytesPerBlock determines the maximum number of bytes
+// that transactions can take up in a block.  Specifically,
+// the sum of the lengths of encodings of each transaction
+// in a block must not exceed MaxTxnBytesPerBlock.
+var MaxTxnBytesPerBlock int
+
+// MaxAppTxnForeignApps is the max number of foreign apps per txn across all consensus versions
+var MaxAppTxnForeignApps int
+
 func checkSetMax(value int, curMax *int) {
 	if value > *curMax {
 		*curMax = value
@@ -618,6 +661,19 @@ func checkSetAllocBounds(p ConsensusParams) {
 	checkSetMax(p.MaxAppProgramLen, &MaxLogCalls)
 	checkSetMax(p.MaxInnerTransactions*p.MaxTxGroupSize, &MaxInnerTransactionsPerDelta)
 	checkSetMax(p.MaxProposedExpiredOnlineAccounts, &MaxProposedExpiredOnlineAccounts)
+
+	// These bounds are exported to make them available to the msgp generator for calculating
+	// maximum valid message size for each message going across the wire.
+	checkSetMax(p.MaxAppTotalArgLen, &MaxAppTotalArgLen)
+	checkSetMax(p.MaxAssetNameBytes, &MaxAssetNameBytes)
+	checkSetMax(p.MaxAssetUnitNameBytes, &MaxAssetUnitNameBytes)
+	checkSetMax(p.MaxAssetURLBytes, &MaxAssetURLBytes)
+	checkSetMax(p.MaxAppBytesValueLen, &MaxAppBytesValueLen)
+	checkSetMax(p.MaxAppKeyLen, &MaxAppBytesKeyLen)
+	checkSetMax(int(p.StateProofTopVoters), &StateProofTopVoters)
+	checkSetMax(p.MaxTxnBytesPerBlock, &MaxTxnBytesPerBlock)
+
+	checkSetMax(p.MaxAppTxnForeignApps, &MaxAppTxnForeignApps)
 }
 
 // DeepCopy creates a deep copy of a consensus protocols map.
@@ -662,6 +718,9 @@ func (cp ConsensusProtocols) Merge(configurableConsensus ConsensusProtocols) Con
 	return staticConsensus
 }
 
+// initConsensusProtocols defines the consensus protocol values and how values change across different versions of the protocol.
+//
+// These are the only valid and tested consensus values and transitions. Other settings are not tested and may lead to unexpected behavior.
 func initConsensusProtocols() {
 	// WARNING: copying a ConsensusParams by value into a new variable
 	// does not copy the ApprovedUpgrades map.  Make sure that each new
@@ -702,8 +761,9 @@ func initConsensusProtocols() {
 		DownCommitteeSize:      10000,
 		DownCommitteeThreshold: 7750,
 
-		AgreementFilterTimeout:        4 * time.Second,
-		AgreementFilterTimeoutPeriod0: 4 * time.Second,
+		AgreementFilterTimeout:          4 * time.Second,
+		AgreementFilterTimeoutPeriod0:   4 * time.Second,
+		AgreementDeadlineTimeoutPeriod0: Protocol.BigLambda + Protocol.SmallLambda,
 
 		FastRecoveryLambda: 5 * time.Minute,
 
@@ -1234,13 +1294,34 @@ func initConsensusProtocols() {
 	// for the sake of future manual calculations, we'll round that down a bit :
 	v37.ApprovedUpgrades[protocol.ConsensusV38] = 10000
 
+	v39 := v38
+	v39.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
+
+	v39.LogicSigVersion = 10
+	v39.EnableLogicSigCostPooling = true
+
+	v39.AgreementDeadlineTimeoutPeriod0 = 4 * time.Second
+
+	v39.DynamicFilterTimeout = true
+
+	v39.StateProofBlockHashInLightHeader = true
+
+	// For future upgrades, round times will likely be shorter so giving ourselves some buffer room
+	v39.MaxUpgradeWaitRounds = 250000
+
+	Consensus[protocol.ConsensusV39] = v39
+
+	// v38 can be upgraded to v39, with an update delay of 7d:
+	// 157000 = (7 * 24 * 60 * 60 / 3.3 round times currently)
+	// but our current max is 150000 so using that :
+	v38.ApprovedUpgrades[protocol.ConsensusV39] = 150000
+
 	// ConsensusFuture is used to test features that are implemented
 	// but not yet released in a production protocol version.
-	vFuture := v38
+	vFuture := v39
 	vFuture.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 
-	vFuture.LogicSigVersion = 10 // When moving this to a release, put a new higher LogicSigVersion here
-	vFuture.EnableLogicSigCostPooling = true
+	vFuture.LogicSigVersion = 11 // When moving this to a release, put a new higher LogicSigVersion here
 
 	Consensus[protocol.ConsensusFuture] = vFuture
 
