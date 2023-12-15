@@ -313,8 +313,9 @@ type LedgerStateDelta struct {
 	// new block header; read-only
 	Hdr *BlockHeader
 
-	// next round for which we expect a state proof.
-	// zero if no state proof is expected.
+	// StateProofNext represents modification on StateProofNextRound field in the block header. If the block contains
+	// a valid state proof transaction, this field will contain the next round for state proof.
+	// otherwise it will be set to 0.
 	StateProofNext Round
 
 	// previous block timestamp

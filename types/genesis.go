@@ -70,8 +70,9 @@ type Account struct {
 	Status          byte     `codec:"onl"`
 	MicroAlgos      uint64   `codec:"algo"`
 	VoteID          [32]byte `codec:"vote"`
-	SelectionID     [32]byte `codec:"sel"`
 	StateProofID    [64]byte `codec:"stprf"`
+	SelectionID     [32]byte `codec:"sel"`
+	VoteFirstValid  uint64   `codec:"voteFst"`
 	VoteLastValid   uint64   `codec:"voteLst"`
 	VoteKeyDilution uint64   `codec:"voteKD"`
 }

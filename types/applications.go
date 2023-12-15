@@ -105,7 +105,7 @@ type ApplicationCallTxnFields struct {
 
 	ApplicationID   AppIndex       `codec:"apid"`
 	OnCompletion    OnCompletion   `codec:"apan"`
-	ApplicationArgs [][]byte       `codec:"apaa,allocbound=encodedMaxApplicationArgs"`
+	ApplicationArgs [][]byte       `codec:"apaa,allocbound=encodedMaxApplicationArgs,maxtotalbytes=config.MaxAppTotalArgLen"`
 	Accounts        []Address      `codec:"apat,allocbound=encodedMaxAccounts"`
 	ForeignApps     []AppIndex     `codec:"apfa,allocbound=encodedMaxForeignApps"`
 	ForeignAssets   []AssetIndex   `codec:"apas,allocbound=encodedMaxForeignAssets"`
