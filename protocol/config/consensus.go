@@ -1,10 +1,14 @@
 package config
 
 import (
+	"encoding/json"
 	"time"
-
+	"os"
+	"path/filepath"
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
 )
+
+const ConfigurableConsensusProtocolsFilename = "consensus.json"
 
 // ConsensusParams specifies settings that might vary based on the
 // particular version of the consensus protocol.
