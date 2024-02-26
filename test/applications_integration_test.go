@@ -869,7 +869,7 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	return nil
 }
 
-func waitForIndexerToCatchUp(n int) error {
+func waitForIndexerToCatchUp() error {
 	const maxAttempts = 30
 
 	roundToWaitFor := lastTxConfirmedRound
