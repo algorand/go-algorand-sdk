@@ -36,6 +36,7 @@ var transientAccount crypto.Account
 var applicationId uint64
 var applicationIds []uint64
 var txComposerMethodResults []transaction.ABIMethodResult
+var lastTxConfirmedRound uint64
 
 func anAlgodVClientConnectedToPortWithToken(v int, host string, port int, token string) error {
 	var err error
@@ -238,10 +239,11 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr s
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
-	_, err := transaction.WaitForConfirmation(algodV2client, txid, 1, context.Background())
+	res, err := transaction.WaitForConfirmation(algodV2client, txid, 1, context.Background())
 	if err != nil {
 		return err
 	}
+	lastTxConfirmedRound = res.ConfirmedRound
 	return nil
 }
 
@@ -867,8 +869,34 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	return nil
 }
 
-func sleptForNMilliSecsForIndexer(n int) error {
-	time.Sleep(time.Duration(n) * time.Millisecond)
+func waitForIndexerToCatchUp() error {
+	const maxAttempts = 30
+
+	roundToWaitFor := lastTxConfirmedRound
+	indexerRound := uint64(0)
+	attempts := 0
+
+	for {
+		res, err := indexerV2client.HealthCheck().Do(context.Background())
+		if err != nil {
+			return err
+		}
+		indexerRound = res.Round
+		if indexerRound >= roundToWaitFor {
+			// Success
+			break
+		}
+
+		// Sleep for 1 second and try again
+		time.Sleep(time.Second)
+		attempts++
+
+		if attempts > maxAttempts {
+			// Failsafe to prevent infinite loop
+			return fmt.Errorf("timeout waiting for indexer to catch up to round %d. It is currently on %d", roundToWaitFor, indexerRound)
+		}
+	}
+
 	return nil
 }
 
@@ -963,5 +991,5 @@ func ApplicationsContext(s *godog.Suite) {
 	s.Step(`^according to "([^"]*)", the current application should have the following boxes "([^"]*)"\.$`, currentApplicationShouldHaveFollowingBoxes)
 	s.Step(`^according to "([^"]*)", with (\d+) being the parameter that limits results, the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
 	s.Step(`^according to indexer, with (\d+) being the parameter that limits results, and "([^"]*)" being the parameter that sets the next result, the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
-	s.Step(`^I sleep for (\d+) milliseconds for indexer to digest things down\.$`, sleptForNMilliSecsForIndexer)
+	s.Step(`^I wait for indexer to catch up to the round where my most recent transaction was confirmed\.$`, waitForIndexerToCatchUp)
 }
