@@ -10,7 +10,7 @@ workflows:
           name: 'test_go_<< matrix.go_version >>'
           matrix:
             parameters:
-              go_version: ['1.20.5']
+              go_version: ['1.20.14']
 
 jobs:
   test:
