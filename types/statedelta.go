@@ -159,6 +159,7 @@ type AccountBaseData struct {
 	RewardsBase        uint64
 	RewardedMicroAlgos MicroAlgos
 	AuthAddr           Address
+	IncentiveEligible  bool
 
 	TotalAppSchema      StateSchema // Totals across created globals, and opted in locals.
 	TotalExtraAppPages  uint32      // Total number of extra pages across all created apps
@@ -168,6 +169,9 @@ type AccountBaseData struct {
 	TotalAssets         uint64      // Total of asset creations and optins (i.e. number of holdings)
 	TotalBoxes          uint64      // Total number of boxes associated to this account
 	TotalBoxBytes       uint64      // Total bytes for this account's boxes. keys _and_ values count
+
+	LastProposed  Round // The last round that this account proposed the winning block.
+	LastHeartbeat Round // The last round that this account sent a heartbeat to show it was online.
 }
 
 // AccountData provides users of the Balances interface per-account data (like basics.AccountData)

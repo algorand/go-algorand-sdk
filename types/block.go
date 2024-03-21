@@ -28,15 +28,25 @@ type (
 		// Genesis hash to which this block belongs.
 		GenesisHash Digest `codec:"gh"`
 
-		// Proposer is the proposer of this block. Like the Seed, algod adds
-		// this after the block is built, so that the same block can be prepared
-		// for multiple Players in the same node. Therefore, it can not be used
+		// Proposer is the proposer of this block. Like the Seed, agreement adds
+		// this after the block is assembled by the transaction pool, so that the same block can be prepared
+		// for multiple participating accounts in the same node. Therefore, it can not be used
 		// to influence block evaluation. Populated if proto.EnableMining
 		Proposer Address `codec:"prp"`
 
 		// FeesCollected is the sum of all fees paid by transactions in this
 		// block. Populated if proto.EnableMining.
 		FeesCollected MicroAlgos `codec:"fc"`
+
+		// Bonus is the bonus incentive to be paid for proposing this block.  It
+		// begins as a consensus parameter value, and decays periodically.
+		Bonus MicroAlgos `codec:"bi"`
+
+		// ProposerPayout is the amount that should be moved from the FeeSink to
+		// the Proposer at the start of the next block.  It is basically the
+		// bonus + the mining fraction of FeesCollected, but may be zero'd by
+		// proposer ineligibility.
+		ProposerPayout MicroAlgos `codec:"pp"`
 
 		// Rewards.
 		//
@@ -130,6 +140,10 @@ type (
 		// that needs to be converted to offline since their
 		// participation key expired.
 		ExpiredParticipationAccounts []Address `codec:"partupdrmv"`
+
+		// AbsentParticipationAccounts contains a list of online accounts that
+		// needs to be converted to offline since they are not proposing.
+		AbsentParticipationAccounts []Address `codec:"partupdabs"`
 	}
 
 	// RewardsState represents the global parameters controlling the rate
