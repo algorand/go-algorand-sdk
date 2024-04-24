@@ -134,6 +134,10 @@ type (
 		// that needs to be converted to offline since their
 		// participation key expired.
 		ExpiredParticipationAccounts []Address `codec:"partupdrmv"`
+
+		// AbsentParticipationAccounts contains a list of online accounts that
+		// needs to be converted to offline since they are not proposing.
+		AbsentParticipationAccounts []Address `codec:"partupdabs"`
 	}
 
 	// RewardsState represents the global parameters controlling the rate
