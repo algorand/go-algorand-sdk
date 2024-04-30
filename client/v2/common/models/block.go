@@ -4,6 +4,12 @@ package models
 // Definition:
 // data/bookkeeping/block.go : Block
 type Block struct {
+	// Bonus the potential bonus payout for this block.
+	Bonus uint64 `json:"bonus,omitempty"`
+
+	// FeesCollected the sum of all fees paid by transactions in this block.
+	FeesCollected uint64 `json:"fees-collected,omitempty"`
+
 	// GenesisHash (gh) hash to which this block belongs.
 	GenesisHash []byte `json:"genesis-hash"`
 
@@ -16,6 +22,12 @@ type Block struct {
 
 	// PreviousBlockHash (prev) Previous block hash.
 	PreviousBlockHash []byte `json:"previous-block-hash"`
+
+	// Proposer the proposer of this block.
+	Proposer string `json:"proposer,omitempty"`
+
+	// ProposerPayout the actual amount transferred to the proposer from the fee sink.
+	ProposerPayout uint64 `json:"proposer-payout,omitempty"`
 
 	// Rewards fields relating to rewards,
 	Rewards BlockRewards `json:"rewards,omitempty"`
