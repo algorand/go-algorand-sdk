@@ -556,7 +556,7 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 	return
 }
 
-// byte32FromBase64 decodes the input base64 string and outputs a
+// byte64FromBase64 decodes the input base64 string and outputs a
 // 64 byte array, erroring if the input is the wrong length.
 func byte64FromBase64(in string) (out [64]byte, err error) {
 	slice, err := base64.StdEncoding.DecodeString(in)
