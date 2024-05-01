@@ -110,6 +110,10 @@ func (c *Client) GetTransactionProof(round uint64, txid string) *GetTransactionP
 	return &GetTransactionProof{c: c, round: round, txid: txid}
 }
 
+func (c *Client) GetBlockLogs(round uint64) *GetBlockLogs {
+	return &GetBlockLogs{c: c, round: round}
+}
+
 func (c *Client) Supply() *Supply {
 	return &Supply{c: c}
 }

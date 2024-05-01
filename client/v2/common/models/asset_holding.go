@@ -4,7 +4,7 @@ package models
 // Definition:
 // data/basics/userBalance.go : AssetHolding
 type AssetHolding struct {
-	// Amount (a) number of units held.
+	// Amount number of units held.
 	Amount uint64 `json:"amount"`
 
 	// AssetId asset ID of the holding.
@@ -13,7 +13,7 @@ type AssetHolding struct {
 	// Deleted whether or not the asset holding is currently deleted from its account.
 	Deleted bool `json:"deleted,omitempty"`
 
-	// IsFrozen (f) whether or not the holding is frozen.
+	// IsFrozen whether or not the holding is frozen.
 	IsFrozen bool `json:"is-frozen"`
 
 	// OptedInAtRound round during which the account opted into this asset holding.
