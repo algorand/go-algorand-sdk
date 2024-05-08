@@ -60,11 +60,17 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	}
 
 	params.Fee = types.MicroAlgos(fee)
-	ltxn, err := transaction.MakePaymentTxn(accounts[1], transientAccount.Address.String(), uint64(microalgos), note, close, params)
+
+	funder, err := fundingAccount(algodV2client, uint64(microalgos))
 	if err != nil {
 		return err
 	}
-	lsk, err := kcl.ExportKey(handle, walletPswd, accounts[1])
+
+	ltxn, err := transaction.MakePaymentTxn(funder, transientAccount.Address.String(), uint64(microalgos), note, close, params)
+	if err != nil {
+		return err
+	}
+	lsk, err := kcl.ExportKey(handle, walletPswd, funder)
 	if err != nil {
 		return err
 	}
@@ -91,7 +97,11 @@ func iFundTheCurrentApplicationsAddress(microalgos int) error {
 		return err
 	}
 
-	txn, err := transaction.MakePaymentTxn(accounts[0], address.String(), uint64(microalgos), nil, "", params)
+	funder, err := fundingAccount(algodV2client, uint64(microalgos))
+	if err != nil {
+		return err
+	}
+	txn, err := transaction.MakePaymentTxn(funder, address.String(), uint64(microalgos), nil, "", params)
 	if err != nil {
 		return err
 	}
