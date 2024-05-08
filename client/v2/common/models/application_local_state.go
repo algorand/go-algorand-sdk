@@ -12,12 +12,12 @@ type ApplicationLocalState struct {
 	// Id the application which this local state is for.
 	Id uint64 `json:"id"`
 
-	// KeyValue (tkv) storage.
+	// KeyValue storage.
 	KeyValue []TealKeyValue `json:"key-value,omitempty"`
 
 	// OptedInAtRound round when the account opted into the application.
 	OptedInAtRound uint64 `json:"opted-in-at-round,omitempty"`
 
-	// Schema (hsch) schema.
+	// Schema schema.
 	Schema ApplicationStateSchema `json:"schema"`
 }

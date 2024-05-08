@@ -27,7 +27,7 @@ func (c *Client) getMsgpack(ctx context.Context, response interface{}, path stri
 	return (*common.Client)(c).GetRawMsgpack(ctx, response, path, body, headers)
 }
 
-// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+// getRaw performs a GET request to the specific path against the server, assumes msgpack response
 func (c *Client) getRaw(ctx context.Context, path string, body interface{}, headers []*common.Header) ([]byte, error) {
 	return (*common.Client)(c).GetRaw(ctx, path, body, headers)
 }
@@ -108,6 +108,10 @@ func (c *Client) GetBlockHash(round uint64) *GetBlockHash {
 
 func (c *Client) GetTransactionProof(round uint64, txid string) *GetTransactionProof {
 	return &GetTransactionProof{c: c, round: round, txid: txid}
+}
+
+func (c *Client) GetBlockLogs(round uint64) *GetBlockLogs {
+	return &GetBlockLogs{c: c, round: round}
 }
 
 func (c *Client) Supply() *Supply {
