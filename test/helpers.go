@@ -52,7 +52,7 @@ func mockHTTPResponsesInLoadedFromHelper(jsonfiles, directory string, status int
 		responseRing.Value = json
 		responseRing = responseRing.Next()
 	}
-	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		json := responseRing.Value.([]byte)
 		if status > 0 {
 			w.WriteHeader(status)
@@ -67,7 +67,7 @@ var receivedMethod string
 var receivedPath string
 
 func mockServerRecordingRequestPaths() error {
-	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mockServer = httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		receivedMethod = r.Method
 		receivedPath = r.URL.String()
 	}))
