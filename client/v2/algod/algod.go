@@ -27,7 +27,7 @@ func (c *Client) getMsgpack(ctx context.Context, response interface{}, path stri
 	return (*common.Client)(c).GetRawMsgpack(ctx, response, path, body, headers)
 }
 
-// getRaw performs a GET request to the specific path against the server, assumes msgpack response
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
 func (c *Client) getRaw(ctx context.Context, path string, body interface{}, headers []*common.Header) ([]byte, error) {
 	return (*common.Client)(c).GetRaw(ctx, path, body, headers)
 }
