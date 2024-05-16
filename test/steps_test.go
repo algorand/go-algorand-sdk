@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -148,13 +149,38 @@ func waitForAlgodInDevMode() {
 	time.Sleep(500 * time.Millisecond)
 }
 
+// fundingAccount finds an account with enough funds to fund the given amount
+func fundingAccount(client *algodV2.Client, amount uint64) (string, error) {
+	// Random shuffle to spread the load
+	shuffledAccounts := make([]string, len(accounts))
+	copy(shuffledAccounts, accounts)
+	rand.Shuffle(len(shuffledAccounts), func(i, j int) {
+		shuffledAccounts[i], shuffledAccounts[j] = shuffledAccounts[j], shuffledAccounts[i]
+	})
+	for _, accountAddress := range shuffledAccounts {
+		res, err := client.AccountInformation(accountAddress).Do(context.Background())
+		if err != nil {
+			return "", err
+		}
+		if res.Amount < amount+100_000 { // 100,000 microalgos is default account min balance
+			continue
+		}
+		return accountAddress, nil
+	}
+	return "", fmt.Errorf("no account has enough to fund %d microalgos", amount)
+}
+
 func initializeAccount(accountAddress string) error {
 	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
 		return err
 	}
 
-	txn, err = transaction.MakePaymentTxn(accounts[0], accountAddress, devModeInitialAmount, []byte{}, "", params)
+	funder, err := fundingAccount(aclv2, devModeInitialAmount)
+	if err != nil {
+		return err
+	}
+	txn, err = transaction.MakePaymentTxn(funder, accountAddress, devModeInitialAmount, []byte{}, "", params)
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,26 @@
+# v2.5.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.5.0 -->
+
+## What's Changed
+### Bugfixes
+* Fix: Fix indexer sync issue in cucumber tests by @jasonpaulos in https://github.com/algorand/go-algorand-sdk/pull/628
+* chore: fix function names by @tianzedavid in https://github.com/algorand/go-algorand-sdk/pull/632
+* Tests: Fix funding for cucumber tests by rotating sender accounts by @jasonpaulos in https://github.com/algorand/go-algorand-sdk/pull/630
+### New Features
+* Build: Bump golang version to 1.21.10 by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/636
+### Enhancements
+* Build: Bump go version for builds/workflows to 1.20.14 by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/629
+* Incentives: Add fields in block header for proposer and fees collected. by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/617
+### Other
+* Regenerate code with the latest specification file (ff2c7476) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/631
+
+## New Contributors
+* @jannotti made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/617
+* @tianzedavid made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/632
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.4.0...v2.5.0
+
 # v2.4.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.4.0 -->
