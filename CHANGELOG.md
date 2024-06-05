@@ -1,3 +1,18 @@
+# v2.6.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.6.0 -->
+
+## What's Changed
+### Enhancements
+* Tests: Enable min-balance tests for indexer and algod APIs. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/642
+### Other
+* Regenerate code with the latest specification file (6c917476) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/635
+* Regenerate code with the latest specification file (981aef83) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/640
+* Regenerate code with the latest specification file (2335b019) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/641
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.5.0...v2.6.0
+
 # v2.5.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.5.0 -->

@@ -65,6 +65,10 @@ type Account struct {
 	// LastProposed the round in which this account last proposed the block.
 	LastProposed uint64 `json:"last-proposed,omitempty"`
 
+	// MinBalance microAlgo balance required by the account.
+	// The requirement grows based on asset and application usage.
+	MinBalance uint64 `json:"min-balance"`
+
 	// Participation accountParticipation describes the parameters used by this account
 	// in consensus protocol.
 	Participation AccountParticipation `json:"participation,omitempty"`
