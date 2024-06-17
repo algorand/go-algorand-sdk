@@ -10,6 +10,10 @@ type SimulateTransactionResult struct {
 	// inner app call trace in a recursive way.
 	ExecTrace SimulationTransactionExecTrace `json:"exec-trace,omitempty"`
 
+	// FixedSigner the account that needed to sign this transaction when no signature
+	// was provided and the provided signer was incorrect.
+	FixedSigner string `json:"fixed-signer,omitempty"`
+
 	// LogicSigBudgetConsumed budget used during execution of a logic sig transaction.
 	LogicSigBudgetConsumed uint64 `json:"logic-sig-budget-consumed,omitempty"`
 
