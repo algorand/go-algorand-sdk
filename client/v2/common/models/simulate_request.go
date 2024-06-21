@@ -19,6 +19,10 @@ type SimulateRequest struct {
 	// transaction group.
 	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
 
+	// FixSigners if true, signers for transactions that are missing signatures will be
+	// fixed during evaluation.
+	FixSigners bool `json:"fix-signers,omitempty"`
+
 	// Round if provided, specifies the round preceding the simulation. State changes
 	// through this round will be used to run this simulation. Usually only the 4 most
 	// recent rounds will be available (controlled by the node config value
