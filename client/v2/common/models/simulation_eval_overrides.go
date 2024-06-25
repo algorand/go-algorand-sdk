@@ -16,6 +16,10 @@ type SimulationEvalOverrides struct {
 	// simulation
 	ExtraOpcodeBudget uint64 `json:"extra-opcode-budget,omitempty"`
 
+	// FixSigners if true, signers for transactions that are missing signatures will be
+	// fixed during evaluation.
+	FixSigners bool `json:"fix-signers,omitempty"`
+
 	// MaxLogCalls the maximum log calls one can make during simulation
 	MaxLogCalls uint64 `json:"max-log-calls,omitempty"`
 
