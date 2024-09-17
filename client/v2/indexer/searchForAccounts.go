@@ -47,12 +47,8 @@ type SearchAccountsParams struct {
 	// results.
 	NextToken string `url:"next,omitempty"`
 
-	// Round include results for the specified round. For performance reasons, this
-	// parameter may be disabled on some configurations. Using application-id or
-	// asset-id filters will return both creator and opt-in accounts. Filtering by
-	// include-all will return creator and opt-in accounts for deleted assets and
-	// accounts. Non-opt-in managers are not included in the results when asset-id is
-	// used.
+	// Round deprecated and disallowed. This parameter used to include results for a
+	// specified round. Requests with this parameter set are now rejected.
 	Round uint64 `url:"round,omitempty"`
 }
 
@@ -136,12 +132,8 @@ func (s *SearchAccounts) NextToken(NextToken string) *SearchAccounts {
 	return s
 }
 
-// Round include results for the specified round. For performance reasons, this
-// parameter may be disabled on some configurations. Using application-id or
-// asset-id filters will return both creator and opt-in accounts. Filtering by
-// include-all will return creator and opt-in accounts for deleted assets and
-// accounts. Non-opt-in managers are not included in the results when asset-id is
-// used.
+// Round deprecated and disallowed. This parameter used to include results for a
+// specified round. Requests with this parameter set are now rejected.
 func (s *SearchAccounts) Round(Round uint64) *SearchAccounts {
 	s.p.Round = Round
 
