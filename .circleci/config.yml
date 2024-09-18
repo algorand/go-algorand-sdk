@@ -15,7 +15,7 @@ workflows:
 jobs:
   test:
     machine:
-      image: "ubuntu-2204:2022.04.2"
+      image: "ubuntu-2404:2024.05.1"
     parameters:
       go_version:
         type: string
@@ -25,5 +25,4 @@ jobs:
           version: << parameters.go_version >>
       - run: |
           go version
-          go get -u golang.org/x/lint/golint
           make docker-test
