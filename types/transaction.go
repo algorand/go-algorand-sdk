@@ -18,6 +18,7 @@ type Transaction struct {
 	AssetFreezeTxnFields
 	ApplicationFields
 	StateProofTxnFields
+	HeartbeatTxnFields
 }
 
 // SignedTxn wraps a transaction and a signature. The encoding of this struct

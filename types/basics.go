@@ -30,18 +30,14 @@ const (
 	ApplicationCallTx TxType = "appl"
 	// StateProofTx records a state proof
 	StateProofTx TxType = "stpf"
+	// HeartbeatTx demonstrates the account is alive
+	HeartbeatTx TxType = "hb"
 )
 
 const masterDerivationKeyLenBytes = 32
 
 // MaxTxGroupSize is max number of transactions in a single group
 const MaxTxGroupSize = 16
-
-// LogicSigMaxSize is a max TEAL program size (with args)
-const LogicSigMaxSize = 1000
-
-// LogicSigMaxCost is a max execution const of a TEAL program
-const LogicSigMaxCost = 20000
 
 // KeyStoreRootSize is the size, in bytes, of keyreg verifier
 const KeyStoreRootSize = 64
