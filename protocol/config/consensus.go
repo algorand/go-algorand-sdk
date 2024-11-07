@@ -97,6 +97,10 @@ type ConsensusParams struct {
 	// group. The total available is len(group) * LogicSigMaxCost)
 	EnableLogicSigCostPooling bool
 
+	// EnableLogicSigSizePooling specifies LogicSig sizes are pooled across a
+	// group. The total available is len(group) * LogicSigMaxSize
+	EnableLogicSigSizePooling bool
+
 	// RewardUnit specifies the number of MicroAlgos corresponding to one reward
 	// unit.
 	//
@@ -1422,6 +1426,8 @@ func initConsensusProtocols() {
 	vFuture.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 
 	vFuture.LogicSigVersion = 11 // When moving this to a release, put a new higher LogicSigVersion here
+
+	vFuture.EnableLogicSigSizePooling = true
 
 	vFuture.Payouts.Enabled = true
 	vFuture.Payouts.Percent = 75
