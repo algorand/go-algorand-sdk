@@ -1,15 +1,12 @@
 run:
   timeout: 5m
   tests: false
-  skip-dirs:
-    # Don't run linter on generated files
-    - client/v2
   
 linters:
   disable-all: true
   enable:
     - errcheck
-    - exportloopref
+    - copyloopvar
     - gci
     - gofmt
     - gosimple
@@ -66,7 +63,11 @@ issues:
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
     # "EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore"
     - ineffective break statement. Did you mean to break out of the outer loop
-    
+
+  exclude-dirs:
+    # Don't run linter on generated files
+    - client/v2
+
   exclude-rules:
     # Test utilities and helpers may have code that look unused, but is being used in another file
     - path: test/helpers.go

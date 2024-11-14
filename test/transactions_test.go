@@ -183,7 +183,7 @@ func buildLegacyAppCallTransaction(
 
 }
 
-func TransactionsUnitContext(s *godog.Suite) {
+func TransactionsUnitContext(s *godog.ScenarioContext) {
 	// @unit.transactions
 	s.Step(`^a signing account with address "([^"]*)" and mnemonic "([^"]*)"$`, aSigningAccountWithAddressAndMnemonic)
 	s.Step(`^sign the transaction$`, signTheTransaction)

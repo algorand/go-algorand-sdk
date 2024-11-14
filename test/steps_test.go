@@ -206,15 +206,19 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	opt.Paths = flag.Args()
 
-	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
-		FeatureContext(s)
-		AlgodClientV2Context(s)
-		IndexerUnitTestContext(s)
-		TransactionsUnitContext(s)
-		ApplicationsContext(s)
-		ApplicationsUnitContext(s)
-		ResponsesContext(s)
-	}, opt)
+	status := godog.TestSuite{
+		Name: "godogs",
+		ScenarioInitializer: func(s *godog.ScenarioContext) {
+			FeatureContext(s)
+			AlgodClientV2Context(s)
+			IndexerUnitTestContext(s)
+			TransactionsUnitContext(s)
+			ApplicationsContext(s)
+			ApplicationsUnitContext(s)
+			ResponsesContext(s)
+		},
+		Options: &opt,
+	}.Run()
 
 	if st := m.Run(); st > status {
 		status = st
@@ -222,7 +226,7 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
-func FeatureContext(s *godog.Suite) {
+func FeatureContext(s *godog.ScenarioContext) {
 	s.Step("I create a wallet", createWallet)
 	s.Step("the wallet should exist", walletExist)
 	s.Step("I get the wallet handle", getHandle)
@@ -387,10 +391,11 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I prepare the transaction without signatures for simulation$`, iPrepareTheTransactionWithoutSignaturesForSimulation)
 	s.Step(`^the simulation should report a failure at group "([^"]*)", path "([^"]*)" with message "([^"]*)"$`, theSimulationShouldReportAFailureAtGroupPathWithMessage)
 
-	s.BeforeScenario(func(interface{}) {
+	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		stxObj = types.SignedTxn{}
 		abiMethods = nil
 		kcl.RenewWalletHandle(handle)
+		return ctx, nil
 	})
 }
 

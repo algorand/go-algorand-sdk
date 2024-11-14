@@ -10,7 +10,7 @@ import (
 	"github.com/cucumber/godog"
 )
 
-func IndexerUnitTestContext(s *godog.Suite) {
+func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make any LookupAssetBalances call$`, weMakeAnyLookupAssetBalancesCall)
 	s.Step(`^the parsed LookupAssetBalances response should be valid on round (\d+), and contain an array of len (\d+) and element number (\d+) should have address "([^"]*)" amount (\d+) and frozen state "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any LookupAssetTransactions call$`, weMakeAnyLookupAssetTransactionsCall)
@@ -56,8 +56,9 @@ func IndexerUnitTestContext(s *godog.Suite) {
 	s.Step(`^we make a Lookup Block call against round (\d+) and header "([^"]*)"$`, weMakeALookupBlockCallAgainstRoundAndHeader)
 	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeALookupApplicationBoxByIDandName)
 	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`, weMakeASearchForApplicationBoxes)
-	s.BeforeScenario(func(interface{}) {
+	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
+		return ctx, nil
 	})
 }
 

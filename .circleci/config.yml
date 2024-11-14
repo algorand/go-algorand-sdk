@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  go: circleci/go@1.11.0
+  go: circleci/go@1.12.0
 
 workflows:
   circleci_build_and_test:
@@ -10,7 +10,7 @@ workflows:
           name: 'test_go_<< matrix.go_version >>'
           matrix:
             parameters:
-              go_version: ['1.21.10']
+              go_version: ['1.23.3']
 
 jobs:
   test:
