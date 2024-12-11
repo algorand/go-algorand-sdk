@@ -15,7 +15,7 @@ type HeartbeatTxnFields struct {
 	// The final three fields are included to allow early, concurrent check of
 	// the HbProof.
 
-	// HbSeed must be the block seed for the this transaction's firstValid
+	// HbSeed must be the block seed for this transaction's firstValid
 	// block. It is the message that must be signed with HbAddress's part key.
 	HbSeed Seed `codec:"hbsd"`
 
