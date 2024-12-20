@@ -73,6 +73,11 @@ type Transaction struct {
 	// the sha512/256 hash of the transactions in that group.
 	Group []byte `json:"group,omitempty"`
 
+	// HeartbeatTransaction fields for a heartbeat transaction.
+	// Definition:
+	// data/transactions/heartbeat.go : HeartbeatTxnFields
+	HeartbeatTransaction TransactionHeartbeat `json:"heartbeat-transaction,omitempty"`
+
 	// Id transaction ID
 	Id string `json:"id,omitempty"`
 
@@ -148,5 +153,6 @@ type Transaction struct {
 	// * (afrz) asset-freeze-transaction
 	// * (appl) application-transaction
 	// * (stpf) state-proof-transaction
+	// * (hb) heartbeat-transaction
 	Type string `json:"tx-type,omitempty"`
 }
