@@ -79,3 +79,33 @@ func (lsig LogicSig) Blank() bool {
 	}
 	return true
 }
+
+/* Classical signatures */
+type ed25519Signature [64]byte
+type ed25519PublicKey [32]byte
+
+// A HeartbeatProof is functionally equivalent to a OneTimeSignature (see below), but it has
+// been cleaned up for use as a transaction field in heartbeat transactions.
+//
+// A OneTimeSignature is a cryptographic signature that is produced a limited
+// number of times and provides forward integrity.
+//
+// Specifically, a OneTimeSignature is generated from an ephemeral secret. After
+// some number of messages is signed under a given OneTimeSignatureIdentifier
+// identifier, the corresponding secret is deleted. This prevents the
+// secret-holder from signing a contradictory message in the future in the event
+// of a secret-key compromise.
+type HeartbeatProof struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Sig is a signature of msg under the key PK.
+	Sig ed25519Signature `codec:"s"`
+	PK  ed25519PublicKey `codec:"p"`
+
+	// PK2 is used to verify a two-level ephemeral signature.
+	PK2 ed25519PublicKey `codec:"p2"`
+	// PK1Sig is a signature of OneTimeSignatureSubkeyOffsetID(PK, Batch, Offset) under the key PK2.
+	PK1Sig ed25519Signature `codec:"p1s"`
+	// PK2Sig is a signature of OneTimeSignatureSubkeyBatchID(PK2, Batch) under the master key (OneTimeSignatureVerifier).
+	PK2Sig ed25519Signature `codec:"p2s"`
+}

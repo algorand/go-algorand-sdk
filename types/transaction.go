@@ -18,6 +18,11 @@ type Transaction struct {
 	AssetFreezeTxnFields
 	ApplicationFields
 	StateProofTxnFields
+
+	// By making HeartbeatTxnFields a pointer we save a ton of space of the
+	// Transaction object. Unlike other txn types, the fields will be
+	// embedded under a named field in the transaction encoding.
+	*HeartbeatTxnFields `codec:"hb"`
 }
 
 // SignedTxn wraps a transaction and a signature. The encoding of this struct
