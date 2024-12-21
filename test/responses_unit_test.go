@@ -235,7 +235,7 @@ func theParsedResponseShouldEqualTheMockResponse() error {
 	return VerifyResponse(baselinePath, responseJson)
 }
 
-func ResponsesContext(s *godog.Suite) {
+func ResponsesContext(s *godog.ScenarioContext) {
 	s.Step(`^mock http responses in "([^"]*)" loaded from "([^"]*)" with status (\d+)\.$`, mockHttpResponsesInLoadedFromWithStatus)
 	s.Step(`^we make any "([^"]*)" call to "([^"]*)"\.$`, weMakeAnyCallTo)
 	s.Step(`^the parsed response should equal the mock response\.$`, theParsedResponseShouldEqualTheMockResponse)

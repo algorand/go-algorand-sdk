@@ -1,3 +1,28 @@
+# v2.7.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.7.0 -->
+
+## What's Changed
+### New Features
+* Build: Bump golang version to 1.23.3 by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/662
+### Enhancements
+* Dependencies: Bump gopkg.in/yaml.v3 from 3.0.0-20200313102051-9f266ea9e77c to 3.0.0 by @dependabot in https://github.com/algorand/go-algorand-sdk/pull/605
+* Dependencies: build(deps): bump golang.org/x/crypto from 0.0.0-20210921155107-089bfa567519 to 0.17.0 by @dependabot in https://github.com/algorand/go-algorand-sdk/pull/646
+* Simulate: Support `FixSigners` option by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/647
+* Build: Update ubuntu image and remove unversioned golint download. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/658
+* API: Regenerate code with the latest specification file (619d56d8) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/657
+* protocol: Add EnableLogicSigSizePooling consensus variable by @giuliop in https://github.com/algorand/go-algorand-sdk/pull/659
+* Incentives: Updates for new heartbeat transaction type and latest consensus v40 by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/661
+### Other
+* Regenerate code with the latest specification file (548ee6a8) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/670
+* Regenerate code with the latest specification file (38cee6a8) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/671
+
+## New Contributors
+* @dependabot made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/605
+* @giuliop made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/659
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.6.0...v2.7.0
+
 # v2.6.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.6.0 -->

@@ -13,7 +13,7 @@ import (
 	"github.com/cucumber/godog"
 )
 
-func AlgodClientV2Context(s *godog.Suite) {
+func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^mock http responses in "([^"]*)" loaded from "([^"]*)"$`, mockHttpResponsesInLoadedFrom)
 	s.Step(`^expect error string to contain "([^"]*)"$`, expectErrorStringToContain)
 	s.Step(`^we make any Pending Transaction Information call$`, weMakeAnyPendingTransactionInformationCall)
@@ -66,8 +66,9 @@ func AlgodClientV2Context(s *godog.Suite) {
 	s.Step(`^we make a TransactionGroupLedgerStateDeltaForRoundResponse call for round (\d+)$`, weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound)
 	s.Step(`^we make a GetBlockTxids call against block number (\d+)$`, weMakeAGetBlockTxidsCallAgainstBlockNumber)
 
-	s.BeforeScenario(func(interface{}) {
+	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
+		return ctx, nil
 	})
 }
 

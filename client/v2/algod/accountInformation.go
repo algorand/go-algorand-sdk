@@ -22,7 +22,7 @@ type AccountInformationParams struct {
 }
 
 // AccountInformation given a specific account public key, this call returns the
-// accounts status, balance and spendable amounts
+// account's status, balance and spendable amounts
 type AccountInformation struct {
 	c *Client
 

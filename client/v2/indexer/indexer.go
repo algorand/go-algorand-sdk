@@ -129,6 +129,10 @@ func (c *Client) LookupAssetTransactions(assetId uint64) *LookupAssetTransaction
 	return &LookupAssetTransactions{c: c, assetId: assetId}
 }
 
+func (c *Client) SearchForBlockHeaders() *SearchForBlockHeaders {
+	return &SearchForBlockHeaders{c: c}
+}
+
 func (c *Client) LookupBlock(roundNumber uint64) *LookupBlock {
 	return &LookupBlock{c: c, roundNumber: roundNumber}
 }

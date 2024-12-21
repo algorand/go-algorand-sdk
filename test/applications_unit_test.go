@@ -71,7 +71,7 @@ func weMakeALookupApplicationsCall(applicationID int) error {
 	return nil
 }
 
-func ApplicationsUnitContext(s *godog.Suite) {
+func ApplicationsUnitContext(s *godog.ScenarioContext) {
 	// @unit.transactions
 	s.Step(`^fee field is in txn$`, feeFieldIsInTxn)
 	s.Step(`^fee field not in txn$`, feeFieldNotInTxn)
