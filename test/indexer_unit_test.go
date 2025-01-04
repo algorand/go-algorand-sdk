@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
 	"github.com/cucumber/godog"
 )
@@ -56,6 +57,7 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make a Lookup Block call against round (\d+) and header "([^"]*)"$`, weMakeALookupBlockCallAgainstRoundAndHeader)
 	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeALookupApplicationBoxByIDandName)
 	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`, weMakeASearchForApplicationBoxes)
+	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have hbaddress "([^"]*)"$`, theParsedSearchForTransactionsResponseHasHeartbeatAddress)
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
 		return ctx, nil
@@ -392,5 +394,23 @@ func weMakeASearchForApplicationBoxes(appId int, limit int, next string) error {
 		return err
 	}
 	indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func theParsedSearchForTransactionsResponseHasHeartbeatAddress(round int, length int, index int, hbAddress string) error {
+	resp := response.(models.TransactionsResponse)
+
+	if resp.CurrentRound != uint64(round) {
+		return fmt.Errorf("Expected round %d, got %d", round, resp.CurrentRound)
+	}
+	if len(resp.Transactions) != length {
+		return fmt.Errorf("Expected %d transactions, got %d", length, len(resp.Transactions))
+	}
+
+	hbTxn := resp.Transactions[index]
+	if hbTxn.HeartbeatTransaction.HbAddress != hbAddress {
+		return fmt.Errorf("Expected heartbeat address %s, got %s", hbAddress, hbTxn.HeartbeatTransaction.HbAddress)
+	}
+
 	return nil
 }

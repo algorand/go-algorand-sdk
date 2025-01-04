@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
@@ -65,6 +67,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a LedgerStateDeltaForTransactionGroupResponse call for ID "([^"]*)"$`, weMakeALedgerStateDeltaForTransactionGroupResponseCallForID)
 	s.Step(`^we make a TransactionGroupLedgerStateDeltaForRoundResponse call for round (\d+)$`, weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound)
 	s.Step(`^we make a GetBlockTxids call against block number (\d+)$`, weMakeAGetBlockTxidsCallAgainstBlockNumber)
+	s.Step(`^the parsed Get Block response should have heartbeat address "([^"]*)"$`, theParsedGetBlockResponseShouldHaveHeartbeatAddress)
 
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
@@ -104,6 +107,34 @@ func weMakeAnyAccountInformationCall() error {
 	return weMakeAnyCallTo("algod", "AccountInformation")
 }
 
+type mockBlock struct {
+	c     *algod.Client
+	round uint64
+	p     algod.BlockParams
+}
+
+// This is a mock implementation of the do method in the Block struct in the algod package.
+// in order to support both JSON and MSGPACK formats depending on the mock file.
+func (s *mockBlock) do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
+	var response models.BlockResponse
+
+	val := responseRing.Value.([]byte)
+	if len(val) > 0 && val[0] == '{' {
+		s.p.Format = "json"
+		err = (*common.Client)(s.c).Get(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+	} else {
+		s.p.Format = "msgpack"
+		err = (*common.Client)(s.c).GetRawMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+	}
+
+	if err != nil {
+		return
+	}
+
+	result = response.Block
+	return
+}
+
 var blockResponse types.Block
 
 func weMakeAnyGetBlockCall() error {
@@ -113,7 +144,9 @@ func weMakeAnyGetBlockCall() error {
 	if err != nil {
 		return err
 	}
-	blockResponse, globalErrForExamination = algodClient.Block(0).Do(context.Background())
+	req := &mockBlock{c: algodClient, round: 0}
+	blockResponse, globalErrForExamination = req.do(context.Background())
+
 	return nil
 }
 
@@ -125,6 +158,17 @@ func theParsedGetBlockResponseShouldHaveRewardsPool(pool string) error {
 	}
 	if !bytes.Equal(poolBytes, blockResponseRewardsPoolBytes[:]) {
 		return fmt.Errorf("response pool %v mismatched expected pool %v", blockResponseRewardsPoolBytes, poolBytes)
+	}
+	return nil
+}
+
+func theParsedGetBlockResponseShouldHaveHeartbeatAddress(hbAddress string) error {
+	if len(blockResponse.Payset) == 0 {
+		return fmt.Errorf("response has no payset")
+	}
+	addr := blockResponse.Payset[0].Txn.HeartbeatTxnFields.HbAddress.String()
+	if addr != hbAddress {
+		return fmt.Errorf("response heartbeat address %s mismatched expected address %s", addr, hbAddress)
 	}
 	return nil
 }
