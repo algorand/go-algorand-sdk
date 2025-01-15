@@ -21,8 +21,7 @@ type LookupAccountByIDParams struct {
 	// localstates.
 	IncludeAll bool `url:"include-all,omitempty"`
 
-	// Round deprecated and disallowed. This parameter used to include results for a
-	// specified round. Requests with this parameter set are now rejected.
+	// Round include results for the specified round.
 	Round uint64 `url:"round,omitempty"`
 }
 
@@ -53,8 +52,7 @@ func (s *LookupAccountByID) IncludeAll(IncludeAll bool) *LookupAccountByID {
 	return s
 }
 
-// Round deprecated and disallowed. This parameter used to include results for a
-// specified round. Requests with this parameter set are now rejected.
+// Round include results for the specified round.
 func (s *LookupAccountByID) Round(Round uint64) *LookupAccountByID {
 	s.p.Round = Round
 
