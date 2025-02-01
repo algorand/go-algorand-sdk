@@ -29,7 +29,7 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make any SearchForTransactions call$`, weMakeAnySearchForTransactionsCall)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any SearchForBlockHeaders call$`, weMakeAnySearchForBlockHeadersCall)
-	s.Step(`^the parsed SearchForBlockHeaders response should be valid on min round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have round "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
+	s.Step(`^the parsed SearchForBlockHeaders response should have a block array of len (\d+) and the element at index (\d+) should have round "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any SearchForAssets call$`, weMakeAnySearchForAssetsCall)
 	s.Step(`^the parsed SearchForAssets response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have asset index (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Lookup Asset Balances call against asset index (\d+) with limit (\d+) afterAddress "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+)$`, weMakeALookupAssetBalancesCallAgainstAssetIndexWithLimitLimitAfterAddressCurrencyGreaterThanCurrencyLessThan)
