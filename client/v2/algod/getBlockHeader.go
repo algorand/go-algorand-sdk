@@ -27,6 +27,7 @@ type GetBlockHeader struct {
 
 // Do performs the HTTP request
 func (s *GetBlockHeader) Do(ctx context.Context, headers ...*common.Header) (response models.BlockHeaderResponse, err error) {
-	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%s/header", common.EscapeParams(s.round)...), s.p, headers)
+	s.p.Format = "msgpack"
+	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%s/header", common.EscapeParams(s.round)...), s.p, headers)
 	return
 }
