@@ -106,10 +106,6 @@ func (c *Client) GetBlockHash(round uint64) *GetBlockHash {
 	return &GetBlockHash{c: c, round: round}
 }
 
-func (c *Client) GetBlockHeader(round uint64) *GetBlockHeader {
-	return &GetBlockHeader{c: c, round: round}
-}
-
 func (c *Client) GetTransactionProof(round uint64, txid string) *GetTransactionProof {
 	return &GetTransactionProof{c: c, round: round, txid: txid}
 }
