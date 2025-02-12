@@ -35,6 +35,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^the parsed Account Information response should have address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Get Block call$`, weMakeAnyGetBlockCall)
 	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)"$`, theParsedGetBlockResponseShouldHaveRewardsPool)
+	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)" and no certificate or payset$`, theParsedGetBlockResponseShouldHaveRewardsPoolAndNoCertificateOrPayset)
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
@@ -46,6 +47,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
 	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
+	s.Step(`^we make a Get Block call for round (\d+) with format "([^"]*)" and header-only "([^"]*)"$`, weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly)
 	s.Step(`^we make any Dryrun call$`, weMakeAnyDryrunCall)
 	s.Step(`^the parsed Dryrun Response should have global delta "([^"]*)" with (\d+)$`, parsedDryrunResponseShouldHave)
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
@@ -162,6 +164,13 @@ func theParsedGetBlockResponseShouldHaveRewardsPool(pool string) error {
 	return nil
 }
 
+func theParsedGetBlockResponseShouldHaveRewardsPoolAndNoCertificateOrPayset(pool string) error {
+	if len(blockResponse.Payset) != 0 {
+		return fmt.Errorf("response has payset")
+	}
+	return theParsedGetBlockResponseShouldHaveRewardsPool(pool)
+}
+
 func theParsedGetBlockResponseShouldHaveHeartbeatAddress(hbAddress string) error {
 	if len(blockResponse.Payset) == 0 {
 		return fmt.Errorf("response has no payset")
@@ -240,6 +249,19 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 		return err
 	}
 	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly(round int, format, headeronly string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	_, globalErrForExamination = algodClient.Block(uint64(round)).HeaderOnly(headeronly == "true").Do(context.Background())
 	return nil
 }
 
