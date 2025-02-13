@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
 	"github.com/cucumber/godog"
 )
@@ -27,6 +28,8 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any SearchForTransactions call$`, weMakeAnySearchForTransactionsCall)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have sender "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
+	s.Step(`^we make any SearchForBlockHeaders call$`, weMakeAnySearchForBlockHeadersCall)
+	s.Step(`^the parsed SearchForBlockHeaders response should have a block array of len (\d+) and the element at index (\d+) should have round "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any SearchForAssets call$`, weMakeAnySearchForAssetsCall)
 	s.Step(`^the parsed SearchForAssets response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have asset index (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make a Lookup Asset Balances call against asset index (\d+) with limit (\d+) afterAddress "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+)$`, weMakeALookupAssetBalancesCallAgainstAssetIndexWithLimitLimitAfterAddressCurrencyGreaterThanCurrencyLessThan)
@@ -38,6 +41,7 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make a Lookup Asset by ID call against asset index (\d+)$`, weMakeALookupAssetByIDCallAgainstAssetIndex)
 	s.Step(`^mock server recording request paths`, mockServerRecordingRequestPaths)
 	s.Step(`^we make a Search For Transactions call with account "([^"]*)" NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) addressRole "([^"]*)" ExcluseCloseTo "([^"]*)"$`, weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseTo)
+	s.Step(`^we make a Search For BlockHeaders call with minRound (\d+) maxRound (\d+) limit (\d+) nextToken "([^"]*)" beforeTime "([^"]*)" afterTime "([^"]*)" proposers "([^"]*)" expired "([^"]*)" absent "([^"]*)"$`, weMakeASearchForBlockHeadersCallWithMinRoundMaxRoundLimitNextTokenBeforeTimeAfterTimeProposersExpiredAbsent)
 	s.Step(`^we make a SearchForAssets call with limit (\d+) creator "([^"]*)" name "([^"]*)" unit "([^"]*)" index (\d+)$`, weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndex)
 	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) rekeyTo "([^"]*)"$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexRekeyTo)
 	s.Step(`^we make a Search Accounts call with assetID (\d+) limit (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) round (\d+) and authenticating address "([^"]*)"$`, weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanRoundAndAuthenticatingAddress)
@@ -56,6 +60,7 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make a Lookup Block call against round (\d+) and header "([^"]*)"$`, weMakeALookupBlockCallAgainstRoundAndHeader)
 	s.Step(`^we make a LookupApplicationBoxByIDandName call with applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeALookupApplicationBoxByIDandName)
 	s.Step(`^we make a SearchForApplicationBoxes call with applicationID (\d+) with max (\d+) nextToken "([^"]*)"$`, weMakeASearchForApplicationBoxes)
+	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have hbaddress "([^"]*)"$`, theParsedSearchForTransactionsResponseHasHeartbeatAddress)
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
 		return ctx, nil
@@ -92,6 +97,10 @@ func weMakeAnySearchAccountsCall() error {
 
 func weMakeAnySearchForTransactionsCall() error {
 	return weMakeAnyCallTo("indexer", "searchForTransactions")
+}
+
+func weMakeAnySearchForBlockHeadersCall() error {
+	return weMakeAnyCallTo("indexer", "searchForBlockHeaders")
 }
 
 func weMakeAnySearchForAssetsCall() error {
@@ -224,6 +233,29 @@ func weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRound
 		return err
 	}
 	_, globalErrForExamination = indexerClient.SearchForTransactions().AddressString(account).NotePrefix(notePrefixBytes).TxType(txType).SigType(sigType).TXID(txid).Round(uint64(round)).MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).BeforeTimeString(beforeTime).AfterTimeString(afterTime).CurrencyGreaterThan(uint64(currencyGreater)).CurrencyLessThan(uint64(currencyLesser)).AssetID(uint64(assetIndex)).AddressRole(addressRole).ExcludeCloseTo(excludeCloseToBool).Do(context.Background())
+	return nil
+}
+
+func weMakeASearchForBlockHeadersCallWithMinRoundMaxRoundLimitNextTokenBeforeTimeAfterTimeProposersExpiredAbsent(minRound, maxRound, limit int, nextToken, beforeTime, afterTime, proposers, expired, absent string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	sfbhBuilder := indexerClient.SearchForBlockHeaders().MinRound(uint64(minRound)).MaxRound(uint64(maxRound)).Limit(uint64(limit)).Next(nextToken).BeforeTimeString(beforeTime).AfterTimeString(afterTime)
+	if len(proposers) > 0 {
+		proposersArray := strings.Split(proposers, ",")
+		sfbhBuilder.Proposers(proposersArray)
+	}
+	if len(expired) > 0 {
+		expiredArray := strings.Split(expired, ",")
+		sfbhBuilder.Expired(expiredArray)
+	}
+	if len(absent) > 0 {
+		absentArray := strings.Split(absent, ",")
+		sfbhBuilder.Absent(absentArray)
+	}
+	_, globalErrForExamination = sfbhBuilder.Do(context.Background())
 	return nil
 }
 
@@ -392,5 +424,23 @@ func weMakeASearchForApplicationBoxes(appId int, limit int, next string) error {
 		return err
 	}
 	indexerClient.SearchForApplicationBoxes(uint64(appId)).Limit(uint64(limit)).Next(next).Do(context.Background())
+	return nil
+}
+
+func theParsedSearchForTransactionsResponseHasHeartbeatAddress(round int, length int, index int, hbAddress string) error {
+	resp := response.(models.TransactionsResponse)
+
+	if resp.CurrentRound != uint64(round) {
+		return fmt.Errorf("Expected round %d, got %d", round, resp.CurrentRound)
+	}
+	if len(resp.Transactions) != length {
+		return fmt.Errorf("Expected %d transactions, got %d", length, len(resp.Transactions))
+	}
+
+	hbTxn := resp.Transactions[index]
+	if hbTxn.HeartbeatTransaction.HbAddress != hbAddress {
+		return fmt.Errorf("Expected heartbeat address %s, got %s", hbAddress, hbTxn.HeartbeatTransaction.HbAddress)
+	}
+
 	return nil
 }

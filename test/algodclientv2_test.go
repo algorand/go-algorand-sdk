@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
@@ -33,6 +35,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^the parsed Account Information response should have address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^we make any Get Block call$`, weMakeAnyGetBlockCall)
 	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)"$`, theParsedGetBlockResponseShouldHaveRewardsPool)
+	s.Step(`^the parsed Get Block response should have rewards pool "([^"]*)" and no certificate or payset$`, theParsedGetBlockResponseShouldHaveRewardsPoolAndNoCertificateOrPayset)
 	s.Step(`^we make any Suggested Transaction Parameters call$`, weMakeAnySuggestedTransactionParametersCall)
 	s.Step(`^the parsed Suggested Transaction Parameters response should have first round valid of (\d+)$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^expect the path used to be "([^"]*)"$`, expectThePathUsedToBe)
@@ -44,6 +47,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a Pending Transaction Information with max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionInformationWithMaxAndFormat)
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
 	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
+	s.Step(`^we make a Get Block call for round (\d+) with format "([^"]*)" and header-only "([^"]*)"$`, weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly)
 	s.Step(`^we make any Dryrun call$`, weMakeAnyDryrunCall)
 	s.Step(`^the parsed Dryrun Response should have global delta "([^"]*)" with (\d+)$`, parsedDryrunResponseShouldHave)
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
@@ -65,6 +69,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a LedgerStateDeltaForTransactionGroupResponse call for ID "([^"]*)"$`, weMakeALedgerStateDeltaForTransactionGroupResponseCallForID)
 	s.Step(`^we make a TransactionGroupLedgerStateDeltaForRoundResponse call for round (\d+)$`, weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound)
 	s.Step(`^we make a GetBlockTxids call against block number (\d+)$`, weMakeAGetBlockTxidsCallAgainstBlockNumber)
+	s.Step(`^the parsed Get Block response should have heartbeat address "([^"]*)"$`, theParsedGetBlockResponseShouldHaveHeartbeatAddress)
 
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
@@ -104,6 +109,34 @@ func weMakeAnyAccountInformationCall() error {
 	return weMakeAnyCallTo("algod", "AccountInformation")
 }
 
+type mockBlock struct {
+	c     *algod.Client
+	round uint64
+	p     algod.BlockParams
+}
+
+// This is a mock implementation of the do method in the Block struct in the algod package.
+// in order to support both JSON and MSGPACK formats depending on the mock file.
+func (s *mockBlock) do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
+	var response models.BlockResponse
+
+	val := responseRing.Value.([]byte)
+	if len(val) > 0 && val[0] == '{' {
+		s.p.Format = "json"
+		err = (*common.Client)(s.c).Get(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+	} else {
+		s.p.Format = "msgpack"
+		err = (*common.Client)(s.c).GetRawMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+	}
+
+	if err != nil {
+		return
+	}
+
+	result = response.Block
+	return
+}
+
 var blockResponse types.Block
 
 func weMakeAnyGetBlockCall() error {
@@ -113,7 +146,9 @@ func weMakeAnyGetBlockCall() error {
 	if err != nil {
 		return err
 	}
-	blockResponse, globalErrForExamination = algodClient.Block(0).Do(context.Background())
+	req := &mockBlock{c: algodClient, round: 0}
+	blockResponse, globalErrForExamination = req.do(context.Background())
+
 	return nil
 }
 
@@ -125,6 +160,24 @@ func theParsedGetBlockResponseShouldHaveRewardsPool(pool string) error {
 	}
 	if !bytes.Equal(poolBytes, blockResponseRewardsPoolBytes[:]) {
 		return fmt.Errorf("response pool %v mismatched expected pool %v", blockResponseRewardsPoolBytes, poolBytes)
+	}
+	return nil
+}
+
+func theParsedGetBlockResponseShouldHaveRewardsPoolAndNoCertificateOrPayset(pool string) error {
+	if len(blockResponse.Payset) != 0 {
+		return fmt.Errorf("response has payset")
+	}
+	return theParsedGetBlockResponseShouldHaveRewardsPool(pool)
+}
+
+func theParsedGetBlockResponseShouldHaveHeartbeatAddress(hbAddress string) error {
+	if len(blockResponse.Payset) == 0 {
+		return fmt.Errorf("response has no payset")
+	}
+	addr := blockResponse.Payset[0].Txn.HeartbeatTxnFields.HbAddress.String()
+	if addr != hbAddress {
+		return fmt.Errorf("response heartbeat address %s mismatched expected address %s", addr, hbAddress)
 	}
 	return nil
 }
@@ -196,6 +249,19 @@ func weMakeAGetBlockCallAgainstBlockNumberWithFormat(blocknum int, format string
 		return err
 	}
 	_, globalErrForExamination = algodClient.Block(uint64(blocknum)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly(round int, format, headeronly string) error {
+	if format != "msgpack" {
+		return fmt.Errorf("this sdk does not support format %s", format)
+	}
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	_, globalErrForExamination = algodClient.Block(uint64(round)).HeaderOnly(headeronly == "true").Do(context.Background())
 	return nil
 }
 

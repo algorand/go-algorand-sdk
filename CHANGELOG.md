@@ -1,3 +1,22 @@
+# v2.8.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.8.0 -->
+
+## What's Changed
+### Enhancements
+* build(deps): bump golang.org/x/crypto from 0.29.0 to 0.31.0 by @dependabot in https://github.com/algorand/go-algorand-sdk/pull/675
+* tests: cross-sdk heartbeat tests by @algorandskiy in https://github.com/algorand/go-algorand-sdk/pull/676
+* consensus: update for minor name change in go-algorand by @cce in https://github.com/algorand/go-algorand-sdk/pull/679
+* API: Support for header-only flag on /v2/block algod endpoint. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/684
+### Other
+* Regenerate code with the latest specification file (9a6c0845) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/677
+* Regenerate code with the latest specification file (5bff0845) by @github-actions in https://github.com/algorand/go-algorand-sdk/pull/680
+
+## New Contributors
+* @cce made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/679
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.7.0...v2.8.0
+
 # v2.7.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.7.0 -->

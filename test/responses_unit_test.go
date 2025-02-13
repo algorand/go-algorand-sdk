@@ -76,6 +76,8 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 			response, err = indexerC.LookupAssetTransactions(10).Do(context.Background())
 		case "searchForTransactions":
 			response, err = indexerC.SearchForTransactions().Do(context.Background())
+		case "searchForBlockHeaders":
+			response, err = indexerC.SearchForBlockHeaders().Do(context.Background())
 		case "lookupBlock":
 			response, err = indexerC.LookupBlock(10).Do(context.Background())
 		case "lookupTransaction":
