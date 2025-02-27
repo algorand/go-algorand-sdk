@@ -64,6 +64,7 @@ jobs:
 
       - name: Send Slack Message
         id: slack
+        if: github.repository_owner == 'algorand'
         uses: slackapi/slack-github-action@v1.27.0
         env:
           RELEASE_TAG: ${{ steps.set-release.outputs.release-tag }}
