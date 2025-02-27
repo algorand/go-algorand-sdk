@@ -6,7 +6,7 @@ on:
     types: [released]
 
 env:
-  CHANGELOG_BRANCH: "changelog/"+${{ github.event.release.tag_name }}
+  CHANGELOG_BRANCH: "changelog/${{ github.event.release.tag_name }}"
 
 jobs:
   update-changelog:
