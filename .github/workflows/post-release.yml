@@ -1,5 +1,5 @@
-# .github/workflows/update-changelog.yaml
-name: "Update Changelog off release notes"
+# .github/workflows/post-release.yml
+name: "Post release changelog update"
 
 on:
   release:
