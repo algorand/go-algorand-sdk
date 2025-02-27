@@ -6,7 +6,7 @@ on:
     types: [released]
 
 env:
-  CHANGELOG_BRANCH: "changelog/${{ github.event.release.tag_name }}"
+  CHANGELOG_BRANCH: changelog/${{ github.event.release.tag_name }}
 
 jobs:
   update-changelog:
@@ -37,12 +37,12 @@ jobs:
           latest-version: ${{ github.event.release.tag_name }}
           release-notes: ${{ github.event.release.body }}
 
-      - name: Commit updated CHANGELOG
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Commit Changes
+        uses: EndBug/add-and-commit@v9.1.3
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         with:
-          branch: $CHANGELOG_BRANCH
-          commit_message: Update CHANGELOG
-          file_pattern: CHANGELOG.md
+          message: "Update changelog for ${{ env.RELEASE_TAG }}"
 
       - name: Create Pull Request to Main
         env:
