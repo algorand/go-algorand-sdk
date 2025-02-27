@@ -55,9 +55,37 @@ jobs:
             --body "Merge changelog updates to main." | tail -n 1)
           if [[ $PULL_REQUEST_URL =~ ^https://github.com/${{ github.repository }}/pull/[0-9]+$ ]]; then
             echo "Pull request to Main created: $PULL_REQUEST_URL"
-            MAIN_PR_MESSAGE="\nPull Request to main: $PULL_REQUEST_URL"
+            MAIN_PR_MESSAGE="\nChangelog Pull Request to main: $PULL_REQUEST_URL"
             echo "pull-request-main-message=$MAIN_PR_MESSAGE" >> $GITHUB_ENV
           else
             echo "There was an issue creating the pull request to main branch."
             exit 1
           fi
+
+      - name: Send Slack Message
+        id: slack
+        uses: slackapi/slack-github-action@v1.27.0
+        env:
+          RELEASE_TAG: ${{ steps.set-release.outputs.release-tag }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} Changelog PR for ${{ env.RELEASE_TAG }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Approval/Merge needed for*:${{ env.pull-request-main-message }}"
+                  }
+                }
+              ]
+            }
