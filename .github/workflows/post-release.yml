@@ -50,7 +50,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           PULL_REQUEST_URL=$(gh pr create --base "main" \
-            --title "Changelog: Merge changelog for ${{ github.event.repository.name }} $RELEASE_TAG to main" \
+            --title "CHANGELOG: Merge changelog for ${{ github.event.repository.name }} $RELEASE_TAG to main" \
             --label "Skip-Release-Notes" \
             --body "Merge changelog updates to main." | tail -n 1)
           if [[ $PULL_REQUEST_URL =~ ^https://github.com/${{ github.repository }}/pull/[0-9]+$ ]]; then
