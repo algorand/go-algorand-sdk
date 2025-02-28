@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Notify Slack - Changelog PR is open
-        id: slack
+        id: slack-changelog
         uses: slackapi/slack-github-action@v1.27.1
         env:
           RELEASE_TAG: v2.9.0-test
@@ -42,7 +42,7 @@ jobs:
             }
 
       - name: Notify Slack - Release Completed
-        id: slack
+        id: slack-release
         uses: slackapi/slack-github-action@v1.27.1
         env:
           SDK: ${{ github.event.repository.name }}
