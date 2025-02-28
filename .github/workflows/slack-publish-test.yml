@@ -1,0 +1,37 @@
+name: Slack Publish Test
+
+on: workflow_dispatch
+
+jobs:
+  slack_publish_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify Slack - Changelog PR is open
+        id: slack
+        uses: slackapi/slack-github-action@v1.27.1
+        env:
+          RELEASE_TAG: v2.9.0-test
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          pull-request-main-message: "\nChangelog Pull Request to main: https://github.com/${{ github.repository }}/pull/123"
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} Changelog PR for ${{ env.RELEASE_TAG }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Approval/Merge needed for*:${{ env.pull-request-main-message }}"
+                  }
+                }
+              ]
+            }
