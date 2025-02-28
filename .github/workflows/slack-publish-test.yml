@@ -40,3 +40,26 @@ jobs:
                 }
               ]
             }
+
+      - name: Notify Slack - Release Completed
+        id: slack
+        uses: slackapi/slack-github-action@v1.27.1
+        env:
+          SDK: ${{ github.event.repository.name }}
+          RELEASE_TAG: v2.9.0-test
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_RELEASE_NOTIFICATIONS_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          pull-request-main-message: "\\nChangelog Pull Request to main: https://github.com/${{ github.repository }}/pull/123"
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*${{ env.SDK }} ${{ env.RELEASE_TAG }}* was released today. https://github.com/algorand/${{ env.SDK }}/releases/tag/${{ env.RELEASE_TAG }}"
+                  }
+                }
+              ]
+            }
