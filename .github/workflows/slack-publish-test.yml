@@ -22,7 +22,7 @@ jobs:
           RELEASE_TAG: v2.9.0-test
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-          pull-request-main-message: "\nChangelog Pull Request to main: https://github.com/${{ github.repository }}/pull/123"
+          pull-request-main-message: "\\nChangelog Pull Request to main: https://github.com/${{ github.repository }}/pull/123"
         with:
           payload: |
             {
