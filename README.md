@@ -1,5 +1,6 @@
 # go-algorand-sdk
 
+[![Build](https://github.com/algorand/go-algorand-sdk/actions/workflows/codegen.yml/badge.svg)](https://github.com/algorand/go-algorand-sdk/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/algorand/go-algorand-sdk)](https://goreportcard.com/report/github.com/algorand/go-algorand-sdk/v2)
 [![GoDoc](https://godoc.org/github.com/algorand/go-algorand-sdk?status.svg)](https://godoc.org/github.com/algorand/go-algorand-sdk/v2)
 
