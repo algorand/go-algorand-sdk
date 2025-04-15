@@ -853,7 +853,11 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	var err error
 
 	if fromClient == "algod" {
-		r, err = algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+		var boxResponse *models.BoxesResponse
+		boxResponse, err = advanceChainAndWaitForBoxesToBeAvailable(len(expectedNames))
+		if err == nil {
+			r = *boxResponse
+		}
 	} else if fromClient == "indexer" {
 		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Do(context.Background())
 	} else {
@@ -877,6 +881,50 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	}
 
 	return nil
+}
+
+func advanceChainAndWaitForBoxesToBeAvailable(expectedBoxLength int) (*models.BoxesResponse, error) {
+	maxRoundsToAdvance := 50
+	for i := 0; i < maxRoundsToAdvance; i++ {
+		params, err := algodV2client.SuggestedParams().Do(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		txn, err := transaction.MakePaymentTxn(transientAccount.Address.String(), transientAccount.Address.String(),
+			uint64(0), nil, "", params)
+		if err != nil {
+			return nil, err
+		}
+
+		_, lstx, err := crypto.SignTransaction(transientAccount.PrivateKey, txn)
+		if err != nil {
+			return nil, err
+		}
+
+		txid, err = algodV2client.SendRawTransaction(lstx).Do(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = transaction.WaitForConfirmation(algodV2client, txid, 1, context.Background())
+
+		// MaxAccountLookback is 4, we start checking for our boxes after the 5th round from create transaction
+		if i > 5 {
+			r, err := algodV2client.GetApplicationBoxes(applicationId).Do(context.Background())
+			if err != nil {
+				return nil, err
+			}
+
+			if len(r.Boxes) == expectedBoxLength {
+				return &r, nil
+			}
+			// Sleep for 1 second and try again
+			time.Sleep(time.Second)
+		}
+	}
+
+	return nil, errors.New("timeout waiting for boxes to become available")
 }
 
 func waitForIndexerToCatchUp() error {
