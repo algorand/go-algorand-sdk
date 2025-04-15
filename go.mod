@@ -2,7 +2,7 @@ module github.com/algorand/go-algorand-sdk/v2
 
 go 1.23.0
 
-toolchain go1.24.1
+toolchain go1.23.3
 
 require (
 	github.com/algorand/avm-abi v0.2.0
