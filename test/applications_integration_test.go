@@ -918,10 +918,9 @@ func advanceChainAndWaitForBoxesToBeAvailable(expectedBoxLength int) (*models.Bo
 
 			if len(r.Boxes) == expectedBoxLength {
 				return &r, nil
-			} else {
-				// Sleep for 1 second and try again
-				time.Sleep(time.Second)
 			}
+			// Sleep for 1 second and try again
+			time.Sleep(time.Second)
 		}
 	}
 
