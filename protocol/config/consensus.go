@@ -430,7 +430,13 @@ type ConsensusParams struct {
 	// 6. checking that in the case of going online the VoteFirst is less or equal to the next network round.
 	EnableKeyregCoherencyCheck bool
 
+	// Allow app updates to specify the extra pages they use.  This allows the
+	// update to pass WellFormed(), but they cannot _change_ the extra pages.
 	EnableExtraPagesOnAppUpdate bool
+
+	// Autoincrements an app's version when the app is updated, careful callers
+	// may avoid making inner calls to apps that have changed.
+	EnableAppVersioning bool
 
 	// MaxProposedExpiredOnlineAccounts is the maximum number of online accounts
 	// that a proposer can take offline for having expired voting keys.
@@ -685,8 +691,8 @@ var MaxBytesKeyValueLen int
 // of the consensus protocols. used for decoding purposes.
 var MaxExtraAppProgramLen int
 
-// MaxAvailableAppProgramLen is the largest supported app program size include the extra pages
-// supported supported by any of the consensus protocols. used for decoding purposes.
+// MaxAvailableAppProgramLen is the largest supported app program size including the extra
+// pages supported by any of the consensus protocols. used for decoding purposes.
 var MaxAvailableAppProgramLen int
 
 // MaxProposedExpiredOnlineAccounts is the maximum number of online accounts
@@ -1462,7 +1468,8 @@ func initConsensusProtocols() {
 	vFuture := v40
 	vFuture.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 
-	vFuture.LogicSigVersion = 12 // When moving this to a release, put a new higher LogicSigVersion here
+	vFuture.LogicSigVersion = 12       // When moving this to a release, put a new higher LogicSigVersion here
+	vFuture.EnableAppVersioning = true // if not promoted when v12 goes into effect, update logic/field.go
 
 	Consensus[protocol.ConsensusFuture] = vFuture
 

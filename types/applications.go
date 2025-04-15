@@ -116,6 +116,7 @@ type ApplicationCallTxnFields struct {
 	ApprovalProgram   []byte      `codec:"apap"`
 	ClearStateProgram []byte      `codec:"apsu"`
 	ExtraProgramPages uint32      `codec:"apep"`
+	RejectVersion     uint64      `codec:"aprv"`
 
 	// If you add any fields here, remember you MUST modify the Empty
 	// method below!
