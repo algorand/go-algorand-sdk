@@ -43,11 +43,11 @@ type KeyregTxnFields struct {
 
 	VotePK           VotePK         `codec:"votekey"`
 	SelectionPK      VRFPK          `codec:"selkey"`
+	StateProofPK     MerkleVerifier `codec:"sprfkey"`
 	VoteFirst        Round          `codec:"votefst"`
 	VoteLast         Round          `codec:"votelst"`
 	VoteKeyDilution  uint64         `codec:"votekd"`
 	Nonparticipation bool           `codec:"nonpart"`
-	StateProofPK     MerkleVerifier `codec:"sprfkey"`
 }
 
 // PaymentTxnFields captures the fields used by payment transactions.
@@ -70,7 +70,7 @@ type AssetConfigTxnFields struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// ConfigAsset is the asset being configured or destroyed.
-	// A zero value means allocation.
+	// A zero value means allocation
 	ConfigAsset AssetIndex `codec:"caid"`
 
 	// AssetParams are the parameters for the asset being
@@ -128,7 +128,7 @@ type Header struct {
 	Fee         MicroAlgos `codec:"fee"`
 	FirstValid  Round      `codec:"fv"`
 	LastValid   Round      `codec:"lv"`
-	Note        []byte     `codec:"note"`
+	Note        []byte     `codec:"note"` // Uniqueness or app-level data about txn
 	GenesisID   string     `codec:"gen"`
 	GenesisHash Digest     `codec:"gh"`
 
@@ -144,8 +144,8 @@ type Header struct {
 	// lease, no other transaction specifying this lease can be confirmed.
 	Lease [32]byte `codec:"lx"`
 
-	// RekeyTo, if nonzero, sets the sender's SpendingKey to the given address
-	// If the RekeyTo address is the sender's actual address, the SpendingKey is set to zero
+	// RekeyTo, if nonzero, sets the sender's AuthAddr to the given address
+	// If the RekeyTo address is the sender's actual address, the AuthAddr is set to zero
 	// This allows "re-keying" a long-lived account -- rotating the signing key, changing
 	// membership of a multisig account, etc.
 	RekeyTo Address `codec:"rekey"`

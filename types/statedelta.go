@@ -55,11 +55,12 @@ type StateSchemas struct {
 type AppParams struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	ApprovalProgram   []byte       `codec:"approv,allocbound=config.MaxAvailableAppProgramLen"`
-	ClearStateProgram []byte       `codec:"clearp,allocbound=config.MaxAvailableAppProgramLen"`
+	ApprovalProgram   []byte       `codec:"approv"`
+	ClearStateProgram []byte       `codec:"clearp"`
 	GlobalState       TealKeyValue `codec:"gs"`
 	StateSchemas
 	ExtraProgramPages uint32 `codec:"epp"`
+	Version           uint64 `codec:"v"`
 }
 
 // AppLocalState stores the LocalState associated with an application. It also
