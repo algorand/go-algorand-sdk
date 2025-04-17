@@ -32,38 +32,6 @@ type BoxReference struct {
 	Name []byte `codec:"n"`
 }
 
-const (
-	// encodedMaxApplicationArgs sets the allocation bound for the maximum
-	// number of ApplicationArgs that a transaction decoded off of the wire
-	// can contain. Its value is verified against consensus parameters in
-	// TestEncodedAppTxnAllocationBounds
-	encodedMaxApplicationArgs = 32
-
-	// encodedMaxAccounts sets the allocation bound for the maximum number
-	// of Accounts that a transaction decoded off of the wire can contain.
-	// Its value is verified against consensus parameters in
-	// TestEncodedAppTxnAllocationBounds
-	encodedMaxAccounts = 32
-
-	// encodedMaxForeignApps sets the allocation bound for the maximum
-	// number of ForeignApps that a transaction decoded off of the wire can
-	// contain. Its value is verified against consensus parameters in
-	// TestEncodedAppTxnAllocationBounds
-	encodedMaxForeignApps = 32
-
-	// encodedMaxForeignAssets sets the allocation bound for the maximum
-	// number of ForeignAssets that a transaction decoded off of the wire
-	// can contain. Its value is verified against consensus parameters in
-	// TestEncodedAppTxnAllocationBounds
-	encodedMaxForeignAssets = 32
-
-	// encodedMaxBoxes sets the allocation bound for the maximum
-	// number of BoxReferences that a transaction decoded off of the wire
-	// can contain. Its value is verified against consensus parameters in
-	// TestEncodedAppTxnAllocationBounds
-	encodedMaxBoxes = 32
-)
-
 // OnCompletion is an enum representing some layer 1 side effect that an
 // ApplicationCall transaction will have if it is included in a block.
 //
