@@ -47,6 +47,10 @@ type SearchAccountsParams struct {
 	// results.
 	NextToken string `url:"next,omitempty"`
 
+	// OnlineOnly when this is set to true, return only accounts whose participation
+	// status is currently online.
+	OnlineOnly bool `url:"online-only,omitempty"`
+
 	// Round include results for the specified round. For performance reasons, this
 	// parameter may be disabled on some configurations. Using application-id or
 	// asset-id filters will return both creator and opt-in accounts. Filtering by
@@ -132,6 +136,14 @@ func (s *SearchAccounts) Limit(Limit uint64) *SearchAccounts {
 // results.
 func (s *SearchAccounts) NextToken(NextToken string) *SearchAccounts {
 	s.p.NextToken = NextToken
+
+	return s
+}
+
+// OnlineOnly when this is set to true, return only accounts whose participation
+// status is currently online.
+func (s *SearchAccounts) OnlineOnly(OnlineOnly bool) *SearchAccounts {
+	s.p.OnlineOnly = OnlineOnly
 
 	return s
 }
