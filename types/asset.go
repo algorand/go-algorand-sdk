@@ -40,18 +40,18 @@ type AssetParams struct {
 
 	// UnitName specifies a hint for the name of a unit of
 	// this asset.
-	UnitName string `codec:"un,allocbound=config.MaxAssetUnitNameBytes"`
+	UnitName string `codec:"un"`
 
 	// AssetName specifies a hint for the name of the asset.
-	AssetName string `codec:"an,allocbound=config.MaxAssetNameBytes"`
+	AssetName string `codec:"an"`
 
 	// URL specifies a URL where more information about the asset can be
 	// retrieved
-	URL string `codec:"au,allocbound=config.MaxAssetURLBytes"`
+	URL string `codec:"au"`
 
 	// MetadataHash specifies a commitment to some unspecified asset
 	// metadata. The format of this metadata is up to the application.
-	MetadataHash [AssetMetadataHashLen]byte `codec:"am"`
+	MetadataHash [32]byte `codec:"am"`
 
 	// Manager specifies an account that is allowed to change the
 	// non-zero addresses in this AssetParams.
