@@ -23,4 +23,7 @@ type ApplicationParams struct {
 
 	// LocalStateSchema local schema
 	LocalStateSchema ApplicationStateSchema `json:"local-state-schema,omitempty"`
+
+	// Version the number of updates to the application programs
+	Version uint64 `json:"version,omitempty"`
 }
