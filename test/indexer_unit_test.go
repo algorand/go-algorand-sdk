@@ -45,6 +45,7 @@ func IndexerUnitTestContext(s *godog.ScenarioContext) {
 	s.Step(`^we make a SearchForAssets call with limit (\d+) creator "([^"]*)" name "([^"]*)" unit "([^"]*)" index (\d+)$`, weMakeASearchForAssetsCallWithLimitCreatorNameUnitIndex)
 	s.Step(`^we make a Lookup Account Transactions call against account "([^"]*)" with NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) rekeyTo "([^"]*)"$`, weMakeALookupAccountTransactionsCallAgainstAccountWithNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexRekeyTo)
 	s.Step(`^we make a Search Accounts call with assetID (\d+) limit (\d+) currencyGreaterThan (\d+) currencyLessThan (\d+) round (\d+) and authenticating address "([^"]*)"$`, weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessThanRoundAndAuthenticatingAddress)
+	s.Step(`^we make a Search Accounts call with onlineOnly "([^"]*)"$`, weMakeASearchAccountsCallWithOnlineOnly)
 	s.Step(`^we make a Search For Transactions call with account "([^"]*)" NotePrefix "([^"]*)" TxType "([^"]*)" SigType "([^"]*)" txid "([^"]*)" round (\d+) minRound (\d+) maxRound (\d+) limit (\d+) beforeTime "([^"]*)" afterTime "([^"]*)" currencyGreaterThan (\d+) currencyLessThan (\d+) assetIndex (\d+) addressRole "([^"]*)" ExcluseCloseTo "([^"]*)" rekeyTo "([^"]*)"$`, weMakeASearchForTransactionsCallWithAccountNotePrefixTxTypeSigTypeTxidRoundMinRoundMaxRoundLimitBeforeTimeAfterTimeCurrencyGreaterThanCurrencyLessThanAssetIndexAddressRoleExcluseCloseToRekeyTo)
 	s.Step(`^the parsed SearchAccounts response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have authorizing address "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
 	s.Step(`^the parsed SearchForTransactions response should be valid on round (\d+) and the array should be of len (\d+) and the element at index (\d+) should have rekey-to "([^"]*)"$`, theParsedResponseShouldEqualTheMockResponse)
@@ -219,6 +220,15 @@ func weMakeASearchAccountsCallWithAssetIDLimitCurrencyGreaterThanCurrencyLessTha
 		Round(uint64(round)).
 		AuthAddress(authAddress).
 		Do(context.Background())
+	return nil
+}
+
+func weMakeASearchAccountsCallWithOnlineOnly(onlineOnly string) error {
+	indexerClient, err := indexer.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	_, globalErrForExamination = indexerClient.SearchAccounts().OnlineOnly(onlineOnly == "true").Do(context.Background())
 	return nil
 }
 
