@@ -55,6 +55,7 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
 	s.Step(`^we make a GetApplicationBoxByName call for applicationID (\d+) with encoded box name "([^"]*)"$`, weMakeAGetApplicationBoxByNameCall)
 	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+)$`, weMakeAGetApplicationBoxesCall)
+	s.Step(`^we make a GetApplicationBoxes call for applicationID (\d+) with max (\d+) prefix "([^"]*)" next "([^"]*)" values "([^"]*)"$`, weMakeAGetApplicationBoxesCallForApplicationIDWithMaxPrefixNextValues)
 	s.Step(`^we make a GetLightBlockHeaderProof call for round (\d+)$`, weMakeAGetLightBlockHeaderProofCallForRound)
 	s.Step(`^we make a GetStateProof call for round (\d+)$`, weMakeAGetStateProofCallForRound)
 	s.Step(`^we make a GetTransactionProof call for round (\d+) txid "([^"]*)" and hashtype "([^"]*)"$`, weMakeAGetTransactionProofCallForRoundTxidAndHashtype)
@@ -344,6 +345,16 @@ func weMakeAGetApplicationBoxesCall(appId int, max int) error {
 		return err
 	}
 	algodClient.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Do(context.Background())
+	return nil
+}
+
+func weMakeAGetApplicationBoxesCallForApplicationIDWithMaxPrefixNextValues(appId, max int, prefix, next, values string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+
+	algodClient.GetApplicationBoxes(uint64(appId)).Max(uint64(max)).Prefix(prefix).Next(next).Values(values == "true").Do(context.Background())
 	return nil
 }
 
