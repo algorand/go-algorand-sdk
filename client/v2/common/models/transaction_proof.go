@@ -1,7 +1,7 @@
 package models
 
-// TransactionProofResponse proof of transaction in a block.
-type TransactionProofResponse struct {
+// TransactionProof proof of transaction in a block.
+type TransactionProof struct {
 	// Hashtype the type of hash function used to create the proof, must be one of:
 	// * sha512_256
 	// * sha256
