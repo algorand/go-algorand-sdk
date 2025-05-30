@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.9.1 - 2025-05-30
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bugfixes
+
+* API: Revert application boxes pagination by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/726
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.9.0...v2.9.1
+
 ## v2.9.0 - 2025-05-22
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
