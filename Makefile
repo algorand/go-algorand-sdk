@@ -53,4 +53,4 @@ docker-test: harness docker-gosdk-build docker-gosdk-run
 
 ci-test: harness smoke-test-examples
 
-.PHONY: test fmt
+.PHONY: test fmt ci-test
