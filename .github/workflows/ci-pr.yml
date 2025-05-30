@@ -1,0 +1,30 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: 'test_go_${{ matrix.go_version }}'
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        go_version: ['1.23.8']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go_version }}
+      
+      - name: Verify Go installation
+        run: go version
+      
+      - name: Run docker tests
+        run: make docker-test
