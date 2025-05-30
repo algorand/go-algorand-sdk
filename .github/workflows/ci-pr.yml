@@ -6,13 +6,13 @@ on:
   push:
     branches: [ main ]
 
+env:
+  GO_VERSION: '1.23.8'
+
 jobs:
   test:
-    name: 'test_go_${{ matrix.go_version }}'
+    name: 'test_go_${{ env.GO_VERSION }}'
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        go_version: ['1.23.8']
     
     steps:
       - name: Checkout code
@@ -21,7 +21,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go_version }}
+          go-version: ${{ env.GO_VERSION }}
       
       - name: Unit Tests
         run: make unit
