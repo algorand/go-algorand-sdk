@@ -26,5 +26,5 @@ jobs:
       - name: Verify Go installation
         run: go version
       
-      - name: Run docker tests
-        run: make docker-test
+      - name: Run tests
+        run: make ci-test
