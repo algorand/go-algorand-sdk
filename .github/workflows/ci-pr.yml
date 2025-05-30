@@ -23,10 +23,10 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       
-      - name: Unit Tests
+      - name: Run Unit Tests
         run: make unit
 
-      - name: Integration Tests
+      - name: Run Integration Tests
         run: make integration
 
       - name: Run Smoke Tests
