@@ -51,6 +51,6 @@ smoke-test-examples:
 
 docker-test: harness docker-gosdk-build docker-gosdk-run
 
-ci-test: unit integration harness smoke-test-examples
+ci-test: harness smoke-test-examples
 
 .PHONY: test fmt

@@ -23,8 +23,11 @@ jobs:
         with:
           go-version: ${{ matrix.go_version }}
       
-      - name: Verify Go installation
-        run: go version
-      
-      - name: Run tests
+      - name: Unit Tests
+        run: make unit
+
+      - name: Integration Tests
+        run: make integration
+
+      - name: Run Smoke Tests
         run: make ci-test
