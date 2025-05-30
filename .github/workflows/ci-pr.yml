@@ -1,4 +1,4 @@
-name: Build and Test
+name: Test Suite
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    name: 'test_go_${{ env.GO_VERSION }}'
+    name: Run Test Suites
     runs-on: ubuntu-24.04
     
     steps:
