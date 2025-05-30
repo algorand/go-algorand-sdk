@@ -44,7 +44,7 @@ docker-gosdk-build:
 
 docker-gosdk-run:
 	docker ps -a
-	docker run -it --network host go-sdk-testing:latest
+	docker run -t --network host go-sdk-testing:latest
 
 smoke-test-examples:
 	cd "$(SRCPATH)/examples" && bash smoke_test.sh && cd -
