@@ -44,12 +44,13 @@ docker-gosdk-build:
 
 docker-gosdk-run:
 	docker ps -a
-	docker run -it --network host go-sdk-testing:latest
+	docker run -t --network host go-sdk-testing:latest
 
 smoke-test-examples:
 	cd "$(SRCPATH)/examples" && bash smoke_test.sh && cd -
 
 docker-test: harness docker-gosdk-build docker-gosdk-run
 
+ci-test: harness smoke-test-examples
 
-.PHONY: test fmt
+.PHONY: test fmt ci-test
