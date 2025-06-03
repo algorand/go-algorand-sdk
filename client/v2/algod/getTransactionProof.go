@@ -41,7 +41,7 @@ func (s *GetTransactionProof) Hashtype(Hashtype string) *GetTransactionProof {
 }
 
 // Do performs the HTTP request
-func (s *GetTransactionProof) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionProofResponse, err error) {
+func (s *GetTransactionProof) Do(ctx context.Context, headers ...*common.Header) (response models.TransactionProof, err error) {
 	err = s.c.get(ctx, &response, fmt.Sprintf("/v2/blocks/%s/transactions/%s/proof", common.EscapeParams(s.round, s.txid)...), s.p, headers)
 	return
 }
