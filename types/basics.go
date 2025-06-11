@@ -60,6 +60,9 @@ type MasterDerivationKey [masterDerivationKeyLenBytes]byte
 // Digest is a SHA512_256 hash
 type Digest [hashLenBytes]byte
 
+// Sha512Digest is a SHA512 hash
+type Sha512Digest [64]byte
+
 // MerkleVerifier is a state proof
 type MerkleVerifier [KeyStoreRootSize]byte
 
