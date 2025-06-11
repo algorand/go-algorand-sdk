@@ -13,35 +13,40 @@ type BlockHeader struct {
 	// The hash of the previous block
 	Branch BlockHash `codec:"prev"`
 
-	// Sortition seed
-	Seed [32]byte `codec:"seed"`
+	// The hash of the previous block, using SHA-512
+	Branch512 Sha512Digest `codec:"prev512"`
 
+	// Sortition seed
+	Seed Seed `codec:"seed"`
+
+	// TxnCommitments authenticates the set of transactions appearing in the block.
 	TxnCommitments
 
 	// TimeStamp in seconds since epoch
 	TimeStamp int64 `codec:"ts"`
 
 	// Genesis ID to which this block belongs.
-	GenesisID string `codec:"gen,allocbound=config.MaxGenesisIDLen"`
+	GenesisID string `codec:"gen"`
 
 	// Genesis hash to which this block belongs.
 	GenesisHash Digest `codec:"gh"`
 
 	// Proposer is the proposer of this block. Like the Seed, agreement adds
 	// this after the block is assembled by the transaction pool, so that the same block can be prepared
-	// for multiple participating accounts in the same node. Populated if proto.Payouts.Enabled
+	// for multiple participating accounts in the same node. Therefore, it can not be used
+	// to influence block evaluation. Populated if proto.Payouts.Enabled
 	Proposer Address `codec:"prp"`
 
 	// FeesCollected is the sum of all fees paid by transactions in this
-	// block. Populated if proto.EnableMining.
+	// block. Populated if proto.Payouts.Enabled
 	FeesCollected MicroAlgos `codec:"fc"`
 
 	// Bonus is the bonus incentive to be paid for proposing this block.  It
 	// begins as a consensus parameter value, and decays periodically.
 	Bonus MicroAlgos `codec:"bi"`
 
-	// ProposerPayout is the amount that should be moved from the FeeSink to
-	// the Proposer at the start of the next block.  It is basically the
+	// ProposerPayout is the amount that is moved from the FeeSink to
+	// the Proposer in this block.  It is basically the
 	// bonus + the payouts percent of FeesCollected, but may be zero'd by
 	// proposer ineligibility.
 	ProposerPayout MicroAlgos `codec:"pp"`
@@ -104,8 +109,7 @@ type BlockHeader struct {
 
 	// StateProofTracking tracks the status of the state proofs, potentially
 	// for multiple types of ASPs (Algorand's State Proofs).
-	//msgp:sort protocol.StateProofType protocol.SortStateProofType
-	StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt,allocbound=NumStateProofTypes"`
+	StateProofTracking map[StateProofType]StateProofTrackingData `codec:"spt"`
 
 	// ParticipationUpdates contains the information needed to mark
 	// certain accounts offline because their participation keys expired
@@ -116,12 +120,15 @@ type BlockHeader struct {
 // It contains multiple commitments based on different algorithms and hash functions, to support different use cases.
 type TxnCommitments struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
-	// Root of transaction merkle tree using SHA512_256 hash function.
+	// Root of transaction Merkle tree using the SHA-512/256 hash function.
 	// This commitment is computed based on the PaysetCommit type specified in the block's consensus protocol.
 	NativeSha512_256Commitment Digest `codec:"txn"`
 
-	// Root of transaction vector commitment merkle tree using SHA256 hash function
+	// Root of transaction vector commitment Merkle tree using the SHA-256 hash function.
 	Sha256Commitment Digest `codec:"txn256"`
+
+	// Root of transaction vector commitment Merkle tree using the SHA-512 hash function.
+	Sha512Commitment Sha512Digest `codec:"txn512"`
 }
 
 // ParticipationUpdates represents participation account data that
@@ -149,7 +156,7 @@ type RewardsState struct {
 	FeeSink Address `codec:"fees"`
 
 	// The RewardsPool accepts periodic injections from the
-	// FeeSink and continually redistributes them to adresses as
+	// FeeSink and continually redistributes them to addresses as
 	// rewards.
 	RewardsPool Address `codec:"rwd"`
 
@@ -191,11 +198,16 @@ type UpgradeVote struct {
 //
 //msgp:ignore UpgradeState
 type UpgradeState struct {
-	CurrentProtocol        string `codec:"proto"`
-	NextProtocol           string `codec:"nextproto"`
-	NextProtocolApprovals  uint64 `codec:"nextyes"`
-	NextProtocolVoteBefore Round  `codec:"nextbefore"`
-	NextProtocolSwitchOn   Round  `codec:"nextswitch"`
+	CurrentProtocol string `codec:"proto"`
+	NextProtocol    string `codec:"nextproto"`
+	// NextProtocolApprovals is the number of approvals for the next protocol proposal. It is expressed in Round because it is a count of rounds.
+	NextProtocolApprovals Round `codec:"nextyes"`
+	// NextProtocolVoteBefore specify the last voting round for the next protocol proposal. If there is no voting for
+	// an upgrade taking place, this would be zero.
+	NextProtocolVoteBefore Round `codec:"nextbefore"`
+	// NextProtocolSwitchOn specify the round number at which the next protocol would be adopted. If there is no upgrade taking place,
+	// nor a wait for the next protocol, this would be zero.
+	NextProtocolSwitchOn Round `codec:"nextswitch"`
 }
 
 // StateProofTrackingData tracks the status of state proofs.
@@ -223,7 +235,7 @@ type StateProofTrackingData struct {
 // A Block contains the Payset and metadata corresponding to a given Round.
 type Block struct {
 	BlockHeader
-	Payset Payset `codec:"txns,maxtotalbytes=config.MaxTxnBytesPerBlock"`
+	Payset Payset `codec:"txns"`
 }
 
 // A Payset represents a common, unforgeable, consistent, ordered set of SignedTxn objects.
@@ -265,8 +277,11 @@ type ApplyData struct {
 	CloseRewards    MicroAlgos `codec:"rc"`
 	EvalDelta       EvalDelta  `codec:"dt"`
 
-	ConfigAsset   uint64 `codec:"caid"`
-	ApplicationID uint64 `codec:"apid"`
+	// If asa or app is being created, the id used. Else 0.
+	// Names chosen to match naming the corresponding txn.
+	// These are populated only when MaxInnerTransactions > 0 (TEAL 5)
+	ConfigAsset   AssetIndex `codec:"caid"`
+	ApplicationID AppIndex   `codec:"apid"`
 }
 
 // EvalDelta stores StateDeltas for an application's global key/value store, as
@@ -278,16 +293,16 @@ type EvalDelta struct {
 	GlobalDelta StateDelta `codec:"gd"`
 
 	// When decoding EvalDeltas, the integer key represents an offset into
-	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ...]
-	//msgp:allocbound LocalDeltas config.MaxEvalDeltaAccounts
+	// [txn.Sender, txn.Accounts[0], txn.Accounts[1], ..., SharedAccts[0], SharedAccts[1], ...]
 	LocalDeltas map[uint64]StateDelta `codec:"ld"`
 
 	// If a program modifies the local of an account that is not the Sender, or
 	// in txn.Accounts, it must be recorded here, so that the key in LocalDeltas
 	// can refer to it.
-	//msgp:allocbound SharedAccts config.MaxEvalDeltaAccounts
 	SharedAccts []Address `codec:"sa"`
 
+	// The total allocbound calculation here accounts for the worse possible case of having bounds.MaxLogCalls individual log entries
+	// with the length of all of them summing up to bounds.MaxEvalDeltaTotalLogSize which is the limit for the sum of individual log lengths
 	Logs []string `codec:"lg"`
 
 	InnerTxns []SignedTxnWithAD `codec:"itx"`
