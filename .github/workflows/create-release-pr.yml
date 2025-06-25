@@ -30,7 +30,7 @@ jobs:
             echo "release-tag: $RELEASE_VERSION"
             echo "release-tag=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "Version input doesn't match the regex pattern ^[0-9]+\.[0-9]+\.[0-9]+$"
+            echo "Version input doesn't match the regex pattern ^v[0-9]+\.[0-9]+\.[0-9]+$"
             exit 1
           fi
 
