@@ -20,7 +20,7 @@ env:
 
 jobs:
   create-release-pr:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Set Release Version and Branch to Check Out
