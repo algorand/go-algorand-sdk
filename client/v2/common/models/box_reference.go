@@ -1,9 +1,11 @@
 package models
 
-// BoxReference references a box of an application.
+// BoxReference boxReference names a box by its name and the application ID it
+// belongs to.
 type BoxReference struct {
-	// App application ID which this box belongs to
-	App uint64 `json:"app"`
+	// ApplicationId application ID to which the box belongs, or zero if referring to
+	// the called application.
+	ApplicationId uint64 `json:"application-id"`
 
 	// Name base64 encoded box name
 	Name []byte `json:"name"`
