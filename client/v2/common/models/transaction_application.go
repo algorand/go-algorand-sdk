@@ -22,6 +22,10 @@ type TransactionApplication struct {
 	// reject the transaction.
 	ApprovalProgram []byte `json:"approval-program,omitempty"`
 
+	// BoxReferences (apbx) the boxes that can be accessed by this transaction (and
+	// others in the same group).
+	BoxReferences []BoxReference `json:"box-references,omitempty"`
+
 	// ClearStateProgram (apsu) Logic executed for application transactions with
 	// on-completion set to "clear". It can read and write global state for the
 	// application, as well as account-specific local state. Clear state programs
@@ -64,4 +68,8 @@ type TransactionApplication struct {
 	// * update
 	// * delete
 	OnCompletion string `json:"on-completion,omitempty"`
+
+	// RejectVersion (aprv) the lowest application version for which this transaction
+	// should immediately fail. 0 indicates that no version check should be performed.
+	RejectVersion uint64 `json:"reject-version,omitempty"`
 }
