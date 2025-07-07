@@ -49,6 +49,11 @@ type SearchForTransactionsParams struct {
 	// receiver, if you would like to exclude them set this parameter to true.
 	ExcludeCloseTo bool `url:"exclude-close-to,omitempty"`
 
+	// GroupID lookup transactions by group ID. This field must be base64-encoded, and
+	// afterwards, base64 characters that are URL-unsafe (i.e. =, /, +) must be
+	// URL-encoded
+	GroupID string `url:"group-id,omitempty"`
+
 	// Limit maximum number of results to return. There could be additional pages even
 	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
@@ -179,6 +184,15 @@ func (s *SearchForTransactions) CurrencyLessThan(CurrencyLessThan uint64) *Searc
 // receiver, if you would like to exclude them set this parameter to true.
 func (s *SearchForTransactions) ExcludeCloseTo(ExcludeCloseTo bool) *SearchForTransactions {
 	s.p.ExcludeCloseTo = ExcludeCloseTo
+
+	return s
+}
+
+// GroupID lookup transactions by group ID. This field must be base64-encoded, and
+// afterwards, base64 characters that are URL-unsafe (i.e. =, /, +) must be
+// URL-encoded
+func (s *SearchForTransactions) GroupID(GroupID []byte) *SearchForTransactions {
+	s.p.GroupID = base64.StdEncoding.EncodeToString(GroupID)
 
 	return s
 }
