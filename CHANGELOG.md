@@ -1,3 +1,21 @@
+# v2.10.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.10.0 -->
+
+## What's Changed
+### New Features
+* CICD: update golang and implement tests in GitHub Actions by @onetechnical in https://github.com/algorand/go-algorand-sdk/pull/729
+### Enhancements
+* consensus: add SHA-512 hash by @cce in https://github.com/algorand/go-algorand-sdk/pull/723
+* CICD: disable CircleCI and limit GitHub Actions concurrency by @onetechnical in https://github.com/algorand/go-algorand-sdk/pull/733
+* Types: Sha512 sync by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/735
+* API: Regenerate code with the latest specification file (da1078cd) by @github-actions[bot] in https://github.com/algorand/go-algorand-sdk/pull/741
+### Other
+* Regenerate code with the latest specification file (2a21b6e3) by @github-actions[bot] in https://github.com/algorand/go-algorand-sdk/pull/734
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.9.1...v2.10.0
+
 # v2.9.1
 
 ## What's Changed
