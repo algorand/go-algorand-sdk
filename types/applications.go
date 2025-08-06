@@ -32,6 +32,35 @@ type BoxReference struct {
 	Name []byte `codec:"n"`
 }
 
+// ResourceRef names a single resource
+type ResourceRef struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	// Only one of these may be set
+	Address Address      `codec:"d"`
+	Asset   AssetIndex   `codec:"s"`
+	App     AppIndex     `codec:"p"`
+	Holding HoldingRef   `codec:"h"`
+	Locals  LocalsRef    `codec:"l"`
+	Box     BoxReference `codec:"b"`
+}
+
+// HoldingRef names a holding by referring to an Address and Asset that appear
+// earlier in the Access list (0 is special cased)
+type HoldingRef struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+	Address uint64   `codec:"d"` // 0=Sender,n-1=index into the Access list, which must be an Address
+	Asset   uint64   `codec:"s"` // n-1=index into the Access list, which must be an Asset
+}
+
+// LocalsRef names a local state by referring to an Address and App that appear
+// earlier in the Access list (0 is special cased)
+type LocalsRef struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+	Address uint64   `codec:"d"` // 0=Sender,n-1=index into the Access list, which must be an Address
+	App     uint64   `codec:"p"` // 0=ApplicationID,n-1=index into the Access list, which must be an App
+}
+
 // OnCompletion is an enum representing some layer 1 side effect that an
 // ApplicationCall transaction will have if it is included in a block.
 //
@@ -93,21 +122,28 @@ type ApplicationCallTxnFields struct {
 	// the app or asset id).
 	Accounts []Address `codec:"apat"`
 
+	// ForeignAssets are asset IDs for assets whose AssetParams
+	// (and since v4, Holdings) may be read by the executing
+	// ApprovalProgram or ClearStateProgram.
+	ForeignAssets []AssetIndex `codec:"apas"`
+
 	// ForeignApps are application IDs for applications besides
 	// this one whose GlobalState (or Local, since v4) may be read
 	// by the executing ApprovalProgram or ClearStateProgram.
 	ForeignApps []AppIndex `codec:"apfa"`
 
+	// Access unifies `Accounts`, `ForeignApps`, `ForeignAssets`, and `Boxes`
+	// under a single list. It removes all implicitly available resources, so
+	// "cross-product" resources (holdings and locals) must be explicitly
+	// listed, as well as app accounts, even the app account of the called app!
+	// Transactions using Access may not use the other lists.
+	Access []ResourceRef `codec:"al"`
+
 	// Boxes are the boxes that can be accessed by this transaction (and others
 	// in the same group). The Index in the BoxRef is the slot of ForeignApps
-	// that the name is associated with (shifted by 1, so 0 indicates "current
+	// that the name is associated with (shifted by 1. 0 indicates "current
 	// app")
 	BoxReferences []BoxReference `codec:"apbx"`
-
-	// ForeignAssets are asset IDs for assets whose AssetParams
-	// (and since v4, Holdings) may be read by the executing
-	// ApprovalProgram or ClearStateProgram.
-	ForeignAssets []AssetIndex `codec:"apas"`
 
 	// LocalStateSchema specifies the maximum number of each type that may
 	// appear in the local key/value store of users who opt in to this
