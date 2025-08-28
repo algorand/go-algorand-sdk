@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"slices"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -1279,6 +1280,142 @@ func MakeApplicationCallTxWithBoxes(
 	return setFee(tx, sp)
 }
 
+// MakeApplicationCallTxWithAccess is a helper for the above ApplicationCall
+// transaction constructors.
+// It uses tx.Access list to fill foreign apps, assets and box references
+// instead of tx.Accounts, tx.ForeignApps, tx.ForeignAssets and tx.BoxReferences.
+// A fully custom ApplicationCall transaction may
+// be constructed using this method. (see above for args desc.)
+func MakeApplicationCallTxWithAccess(
+	appIdx uint64,
+	appArgs [][]byte,
+	accounts []string,
+	foreignApps []uint64,
+	foreignAssets []uint64,
+	appBoxReferences []types.AppBoxReference,
+	holdings []types.AppHoldingRef,
+	locals []types.AppLocalsRef,
+	onCompletion types.OnCompletion,
+	approvalProg []byte,
+	clearProg []byte,
+	globalSchema types.StateSchema,
+	localSchema types.StateSchema,
+	extraPages uint32,
+	sp types.SuggestedParams,
+	sender types.Address,
+	note []byte,
+	group types.Digest,
+	lease [32]byte,
+	rekeyTo types.Address) (tx types.Transaction, err error) {
+
+	ensure := func(target types.ResourceRef) uint64 {
+		// We always check all three, though calls will only have one set.  Less code duplication.
+		idx := slices.IndexFunc(tx.Access, func(present types.ResourceRef) bool {
+			return present.Address == target.Address &&
+				present.Asset == target.Asset &&
+				present.App == target.App
+		})
+		if idx != -1 {
+			return uint64(idx) + 1
+		}
+		tx.Access = append(tx.Access, target)
+		return uint64(len(tx.Access))
+	}
+
+	tx.Type = types.ApplicationCallTx
+	tx.ApplicationID = types.AppIndex(appIdx)
+	tx.OnCompletion = onCompletion
+	tx.ApplicationArgs = appArgs
+
+	parsedAccounts, err := parseTxnAccounts(accounts)
+	if err != nil {
+		return tx, err
+	}
+	parsedForeignApps := parseTxnForeignApps(foreignApps)
+	parsedForeignAssets := parseTxnForeignAssets(foreignAssets)
+
+	for _, addr := range parsedAccounts {
+		ensure(types.ResourceRef{Address: addr})
+	}
+	for _, asset := range parsedForeignAssets {
+		ensure(types.ResourceRef{Asset: asset})
+	}
+	for _, app := range parsedForeignApps {
+		ensure(types.ResourceRef{App: app})
+	}
+
+	parsedHoldings, err := parseTxnHoldingRefs(holdings)
+	if err != nil {
+		return tx, err
+	}
+
+	for _, hr := range parsedHoldings {
+		addrIdx := uint64(0)
+		if !hr.address.IsZero() {
+			addrIdx = ensure(types.ResourceRef{Address: hr.address})
+		}
+		tx.Access = append(tx.Access, types.ResourceRef{Holding: types.HoldingRef{
+			Asset:   ensure(types.ResourceRef{Asset: hr.asset}),
+			Address: addrIdx,
+		}})
+	}
+
+	parsedLocals, err := parseTxnLocalsRefs(locals)
+	if err != nil {
+		return tx, err
+	}
+	for _, lr := range parsedLocals {
+		appIdx := uint64(0)
+		if lr.app != 0 && lr.app != tx.ApplicationID {
+			appIdx = ensure(types.ResourceRef{App: lr.app})
+		}
+		addrIdx := uint64(0)
+		if !lr.address.IsZero() {
+			addrIdx = ensure(types.ResourceRef{Address: lr.address})
+		}
+		tx.Access = append(tx.Access, types.ResourceRef{Locals: types.LocalsRef{
+			App:     appIdx,
+			Address: addrIdx,
+		}})
+	}
+
+	for _, br := range appBoxReferences {
+		appIdx := uint64(0)
+		if br.AppID != 0 && types.AppIndex(br.AppID) != tx.ApplicationID {
+			appIdx = ensure(types.ResourceRef{App: types.AppIndex(br.AppID)})
+		}
+		tx.Access = append(tx.Access, types.ResourceRef{Box: types.BoxReference{
+			ForeignAppIdx: appIdx,
+			Name:          []byte(br.Name),
+		}})
+	}
+
+	tx.ApprovalProgram = approvalProg
+	tx.ClearStateProgram = clearProg
+	tx.LocalStateSchema = localSchema
+	tx.GlobalStateSchema = globalSchema
+	tx.ExtraProgramPages = extraPages
+
+	var gh types.Digest
+	copy(gh[:], sp.GenesisHash)
+
+	tx.Header = types.Header{
+		Sender:      sender,
+		Fee:         sp.Fee,
+		FirstValid:  sp.FirstRoundValid,
+		LastValid:   sp.LastRoundValid,
+		Note:        note,
+		GenesisID:   sp.GenesisID,
+		GenesisHash: gh,
+		Group:       group,
+		Lease:       lease,
+		RekeyTo:     rekeyTo,
+	}
+
+	// Update fee
+	return setFee(tx, sp)
+}
+
 // AssignGroupID computes and return list of transactions with Group field set.
 // - txns is a list of transactions to process
 // - account specifies a sender field of transaction to return. Set to empty string to return all of them
@@ -1331,6 +1468,46 @@ func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
 		parsed = append(parsed, types.AssetIndex(aidx))
 	}
 	return
+}
+
+type appHoldingRef struct {
+	asset   types.AssetIndex
+	address types.Address
+}
+
+type appLocalsRef struct {
+	app     types.AppIndex
+	address types.Address
+}
+
+func parseTxnHoldingRefs(holdings []types.AppHoldingRef) (parsed []appHoldingRef, err error) {
+	for _, h := range holdings {
+		addr, err := types.DecodeAddress(h.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		parsed = append(parsed, appHoldingRef{
+			asset:   types.AssetIndex(h.Asset),
+			address: addr,
+		})
+	}
+	return parsed, nil
+}
+
+func parseTxnLocalsRefs(locals []types.AppLocalsRef) (parsed []appLocalsRef, err error) {
+	for _, l := range locals {
+		addr, err := types.DecodeAddress(l.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		parsed = append(parsed, appLocalsRef{
+			app:     types.AppIndex(l.App),
+			address: addr,
+		})
+	}
+	return parsed, nil
 }
 
 func parseBoxReferences(abrs []types.AppBoxReference, foreignApps []uint64, curAppID uint64) (parsed []types.BoxReference, err error) {

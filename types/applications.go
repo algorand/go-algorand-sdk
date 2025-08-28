@@ -21,6 +21,22 @@ type AppBoxReference struct {
 	Name []byte
 }
 
+// AppHoldingRef identifies an asset holding by the asset id and the address.
+// It can be viewed as the "hydrated" form of a HoldingRef, which uses indices
+// and typed addresses.
+type AppHoldingRef struct {
+	Asset   uint64
+	Address string
+}
+
+// AppLocalsRef identifies local state by the app id and the address.
+// It can be viewed as the "hydrated" form of a LocalsRef, which uses indices
+// and typed addresses.
+type AppLocalsRef struct {
+	App     uint64
+	Address string
+}
+
 // BoxReference names a box by the index in the foreign app array
 type BoxReference struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
