@@ -56,7 +56,12 @@ type LogicSig struct {
 	Sig Signature `codec:"sig"`
 
 	// The signature of the multisig account that has delegated to this LogicSig, if any
+	// Accepted on transactions if consensus param LogicSigMsig=true
 	Msig MultisigSig `codec:"msig"`
+
+	// The signature of the multisig account that has delegated to this LogicSig, if any
+	// Accepted on transactions if consensus param LogicSigLMsig=true
+	LMsig MultisigSig `codec:"lmsig"`
 
 	// Args are not signed, but checked by Logic
 	Args [][]byte `codec:"arg"`
@@ -72,6 +77,9 @@ func (lsig LogicSig) Blank() bool {
 		return false
 	}
 	if !lsig.Msig.Blank() {
+		return false
+	}
+	if !lsig.LMsig.Blank() {
 		return false
 	}
 	if lsig.Sig != (Signature{}) {
