@@ -308,7 +308,8 @@ func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.P
 func (lsa LogicSigAccount) IsDelegated() bool {
 	hasSig := lsa.Lsig.Sig != (types.Signature{})
 	hasMsig := !lsa.Lsig.Msig.Blank()
-	return hasSig || hasMsig
+	hasLMsig := !lsa.Lsig.LMsig.Blank()
+	return hasSig || hasMsig || hasLMsig
 }
 
 // Address returns the address of this LogicSigAccount.
@@ -321,12 +322,7 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 	hasSig := lsa.Lsig.Sig != (types.Signature{})
 	hasMsig := !lsa.Lsig.Msig.Blank()
-
-	// require at most one sig
-	if hasSig && hasMsig {
-		err = errLsigTooManySignatures
-		return
-	}
+	hasLMsig := !lsa.Lsig.LMsig.Blank()
 
 	if hasSig {
 		n := copy(addr[:], lsa.SigningKey)
@@ -339,6 +335,16 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 	if hasMsig {
 		var msigAccount MultisigAccount
 		msigAccount, err = MultisigAccountFromSig(lsa.Lsig.Msig)
+		if err != nil {
+			return
+		}
+		addr, err = msigAccount.Address()
+		return
+	}
+
+	if hasLMsig {
+		var msigAccount MultisigAccount
+		msigAccount, err = MultisigAccountFromSig(lsa.Lsig.LMsig)
 		if err != nil {
 			return
 		}

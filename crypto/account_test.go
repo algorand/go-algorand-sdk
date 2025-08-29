@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -203,13 +204,21 @@ func TestMakeLogicSigAccount(t *testing.T) {
 		lsigAccount, err := MakeLogicSigAccountDelegatedMsig(program, args, ma, sk1)
 		require.NoError(t, err)
 
+		addr, err := ma.Address()
+		require.NoError(t, err)
+
+		var expectedSig types.Signature
+		copy(expectedSig[:], ed25519.Sign(sk1, bytes.Join(
+			[][]byte{[]byte("MsigProgram"), addr[:], program}, nil,
+		)))
+
 		expectedMsig := types.MultisigSig{
 			Version:   ma.Version,
 			Threshold: ma.Threshold,
 			Subsigs: []types.MultisigSubsig{
 				{
 					Key: ma.Pks[0],
-					Sig: types.Signature{0x49, 0x13, 0xb8, 0x5, 0xd1, 0x9e, 0x7f, 0x2c, 0x10, 0x80, 0xf6, 0x33, 0x7e, 0x18, 0x54, 0xa7, 0xce, 0xea, 0xee, 0x10, 0xdd, 0xbd, 0x13, 0x65, 0x84, 0xbf, 0x93, 0xb7, 0x5f, 0x30, 0x63, 0x15, 0x91, 0xca, 0x23, 0xc, 0xed, 0xef, 0x23, 0xd1, 0x74, 0x1b, 0x52, 0x9d, 0xb0, 0xff, 0xef, 0x37, 0x54, 0xd6, 0x46, 0xf4, 0xb5, 0x61, 0xfc, 0x8b, 0xbc, 0x2d, 0x7b, 0x4e, 0x63, 0x5c, 0xbd, 0x2},
+					Sig: expectedSig,
 				},
 				{
 					Key: ma.Pks[1],
@@ -223,8 +232,9 @@ func TestMakeLogicSigAccount(t *testing.T) {
 		require.Equal(t, program, lsigAccount.Lsig.Logic)
 		require.Equal(t, args, lsigAccount.Lsig.Args)
 		require.Equal(t, types.Signature{}, lsigAccount.Lsig.Sig)
-		require.Equal(t, expectedMsig, lsigAccount.Lsig.Msig)
-		require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+		require.Zero(t, lsigAccount.Lsig.Msig) // Legacy
+		require.Equal(t, expectedMsig, lsigAccount.Lsig.LMsig)
+		require.Nil(t, lsigAccount.SigningKey)
 
 		require.True(t, lsigAccount.IsDelegated())
 
@@ -232,13 +242,18 @@ func TestMakeLogicSigAccount(t *testing.T) {
 			err := lsigAccount.AppendMultisigSignature(sk2)
 			require.NoError(t, err)
 
-			expectedMsig.Subsigs[1].Sig = types.Signature{0x64, 0xbc, 0x55, 0xdb, 0xed, 0x91, 0xa2, 0x41, 0xd4, 0x2a, 0xb6, 0x60, 0xf7, 0xe1, 0x4a, 0xb9, 0x99, 0x9a, 0x52, 0xb3, 0xb1, 0x71, 0x58, 0xce, 0xfc, 0x3f, 0x4f, 0xe7, 0xcb, 0x22, 0x41, 0x14, 0xad, 0xa9, 0x3d, 0x5e, 0x84, 0x5, 0x2, 0xa, 0x17, 0xa6, 0x69, 0x83, 0x3, 0x22, 0x4e, 0x86, 0xa3, 0x8b, 0x6a, 0x36, 0xc5, 0x54, 0xbe, 0x20, 0x50, 0xff, 0xd3, 0xee, 0xa8, 0xb3, 0x4, 0x9}
+			var expectedSig types.Signature
+			copy(expectedSig[:], ed25519.Sign(sk2, bytes.Join(
+				[][]byte{[]byte("MsigProgram"), addr[:], program}, nil,
+			)))
+			expectedMsig.Subsigs[1].Sig = expectedSig
 
 			require.Equal(t, program, lsigAccount.Lsig.Logic)
 			require.Equal(t, args, lsigAccount.Lsig.Args)
 			require.Equal(t, types.Signature{}, lsigAccount.Lsig.Sig)
-			require.Equal(t, expectedMsig, lsigAccount.Lsig.Msig)
-			require.Equal(t, ed25519.PublicKey(nil), lsigAccount.SigningKey)
+			require.Zero(t, lsigAccount.Lsig.Msig) // Legacy
+			require.Equal(t, expectedMsig, lsigAccount.Lsig.LMsig)
+			require.Nil(t, lsigAccount.SigningKey)
 
 			require.True(t, lsigAccount.IsDelegated())
 		})
