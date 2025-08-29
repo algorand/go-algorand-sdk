@@ -23,6 +23,9 @@ type Block struct {
 	// PreviousBlockHash (prev) Previous block hash.
 	PreviousBlockHash []byte `json:"previous-block-hash"`
 
+	// PreviousBlockHash512 (prev512) Previous block hash, using SHA-512.
+	PreviousBlockHash512 []byte `json:"previous-block-hash-512,omitempty"`
+
 	// Proposer the proposer of this block.
 	Proposer string `json:"proposer,omitempty"`
 
@@ -61,6 +64,11 @@ type Block struct {
 	// SHA256 hash function instead of the default SHA512_256. This commitment can be
 	// used on environments where only the SHA256 function exists.
 	TransactionsRootSha256 []byte `json:"transactions-root-sha256"`
+
+	// TransactionsRootSha512 (txn512) TransactionsRootSHA512 is an auxiliary
+	// TransactionRoot, built using a vector commitment instead of a merkle tree, and
+	// SHA512 hash function instead of the default SHA512_256.
+	TransactionsRootSha512 []byte `json:"transactions-root-sha512,omitempty"`
 
 	// TxnCounter (tc) TxnCounter counts the number of transactions committed in the
 	// ledger, from the time at which support for this feature was introduced.

@@ -1,6 +1,6 @@
 package models
 
-// TransactionSignatureMultisig (msig) structure holding multiple subsignatures.
+// TransactionSignatureMultisig structure holding multiple subsignatures.
 // Definition:
 // crypto/multisig.go : MultisigSig
 type TransactionSignatureMultisig struct {

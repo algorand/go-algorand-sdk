@@ -4,6 +4,11 @@ package models
 // Definition:
 // data/transactions/application.go : ApplicationCallTxnFields
 type TransactionApplication struct {
+	// Access (al) Access unifies `accounts`, `foreign-apps`, `foreign-assets`, and
+	// `box-references` under a single list. If access is non-empty, these lists must
+	// be empty. If access is empty, those lists may be non-empty.
+	Access []ResourceRef `json:"access,omitempty"`
+
 	// Accounts (apat) List of accounts in addition to the sender that may be accessed
 	// from the application's approval-program and clear-state-program.
 	Accounts []string `json:"accounts,omitempty"`
