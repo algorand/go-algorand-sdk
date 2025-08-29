@@ -202,6 +202,54 @@ func TestAddMethodCallWithManualForeignArgs(t *testing.T) {
 
 	require.Equal(t, len(txns[0].Txn.Accounts), 1)
 	require.Equal(t, txns[0].Txn.Accounts[0], arg_addr)
+
+	// make sure Access field is not used with ref args
+	params.UseAccess = true
+	err = atc.AddMethodCall(params)
+	require.Error(t, err)
+}
+
+func TestAddMethodCallWithAccess(t *testing.T) {
+	var atc AtomicTransactionComposer
+	account := crypto.GenerateAccount()
+	txSigner := BasicAccountTransactionSigner{Account: account}
+	methodSig := "add()uint32"
+
+	method, err := abi.MethodFromSignature(methodSig)
+	require.NoError(t, err)
+
+	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
+	require.NoError(t, err)
+
+	arg_addr_str := "E4VCHISDQPLIZWMALIGNPK2B2TERPDMR64MZJXE3UL75MUDXZMADX5OWXM"
+	arg_addr, err := types.DecodeAddress(arg_addr_str)
+	require.NoError(t, err)
+
+	params := AddMethodCallParams{
+		AppID:           4,
+		Method:          method,
+		Sender:          addr,
+		Signer:          txSigner,
+		ForeignApps:     []uint64{1},
+		ForeignAssets:   []uint64{5},
+		ForeignAccounts: []string{arg_addr_str},
+		UseAccess:       true,
+	}
+	err = atc.AddMethodCall(params)
+	require.NoError(t, err)
+	require.Equal(t, atc.GetStatus(), BUILDING)
+	require.Equal(t, atc.Count(), 1)
+	txns, err := atc.BuildGroup()
+	require.NoError(t, err)
+
+	require.Empty(t, txns[0].Txn.ForeignApps)
+	require.Empty(t, txns[0].Txn.ForeignAssets)
+	require.Empty(t, txns[0].Txn.Accounts)
+
+	require.Equal(t, len(txns[0].Txn.Access), 3)
+	require.Equal(t, arg_addr, txns[0].Txn.Access[0].Address)
+	require.Equal(t, types.AssetIndex(5), txns[0].Txn.Access[1].Asset)
+	require.Equal(t, types.AppIndex(1), txns[0].Txn.Access[2].App)
 }
 
 func TestGatherSignatures(t *testing.T) {

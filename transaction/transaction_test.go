@@ -778,6 +778,134 @@ func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
 	require.Error(t, err, "the app id 10 provided for this box is not in the foreignApps array")
 }
 
+func TestMakeApplicationCallTxWithAccess(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+	note := byteFromBase64("8xMCTuLQ810=")
+	program := []byte{1, 32, 1, 1, 34}
+	gSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+	lSchema := types.StateSchema{NumUint: uint64(1), NumByteSlice: uint64(1)}
+
+	accounts := []string{"47YPQTIGQEO7T4Y4RWDYWEKV6RTR2UNBQXBABEEGM72ESWDQNCQ52OPASU", "BH55E5RMBD4GYWXGX5W5PJ5JAHPGM5OXKDQH5DC4O2MGI7NW4H6VOE4CP4"}
+	addrs, err := parseTxnAccounts(accounts)
+	require.NoError(t, err)
+
+	tx, err := MakeApplicationCallTxWithAccess(111, nil, accounts, nil, nil, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.Accounts)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+	}, tx.Access)
+
+	foreignAssets := []uint64{2222, 3333}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, nil, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.ForeignAssets)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+	}, tx.Access)
+
+	foreignApps := []uint64{222, 333}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.ForeignApps)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+		{App: types.AppIndex(foreignApps[0])}, {App: types.AppIndex(foreignApps[1])},
+	}, tx.Access)
+
+	appBoxReferences := []types.AppBoxReference{{AppID: 3, Name: []byte("aaa")}}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.ForeignApps)
+	require.Nil(t, tx.BoxReferences)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+		{App: types.AppIndex(foreignApps[0])}, {App: types.AppIndex(foreignApps[1])},
+
+		{App: 3}, {Box: types.BoxReference{ForeignAppIdx: 7, Name: []byte("aaa")}},
+	}, tx.Access)
+
+	appBoxReferences = []types.AppBoxReference{{AppID: 3, Name: []byte("aaa")}, {AppID: 0, Name: []byte("bbb")}, {AppID: 111, Name: []byte("bbb2")}}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.ForeignApps)
+	require.Nil(t, tx.BoxReferences)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+		{App: types.AppIndex(foreignApps[0])}, {App: types.AppIndex(foreignApps[1])},
+
+		{App: 3}, {Box: types.BoxReference{ForeignAppIdx: 7, Name: []byte("aaa")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb2")}},
+	}, tx.Access)
+
+	zero := "" // zero address, the sender => expect index 0 in holdings and locals access entries
+	one := "AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKE3PRHE"
+	oneAddr, err := types.DecodeAddress(one)
+	require.NoError(t, err)
+	two := "AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGFFWAF4"
+	twoAddr, err := types.DecodeAddress(two)
+	require.NoError(t, err)
+	holdings := []types.AppHoldingRef{{Asset: 111, Address: one}, {Asset: 3333, Address: zero}}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.Accounts)
+	require.Nil(t, tx.ForeignAssets)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+		{App: types.AppIndex(foreignApps[0])}, {App: types.AppIndex(foreignApps[1])},
+
+		{Address: oneAddr}, {Asset: 111}, {Holding: types.HoldingRef{Asset: 8, Address: 7}},
+		{Holding: types.HoldingRef{Asset: 4, Address: 0}},
+
+		{App: 3}, {Box: types.BoxReference{ForeignAppIdx: 11, Name: []byte("aaa")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb2")}},
+	}, tx.Access)
+
+	locals := []types.AppLocalsRef{{App: 111, Address: two}, {App: 333, Address: zero}, {App: 444, Address: one}}
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, locals, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.Nil(t, tx.Accounts)
+	require.Nil(t, tx.ForeignApps)
+	require.Equal(t, []types.ResourceRef{
+		{Address: addrs[0]}, {Address: addrs[1]},
+		{Asset: types.AssetIndex(foreignAssets[0])}, {Asset: types.AssetIndex(foreignAssets[1])},
+		{App: types.AppIndex(foreignApps[0])}, {App: types.AppIndex(foreignApps[1])},
+
+		{Address: oneAddr}, {Asset: 111}, {Holding: types.HoldingRef{Asset: 8, Address: 7}},
+		{Holding: types.HoldingRef{Asset: 4, Address: 0}},
+
+		{Address: twoAddr},
+		{Locals: types.LocalsRef{App: 0, Address: 11}},
+		{Locals: types.LocalsRef{App: 6, Address: 0}},
+		{App: 444},
+		{Locals: types.LocalsRef{App: 14, Address: 7}},
+
+		{App: 3}, {Box: types.BoxReference{ForeignAppIdx: 16, Name: []byte("aaa")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb")}},
+		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb2")}},
+	}, tx.Access)
+
+}
+
 func TestComputeGroupID(t *testing.T) {
 	// compare regular transactions created in SDK with 'goal clerk send' result
 	// compare transaction group created in SDK with 'goal clerk group' result
