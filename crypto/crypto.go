@@ -31,6 +31,9 @@ var bytesPrefix = []byte("MX")
 // programPrefix is prepended to a logic program when computing a hash
 var programPrefix = []byte("Program")
 
+// msigProgramPrefix is prepended to a logic program when computing a hash for a program signed by multisig
+var msigProgramPrefix = []byte("MsigProgram")
+
 // programDataPrefix is prepended to teal sign data
 var programDataPrefix = []byte("ProgData")
 
@@ -505,19 +508,20 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 
 	hasSig := lsig.Sig != (types.Signature{})
 	hasMsig := !lsig.Msig.Blank()
-
-	// require only one or zero sig
-	if hasSig && hasMsig {
-		return false
-	}
-
-	toBeSigned := programToSign(lsig.Logic)
+	hasLMsig := !lsig.LMsig.Blank()
 
 	if hasSig {
+		if hasMsig || hasLMsig {
+			return false
+		}
+		toBeSigned := programToSign(lsig.Logic)
 		return ed25519.Verify(singleSigner[:], toBeSigned, lsig.Sig[:])
 	}
 
 	if hasMsig {
+		if hasSig || hasLMsig {
+			return false
+		}
 		msigAccount, err := MultisigAccountFromSig(lsig.Msig)
 		if err != nil {
 			return false
@@ -526,9 +530,25 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		if err != nil {
 			return false
 		}
+		toBeSigned := programToSign(lsig.Logic)
 		return VerifyMultisig(addr, toBeSigned, lsig.Msig)
 	}
 
+	if hasLMsig {
+		if hasSig || hasMsig {
+			return false
+		}
+		msigAccount, err := MultisigAccountFromSig(lsig.LMsig)
+		if err != nil {
+			return false
+		}
+		addr, err := msigAccount.Address()
+		if err != nil {
+			return false
+		}
+		toBeSigned := msigProgramToSign(addr, lsig.Logic)
+		return VerifyMultisig(addr, toBeSigned, lsig.LMsig)
+	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
 }
@@ -585,7 +605,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 // use SignLogicSigAccountTransaction instead.
 func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	hasSig := lsig.Sig != (types.Signature{})
-	hasMsig := !lsig.Msig.Blank()
+	hasLMsig := !lsig.LMsig.Blank()
 
 	// the address that the LogicSig represents
 	var lsigAddress types.Address
@@ -595,9 +615,9 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 		// delegating account is the sender. If that's not the case, the signing
 		// will fail.
 		lsigAddress = tx.Header.Sender
-	} else if hasMsig {
+	} else if hasLMsig {
 		var msigAccount MultisigAccount
-		msigAccount, err = MultisigAccountFromSig(lsig.Msig)
+		msigAccount, err = MultisigAccountFromSig(lsig.LMsig)
 		if err != nil {
 			return
 		}
@@ -615,6 +635,12 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 
 func programToSign(program []byte) []byte {
 	parts := [][]byte{programPrefix, program}
+	toBeSigned := bytes.Join(parts, nil)
+	return toBeSigned
+}
+
+func msigProgramToSign(msigAddr types.Address, program []byte) []byte {
+	parts := [][]byte{msigProgramPrefix, msigAddr[:], program}
 	toBeSigned := bytes.Join(parts, nil)
 	return toBeSigned
 }
@@ -673,9 +699,17 @@ func makeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma Multi
 		return
 	}
 
+	multisigAddr, err := ma.Address()
+	if err != nil {
+		return
+	}
+
 	// this signer signs a program
 	customSigner := func() (rawSig types.Signature, err error) {
-		return signProgram(sk, program)
+		toBeSigned := msigProgramToSign(multisigAddr, program)
+		sigBytes := ed25519.Sign(sk, toBeSigned)
+		copy(rawSig[:], sigBytes)
+		return
 	}
 
 	msig, _, err := multisigSingle(sk, ma, customSigner)
@@ -685,24 +719,32 @@ func makeLogicSig(program []byte, args [][]byte, sk ed25519.PrivateKey, ma Multi
 
 	lsig.Logic = program
 	lsig.Args = args
-	lsig.Msig = msig
+	lsig.LMsig = msig
 
 	return
 }
 
 // AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
 func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error {
-	if lsig.Msig.Blank() {
+	if lsig.LMsig.Blank() {
 		return errLsigEmptyMsig
 	}
 
-	ma, err := MultisigAccountFromSig(lsig.Msig)
+	ma, err := MultisigAccountFromSig(lsig.LMsig)
+	if err != nil {
+		return err
+	}
+
+	multisigAddr, err := ma.Address()
 	if err != nil {
 		return err
 	}
 
 	customSigner := func() (rawSig types.Signature, err error) {
-		return signProgram(sk, lsig.Logic)
+		toBeSigned := msigProgramToSign(multisigAddr, lsig.Logic)
+		sigBytes := ed25519.Sign(sk, toBeSigned)
+		copy(rawSig[:], sigBytes)
+		return
 	}
 
 	msig, idx, err := multisigSingle(sk, ma, customSigner)
@@ -710,7 +752,7 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 		return err
 	}
 
-	lsig.Msig.Subsigs[idx] = msig.Subsigs[idx]
+	lsig.LMsig.Subsigs[idx] = msig.Subsigs[idx]
 
 	return nil
 }
