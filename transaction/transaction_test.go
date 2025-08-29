@@ -855,7 +855,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb2")}},
 	}, tx.Access)
 
-	zero := "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+	zero := "" // zero address, the sender => expect index 0 in holdings and locals access entries
 	one := "AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKE3PRHE"
 	oneAddr, err := types.DecodeAddress(one)
 	require.NoError(t, err)

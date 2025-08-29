@@ -1216,7 +1216,7 @@ func MakeApplicationCallTxWithExtraPages(
 }
 
 // MakeApplicationCallTxWithBoxes is a helper for the above ApplicationCall
-// transaction constructors. A fully custom ApplicationCall transaction may
+// transaction constructors. A custom ApplicationCall transaction without Access field may
 // be constructed using this method. (see above for args desc.)
 func MakeApplicationCallTxWithBoxes(
 	appIdx uint64,
@@ -1280,11 +1280,16 @@ func MakeApplicationCallTxWithBoxes(
 	return setFee(tx, sp)
 }
 
+// - holdings      lists the asset holdings to be accessed during evaluation of the application
+//                 call. Empty address means the sender.
+// - locals        lists the local states to be accessed during evaluation of the application
+//                 call. Empty address means the sender.
+
 // MakeApplicationCallTxWithAccess is a helper for the above ApplicationCall
 // transaction constructors.
-// It uses tx.Access list to fill foreign apps, assets and box references
+// It creates tx.Access list to specify accounts, apps, assets, boxes, holdings and locals access.
 // instead of tx.Accounts, tx.ForeignApps, tx.ForeignAssets and tx.BoxReferences.
-// A fully custom ApplicationCall transaction may
+// A custom ApplicationCall with Access field transaction may
 // be constructed using this method. (see above for args desc.)
 func MakeApplicationCallTxWithAccess(
 	appIdx uint64,
@@ -1472,19 +1477,22 @@ func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
 
 type appHoldingRef struct {
 	asset   types.AssetIndex
-	address types.Address
+	address types.Address // zero address, implies sender
 }
 
 type appLocalsRef struct {
 	app     types.AppIndex
-	address types.Address
+	address types.Address // zero address, implies sender
 }
 
 func parseTxnHoldingRefs(holdings []types.AppHoldingRef) (parsed []appHoldingRef, err error) {
 	for _, h := range holdings {
-		addr, err := types.DecodeAddress(h.Address)
-		if err != nil {
-			return nil, err
+		var addr types.Address
+		if h.Address != "" {
+			addr, err = types.DecodeAddress(h.Address)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		parsed = append(parsed, appHoldingRef{
@@ -1497,9 +1505,12 @@ func parseTxnHoldingRefs(holdings []types.AppHoldingRef) (parsed []appHoldingRef
 
 func parseTxnLocalsRefs(locals []types.AppLocalsRef) (parsed []appLocalsRef, err error) {
 	for _, l := range locals {
-		addr, err := types.DecodeAddress(l.Address)
-		if err != nil {
-			return nil, err
+		var addr types.Address
+		if l.Address != "" {
+			addr, err = types.DecodeAddress(l.Address)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		parsed = append(parsed, appLocalsRef{
