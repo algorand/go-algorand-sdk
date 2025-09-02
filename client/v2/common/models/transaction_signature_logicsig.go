@@ -11,7 +11,12 @@ type TransactionSignatureLogicsig struct {
 	// address of ana ccount. Base64 encoded TEAL program.
 	Logic []byte `json:"logic"`
 
-	// MultisigSignature (msig) structure holding multiple subsignatures.
+	// LogicMultisigSignature structure holding multiple subsignatures.
+	// Definition:
+	// crypto/multisig.go : MultisigSig
+	LogicMultisigSignature TransactionSignatureMultisig `json:"logic-multisig-signature,omitempty"`
+
+	// MultisigSignature structure holding multiple subsignatures.
 	// Definition:
 	// crypto/multisig.go : MultisigSig
 	MultisigSignature TransactionSignatureMultisig `json:"multisig-signature,omitempty"`
