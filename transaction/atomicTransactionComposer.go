@@ -101,6 +101,15 @@ type AddMethodCallParams struct {
 
 	// References of the boxes to be accessed by this method call.
 	BoxReferences []types.AppBoxReference
+
+	// If true, the transaction will be created with the Access field
+	UseAccess bool
+	// The asset holdings to be accessed by this method call.
+	// The zero address means the sender. Not used if UseAccess is false.
+	Holdings []types.AppHoldingRef
+	// The local states to be accessed by this method call.
+	// The zero address means the sender. Not used if UseAccess is false.
+	Locals []types.AppLocalsRef
 }
 
 // SimulateResult contains the results of calling the Simulate method on an
@@ -350,6 +359,11 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 	if err != nil {
 		return err
 	}
+
+	if len(refArgsResolved) != 0 && params.UseAccess {
+		return fmt.Errorf("cannot use reference arguments with Access field transaction")
+	}
+
 	for i, resolved := range refArgsResolved {
 		basicArgIndex := refArgIndexToBasicArgIndex[i]
 		// use the foreign array index as the encoded argument value
@@ -387,25 +401,52 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 		encodedAbiArgs = append(encodedAbiArgs, encodedArg)
 	}
 
-	tx, err := MakeApplicationCallTxWithBoxes(
-		params.AppID,
-		encodedAbiArgs,
-		foreignAccounts,
-		foreignApps,
-		foreignAssets,
-		params.BoxReferences,
-		params.OnComplete,
-		params.ApprovalProgram,
-		params.ClearProgram,
-		params.GlobalSchema,
-		params.LocalSchema,
-		params.ExtraPages,
-		params.SuggestedParams,
-		params.Sender,
-		params.Note,
-		types.Digest{},
-		params.Lease,
-		params.RekeyTo)
+	var tx types.Transaction
+	if params.UseAccess {
+		// Access field transaction without reference args
+		tx, err = MakeApplicationCallTxWithAccess(
+			params.AppID,
+			encodedAbiArgs,
+			foreignAccounts,
+			foreignApps,
+			foreignAssets,
+			params.BoxReferences,
+			params.Holdings,
+			params.Locals,
+			params.OnComplete,
+			params.ApprovalProgram,
+			params.ClearProgram,
+			params.GlobalSchema,
+			params.LocalSchema,
+			params.ExtraPages,
+			params.SuggestedParams,
+			params.Sender,
+			params.Note,
+			types.Digest{},
+			params.Lease,
+			params.RekeyTo)
+
+	} else {
+		tx, err = MakeApplicationCallTxWithBoxes(
+			params.AppID,
+			encodedAbiArgs,
+			foreignAccounts,
+			foreignApps,
+			foreignAssets,
+			params.BoxReferences,
+			params.OnComplete,
+			params.ApprovalProgram,
+			params.ClearProgram,
+			params.GlobalSchema,
+			params.LocalSchema,
+			params.ExtraPages,
+			params.SuggestedParams,
+			params.Sender,
+			params.Note,
+			types.Digest{},
+			params.Lease,
+			params.RekeyTo)
+	}
 	if err != nil {
 		return err
 	}
