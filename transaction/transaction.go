@@ -1218,6 +1218,8 @@ func MakeApplicationCallTxWithExtraPages(
 // MakeApplicationCallTxWithBoxes is a helper for the above ApplicationCall
 // transaction constructors. A custom ApplicationCall transaction without Access field may
 // be constructed using this method. (see above for args desc.)
+// A sister function MakeApplicationCallTxWithAccess exists to create an ApplicationCall
+// transaction with Access field instead of Accounts, ForeignApps, ForeignAssets and BoxReferences.
 func MakeApplicationCallTxWithBoxes(
 	appIdx uint64,
 	appArgs [][]byte,

@@ -105,10 +105,10 @@ type AddMethodCallParams struct {
 	// If true, the transaction will be created with the Access field
 	UseAccess bool
 	// The asset holdings to be accessed by this method call.
-	// The zero address means the sender.
+	// The zero address means the sender. Not used if UseAccess is false.
 	Holdings []types.AppHoldingRef
 	// The local states to be accessed by this method call.
-	// The zero address means the sender.
+	// The zero address means the sender. Not used if UseAccess is false.
 	Locals []types.AppLocalsRef
 }
 
