@@ -8,7 +8,7 @@ type TransactionSignature struct {
 	// data/transactions/logicsig.go
 	Logicsig TransactionSignatureLogicsig `json:"logicsig,omitempty"`
 
-	// Multisig (msig) structure holding multiple subsignatures.
+	// Multisig structure holding multiple subsignatures.
 	// Definition:
 	// crypto/multisig.go : MultisigSig
 	Multisig TransactionSignatureMultisig `json:"multisig,omitempty"`
