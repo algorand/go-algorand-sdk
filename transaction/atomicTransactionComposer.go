@@ -108,7 +108,7 @@ type AddMethodCallParams struct {
 	// The zero address means the sender.
 	Holdings []types.AppHoldingRef
 	// The local states to be accessed by this method call.
-	// An empty address means the sender.
+	// The zero address means the sender.
 	Locals []types.AppLocalsRef
 }
 
