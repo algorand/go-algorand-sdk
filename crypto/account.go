@@ -264,10 +264,9 @@ func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) e
 // the delegating account. In all other cases, an error will be returned if
 // signerPublicKey is present.
 func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.PublicKey) (lsa LogicSigAccount, err error) {
-	hasSig := lsig.Sig != (types.Signature{})
-	hasMsig := !lsig.Msig.Blank()
+	hasSig, _, _, count := lsig.SignatureCount()
 
-	if hasSig && hasMsig {
+	if count > 1 {
 		err = errLsigTooManySignatures
 		return
 	}
@@ -308,7 +307,8 @@ func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.P
 func (lsa LogicSigAccount) IsDelegated() bool {
 	hasSig := lsa.Lsig.Sig != (types.Signature{})
 	hasMsig := !lsa.Lsig.Msig.Blank()
-	return hasSig || hasMsig
+	hasLMsig := !lsa.Lsig.LMsig.Blank()
+	return hasSig || hasMsig || hasLMsig
 }
 
 // Address returns the address of this LogicSigAccount.
@@ -319,13 +319,9 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 // If the LogicSig is not delegated to another account, this will return an
 // escrow address that is the hash of the LogicSig's program code.
 func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
-	hasSig := lsa.Lsig.Sig != (types.Signature{})
-	hasMsig := !lsa.Lsig.Msig.Blank()
-
-	// require at most one sig
-	if hasSig && hasMsig {
-		err = errLsigTooManySignatures
-		return
+	hasSig, hasMsig, hasLMsig, err := lsa.hasSignatures()
+	if err != nil {
+		return types.Address{}, err
 	}
 
 	if hasSig {
@@ -346,6 +342,24 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 		return
 	}
 
+	if hasLMsig {
+		var msigAccount MultisigAccount
+		msigAccount, err = MultisigAccountFromSig(lsa.Lsig.LMsig)
+		if err != nil {
+			return
+		}
+		addr, err = msigAccount.Address()
+		return
+	}
+
 	addr = LogicSigAddress(lsa.Lsig)
+	return
+}
+
+func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig bool, err error) {
+	var count int
+	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCount(); count > 1 {
+		err = errLsigTooManySignatures
+	}
 	return
 }
