@@ -88,7 +88,8 @@ func (lsig LogicSig) Blank() bool {
 	return true
 }
 
-func (lsig LogicSig) SignatureCheck() (hasSig, hasMsig, hasLMsig bool, count int) {
+// SignatureCount returns whether the LogicSig has each of the three possible signature types.
+func (lsig LogicSig) SignatureCount() (hasSig, hasMsig, hasLMsig bool, count int) {
 	if hasSig = (lsig.Sig != Signature{}); hasSig {
 		count++
 	}

@@ -506,7 +506,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		return false
 	}
 
-	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCheck()
+	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCount()
 	if count > 1 {
 		return false
 	}

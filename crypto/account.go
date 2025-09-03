@@ -264,7 +264,7 @@ func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) e
 // the delegating account. In all other cases, an error will be returned if
 // signerPublicKey is present.
 func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.PublicKey) (lsa LogicSigAccount, err error) {
-	hasSig, _, _, count := lsig.SignatureCheck()
+	hasSig, _, _, count := lsig.SignatureCount()
 
 	if count > 1 {
 		err = errLsigTooManySignatures
@@ -358,7 +358,7 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 
 func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig bool, err error) {
 	var count int
-	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCheck(); count > 1 {
+	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCount(); count > 1 {
 		err = errLsigTooManySignatures
 	}
 	return
