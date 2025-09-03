@@ -88,6 +88,19 @@ func (lsig LogicSig) Blank() bool {
 	return true
 }
 
+func (lsig LogicSig) SignatureCheck() (hasSig, hasMsig, hasLMsig bool, count int) {
+	if hasSig = (lsig.Sig != Signature{}); hasSig {
+		count++
+	}
+	if hasMsig = !lsig.Msig.Blank(); hasMsig {
+		count++
+	}
+	if hasLMsig = !lsig.LMsig.Blank(); hasLMsig {
+		count++
+	}
+	return
+}
+
 /* Classical signatures */
 type ed25519Signature [64]byte
 type ed25519PublicKey [32]byte

@@ -506,22 +506,17 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		return false
 	}
 
-	hasSig := lsig.Sig != (types.Signature{})
-	hasMsig := !lsig.Msig.Blank()
-	hasLMsig := !lsig.LMsig.Blank()
+	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCheck()
+	if count > 1 {
+		return false
+	}
 
 	if hasSig {
-		if hasMsig || hasLMsig {
-			return false
-		}
 		toBeSigned := programToSign(lsig.Logic)
 		return ed25519.Verify(singleSigner[:], toBeSigned, lsig.Sig[:])
 	}
 
 	if hasMsig {
-		if hasSig || hasLMsig {
-			return false
-		}
 		msigAccount, err := MultisigAccountFromSig(lsig.Msig)
 		if err != nil {
 			return false
@@ -535,9 +530,6 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	}
 
 	if hasLMsig {
-		if hasSig || hasMsig {
-			return false
-		}
 		msigAccount, err := MultisigAccountFromSig(lsig.LMsig)
 		if err != nil {
 			return false

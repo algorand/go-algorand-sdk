@@ -264,10 +264,9 @@ func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) e
 // the delegating account. In all other cases, an error will be returned if
 // signerPublicKey is present.
 func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.PublicKey) (lsa LogicSigAccount, err error) {
-	hasSig := lsig.Sig != (types.Signature{})
-	hasMsig := !lsig.Msig.Blank()
+	hasSig, _, _, count := lsig.SignatureCheck()
 
-	if hasSig && hasMsig {
+	if count > 1 {
 		err = errLsigTooManySignatures
 		return
 	}
@@ -320,9 +319,10 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 // If the LogicSig is not delegated to another account, this will return an
 // escrow address that is the hash of the LogicSig's program code.
 func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
-	hasSig := lsa.Lsig.Sig != (types.Signature{})
-	hasMsig := !lsa.Lsig.Msig.Blank()
-	hasLMsig := !lsa.Lsig.LMsig.Blank()
+	hasSig, hasMsig, hasLMsig, err := lsa.hasSignatures()
+	if err != nil {
+		return types.Address{}, err
+	}
 
 	if hasSig {
 		n := copy(addr[:], lsa.SigningKey)
@@ -353,5 +353,13 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 	}
 
 	addr = LogicSigAddress(lsa.Lsig)
+	return
+}
+
+func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig bool, err error) {
+	var count int
+	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCheck(); count > 1 {
+		err = errLsigTooManySignatures
+	}
 	return
 }
