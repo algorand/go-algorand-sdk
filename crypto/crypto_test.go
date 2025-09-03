@@ -428,6 +428,36 @@ func TestMakeLogicSigMulti(t *testing.T) {
 	require.Equal(t, lsig, lsig1)
 }
 
+// TestLogicSigMultisigLegacy ensures we can still verify a legacy multisig
+// delegated lsig with the Msig field.
+func TestLogicSigMultisigLegacy(t *testing.T) {
+	ma, _, sk2, _ := makeTestMultisigAccount(t)
+	sender, err := ma.Address()
+	require.NoError(t, err)
+
+	// Construct a MSig signature "by hand" since we've removed the ability to make them from the SDK.
+	logic := []byte{0x02, 0x03, 0x04}
+	args := [][]byte{{0x01}, {0x02, 0x03}}
+	lsig := types.LogicSig{
+		Logic: logic,
+		Args:  args,
+		Msig: types.MultisigSig{
+			Version:   1,
+			Threshold: 1,
+			Subsigs: []types.MultisigSubsig{{
+				Key: ma.Pks[0],
+			}, {
+				Key: ma.Pks[1],
+			}},
+		},
+	}
+	require.False(t, VerifyLogicSig(lsig, sender))
+	singleSig, err := signProgram(sk2, logic)
+	require.NoError(t, err)
+	lsig.Msig.Subsigs[1].Sig = singleSig
+	require.True(t, VerifyLogicSig(lsig, sender))
+}
+
 func TestSignLogicsigTransaction(t *testing.T) {
 	program := []byte{1, 32, 1, 1, 34}
 	args := [][]byte{
