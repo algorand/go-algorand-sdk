@@ -1,3 +1,18 @@
+# v2.11.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.11.0 -->
+
+## What's Changed
+### Enhancements
+* Types: Changes for tx.Access and epp consensus flag change by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/736
+* Types: Sync types for consensus v41 with go-algorand. by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/743
+* Types: Sync signature types for consensus v41 with go-algorand by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/745
+* types: add txn.Access constructor by @algorandskiy in https://github.com/algorand/go-algorand-sdk/pull/744
+* Txn: Support lmsig logicsig signatures by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/746
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.10.0...v2.11.0
+
 # v2.10.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.10.0 -->
