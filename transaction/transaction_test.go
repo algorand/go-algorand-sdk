@@ -714,7 +714,7 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
 	boxReferences[2] = types.AppBoxReference{AppID: 10, Name: []byte("box_name2")}
 
-	tx, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 2, tx.ExtraProgramPages)
 
@@ -725,7 +725,7 @@ func TestMakeApplicationCallTx(t *testing.T) {
 
 	// the current app can also be referenced with AppID = 0
 	boxReferences[0].AppID = 0
-	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 0, tx.BoxReferences[0].ForeignAppIdx)
 	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
@@ -735,7 +735,7 @@ func TestMakeApplicationCallTx(t *testing.T) {
 	// then the index in the array should be returned rather than the usual value of 0
 	boxReferences[0].AppID = 2
 	foreignApps = append(foreignApps, 2)
-	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.EqualValues(t, 2, tx.BoxReferences[0].ForeignAppIdx)
 	require.EqualValues(t, 1, tx.BoxReferences[1].ForeignAppIdx)
@@ -774,7 +774,7 @@ func TestMakeApplicationCallTxInvalidBoxes(t *testing.T) {
 	boxReferences[1] = types.AppBoxReference{AppID: 10, Name: []byte("box_name")}
 	boxReferences[2] = types.AppBoxReference{AppID: 11, Name: []byte("box_name")}
 
-	_, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	_, err := MakeApplicationCallTxWithBoxes(2, args, addr, foreignApps, foreignAssets, boxReferences, types.NoOpOC, program, program, gSchema, lSchema, extraPages, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.Error(t, err, "the app id 10 provided for this box is not in the foreignApps array")
 }
 
@@ -801,7 +801,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	addrs, err := parseTxnAccounts(accounts)
 	require.NoError(t, err)
 
-	tx, err := MakeApplicationCallTxWithAccess(111, nil, accounts, nil, nil, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err := MakeApplicationCallTxWithAccess(111, nil, accounts, nil, nil, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.Accounts)
 	require.Equal(t, []types.ResourceRef{
@@ -809,7 +809,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	}, tx.Access)
 
 	foreignAssets := []uint64{2222, 3333}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, nil, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, nil, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.ForeignAssets)
 	require.Equal(t, []types.ResourceRef{
@@ -818,7 +818,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	}, tx.Access)
 
 	foreignApps := []uint64{222, 333}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, nil, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.ForeignApps)
 	require.Equal(t, []types.ResourceRef{
@@ -828,7 +828,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	}, tx.Access)
 
 	appBoxReferences := []types.AppBoxReference{{AppID: 3, Name: []byte("aaa")}}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.ForeignApps)
 	require.Nil(t, tx.BoxReferences)
@@ -841,7 +841,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	}, tx.Access)
 
 	appBoxReferences = []types.AppBoxReference{{AppID: 3, Name: []byte("aaa")}, {AppID: 0, Name: []byte("bbb")}, {AppID: 111, Name: []byte("bbb2")}}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, nil, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.ForeignApps)
 	require.Nil(t, tx.BoxReferences)
@@ -863,7 +863,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	twoAddr, err := types.DecodeAddress(two)
 	require.NoError(t, err)
 	holdings := []types.AppHoldingRef{{Asset: 111, Address: one}, {Asset: 3333, Address: zero}}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, nil, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.Accounts)
 	require.Nil(t, tx.ForeignAssets)
@@ -881,7 +881,7 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 	}, tx.Access)
 
 	locals := []types.AppLocalsRef{{App: 111, Address: two}, {App: 333, Address: zero}, {App: 444, Address: one}}
-	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, locals, types.NoOpOC, program, program, gSchema, lSchema, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	tx, err = MakeApplicationCallTxWithAccess(111, nil, accounts, foreignApps, foreignAssets, appBoxReferences, holdings, locals, types.NoOpOC, program, program, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
 	require.NoError(t, err)
 	require.Nil(t, tx.Accounts)
 	require.Nil(t, tx.ForeignApps)
@@ -904,6 +904,106 @@ func TestMakeApplicationCallTxWithAccess(t *testing.T) {
 		{Box: types.BoxReference{ForeignAppIdx: 0, Name: []byte("bbb2")}},
 	}, tx.Access)
 
+}
+
+func TestApplicationCallTxnWithRejectVersion(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+	note := byteFromBase64("8xMCTuLQ810=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+
+	gSchema := types.StateSchema{NumUint: 1, NumByteSlice: 1}
+	lSchema := types.StateSchema{NumUint: 1, NumByteSlice: 1}
+
+	// Test with specific reject version
+	tx, err := MakeApplicationCallTxWithBoxes(123, nil, nil, nil, nil, nil, types.NoOpOC, nil, nil, gSchema, lSchema, 0, 5, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 5, tx.RejectVersion)
+
+	// Verify encoding includes reject version
+	encoded := msgpack.Encode(tx)
+	decoded := types.Transaction{}
+	err = msgpack.Decode(encoded, &decoded)
+	require.NoError(t, err)
+	require.EqualValues(t, 5, decoded.RejectVersion)
+
+	// Test with default reject version (should be 0)
+	txDefault, err := MakeApplicationCallTxWithBoxes(456, nil, nil, nil, nil, nil, types.NoOpOC, nil, nil, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 0, txDefault.RejectVersion)
+
+	// Test with MakeApplicationCallTxWithAccess
+	txAccess, err := MakeApplicationCallTxWithAccess(789, nil, nil, nil, nil, nil, nil, nil, types.NoOpOC, nil, nil, gSchema, lSchema, 0, 7, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 7, txAccess.RejectVersion)
+}
+
+func TestApplicationCallRejectVersionSerialization(t *testing.T) {
+	const fee = 1000
+	const firstRound = 2063137
+	const genesisID = "devnet-v1.0"
+	genesisHash := byteFromBase64("sC3P7e2SdbqKJK0tbiCdK9tdSpbe6XeCGKdoNzmlj0E=")
+	note := byteFromBase64("8xMCTuLQ810=")
+
+	params := types.SuggestedParams{
+		Fee:             fee,
+		FirstRoundValid: firstRound,
+		LastRoundValid:  firstRound + 1000,
+		GenesisHash:     genesisHash,
+		GenesisID:       genesisID,
+		FlatFee:         true,
+	}
+
+	gSchema := types.StateSchema{NumUint: 1, NumByteSlice: 1}
+	lSchema := types.StateSchema{NumUint: 1, NumByteSlice: 1}
+
+	// Test that rejectVersion=0 is omitted from encoding
+	txZero, err := MakeApplicationCallTxWithBoxes(123, nil, nil, nil, nil, nil, types.NoOpOC, nil, nil, gSchema, lSchema, 0, 0, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 0, txZero.RejectVersion)
+
+	encodedZero := msgpack.Encode(txZero)
+	// Decode to a map to check if "aprv" field is present
+	var mapZero map[string]interface{}
+	err = msgpack.Decode(encodedZero, &mapZero)
+	require.NoError(t, err)
+	_, hasAprvZero := mapZero["aprv"]
+	require.False(t, hasAprvZero, "aprv field should be omitted when rejectVersion is 0")
+
+	// Test that non-zero rejectVersion is included in encoding
+	txNonZero, err := MakeApplicationCallTxWithBoxes(123, nil, nil, nil, nil, nil, types.NoOpOC, nil, nil, gSchema, lSchema, 0, 5, params, types.Address{}, note, types.Digest{}, [32]byte{}, types.Address{})
+	require.NoError(t, err)
+	require.EqualValues(t, 5, txNonZero.RejectVersion)
+
+	encodedNonZero := msgpack.Encode(txNonZero)
+	var mapNonZero map[string]interface{}
+	err = msgpack.Decode(encodedNonZero, &mapNonZero)
+	require.NoError(t, err)
+	aprvValue, hasAprvNonZero := mapNonZero["aprv"]
+	require.True(t, hasAprvNonZero, "aprv field should be present when rejectVersion is non-zero")
+	require.EqualValues(t, 5, aprvValue, "aprv value should be 5")
+
+	// Verify round-trip encoding preserves the value
+	var decodedNonZero types.Transaction
+	err = msgpack.Decode(encodedNonZero, &decodedNonZero)
+	require.NoError(t, err)
+	require.EqualValues(t, 5, decodedNonZero.RejectVersion)
+
+	// Verify that decoding a transaction without aprv field defaults to 0
+	var decodedZero types.Transaction
+	err = msgpack.Decode(encodedZero, &decodedZero)
+	require.NoError(t, err)
+	require.EqualValues(t, 0, decodedZero.RejectVersion)
 }
 
 func TestComputeGroupID(t *testing.T) {

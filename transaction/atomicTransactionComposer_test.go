@@ -299,3 +299,76 @@ func TestGatherSignatures(t *testing.T) {
 	require.Equal(t, len(sigs[0]), len(expectedSig))
 	require.Equal(t, sigs[0], expectedSig)
 }
+
+func TestATCWithRejectVersion(t *testing.T) {
+	var atc AtomicTransactionComposer
+	account := crypto.GenerateAccount()
+
+	method, err := abi.MethodFromSignature("add(uint64,uint64)uint64")
+	require.NoError(t, err)
+
+	sp := types.SuggestedParams{
+		Fee:             1000,
+		FirstRoundValid: 1000,
+		LastRoundValid:  2000,
+		GenesisID:       "testnet-v1.0",
+		GenesisHash:     []byte("SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="),
+		FlatFee:         true,
+	}
+
+	// Test with specific reject version
+	err = atc.AddMethodCall(AddMethodCallParams{
+		AppID:           123,
+		Method:          method,
+		MethodArgs:      []interface{}{uint64(1), uint64(2)},
+		Sender:          account.Address,
+		SuggestedParams: sp,
+		OnComplete:      types.NoOpOC,
+		Signer:          BasicAccountTransactionSigner{Account: account},
+		RejectVersion:   5,
+	})
+	require.NoError(t, err)
+
+	txGroup, err := atc.BuildGroup()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(txGroup))
+	require.EqualValues(t, 5, txGroup[0].Txn.RejectVersion)
+
+	// Test with default reject version (0)
+	var atc2 AtomicTransactionComposer
+	err = atc2.AddMethodCall(AddMethodCallParams{
+		AppID:           456,
+		Method:          method,
+		MethodArgs:      []interface{}{uint64(3), uint64(4)},
+		Sender:          account.Address,
+		SuggestedParams: sp,
+		OnComplete:      types.NoOpOC,
+		Signer:          BasicAccountTransactionSigner{Account: account},
+	})
+	require.NoError(t, err)
+
+	txGroup2, err := atc2.BuildGroup()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(txGroup2))
+	require.EqualValues(t, 0, txGroup2[0].Txn.RejectVersion)
+
+	// Test with UseAccess and reject version
+	var atc3 AtomicTransactionComposer
+	err = atc3.AddMethodCall(AddMethodCallParams{
+		AppID:           789,
+		Method:          method,
+		MethodArgs:      []interface{}{uint64(5), uint64(6)},
+		Sender:          account.Address,
+		SuggestedParams: sp,
+		OnComplete:      types.NoOpOC,
+		Signer:          BasicAccountTransactionSigner{Account: account},
+		UseAccess:       true,
+		RejectVersion:   7,
+	})
+	require.NoError(t, err)
+
+	txGroup3, err := atc3.BuildGroup()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(txGroup3))
+	require.EqualValues(t, 7, txGroup3[0].Txn.RejectVersion)
+}

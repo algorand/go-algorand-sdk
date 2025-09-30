@@ -738,6 +738,7 @@ func MakeApplicationCreateTxWithBoxes(
 		globalSchema,
 		localSchema,
 		extraPages,
+		0,
 		sp,
 		sender,
 		note,
@@ -809,6 +810,7 @@ func MakeApplicationUpdateTxWithBoxes(
 		emptySchema,
 		emptySchema,
 		0,
+		0,
 		sp,
 		sender,
 		note,
@@ -873,6 +875,7 @@ func MakeApplicationDeleteTxWithBoxes(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		0,
 		sp,
 		sender,
@@ -941,6 +944,7 @@ func MakeApplicationOptInTxWithBoxes(
 		emptySchema,
 		emptySchema,
 		0,
+		0,
 		sp,
 		sender,
 		note,
@@ -1008,6 +1012,7 @@ func MakeApplicationCloseOutTxWithBoxes(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		0,
 		sp,
 		sender,
@@ -1078,6 +1083,7 @@ func MakeApplicationClearStateTxWithBoxes(
 		nil,
 		emptySchema,
 		emptySchema,
+		0,
 		0,
 		sp,
 		sender,
@@ -1150,6 +1156,7 @@ func MakeApplicationNoOpTxWithBoxes(
 		emptySchema,
 		emptySchema,
 		0,
+		0,
 		sp,
 		sender,
 		note,
@@ -1195,6 +1202,7 @@ func MakeApplicationCallTx(
 		globalSchema,
 		localSchema,
 		0,
+		0,
 		sp,
 		sender,
 		note,
@@ -1233,6 +1241,7 @@ func MakeApplicationCallTxWithBoxes(
 	globalSchema types.StateSchema,
 	localSchema types.StateSchema,
 	extraPages uint32,
+	rejectVersion uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -1261,6 +1270,7 @@ func MakeApplicationCallTxWithBoxes(
 	tx.LocalStateSchema = localSchema
 	tx.GlobalStateSchema = globalSchema
 	tx.ExtraProgramPages = extraPages
+	tx.RejectVersion = rejectVersion
 
 	var gh types.Digest
 	copy(gh[:], sp.GenesisHash)
@@ -1308,6 +1318,7 @@ func MakeApplicationCallTxWithAccess(
 	globalSchema types.StateSchema,
 	localSchema types.StateSchema,
 	extraPages uint32,
+	rejectVersion uint64,
 	sp types.SuggestedParams,
 	sender types.Address,
 	note []byte,
@@ -1402,6 +1413,7 @@ func MakeApplicationCallTxWithAccess(
 	tx.LocalStateSchema = localSchema
 	tx.GlobalStateSchema = globalSchema
 	tx.ExtraProgramPages = extraPages
+	tx.RejectVersion = rejectVersion
 
 	var gh types.Digest
 	copy(gh[:], sp.GenesisHash)
