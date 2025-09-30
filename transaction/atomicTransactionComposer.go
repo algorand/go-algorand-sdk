@@ -110,6 +110,9 @@ type AddMethodCallParams struct {
 	// The local states to be accessed by this method call.
 	// The zero address means the sender. Not used if UseAccess is false.
 	Locals []types.AppLocalsRef
+	// The lowest application version for which this transaction should immediately fail.
+	// 0 indicates that no version check should be performed.
+	RejectVersion uint64
 }
 
 // SimulateResult contains the results of calling the Simulate method on an
@@ -419,6 +422,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 			params.GlobalSchema,
 			params.LocalSchema,
 			params.ExtraPages,
+			params.RejectVersion,
 			params.SuggestedParams,
 			params.Sender,
 			params.Note,
@@ -440,6 +444,7 @@ func (atc *AtomicTransactionComposer) AddMethodCall(params AddMethodCallParams) 
 			params.GlobalSchema,
 			params.LocalSchema,
 			params.ExtraPages,
+			params.RejectVersion,
 			params.SuggestedParams,
 			params.Sender,
 			params.Note,
