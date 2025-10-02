@@ -1,3 +1,14 @@
+# v2.11.1
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.11.1 -->
+
+## What's Changed
+### Enhancements
+* Apps: Support for reject-version on application call transactions by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/750
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.11.0...v2.11.1
+
 # v2.11.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.11.0 -->
