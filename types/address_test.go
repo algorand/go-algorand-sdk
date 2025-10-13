@@ -71,7 +71,6 @@ func TestUnmarshalAddress(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			// wrap in quotes so that it is valid JSON
