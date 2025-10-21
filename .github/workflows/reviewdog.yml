@@ -12,7 +12,7 @@ jobs:
       - name: Install specific golang
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.3'
+          go-version: '1.25.3'
       - name: Check format
         run: test -z `go fmt ./...`
       - name: Vet
@@ -20,9 +20,9 @@ jobs:
       - name: reviewdog-golangci-lint
         uses: reviewdog/action-golangci-lint@v2.6.2
         with:
-          golangci_lint_version: "v1.62.0"
+          golangci_lint_version: "v1.64.8"
           golangci_lint_flags: "-c .golangci.yml --allow-parallel-runners"
-          go_version: "1.23.3"
+          go_version: "1.25.3"
           reporter: "github-pr-review"
           tool_name: "Lint Errors"
           level: "error"

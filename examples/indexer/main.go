@@ -65,7 +65,7 @@ func main() {
 
 	// Print the results
 	assetJson, _ := json.MarshalIndent(assetResult, "", "\t")
-	fmt.Printf(string(assetJson) + "\n")
+	fmt.Print(string(assetJson) + "\n")
 	// example: INDEXER_LOOKUP_ASSET
 
 	assetJson = nil
@@ -82,7 +82,7 @@ func main() {
 
 	// Print results
 	transactionJson, _ := json.MarshalIndent(transactionResult, "", "\t")
-	fmt.Printf(string(transactionJson) + "\n")
+	fmt.Print(string(transactionJson) + "\n")
 	// example: INDEXER_SEARCH_MIN_AMOUNT
 
 	// example: INDEXER_PAGINATE_RESULTS
@@ -113,7 +113,7 @@ func main() {
 			if err != nil {
 				return
 			}
-			fmt.Printf(string(pagedJson) + "\n")
+			fmt.Print(string(pagedJson) + "\n")
 			fmt.Println("End of page : ", numPages)
 			fmt.Println("Transaction printed : ", len(pagedTransactions))
 			fmt.Println("Next Token : ", nextToken)
@@ -134,6 +134,6 @@ func main() {
 
 	// Print results
 	prefixJson, _ := json.MarshalIndent(prefixResult, "", "\t")
-	fmt.Printf(string(prefixJson) + "\n")
+	fmt.Print(string(prefixJson) + "\n")
 	// example: INDEXER_PREFIX_SEARCH
 }
