@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
+//nolint:revive // ALL_CAPS naming is acceptable for example configuration
 var (
 	ALGOD_ADDRESS = "http://localhost"
 	ALGOD_PORT    = "4001"
@@ -98,40 +98,40 @@ func GetSandboxAccounts() ([]crypto.Account, error) {
 
 	resp, err := client.ListWallets()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list wallets: %+v", err)
+		return nil, fmt.Errorf("failed to list wallets: %+v", err)
 	}
 
-	var walletId string
+	var walletID string
 	for _, wallet := range resp.Wallets {
 		if wallet.Name == KMD_WALLET_NAME {
-			walletId = wallet.ID
+			walletID = wallet.ID
 		}
 	}
 
-	if walletId == "" {
-		return nil, fmt.Errorf("No wallet named %s", KMD_WALLET_NAME)
+	if walletID == "" {
+		return nil, fmt.Errorf("no wallet named %s", KMD_WALLET_NAME)
 	}
 
-	whResp, err := client.InitWalletHandle(walletId, KMD_WALLET_PASSWORD)
+	whResp, err := client.InitWalletHandle(walletID, KMD_WALLET_PASSWORD)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to init wallet handle: %+v", err)
+		return nil, fmt.Errorf("failed to init wallet handle: %+v", err)
 	}
 
 	addrResp, err := client.ListKeys(whResp.WalletHandleToken)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list keys: %+v", err)
+		return nil, fmt.Errorf("failed to list keys: %+v", err)
 	}
 
 	var accts []crypto.Account
 	for _, addr := range addrResp.Addresses {
 		expResp, err := client.ExportKey(whResp.WalletHandleToken, KMD_WALLET_PASSWORD, addr)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to export key: %+v", err)
+			return nil, fmt.Errorf("failed to export key: %+v", err)
 		}
 
 		acct, err := crypto.AccountFromPrivateKey(expResp.PrivateKey)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create account from private key: %+v", err)
+			return nil, fmt.Errorf("failed to create account from private key: %+v", err)
 		}
 
 		accts = append(accts, acct)
@@ -141,7 +141,7 @@ func GetSandboxAccounts() ([]crypto.Account, error) {
 }
 
 func CompileTeal(algodClient *algod.Client, path string) []byte {
-	teal, err := ioutil.ReadFile(path)
+	teal, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
 	}
@@ -166,7 +166,7 @@ func DeployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 	)
 
 	// Compile approval program
-	approvalTeal, err := ioutil.ReadFile("calculator/approval.teal")
+	approvalTeal, err := os.ReadFile("calculator/approval.teal")
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
 	}
@@ -182,7 +182,7 @@ func DeployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 	}
 
 	// Compile clear program
-	clearTeal, err := ioutil.ReadFile("calculator/clear.teal")
+	clearTeal, err := os.ReadFile("calculator/clear.teal")
 	if err != nil {
 		log.Fatalf("failed to read clear program: %s", err)
 	}

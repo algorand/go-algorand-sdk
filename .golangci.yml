@@ -23,6 +23,20 @@ linters:
   exclusions:
     generated: lax
     rules:
+      # revive: types is an acceptable package name in this codebase
+      - linters:
+          - revive
+        path: types/
+        text: 'var-naming: avoid meaningless package names'
+      # Examples directory is allowed to skip error checking for brevity
+      - linters:
+          - errcheck
+        path: examples/
+      # Examples directory does not require comments on exported functions
+      - linters:
+          - revive
+        path: examples/
+        text: 'exported: exported function .* should have comment or be unexported'
       # Test utilities and helpers may have code that look unused, but is being used in another file
       - path: test/helpers.go
         text: is unused
@@ -31,6 +45,11 @@ linters:
       # Ignore unused fields in types that are copied from go-algorand
       - path: types/
         text: is unused
+      # ignore issues about the way we use _struct fields to define encoding settings
+      - path: (.+)\.go$
+        text: 'field _struct is unused'
+        linters:
+          - unused
         # ignore govet false positive fixed in https://github.com/golang/go/issues/45043
       - path: (.+)\.go$
         text: 'sigchanyzer: misuse of unbuffered os.Signal channel as argument to signal.Notify'

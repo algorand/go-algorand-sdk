@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/examples"
@@ -22,7 +22,7 @@ func main() {
 	seedAcct := accts[0]
 
 	// example: LSIG_COMPILE
-	teal, err := ioutil.ReadFile("lsig/simple.teal")
+	teal, err := os.ReadFile("lsig/simple.teal")
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
 	}
@@ -111,7 +111,7 @@ func main() {
 		log.Fatalf("failed to make transaction: %s", err)
 	}
 
-	delTxId, delStxn, err := crypto.SignLogicSigAccountTransaction(delSig, delSigPay)
+	delTxID, delStxn, err := crypto.SignLogicSigAccountTransaction(delSig, delSigPay)
 	if err != nil {
 		log.Fatalf("failed to sign with delegate sig: %s", err)
 	}
@@ -121,7 +121,7 @@ func main() {
 		log.Fatalf("failed to send transaction: %s", err)
 	}
 
-	delPayResult, err := transaction.WaitForConfirmation(algodClient, delTxId, 4, context.Background())
+	delPayResult, err := transaction.WaitForConfirmation(algodClient, delTxID, 4, context.Background())
 	if err != nil {
 		log.Fatalf("failed while waiting for transaction: %s", err)
 	}

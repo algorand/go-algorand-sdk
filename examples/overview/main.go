@@ -128,5 +128,7 @@ func main() {
 	// example: TRANSACTION_FEE_OVERRIDE
 
 }
+
+//nolint:unused // example code for documentation
 func exampleAlgod() {
 }

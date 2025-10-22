@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/algorand/go-algorand-sdk/v2/abi"
 	"github.com/algorand/go-algorand-sdk/v2/examples"
@@ -25,7 +25,7 @@ func main() {
 	log.Printf("%d", appID)
 
 	// example: ATC_CONTRACT_INIT
-	b, err := ioutil.ReadFile("calculator/contract.json")
+	b, err := os.ReadFile("calculator/contract.json")
 	if err != nil {
 		log.Fatalf("failed to read contract file: %s", err)
 	}
@@ -93,6 +93,7 @@ func main() {
 
 	// example: ATC_BOX_REF
 	boxName := "coolBoxName"
+	//nolint:ineffassign,staticcheck // example code demonstrating BoxReferences structure
 	mcp = transaction.AddMethodCallParams{
 		AppID:           appID,
 		Sender:          acct1.Address,

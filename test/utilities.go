@@ -235,7 +235,7 @@ func recursiveCompare(field string, expected, actual interface{}) error {
 	} else {
 		// If both are present, make sure they are the same
 		if expectedType != actualType {
-			return errors.New("Type mismatch")
+			return errors.New("type mismatch")
 		}
 		keyType = expectedType
 	}

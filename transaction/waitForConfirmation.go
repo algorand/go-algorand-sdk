@@ -24,7 +24,7 @@ func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx co
 	for {
 		// Check that the `waitRounds` has not passed
 		if currentRound > lastRound+waitRounds {
-			err = fmt.Errorf("Wait for transaction id %s timed out", txid)
+			err = fmt.Errorf("wait for transaction id %s timed out", txid)
 			return
 		}
 
@@ -32,7 +32,7 @@ func WaitForConfirmation(c *algod.Client, txid string, waitRounds uint64, ctx co
 		if err == nil {
 			if len(txInfo.PoolError) != 0 {
 				// The transaction has been rejected
-				err = fmt.Errorf("Transaction rejected: %s", txInfo.PoolError)
+				err = fmt.Errorf("transaction rejected: %s", txInfo.PoolError)
 				return
 			}
 
