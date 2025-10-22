@@ -1,11 +1,13 @@
 package config
 
 import (
+	"encoding/json"
 	"time"
-
+	"os"
+	"path/filepath"
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
 )
-
+const ConfigurableConsensusProtocolsFilename = "consensus.json"
 // ConsensusParams specifies settings that might vary based on the
 // particular version of the consensus protocol.
 type ConsensusParams struct {
@@ -1381,4 +1383,54 @@ var Protocol = Global{
 func init() {
 	Consensus = make(ConsensusProtocols)
 	initConsensusProtocols()
+}
+
+
+// LoadConfigurableConsensusProtocols loads the configurable protocols from the data directory
+func LoadConfigurableConsensusProtocols(dataDirectory string) error {
+	newConsensus, err := PreloadConfigurableConsensusProtocols(dataDirectory)
+	if err != nil {
+		return err
+	}
+	if newConsensus != nil {
+		SetConfigurableConsensusProtocols(newConsensus)
+	}
+	return nil
+}
+
+// SetConfigurableConsensusProtocols sets the configurable protocols.
+func SetConfigurableConsensusProtocols(newConsensus ConsensusProtocols) ConsensusProtocols {
+	oldConsensus := Consensus
+	Consensus = newConsensus
+	// Set allocation limits
+	for _, p := range Consensus {
+		checkSetAllocBounds(p)
+	}
+	return oldConsensus
+}
+
+// https://github.com/algorand/go-algorand/blob/21eec2d39b4ac93d66f9e930e7b07d45f8248c24/config/consensus.go#L787
+// PreloadConfigurableConsensusProtocols loads the configurable protocols from the data directory
+// and merge it with a copy of the Consensus map. Then, it returns it to the caller.
+func PreloadConfigurableConsensusProtocols(dataDirectory string) (ConsensusProtocols, error) {
+	consensusProtocolPath := filepath.Join(dataDirectory, ConfigurableConsensusProtocolsFilename)
+	file, err := os.Open(consensusProtocolPath)
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			// this file is not required, only optional. if it's missing, no harm is done.
+			return Consensus, nil
+		}
+		return nil, err
+	}
+	defer file.Close()
+
+	configurableConsensus := make(ConsensusProtocols)
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&configurableConsensus)
+	if err != nil {
+		return nil, err
+	}
+	return Consensus.Merge(configurableConsensus), nil
 }
