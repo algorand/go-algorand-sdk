@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"time"
+	"maps"
 	"os"
 	"path/filepath"
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
@@ -1403,9 +1404,10 @@ func SetConfigurableConsensusProtocols(newConsensus ConsensusProtocols) Consensu
 	oldConsensus := Consensus
 	Consensus = newConsensus
 	// Set allocation limits
-	for _, p := range Consensus {
-		checkSetAllocBounds(p)
-	}
+	// checkSetAllocBounds not ported to sdk https://github.com/algorand/go-algorand/blob/e68b54e90cd9dc1b52c3a9df85e0aeb56e8206d5/config/consensus.go#L723
+	// for _, p := range Consensus {
+	// 	checkSetAllocBounds(p)
+	// }
 	return oldConsensus
 }
 
@@ -1433,4 +1435,42 @@ func PreloadConfigurableConsensusProtocols(dataDirectory string) (ConsensusProto
 		return nil, err
 	}
 	return Consensus.Merge(configurableConsensus), nil
+}
+
+// https://github.com/algorand/go-algorand/blob/e68b54e90cd9dc1b52c3a9df85e0aeb56e8206d5/config/consensus.go#L768
+// DeepCopy creates a deep copy of a consensus protocols map.
+func (cp ConsensusProtocols) DeepCopy() ConsensusProtocols {
+	staticConsensus := make(ConsensusProtocols)
+	for consensusVersion, consensusParams := range cp {
+		// recreate the ApprovedUpgrades map since we don't want to modify the original one.
+		consensusParams.ApprovedUpgrades = maps.Clone(consensusParams.ApprovedUpgrades)
+		staticConsensus[consensusVersion] = consensusParams
+	}
+	return staticConsensus
+}
+
+// https://github.com/algorand/go-algorand/blob/e68b54e90cd9dc1b52c3a9df85e0aeb56e8206d5/config/consensus.go#L780
+// Merge merges a configurable consensus on top of the existing consensus protocol and return
+// a new consensus protocol without modify any of the incoming structures.
+func (cp ConsensusProtocols) Merge(configurableConsensus ConsensusProtocols) ConsensusProtocols {
+	staticConsensus := cp.DeepCopy()
+
+	for consensusVersion, consensusParams := range configurableConsensus {
+		if consensusParams.ApprovedUpgrades == nil {
+			// if we were provided with an empty ConsensusParams, delete the existing reference to this consensus version
+			for cVer, cParam := range staticConsensus {
+				if cVer == consensusVersion {
+					delete(staticConsensus, cVer)
+				} else {
+					// delete upgrade to deleted version
+					delete(cParam.ApprovedUpgrades, consensusVersion)
+				}
+			}
+		} else {
+			// need to add/update entry
+			staticConsensus[consensusVersion] = consensusParams
+		}
+	}
+
+	return staticConsensus
 }
