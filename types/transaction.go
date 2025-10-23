@@ -203,12 +203,12 @@ type SuggestedParams struct {
 // - lease: the [32]byte lease to add to the header
 // - feePerByte: the new feePerByte
 func (tx *Transaction) AddLease(lease [32]byte, feePerByte uint64) {
-	copy(tx.Lease[:], lease[:])
+	copy(tx.Header.Lease[:], lease[:])
 	// normally we would use estimateSize,
 	// and set fee = feePerByte * estimateSize,
 	// but this would cause a circular import.
 	// we know we are adding 32 bytes (+ a few bytes to hold the 32), so increase fee accordingly.
-	tx.Fee = tx.Fee + MicroAlgos(37*feePerByte)
+	tx.Header.Fee = tx.Header.Fee + MicroAlgos(37*feePerByte)
 }
 
 // AddLeaseWithFlatFee adds the passed lease (see types/transaction.go) to the header of the passed transaction
@@ -216,8 +216,8 @@ func (tx *Transaction) AddLease(lease [32]byte, feePerByte uint64) {
 // - lease: the [32]byte lease to add to the header
 // - flatFee: the new flatFee
 func (tx *Transaction) AddLeaseWithFlatFee(lease [32]byte, flatFee uint64) {
-	tx.Lease = lease
-	tx.Fee = MicroAlgos(flatFee)
+	tx.Header.Lease = lease
+	tx.Header.Fee = MicroAlgos(flatFee)
 }
 
 // Rekey sets the rekeyTo field to the passed address. Any future transacrtion will need to be signed by the

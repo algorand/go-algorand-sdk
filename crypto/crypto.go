@@ -606,7 +606,7 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 		// the address of that account from only its signature, so assume the
 		// delegating account is the sender. If that's not the case, the signing
 		// will fail.
-		lsigAddress = tx.Sender
+		lsigAddress = tx.Header.Sender
 	} else if hasLMsig {
 		var msigAccount MultisigAccount
 		msigAccount, err = MultisigAccountFromSig(lsig.LMsig)

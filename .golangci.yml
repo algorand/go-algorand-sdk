@@ -20,23 +20,33 @@ linters:
       require-explanation: true
       # require naming a specific linter X using //nolint:X
       require-specific: true
+    staticcheck:
+      checks:
+        - all
+        - '-ST1000' # don't require package comments
+        - '-ST1003' # don't require currentDBRound vs currentDbRound
+        - '-SA3001' # we assign to b.N in several benchmarks
+        - '-QF1008' # ignore suggestions to remove embedded fields (e.g., txn.SignedTxn.Txn -> txn.Txn)
   exclusions:
     generated: lax
     rules:
+      # Examples directory is allowed to skip error checking for brevity
+      - linters: errcheck
+        path: examples/
+      - linters: revive
+        text: '^package-comments: should have a package comment'
       # revive: types is an acceptable package name in this codebase
-      - linters:
-          - revive
+      - linters: revive
         path: types/
         text: 'var-naming: avoid meaningless package names'
-      # Examples directory is allowed to skip error checking for brevity
-      - linters:
-          - errcheck
-        path: examples/
       # Examples directory does not require comments on exported functions
-      - linters:
-          - revive
+      - linters: revive
         path: examples/
         text: 'exported: exported function .* should have comment or be unexported'
+      # ignore issues about the way we use _struct fields to define encoding settings
+      - linters: unused
+        path: (.+)\.go$
+        text: 'field _struct is unused'
       # Test utilities and helpers may have code that look unused, but is being used in another file
       - path: test/helpers.go
         text: is unused
@@ -45,17 +55,9 @@ linters:
       # Ignore unused fields in types that are copied from go-algorand
       - path: types/
         text: is unused
-      # ignore issues about the way we use _struct fields to define encoding settings
-      - path: (.+)\.go$
-        text: 'field _struct is unused'
-        linters:
-          - unused
         # ignore issues about the way we use _struct fields to define encoding settings
       - path: (.+)\.go$
         text: '`_struct` is unused'
-        # we are not enforcing package-comments at this point
-      - path: (.+)\.go$
-        text: '^package-comments: should have a package comment'
         # Enable some golangci-lint default exception rules:
         # "EXC0001 errcheck: Almost all programs ignore errors on these functions and in most cases it's ok"
       - path: (.+)\.go$
