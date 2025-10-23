@@ -55,10 +55,11 @@ func appCreate(algodClient *algod.Client, creator crypto.Account) uint64 {
 	// example: APP_SCHEMA
 	// declare application state storage (immutable)
 	var (
-		localInts   uint64 = 1
-		localBytes  uint64 = 1
-		globalInts  uint64 = 1
-		globalBytes uint64
+		localInts  uint64 = 1
+		localBytes uint64 = 1
+		globalInts uint64 = 1
+		//revive:disable:var-declaration // We want the explicit declaration here for the example
+		globalBytes uint64 = 0
 	)
 
 	// define schema
