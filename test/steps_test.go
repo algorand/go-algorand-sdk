@@ -637,7 +637,7 @@ func equalGolden(golden string) error {
 	}
 
 	if !bytes.Equal(goldenDecoded, stx) {
-		return fmt.Errorf("%s", base64.StdEncoding.EncodeToString(stx))
+		return errors.New(base64.StdEncoding.EncodeToString(stx))
 	}
 	return nil
 }
