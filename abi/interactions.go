@@ -36,10 +36,10 @@ func (a Arg) IsReferenceArg() bool {
 // reference type
 func (a *Arg) GetTypeObject() (Type, error) {
 	if a.IsTransactionArg() {
-		return Type{}, fmt.Errorf("Invalid operation on transaction type %s", a.Type)
+		return Type{}, fmt.Errorf("invalid operation on transaction type %s", a.Type)
 	}
 	if a.IsReferenceArg() {
-		return Type{}, fmt.Errorf("Invalid operation on reference type %s", a.Type)
+		return Type{}, fmt.Errorf("invalid operation on reference type %s", a.Type)
 	}
 	if a.typeObject != nil {
 		return *a.typeObject, nil
@@ -72,7 +72,7 @@ func (r Return) IsVoid() bool {
 // An error will be returned if this is a void return type.
 func (r *Return) GetTypeObject() (Type, error) {
 	if r.IsVoid() {
-		return Type{}, fmt.Errorf("Invalid operation on void return type")
+		return Type{}, fmt.Errorf("invalid operation on void return type")
 	}
 	if r.typeObject != nil {
 		return *r.typeObject, nil
@@ -108,7 +108,7 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		// fill type object cache and catch any errors
 		_, err := returnType.GetTypeObject()
 		if err != nil {
-			return Method{}, fmt.Errorf("Could not parse method return type: %w", err)
+			return Method{}, fmt.Errorf("could not parse method return type: %w", err)
 		}
 	}
 
@@ -123,7 +123,7 @@ func MethodFromSignature(methodStr string) (Method, error) {
 		// fill type object cache and catch any errors
 		_, err := args[i].GetTypeObject()
 		if err != nil {
-			return Method{}, fmt.Errorf("Could not parse argument type at index %d: %w", i, err)
+			return Method{}, fmt.Errorf("could not parse argument type at index %d: %w", i, err)
 		}
 	}
 

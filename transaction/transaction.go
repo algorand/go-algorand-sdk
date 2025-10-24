@@ -551,7 +551,7 @@ func byte32FromBase64(in string) (out [32]byte, err error) {
 		return
 	}
 	if len(slice) != 32 {
-		return out, fmt.Errorf("Input is not 32 bytes")
+		return out, fmt.Errorf("input is not 32 bytes")
 	}
 	copy(out[:], slice)
 	return

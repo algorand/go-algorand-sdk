@@ -6,7 +6,7 @@ INTEGRATIONS_TAGS := "$(shell awk '{print $2}' test/integration.tags | paste -s 
 GO_IMAGE := golang:$(subst go,,$(shell go version | cut -d' ' -f 3 | cut -d'.' -f 1,2))-bookworm
 
 lint:
-	golangci-lint run -c .golangci.yml
+	GOTOOLCHAIN=auto go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run -c .golangci.yml
 	go vet ./...
 
 fmt:

@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
@@ -55,9 +55,10 @@ func appCreate(algodClient *algod.Client, creator crypto.Account) uint64 {
 	// example: APP_SCHEMA
 	// declare application state storage (immutable)
 	var (
-		localInts   uint64 = 1
-		localBytes  uint64 = 1
-		globalInts  uint64 = 1
+		localInts  uint64 = 1
+		localBytes uint64 = 1
+		globalInts uint64 = 1
+		//revive:disable:var-declaration // We want the explicit declaration here for the example
 		globalBytes uint64 = 0
 	)
 
@@ -67,11 +68,11 @@ func appCreate(algodClient *algod.Client, creator crypto.Account) uint64 {
 	// example: APP_SCHEMA
 
 	// example: APP_SOURCE
-	approvalTeal, err := ioutil.ReadFile("application/approval.teal")
+	approvalTeal, err := os.ReadFile("application/approval.teal")
 	if err != nil {
 		log.Fatalf("failed to read approval program: %s", err)
 	}
-	clearTeal, err := ioutil.ReadFile("application/clear.teal")
+	clearTeal, err := os.ReadFile("application/clear.teal")
 	if err != nil {
 		log.Fatalf("failed to read clear program: %s", err)
 	}
@@ -311,6 +312,7 @@ func appCloseOut(algodClient *algod.Client, appID uint64, caller crypto.Account)
 	// example: APP_CLOSEOUT
 }
 
+//nolint:unused // example code for documentation
 func appClearState(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 	// example: APP_CLEAR
 	sp, err := algodClient.SuggestedParams().Do(context.Background())

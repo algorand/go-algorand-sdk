@@ -810,7 +810,7 @@ func theContentsOfTheBoxWithNameShouldBeIfThereIsAnErrorItIs(fromClient, encoded
 	} else if fromClient == "indexer" {
 		box, err = indexerV2client.LookupApplicationBoxByIDAndName(applicationId, decodedBoxName).Do(context.Background())
 	} else {
-		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+		err = fmt.Errorf("expecting algod or indexer, got %s", fromClient)
 	}
 	if err != nil {
 		// If the expected error string is not empty, check if it is a substring of the actual error string.
@@ -861,7 +861,7 @@ func currentApplicationShouldHaveFollowingBoxes(fromClient, encodedBoxesRaw stri
 	} else if fromClient == "indexer" {
 		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Do(context.Background())
 	} else {
-		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+		err = fmt.Errorf("expecting algod or indexer, got %s", fromClient)
 	}
 	if err != nil {
 		return err
@@ -967,7 +967,7 @@ func currentApplicationShouldHaveBoxNum(fromClient string, max int, expectedNum 
 	} else if fromClient == "indexer" {
 		r, err = indexerV2client.SearchForApplicationBoxes(applicationId).Limit(uint64(max)).Do(context.Background())
 	} else {
-		err = fmt.Errorf("expecting algod or indexer, got " + fromClient)
+		err = fmt.Errorf("expecting algod or indexer, got %s", fromClient)
 	}
 	if err != nil {
 		return err

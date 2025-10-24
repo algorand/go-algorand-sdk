@@ -1,4 +1,4 @@
-ARG GO_IMAGE=golang:1.23.9
+ARG GO_IMAGE=golang:1.25.3
 FROM $GO_IMAGE
 
 # Copy SDK code into the container

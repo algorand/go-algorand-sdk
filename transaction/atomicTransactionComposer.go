@@ -812,7 +812,7 @@ func marshallAbiUint64(value interface{}) (uint64, error) {
 	}
 	marshalledValue, ok := decoded.(uint64)
 	if !ok {
-		err = fmt.Errorf("Decoded value is not a uint64")
+		err = fmt.Errorf("decoded value is not a uint64")
 	}
 	return marshalledValue, err
 }
@@ -834,7 +834,7 @@ func marshallAbiAddress(value interface{}) (string, error) {
 	}
 	marshalledValue, ok := decoded.([]byte)
 	if !ok || len(marshalledValue) != len(types.ZeroAddress) {
-		err = fmt.Errorf("Decoded value is not a 32 length byte slice")
+		err = fmt.Errorf("decoded value is not a 32 length byte slice")
 	}
 	var addressValue types.Address
 	copy(addressValue[:], marshalledValue)
@@ -912,7 +912,7 @@ func populateMethodCallReferenceArgs(sender string, currentApp uint64, types []s
 				*assets = append(*assets, assetID)
 			}
 		default:
-			return nil, fmt.Errorf("Unknown reference type: %s", types[i])
+			return nil, fmt.Errorf("unknown reference type: %s", types[i])
 		}
 
 		resolvedIndexes[i] = resolved

@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -637,7 +638,7 @@ func equalGolden(golden string) error {
 	}
 
 	if !bytes.Equal(goldenDecoded, stx) {
-		return fmt.Errorf(base64.StdEncoding.EncodeToString(stx))
+		return errors.New(base64.StdEncoding.EncodeToString(stx))
 	}
 	return nil
 }

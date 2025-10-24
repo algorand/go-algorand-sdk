@@ -54,21 +54,19 @@ func main() {
 
 	// example: INDEXER_LOOKUP_ASSET
 	// query parameters
-	var assetId uint64 = 2044572
+	var assetID uint64 = 2044572
 	var minBalance uint64 = 50
 
 	// Lookup accounts with minimum balance of asset
 	assetResult, _ := indexerClient.
-		LookupAssetBalances(assetId).
+		LookupAssetBalances(assetID).
 		CurrencyGreaterThan(minBalance).
 		Do(context.Background())
 
 	// Print the results
-	assetJson, _ := json.MarshalIndent(assetResult, "", "\t")
-	fmt.Printf(string(assetJson) + "\n")
+	assetJSON, _ := json.MarshalIndent(assetResult, "", "\t")
+	fmt.Print(string(assetJSON) + "\n")
 	// example: INDEXER_LOOKUP_ASSET
-
-	assetJson = nil
 
 	// example: INDEXER_SEARCH_MIN_AMOUNT
 	// query parameters
@@ -81,8 +79,8 @@ func main() {
 		Do(context.Background())
 
 	// Print results
-	transactionJson, _ := json.MarshalIndent(transactionResult, "", "\t")
-	fmt.Printf(string(transactionJson) + "\n")
+	transactionJSON, _ := json.MarshalIndent(transactionResult, "", "\t")
+	fmt.Print(string(transactionJSON) + "\n")
 	// example: INDEXER_SEARCH_MIN_AMOUNT
 
 	// example: INDEXER_PAGINATE_RESULTS
@@ -109,11 +107,11 @@ func main() {
 
 		if numTx > 0 {
 			// Print results
-			pagedJson, err := json.MarshalIndent(pagedTransactions, "", "\t")
+			pagedJSON, err := json.MarshalIndent(pagedTransactions, "", "\t")
 			if err != nil {
 				return
 			}
-			fmt.Printf(string(pagedJson) + "\n")
+			fmt.Print(string(pagedJSON) + "\n")
 			fmt.Println("End of page : ", numPages)
 			fmt.Println("Transaction printed : ", len(pagedTransactions))
 			fmt.Println("Next Token : ", nextToken)
@@ -133,7 +131,7 @@ func main() {
 		Do(context.Background())
 
 	// Print results
-	prefixJson, _ := json.MarshalIndent(prefixResult, "", "\t")
-	fmt.Printf(string(prefixJson) + "\n")
+	prefixJSON, _ := json.MarshalIndent(prefixResult, "", "\t")
+	fmt.Print(string(prefixJSON) + "\n")
 	// example: INDEXER_PREFIX_SEARCH
 }

@@ -180,6 +180,7 @@ func optInAsset(algodClient *algod.Client, assetID uint64, user crypto.Account) 
 	// example: ASSET_OPTIN
 }
 
+//nolint:unused // example code for documentation
 func optOutAsset(algodClient *algod.Client, assetID uint64, creator, user crypto.Account) {
 	// example: ASSET_OPT_OUT
 	userAddr := user.Address.String()

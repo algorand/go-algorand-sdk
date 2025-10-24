@@ -327,7 +327,7 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 	if hasSig {
 		n := copy(addr[:], lsa.SigningKey)
 		if n != ed25519.PublicKeySize {
-			err = fmt.Errorf("Generated public key has length of %d, expected %d", n, ed25519.PublicKeySize)
+			err = fmt.Errorf("generated public key has length of %d, expected %d", n, ed25519.PublicKeySize)
 		}
 		return
 	}
