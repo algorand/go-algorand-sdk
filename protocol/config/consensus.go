@@ -1,6 +1,7 @@
 package config
 
 import (
+	"maps"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
@@ -668,6 +669,42 @@ type ConsensusProtocols map[protocol.ConsensusVersion]ConsensusParams
 // Consensus tracks the protocol-level settings for different versions of the
 // consensus protocol.
 var Consensus ConsensusProtocols
+
+// DeepCopy creates a deep copy of a consensus protocols map.
+func (cp ConsensusProtocols) DeepCopy() ConsensusProtocols {
+	staticConsensus := make(ConsensusProtocols)
+	for consensusVersion, consensusParams := range cp {
+		// recreate the ApprovedUpgrades map since we don't want to modify the original one.
+		consensusParams.ApprovedUpgrades = maps.Clone(consensusParams.ApprovedUpgrades)
+		staticConsensus[consensusVersion] = consensusParams
+	}
+	return staticConsensus
+}
+
+// Merge merges a configurable consensus on top of the existing consensus protocol and return
+// a new consensus protocol without modify any of the incoming structures.
+func (cp ConsensusProtocols) Merge(configurableConsensus ConsensusProtocols) ConsensusProtocols {
+	staticConsensus := cp.DeepCopy()
+
+	for consensusVersion, consensusParams := range configurableConsensus {
+		if consensusParams.ApprovedUpgrades == nil {
+			// if we were provided with an empty ConsensusParams, delete the existing reference to this consensus version
+			for cVer, cParam := range staticConsensus {
+				if cVer == consensusVersion {
+					delete(staticConsensus, cVer)
+				} else {
+					// delete upgrade to deleted version
+					delete(cParam.ApprovedUpgrades, consensusVersion)
+				}
+			}
+		} else {
+			// need to add/update entry
+			staticConsensus[consensusVersion] = consensusParams
+		}
+	}
+
+	return staticConsensus
+}
 
 // initConsensusProtocols defines the consensus protocol values and how values change across different versions of the protocol.
 //
