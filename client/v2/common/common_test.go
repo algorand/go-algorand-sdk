@@ -62,7 +62,6 @@ func TestClient_Verbs(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.expectedVerb, func(t *testing.T) {
 			var receivedMethod string
 			var receivedPath string
