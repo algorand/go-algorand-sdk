@@ -1,6 +1,7 @@
 package config
 
 import (
+	"maps"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
@@ -558,6 +559,12 @@ type ConsensusParams struct {
 	// available. This parameters can be removed and assumed true after the
 	// first consensus release in which it is set true.
 	EnableInnerClawbackWithoutSenderHolding bool
+
+	// AppSizeUpdates allows application update transactions to change
+	// the extra-program-pages and global schema sizes. Since it enables newly
+	// legal transactions, this parameter can be removed and assumed true after
+	// the first consensus release in which it is set true.
+	AppSizeUpdates bool
 }
 
 // ProposerPayoutRules puts several related consensus parameters in one place. The same
@@ -668,6 +675,42 @@ type ConsensusProtocols map[protocol.ConsensusVersion]ConsensusParams
 // Consensus tracks the protocol-level settings for different versions of the
 // consensus protocol.
 var Consensus ConsensusProtocols
+
+// DeepCopy creates a deep copy of a consensus protocols map.
+func (cp ConsensusProtocols) DeepCopy() ConsensusProtocols {
+	staticConsensus := make(ConsensusProtocols)
+	for consensusVersion, consensusParams := range cp {
+		// recreate the ApprovedUpgrades map since we don't want to modify the original one.
+		consensusParams.ApprovedUpgrades = maps.Clone(consensusParams.ApprovedUpgrades)
+		staticConsensus[consensusVersion] = consensusParams
+	}
+	return staticConsensus
+}
+
+// Merge merges a configurable consensus on top of the existing consensus protocol and return
+// a new consensus protocol without modify any of the incoming structures.
+func (cp ConsensusProtocols) Merge(configurableConsensus ConsensusProtocols) ConsensusProtocols {
+	staticConsensus := cp.DeepCopy()
+
+	for consensusVersion, consensusParams := range configurableConsensus {
+		if consensusParams.ApprovedUpgrades == nil {
+			// if we were provided with an empty ConsensusParams, delete the existing reference to this consensus version
+			for cVer, cParam := range staticConsensus {
+				if cVer == consensusVersion {
+					delete(staticConsensus, cVer)
+				} else {
+					// delete upgrade to deleted version
+					delete(cParam.ApprovedUpgrades, consensusVersion)
+				}
+			}
+		} else {
+			// need to add/update entry
+			staticConsensus[consensusVersion] = consensusParams
+		}
+	}
+
+	return staticConsensus
+}
 
 // initConsensusProtocols defines the consensus protocol values and how values change across different versions of the protocol.
 //
@@ -1330,6 +1373,8 @@ func initConsensusProtocols() {
 	vFuture.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 
 	vFuture.LogicSigVersion = 13 // When moving this to a release, put a new higher LogicSigVersion here
+
+	vFuture.AppSizeUpdates = true
 
 	Consensus[protocol.ConsensusFuture] = vFuture
 
