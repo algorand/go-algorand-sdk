@@ -177,7 +177,7 @@ func buildLegacyAppCallTransaction(
 		tx, err = transaction.MakeApplicationDeleteTxWithBoxes(uint64(applicationId), args, accs, fApp, fAssets, boxReferences,
 			sugParams, senderAddr, nil, types.Digest{}, [32]byte{}, types.Address{})
 	default:
-		err = fmt.Errorf("Unknown opperation: %s", operation)
+		err = fmt.Errorf("Unknown operation: %s", operation)
 	}
 	return err
 
