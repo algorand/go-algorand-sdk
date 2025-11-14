@@ -46,7 +46,7 @@ func (d GenericDigest) IsEqual(other GenericDigest) bool {
 	return bytes.Equal(d, other)
 }
 
-// IsEmpty checks wether the generic digest is an empty one or not
+// IsEmpty checks whether the generic digest is an empty one or not
 func (d GenericDigest) IsEmpty() bool {
 	return len(d) == 0
 }

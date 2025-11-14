@@ -31,7 +31,7 @@ func (a Address) String() string {
 // ZeroAddress is Address with all zero bytes. For handy == != comparisons.
 var ZeroAddress Address = [hashLenBytes]byte{}
 
-// IsZero returs true if the Address is all zero bytes.
+// IsZero returns true if the Address is all zero bytes.
 func (a Address) IsZero() bool {
 	return a == ZeroAddress
 }
