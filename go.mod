@@ -10,7 +10,7 @@ require (
 	github.com/cucumber/godog v0.14.1
 	github.com/google/go-querystring v1.1.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
