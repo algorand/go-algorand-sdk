@@ -246,7 +246,7 @@ func (atc *AtomicTransactionComposer) validateTransaction(txn types.Transaction,
 // causes the current group to exceed MaxAtomicGroupSize.
 func (atc *AtomicTransactionComposer) AddTransaction(txnAndSigner TransactionWithSigner) error {
 	if atc.status != BUILDING {
-		return errors.New("status must be BUILDING in order to add tranactions")
+		return errors.New("status must be BUILDING in order to add transactions")
 	}
 
 	if atc.Count() == MaxAtomicGroupSize {
@@ -715,7 +715,7 @@ func (atc *AtomicTransactionComposer) Execute(client *algod.Client, ctx context.
 	for i, txContext := range atc.txContexts {
 		if txContext.isMethodCallTx() {
 			// if there is a method call in the group, we need to query the
-			// pending tranaction endpoint for it anyway, so as an optimization
+			// pending transaction endpoint for it anyway, so as an optimization
 			// we should wait for its TxID
 			if numMethodCalls == 0 {
 				indexToWaitFor = i
