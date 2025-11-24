@@ -114,6 +114,16 @@ type BlockHeader struct {
 	// ParticipationUpdates contains the information needed to mark
 	// certain accounts offline because their participation keys expired
 	ParticipationUpdates
+
+	// Load is the degree to which a block is full. Currently, it is based on
+	// the number of bytes in the final block, compared to the maximum allowed.
+	// It is expressed as a fixed-point integer with 6 digits of precision.  So,
+	// 1,000,000 is a completely full block.
+	Load Micros `codec:"ld"`
+
+	// CongestionTax fee required, beyond the MinFee, for "normal"
+	// transactions in this block.
+	CongestionTax Micros `codec:"ct"`
 }
 
 // TxnCommitments represents the commitments computed from the transactions in the block.

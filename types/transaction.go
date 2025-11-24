@@ -124,13 +124,24 @@ type AssetFreezeTxnFields struct {
 type Header struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sender      Address    `codec:"snd"`
-	Fee         MicroAlgos `codec:"fee"`
-	FirstValid  Round      `codec:"fv"`
-	LastValid   Round      `codec:"lv"`
-	Note        []byte     `codec:"note"` // Uniqueness or app-level data about txn
-	GenesisID   string     `codec:"gen"`
-	GenesisHash Digest     `codec:"gh"`
+	Sender Address `codec:"snd"`
+
+	Fee MicroAlgos `codec:"fee"`
+	// Tip represents a multiplier for all costs in the same group. Only one
+	// transaction per group may specify a tip. The Tip does not multiply the
+	// Fee, rather it promises that, with the tip applied, the Fees specified
+	// will still be sufficient.  When congested, `algod` will begin to drop
+	// groups with insifficient tips to cover the block's CongestionTax. Future
+	// versions may prioritize groups with larger tips.
+	Tip Micros `codec:"tp"` // All costs are multiplied by 1 + Tip
+
+	FirstValid Round `codec:"fv"`
+	LastValid  Round `codec:"lv"`
+
+	Note []byte `codec:"note"` // Uniqueness or app-level data about txn
+
+	GenesisID   string `codec:"gen"`
+	GenesisHash Digest `codec:"gh"`
 
 	// Group specifies that this transaction is part of a
 	// transaction group (and, if so, specifies the hash
