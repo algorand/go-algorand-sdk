@@ -1,11 +1,10 @@
 package types
 
 import (
+	"encoding/base64"
 	"testing"
 
-	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
-
 	"github.com/stretchr/testify/require"
 )
 

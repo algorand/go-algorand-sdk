@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"strconv"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/cucumber/godog"
-
 	"golang.org/x/crypto/ed25519"
 )
 
