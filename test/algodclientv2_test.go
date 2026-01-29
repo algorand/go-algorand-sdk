@@ -6,13 +6,13 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/cucumber/godog"
+
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
-
-	"github.com/cucumber/godog"
 )
 
 func AlgodClientV2Context(s *godog.ScenarioContext) {

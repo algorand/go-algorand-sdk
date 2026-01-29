@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cucumber/godog"
+
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
-	"github.com/cucumber/godog"
 )
 
 func IndexerUnitTestContext(s *godog.ScenarioContext) {

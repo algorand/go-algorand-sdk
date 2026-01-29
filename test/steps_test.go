@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
-
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/v2/abi"
@@ -35,9 +35,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/logic"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
 )
 
 var txn types.Transaction
