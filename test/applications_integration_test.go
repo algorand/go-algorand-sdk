@@ -16,8 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
-
 	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/v2/abi"
@@ -26,6 +24,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	sdkJson "github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
