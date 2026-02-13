@@ -11,10 +11,15 @@ import (
 // AccountInformationParams contains all of the query parameters for url serialization.
 type AccountInformationParams struct {
 
-	// Exclude when set to `all` will exclude asset holdings, application local state,
-	// created asset parameters, any created application parameters. Defaults to
-	// `none`.
-	Exclude string `url:"exclude,omitempty"`
+	// Exclude exclude additional items from the account. Use `all` to exclude asset
+	// holdings, application local state, created asset parameters, and created
+	// application parameters. Use `created-apps-params` to exclude only the parameters
+	// of created applications (returns only application IDs). Use
+	// `created-assets-params` to exclude only the parameters of created assets
+	// (returns only asset IDs). Multiple values can be comma-separated (e.g.,
+	// `created-apps-params,created-assets-params`). Note: `all` and `none` cannot be
+	// combined with other values. Defaults to `none`.
+	Exclude []string `url:"exclude,omitempty,comma"`
 
 	// Format configures whether the response object is JSON or MessagePack encoded. If
 	// not provided, defaults to JSON.
@@ -31,10 +36,15 @@ type AccountInformation struct {
 	p AccountInformationParams
 }
 
-// Exclude when set to `all` will exclude asset holdings, application local state,
-// created asset parameters, any created application parameters. Defaults to
-// `none`.
-func (s *AccountInformation) Exclude(Exclude string) *AccountInformation {
+// Exclude exclude additional items from the account. Use `all` to exclude asset
+// holdings, application local state, created asset parameters, and created
+// application parameters. Use `created-apps-params` to exclude only the parameters
+// of created applications (returns only application IDs). Use
+// `created-assets-params` to exclude only the parameters of created assets
+// (returns only asset IDs). Multiple values can be comma-separated (e.g.,
+// `created-apps-params,created-assets-params`). Note: `all` and `none` cannot be
+// combined with other values. Defaults to `none`.
+func (s *AccountInformation) Exclude(Exclude []string) *AccountInformation {
 	s.p.Exclude = Exclude
 
 	return s
