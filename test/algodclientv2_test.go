@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/cucumber/godog"
 
@@ -303,7 +304,7 @@ func weMakeAnAccountInformationCallAgainstAccountWithExclude(account, exclude st
 	if err != nil {
 		return err
 	}
-	algodClient.AccountInformation(account).Exclude(exclude).Do(context.Background())
+	algodClient.AccountInformation(account).Exclude(strings.Split(exclude, ",")).Do(context.Background())
 	return nil
 }
 

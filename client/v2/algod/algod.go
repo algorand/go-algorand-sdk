@@ -90,6 +90,10 @@ func (c *Client) AccountApplicationInformation(address string, applicationId uin
 	return &AccountApplicationInformation{c: c, address: address, applicationId: applicationId}
 }
 
+func (c *Client) AccountApplicationsInformation(address string) *AccountApplicationsInformation {
+	return &AccountApplicationsInformation{c: c, address: address}
+}
+
 func (c *Client) PendingTransactionsByAddress(address string) *PendingTransactionsByAddress {
 	return &PendingTransactionsByAddress{c: c, address: address}
 }
