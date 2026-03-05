@@ -86,6 +86,14 @@ func (c *Client) AccountAssetInformation(address string, assetId uint64) *Accoun
 	return &AccountAssetInformation{c: c, address: address, assetId: assetId}
 }
 
+func (c *Client) AccountAssetsInformation(address string) *AccountAssetsInformation {
+	return &AccountAssetsInformation{c: c, address: address}
+}
+
+func (c *Client) AccountApplicationsInformation(address string) *AccountApplicationsInformation {
+	return &AccountApplicationsInformation{c: c, address: address}
+}
+
 func (c *Client) AccountApplicationInformation(address string, applicationId uint64) *AccountApplicationInformation {
 	return &AccountApplicationInformation{c: c, address: address, applicationId: applicationId}
 }
