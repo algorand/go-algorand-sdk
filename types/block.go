@@ -205,8 +205,6 @@ type UpgradeVote struct {
 // strictly speaking, computable from the history of all UpgradeVotes
 // but we keep it in the block for explicitness and convenience
 // (instead of materializing it separately, like balances).
-//
-//msgp:ignore UpgradeState
 type UpgradeState struct {
 	CurrentProtocol string `codec:"proto"`
 	NextProtocol    string `codec:"nextproto"`
@@ -248,9 +246,7 @@ type Block struct {
 	Payset Payset `codec:"txns"`
 }
 
-// A Payset represents a common, unforgeable, consistent, ordered set of SignedTxn objects.
-//
-//msgp:allocbound Payset 100000
+// Payset represents a common, unforgeable, consistent, ordered set of SignedTxn objects.
 type Payset []SignedTxnInBlock
 
 // SignedTxnInBlock is how a signed transaction is encoded in a block.
@@ -320,8 +316,6 @@ type EvalDelta struct {
 
 // StateDelta is a map from key/value store keys to ValueDeltas, indicating
 // what should happen for that key
-//
-//msgp:allocbound StateDelta config.MaxStateDeltaKeys
 type StateDelta map[string]ValueDelta
 
 // ValueDelta links a DeltaAction with a value to be set
