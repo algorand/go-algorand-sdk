@@ -9,24 +9,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
-
-	"github.com/algorand/go-algorand-sdk/v2/transaction"
-
-	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/v2/abi"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	sdkJson "github.com/algorand/go-algorand-sdk/v2/encoding/json"
+	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/cucumber/godog"
+	"github.com/stretchr/testify/require"
 )
 
 var algodV2client *algod.Client
@@ -240,12 +243,53 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr s
 		return err
 	}
 	txid, err = algodV2client.SendRawTransaction(lstx).Do(context.Background())
-	if err != nil && len(expectedErr) != 0 {
-		if strings.Contains(err.Error(), expectedErr) {
+	return checkSubmitTransactionError(err, expectedErr, "", "")
+}
+
+func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIsAndTheDataContains(expectedErr, dataKey, dataValue string) error {
+	var err error
+	var lstx []byte
+
+	txid, lstx, err = crypto.SignTransaction(transientAccount.PrivateKey, tx)
+	if err != nil {
+		return err
+	}
+	txid, err = algodV2client.SendRawTransaction(lstx).Do(context.Background())
+	return checkSubmitTransactionError(err, expectedErr, dataKey, dataValue)
+}
+
+func checkSubmitTransactionError(err error, expectedErr, dataKey, dataValue string) error {
+	if err == nil {
+		if expectedErr == "" && dataKey == "" {
 			return nil
 		}
+		return fmt.Errorf("expected an error but transaction submission succeeded")
 	}
-	return err
+
+	if expectedErr != "" && !strings.Contains(err.Error(), expectedErr) {
+		return err
+	}
+	if dataKey == "" {
+		return nil
+	}
+
+	var httpErr *common.HTTPError
+	if !errors.As(err, &httpErr) {
+		return fmt.Errorf("expected an SDK HTTP error, got %T", err)
+	}
+	if httpErr.Data == nil {
+		return fmt.Errorf("expected structured error data on HTTP error")
+	}
+
+	actualValue, ok := httpErr.Data[dataKey]
+	if !ok {
+		return fmt.Errorf("expected error data to contain key %q", dataKey)
+	}
+	if fmt.Sprint(actualValue) != dataValue {
+		return fmt.Errorf("expected error data %q to be %q, got %v", dataKey, dataValue, actualValue)
+	}
+
+	return nil
 }
 
 func iWaitForTheTransactionToBeConfirmed() error {
@@ -1022,6 +1066,7 @@ func ApplicationsContext(s *godog.ScenarioContext) {
 	s.Step(`^I create a new transient account and fund it with (\d+) microalgos\.$`, iCreateANewTransientAccountAndFundItWithMicroalgos)
 	s.Step(`^I build an application transaction with the transient account, the current application, suggested params, operation "([^"]*)", approval-program "([^"]*)", clear-program "([^"]*)", global-bytes (\d+), global-ints (\d+), local-bytes (\d+), local-ints (\d+), app-args "([^"]*)", foreign-apps "([^"]*)", foreign-assets "([^"]*)", app-accounts "([^"]*)", extra-pages (\d+), boxes "([^"]*)"$`, iBuildAnApplicationTransaction)
 	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs)
+	s.Step(`^I sign and submit the transaction, saving the txid\. If there is an error it is "([^"]*)" and the data contains "([^"]*)" = "([^"]*)"\.$`, iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIsAndTheDataContains)
 	s.Step(`^I wait for the transaction to be confirmed\.$`, iWaitForTheTransactionToBeConfirmed)
 	s.Step(`^I remember the new application ID\.$`, iRememberTheNewApplicationID)
 	s.Step(`^I reset the array of application IDs to remember\.$`, iResetTheArrayOfApplicationIDsToRemember)
@@ -1050,4 +1095,52 @@ func ApplicationsContext(s *godog.ScenarioContext) {
 	s.Step(`^according to "([^"]*)", with (\d+) being the parameter that limits results, the current application should have (\d+) boxes\.$`, currentApplicationShouldHaveBoxNum)
 	s.Step(`^according to indexer, with (\d+) being the parameter that limits results, and "([^"]*)" being the parameter that sets the next result, the current application should have the following boxes "([^"]*)"\.$`, indexerSaysCurrentAppShouldHaveTheseBoxes)
 	s.Step(`^I wait for indexer to catch up to the round where my most recent transaction was confirmed\.$`, waitForIndexerToCatchUp)
+}
+
+func TestSubmitAppCallTransactionErrorIncludesData(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v2/transactions", r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
+		_, err := w.Write([]byte(`{"message":"transaction rejected","data":{"pool-error":"logic eval error","pc":7}}`))
+		require.NoError(t, err)
+	}))
+	defer mockServer.Close()
+
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	require.NoError(t, err)
+
+	account := crypto.GenerateAccount()
+	params := types.SuggestedParams{
+		Fee:             1000,
+		FirstRoundValid: 1,
+		LastRoundValid:  1000,
+		GenesisID:       "testnet-v1.0",
+		GenesisHash:     []byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	}
+	appCallTxn, err := transaction.MakeApplicationNoOpTx(
+		1,
+		nil,
+		nil,
+		nil,
+		nil,
+		params,
+		account.Address,
+		nil,
+		types.Digest{},
+		[32]byte{},
+		types.Address{},
+	)
+	require.NoError(t, err)
+
+	_, signedTxn, err := crypto.SignTransaction(account.PrivateKey, appCallTxn)
+	require.NoError(t, err)
+
+	_, err = algodClient.SendRawTransaction(signedTxn).Do(context.Background())
+	require.Error(t, err)
+	require.NoError(t, checkSubmitTransactionError(err, "transaction rejected", "pool-error", "logic eval error"))
+
+	var httpErr *common.HTTPError
+	require.True(t, errors.As(err, &httpErr))
+	require.Equal(t, float64(7), httpErr.Data["pc"])
 }
