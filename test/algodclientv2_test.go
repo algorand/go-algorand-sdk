@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
+
+	"github.com/cucumber/godog"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
-
-	"github.com/cucumber/godog"
 )
 
 func AlgodClientV2Context(s *godog.ScenarioContext) {
@@ -70,6 +71,8 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a TransactionGroupLedgerStateDeltaForRoundResponse call for round (\d+)$`, weMakeATransactionGroupLedgerStateDeltaForRoundResponseCallForRound)
 	s.Step(`^we make a GetBlockTxids call against block number (\d+)$`, weMakeAGetBlockTxidsCallAgainstBlockNumber)
 	s.Step(`^the parsed Get Block response should have heartbeat address "([^"]*)"$`, theParsedGetBlockResponseShouldHaveHeartbeatAddress)
+	s.Step(`^we make an Account Assets Information call against account "([^"]*)" with limit (\d+) and next "([^"]*)"$`, weMakeAnAccountAssetsInformationCall)
+	s.Step(`^we make an Account Applications Information call against account "([^"]*)" with limit (\d+) next "([^"]*)" and include "([^"]*)"$`, weMakeAnAccountApplicationsInformationCall)
 
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		globalErrForExamination = nil
@@ -303,7 +306,11 @@ func weMakeAnAccountInformationCallAgainstAccountWithExclude(account, exclude st
 	if err != nil {
 		return err
 	}
-	algodClient.AccountInformation(account).Exclude(exclude).Do(context.Background())
+	req := algodClient.AccountInformation(account)
+	if exclude != "" {
+		req.Exclude(strings.Split(exclude, ","))
+	}
+	req.Do(context.Background())
 	return nil
 }
 
@@ -469,5 +476,40 @@ func weMakeAGetBlockTxidsCallAgainstBlockNumber(round int) error {
 		return err
 	}
 	algodClient.GetBlockTxids(uint64(round)).Do(context.Background())
+	return nil
+}
+
+func weMakeAnAccountAssetsInformationCall(account string, limit int, next string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	req := algodClient.AccountAssetsInformation(account)
+	if limit > 0 {
+		req.Limit(uint64(limit))
+	}
+	if next != "" {
+		req.Next(next)
+	}
+	req.Do(context.Background())
+	return nil
+}
+
+func weMakeAnAccountApplicationsInformationCall(account string, limit int, next string, include string) error {
+	algodClient, err := algod.MakeClient(mockServer.URL, "")
+	if err != nil {
+		return err
+	}
+	req := algodClient.AccountApplicationsInformation(account)
+	if include != "" {
+		req.Include(strings.Split(include, ","))
+	}
+	if limit > 0 {
+		req.Limit(uint64(limit))
+	}
+	if next != "" {
+		req.Next(next)
+	}
+	req.Do(context.Background())
 	return nil
 }

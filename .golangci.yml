@@ -1,6 +1,6 @@
 version: "2"
 run:
-  tests: false
+  tests: true
 linters:
   default: none
   enable:
@@ -30,6 +30,19 @@ linters:
   exclusions:
     generated: lax
     rules:
+      # Don't run linters on test files; formatters (gci, gofmt) still apply
+      - path: _test\.go
+        linters:
+          - copyloopvar
+          - errcheck
+          - govet
+          - ineffassign
+          - misspell
+          - nilerr
+          - nolintlint
+          - revive
+          - staticcheck
+          - unused
       # Examples directory is allowed to skip error checking for brevity
       - linters: errcheck
         path: examples/

@@ -1,12 +1,12 @@
 package types
 
 import (
+	"encoding/base64"
 	"testing"
 
-	"encoding/base64"
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 )
 
 func TestSignedTxnFromBase64String(t *testing.T) {

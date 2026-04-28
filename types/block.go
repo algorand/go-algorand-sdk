@@ -114,6 +114,16 @@ type BlockHeader struct {
 	// ParticipationUpdates contains the information needed to mark
 	// certain accounts offline because their participation keys expired
 	ParticipationUpdates
+
+	// Load is the degree to which a block is full. Currently, it is based on
+	// the number of bytes in the final block, compared to the maximum allowed.
+	// It is expressed as a fixed-point integer with 6 digits of precision.  So,
+	// 1,000,000 is a completely full block.
+	Load Micros `codec:"ld"`
+
+	// CongestionTax fee required, beyond the MinFee, for "normal"
+	// transactions in this block.
+	CongestionTax Micros `codec:"ct"`
 }
 
 // TxnCommitments represents the commitments computed from the transactions in the block.
@@ -195,8 +205,6 @@ type UpgradeVote struct {
 // strictly speaking, computable from the history of all UpgradeVotes
 // but we keep it in the block for explicitness and convenience
 // (instead of materializing it separately, like balances).
-//
-//msgp:ignore UpgradeState
 type UpgradeState struct {
 	CurrentProtocol string `codec:"proto"`
 	NextProtocol    string `codec:"nextproto"`
@@ -238,9 +246,7 @@ type Block struct {
 	Payset Payset `codec:"txns"`
 }
 
-// A Payset represents a common, unforgeable, consistent, ordered set of SignedTxn objects.
-//
-//msgp:allocbound Payset 100000
+// Payset represents a common, unforgeable, consistent, ordered set of SignedTxn objects.
 type Payset []SignedTxnInBlock
 
 // SignedTxnInBlock is how a signed transaction is encoded in a block.
@@ -310,8 +316,6 @@ type EvalDelta struct {
 
 // StateDelta is a map from key/value store keys to ValueDeltas, indicating
 // what should happen for that key
-//
-//msgp:allocbound StateDelta config.MaxStateDeltaKeys
 type StateDelta map[string]ValueDelta
 
 // ValueDelta links a DeltaAction with a value to be set
@@ -337,3 +341,7 @@ const (
 	// DeleteAction indicates that the value for a particular key should be deleted
 	DeleteAction DeltaAction = 3
 )
+
+// Micros represents millionths of something. It's a fixed-point number with 6
+// digits of precision.
+type Micros uint64

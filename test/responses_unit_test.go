@@ -198,6 +198,12 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 		case "GetBlockTxids":
 			response, err =
 				algodC.GetBlockTxids(123).Do(context.Background())
+		case "AccountAssetsInformation":
+			response, err =
+				algodC.AccountAssetsInformation("acct").Do(context.Background())
+		case "AccountApplicationsInformation":
+			response, err =
+				algodC.AccountApplicationsInformation("acct").Do(context.Background())
 		case "any":
 			// This is an error case
 			// pickup the error as the response
