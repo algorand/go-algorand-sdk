@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/protocol"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // ConsensusParams specifies settings that might vary based on the
@@ -43,8 +44,16 @@ type ConsensusParams struct {
 	// in a block must not exceed MaxTxnBytesPerBlock.
 	MaxTxnBytesPerBlock int
 
-	// MaxTxnBytesPerBlock is the maximum size of a transaction's Note field.
+	// MaxTxnNoteBytes is the maximum size of a transaction's Note field in
+	// a "basic transaction".  Larger notes require extra fees.
 	MaxTxnNoteBytes int
+
+	// MaxAbsoluteTxnNoteBytes is the absolute maximum size of a transaction's
+	// Note field, even with extra fees paid. Provides DoS protection. When set
+	// equal to MaxTxnNoteBytes, effectively disables large notes. When set
+	// higher, allows notes up to this size with appropriate fees (1000
+	// FeeFactor units per byte over MaxTxnNoteBytes).
+	MaxAbsoluteTxnNoteBytes int
 
 	// MaxTxnLife is how long a transaction can be live for:
 	// the maximum difference between LastValid and FirstValid.
@@ -233,8 +242,12 @@ type ConsensusParams struct {
 	// max number of ApplicationArgs for an ApplicationCall transaction
 	MaxAppArgs int
 
-	// max sum([len(arg) for arg in txn.ApplicationArgs])
+	// max sum([len(arg) for arg in txn.ApplicationArgs]) w/o paying extra
 	MaxAppTotalArgLen int
+
+	// MaxAbsoluteTotalArgLen is the absolute maximum length of app args,
+	// with anything longer than MaxAppTotalArgLen costing extra
+	MaxAbsoluteTotalArgLen int
 
 	// maximum byte len of application approval program or clear state
 	// When MaxExtraAppProgramPages > 0, this is the size of those pages.
@@ -248,6 +261,10 @@ type ConsensusParams struct {
 
 	// extra length for application program in pages. A page is MaxAppProgramLen bytes
 	MaxExtraAppProgramPages int
+
+	// MaxAbsoluteExtraProgramPages is the absolute maximum number of extra pages allowed,
+	// even with extra fees paid. Provides DoS protection.
+	MaxAbsoluteExtraProgramPages int
 
 	// maximum number of accounts in the ApplicationCall Accounts field.
 	// this determines, in part, the maximum number of balance records
@@ -561,6 +578,12 @@ type ConsensusParams struct {
 	// LoadTracking enables header values that track Load that grows/shrinks
 	// when blocks are more/less than half full.
 	LoadTracking bool
+
+	// PerByteTxnSurcharge specifies the fee surcharge per byte for transactions
+	// with large notes, app args, programs, or other fields that can beyond the
+	// basic Max sizes (they use up to "Absolute" Maxes. It is expressed in
+	// fraction of a basic min fee.
+	PerByteTxnSurcharge types.Micros
 }
 
 // ProposerPayoutRules puts several related consensus parameters in one place. The same
@@ -723,12 +746,13 @@ func initConsensusProtocols() {
 		DefaultUpgradeWaitRounds: 10000,
 		MaxVersionStringLen:      64,
 
-		MinBalance:          10000,
-		MinTxnFee:           1000,
-		MaxTxnLife:          1000,
-		MaxTxnNoteBytes:     1024,
-		MaxTxnBytesPerBlock: 1000000,
-		DefaultKeyDilution:  10000,
+		MinBalance:              10000,
+		MinTxnFee:               1000,
+		MaxTxnLife:              1000,
+		MaxTxnNoteBytes:         1024,
+		MaxAbsoluteTxnNoteBytes: 1024,
+		MaxTxnBytesPerBlock:     1000000,
+		DefaultKeyDilution:      10000,
 
 		MaxTimestampIncrement: 25,
 
@@ -972,6 +996,7 @@ func initConsensusProtocols() {
 
 	v24.MaxAppArgs = 16
 	v24.MaxAppTotalArgLen = 2048
+	v24.MaxAbsoluteTotalArgLen = 2048
 	v24.MaxAppProgramLen = 1024
 	v24.MaxAppTotalProgramLen = 2048 // No effect until v28, when MaxAppProgramLen increased
 	v24.MaxAppKeyLen = 64
@@ -1074,6 +1099,7 @@ func initConsensusProtocols() {
 	v28.LogicSigVersion = 4
 	// Enable support for larger app program size
 	v28.MaxExtraAppProgramPages = 3
+	v28.MaxAbsoluteExtraProgramPages = 3
 	v28.MaxAppProgramLen = 2048
 	// Increase asset URL length to allow for IPFS URLs
 	v28.MaxAssetURLBytes = 96
@@ -1369,6 +1395,10 @@ func initConsensusProtocols() {
 	vFuture.AllowZeroLocalAppRef = true
 	vFuture.EnforceAuthAddrSenderDiff = true
 	vFuture.LoadTracking = true
+	vFuture.MaxAbsoluteTxnNoteBytes = 4096   // same as largest AVM value
+	vFuture.MaxAbsoluteExtraProgramPages = 7 // Allow larger programs with extra fees
+	vFuture.MaxAbsoluteTotalArgLen = 16384   // We _could_ make this as high as 16*4k
+	vFuture.PerByteTxnSurcharge = 100        // This is 1.000100 times minfee
 
 	Consensus[protocol.ConsensusFuture] = vFuture
 
