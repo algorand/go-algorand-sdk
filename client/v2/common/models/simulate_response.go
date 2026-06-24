@@ -17,6 +17,14 @@ type SimulateResponse struct {
 	// this round were used to run this simulation.
 	LastRound uint64 `json:"last-round"`
 
+	// TotalFeesPaid total fees paid across all top-level transaction groups and their
+	// descendants.
+	TotalFeesPaid uint64 `json:"total-fees-paid,omitempty"`
+
+	// TotalUsage total fee usage across all top-level transaction groups and their
+	// descendants, in millionths of a basic transaction fee unit.
+	TotalUsage uint64 `json:"total-usage,omitempty"`
+
 	// TxnGroups a result object for each transaction group that was simulated.
 	TxnGroups []SimulateTransactionGroupResult `json:"txn-groups"`
 

@@ -11,7 +11,4 @@ type BoxesResponse struct {
 	// NextToken used for pagination, when making another request provide this token
 	// with the next parameter.
 	NextToken string `json:"next-token,omitempty"`
-
-	// Round the round for which this information is relevant.
-	Round uint64 `json:"round,omitempty"`
 }
