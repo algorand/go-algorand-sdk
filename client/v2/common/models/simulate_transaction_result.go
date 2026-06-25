@@ -10,6 +10,10 @@ type SimulateTransactionResult struct {
 	// inner app call trace in a recursive way.
 	ExecTrace SimulationTransactionExecTrace `json:"exec-trace,omitempty"`
 
+	// FeesPaid total fees paid by this transaction and all of its descendant inner
+	// transactions.
+	FeesPaid uint64 `json:"fees-paid,omitempty"`
+
 	// FixedSigner the account that needed to sign this transaction when no signature
 	// was provided and the provided signer was incorrect.
 	FixedSigner string `json:"fixed-signer,omitempty"`
@@ -31,4 +35,8 @@ type SimulateTransactionResult struct {
 	// be made available by any transaction of the group; otherwise, resources must be
 	// placed in the same transaction which accessed them.
 	UnnamedResourcesAccessed SimulateUnnamedResourcesAccessed `json:"unnamed-resources-accessed,omitempty"`
+
+	// Usage fee usage for this transaction and all of its descendant inner
+	// transactions, in millionths of a basic transaction fee unit.
+	Usage uint64 `json:"usage,omitempty"`
 }
