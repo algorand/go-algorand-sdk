@@ -8,12 +8,34 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
+// SendRawTransactionParams contains all of the query parameters for url serialization.
+type SendRawTransactionParams struct {
+
+	// SkipPqAddressCheck skip post-quantum address checks, including the check that
+	// rejects TEAL v13 or later LogicSig escrow addresses whose program hash is an
+	// Edwards25519 curve point. This should only be used if you understand the risks
+	// and know what you are doing.
+	SkipPqAddressCheck bool `url:"skip-pq-address-check,omitempty"`
+}
+
 // SendRawTransaction broadcasts a raw transaction or transaction group to the
 // network.
 type SendRawTransaction struct {
 	c *Client
 
 	rawtxn []byte
+
+	p SendRawTransactionParams
+}
+
+// SkipPqAddressCheck skip post-quantum address checks, including the check that
+// rejects TEAL v13 or later LogicSig escrow addresses whose program hash is an
+// Edwards25519 curve point. This should only be used if you understand the risks
+// and know what you are doing.
+func (s *SendRawTransaction) SkipPqAddressCheck(SkipPqAddressCheck bool) *SendRawTransaction {
+	s.p.SkipPqAddressCheck = SkipPqAddressCheck
+
+	return s
 }
 
 // Do performs the HTTP request

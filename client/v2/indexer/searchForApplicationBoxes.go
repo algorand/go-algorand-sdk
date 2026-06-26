@@ -11,6 +11,10 @@ import (
 // SearchForApplicationBoxesParams contains all of the query parameters for url serialization.
 type SearchForApplicationBoxesParams struct {
 
+	// Include include additional items in the response. Use `values` to include box
+	// values. Multiple values can be comma-separated.
+	Include []string `url:"include,omitempty,comma"`
+
 	// Limit maximum number of results to return. There could be additional pages even
 	// if the limit is not reached.
 	Limit uint64 `url:"limit,omitempty"`
@@ -28,6 +32,14 @@ type SearchForApplicationBoxes struct {
 	applicationId uint64
 
 	p SearchForApplicationBoxesParams
+}
+
+// Include include additional items in the response. Use `values` to include box
+// values. Multiple values can be comma-separated.
+func (s *SearchForApplicationBoxes) Include(Include []string) *SearchForApplicationBoxes {
+	s.p.Include = Include
+
+	return s
 }
 
 // Limit maximum number of results to return. There could be additional pages even
