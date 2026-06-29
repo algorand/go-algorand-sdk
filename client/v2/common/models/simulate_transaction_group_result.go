@@ -20,6 +20,14 @@ type SimulateTransactionGroupResult struct {
 	// specifies why that happened
 	FailureMessage string `json:"failure-message,omitempty"`
 
+	// GroupFeesPaid total fees paid by the transaction group and all of its descendant
+	// inner transaction groups.
+	GroupFeesPaid uint64 `json:"group-fees-paid,omitempty"`
+
+	// GroupUsage fee usage for the transaction group, including all descendant inner
+	// transactions, in millionths of a basic transaction fee unit.
+	GroupUsage uint64 `json:"group-usage,omitempty"`
+
 	// TxnResults simulation result for individual transactions
 	TxnResults []SimulateTransactionResult `json:"txn-results"`
 
