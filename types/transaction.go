@@ -235,9 +235,11 @@ func (tx *Transaction) Rekey(rekeyToAddress string) error {
 }
 
 // PQScheme is a 2-byte ASCII identifier of a post-quantum account authorization scheme.
-// Conventionally, the first byte is the PQ-DSA family and the second byte is a version
+// Conventionally, the first byte is the PQ-DSA family, and the second byte is a version
 // or variant identifier.
-type PQScheme string
+//
+//msgp:test ignore PQScheme
+type PQScheme [2]byte
 
 // PQAddressSalt is a 1-byte salt that selects an address for a post-quantum
 // public key when deriving a 32-byte address; it is public and included in the
