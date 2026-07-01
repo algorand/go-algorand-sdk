@@ -33,7 +33,7 @@ type SignedTxn struct {
 	Sig   Signature   `codec:"sig"`
 	Msig  MultisigSig `codec:"msig"`
 	Lsig  LogicSig    `codec:"lsig"`
-	PQSig PQSig       `codec:"pq"`
+	PQsig PQSig       `codec:"pqsig"`
 
 	Txn      Transaction `codec:"txn,required"`
 	AuthAddr Address     `codec:"sgnr"`
