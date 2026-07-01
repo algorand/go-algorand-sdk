@@ -51,8 +51,7 @@ type ConsensusParams struct {
 	// MaxAbsoluteTxnNoteBytes is the absolute maximum size of a transaction's
 	// Note field, even with extra fees paid. Provides DoS protection. When set
 	// equal to MaxTxnNoteBytes, effectively disables large notes. When set
-	// higher, allows notes up to this size with appropriate fees (1000
-	// FeeFactor units per byte over MaxTxnNoteBytes).
+	// higher, allows notes up to this size with appropriate fees.
 	MaxAbsoluteTxnNoteBytes int
 
 	// MaxTxnLife is how long a transaction can be live for:
@@ -580,10 +579,14 @@ type ConsensusParams struct {
 	LoadTracking bool
 
 	// PerByteTxnSurcharge specifies the fee surcharge per byte for transactions
-	// with large notes, app args, programs, or other fields that can beyond the
-	// basic Max sizes (they use up to "Absolute" Maxes. It is expressed in
-	// fraction of a basic min fee.
+	// with large notes, app args, programs, or other fields that can go beyond
+	// the basic Max sizes (they allow up to the "Absolute" Maxes). It is
+	// expressed in fraction of a basic min fee.
 	PerByteTxnSurcharge types.Micros
+
+	// EnablePQSchemeFalcon1024 enables native Falcon-1024 transaction
+	// authorization for the f1 PQ scheme.
+	EnablePQSchemeFalcon1024 bool
 }
 
 // ProposerPayoutRules puts several related consensus parameters in one place. The same
@@ -1394,6 +1397,7 @@ func initConsensusProtocols() {
 	vFuture.AppSizeUpdates = true
 	vFuture.AllowZeroLocalAppRef = true
 	vFuture.EnforceAuthAddrSenderDiff = true
+	vFuture.EnablePQSchemeFalcon1024 = true
 	vFuture.LoadTracking = true
 	vFuture.MaxAbsoluteTxnNoteBytes = 4096   // same as largest AVM value
 	vFuture.MaxAbsoluteExtraProgramPages = 7 // Allow larger programs with extra fees
