@@ -4,6 +4,8 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"strings"
+
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 const (
@@ -16,6 +18,10 @@ const (
 
 var sepStr = " "
 var emptyByte = byte(0)
+
+// pqKeyPrefix is prepended when deriving a PQ key-generation seed from a
+// 25-word mnemonic.
+var pqKeyPrefix = []byte("PQK")
 
 func init() {
 	// Verify expected relationship between constants
@@ -109,6 +115,27 @@ func ToKey(mnemonic string) ([]byte, error) {
 	}
 
 	return byteArr, nil
+}
+
+// ToPQSeed converts a mnemonic generated using this library into the
+// corresponding falcon PQ seed. It returns an error if the passed mnemonic
+// has an incorrect checksum, if the number of words is unexpected, or if one
+// of the passed words is not found in the words list.
+// The resulting seed is Hash("PQK" || scheme || mnemonicBytes).
+func ToPQSeed(pqmnemonic string, scheme types.PQScheme) (seed []byte, err error) {
+	seedEntropy, err := ToKey(pqmnemonic)
+	if err != nil {
+		return
+	}
+
+	input := make([]byte, 0, len(pqKeyPrefix)+len(scheme)+len(seedEntropy))
+	input = append(input, pqKeyPrefix...)
+	input = append(input, scheme[:]...)
+	input = append(input, seedEntropy...)
+
+	digest := sha512.Sum512_256(input)
+	seed = digest[:]
+	return
 }
 
 // https://stackoverflow.com/a/50285590/356849

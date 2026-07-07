@@ -241,6 +241,11 @@ func (tx *Transaction) Rekey(rekeyToAddress string) error {
 //msgp:test ignore PQScheme
 type PQScheme [2]byte
 
+// PQSchemeFalcon1024 ("f1") is Falcon-1024 using a deterministic signing
+// profile. Deterministic nonce derivation is signer-side only; consensus
+// verifies signature validity, not how signer nonce material was derived.
+var PQSchemeFalcon1024 = PQScheme{'f', '1'}
+
 // PQAddressSalt is a 1-byte salt that selects an address for a post-quantum
 // public key when deriving a 32-byte address; it is public and included in the
 // address derivation.
