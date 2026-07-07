@@ -241,21 +241,12 @@ func (tx *Transaction) Rekey(rekeyToAddress string) error {
 //msgp:test ignore PQScheme
 type PQScheme [2]byte
 
+// PQSchemeFalcon1024 ("f1") is Falcon-1024 using a deterministic signing
+// profile. Deterministic nonce derivation is signer-side only; consensus
+// verifies signature validity, not how signer nonce material was derived.
+var PQSchemeFalcon1024 = PQScheme{'f', '1'}
+
 // PQAddressSalt is a 1-byte salt that selects an address for a post-quantum
 // public key when deriving a 32-byte address; it is public and included in the
 // address derivation.
 type PQAddressSalt uint8
-
-// PQSig is a post-quantum transaction authorization proof. Its public key and
-// signature are wire/decode-bounded by crypto.MaxPQPublicKeySize and
-// crypto.MaxPQSignatureSize (the largest sizes over all supported PQ schemes),
-// which feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize,
-// and the SignedTxn wire bound.
-type PQSig struct {
-	_struct struct{} `codec:",omitempty,omitemptyarray"`
-
-	Scheme    PQScheme      `codec:"sch"`
-	Salt      PQAddressSalt `codec:"slt"`
-	PublicKey []byte        `codec:"pk"`
-	Signature []byte        `codec:"sig"`
-}

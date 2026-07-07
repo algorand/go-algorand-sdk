@@ -246,6 +246,37 @@ func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount
 	return
 }
 
+// MakeLogicSigAccountDelegatedFalcon1024 creates delegated LogicSigAccount that can sign on behalf of a Falcon1024 account.
+func MakeLogicSigAccountDelegatedFalcon1024(program []byte, args [][]byte, pqsigAccount Falcon1024Account) (lsa LogicSigAccount, err error) {
+	if err = sanityCheckProgram(program); err != nil {
+		return
+	}
+
+	toSignBytes := pqsigProgramToSign(pqsigAccount.Address(), program)
+	sig, err := pqsigAccount.PrivateKey.SignCompressed(toSignBytes)
+	if err != nil {
+		return
+	}
+
+	pqsig := types.PQSig{
+		Scheme:    types.PQSchemeFalcon1024,
+		Salt:      pqsigAccount.Salt,
+		PublicKey: pqsigAccount.PublicKey[:],
+		Signature: sig,
+	}
+
+	lsig := types.LogicSig{
+		Logic: program,
+		Args:  args,
+		PQsig: pqsig,
+	}
+
+	lsa = LogicSigAccount{
+		Lsig: lsig,
+	}
+	return
+}
+
 // AppendMultisigSignature adds an additional signature from a member of the
 // delegating multisig account.
 //
@@ -264,7 +295,7 @@ func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) e
 // the delegating account. In all other cases, an error will be returned if
 // signerPublicKey is present.
 func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.PublicKey) (lsa LogicSigAccount, err error) {
-	hasSig, _, _, count := lsig.SignatureCount()
+	hasSig, _, _, _, count := lsig.SignatureCount()
 
 	if count > 1 {
 		err = errLsigTooManySignatures
@@ -308,7 +339,8 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 	hasSig := lsa.Lsig.Sig != (types.Signature{})
 	hasMsig := !lsa.Lsig.Msig.Blank()
 	hasLMsig := !lsa.Lsig.LMsig.Blank()
-	return hasSig || hasMsig || hasLMsig
+	hasPQsig := !lsa.Lsig.PQsig.Blank()
+	return hasSig || hasMsig || hasLMsig || hasPQsig
 }
 
 // Address returns the address of this LogicSigAccount.
@@ -319,7 +351,7 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 // If the LogicSig is not delegated to another account, this will return an
 // escrow address that is the hash of the LogicSig's program code.
 func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
-	hasSig, hasMsig, hasLMsig, err := lsa.hasSignatures()
+	hasSig, hasMsig, hasLMsig, hasPQsig, err := lsa.hasSignatures()
 	if err != nil {
 		return types.Address{}, err
 	}
@@ -352,13 +384,18 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 		return
 	}
 
+	if hasPQsig {
+		addr = PQAddressFromSig(lsa.Lsig.PQsig)
+		return
+	}
+
 	addr = LogicSigAddress(lsa.Lsig)
 	return
 }
 
-func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig bool, err error) {
+func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig, hasPQsig bool, err error) {
 	var count int
-	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCount(); count > 1 {
+	if hasSig, hasMsig, hasLMsig, hasPQsig, count = lsa.Lsig.SignatureCount(); count > 1 {
 		err = errLsigTooManySignatures
 	}
 	return

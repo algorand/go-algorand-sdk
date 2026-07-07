@@ -39,6 +39,31 @@ func (msig MultisigSig) Blank() bool {
 	return true
 }
 
+// PQSig is a post-quantum transaction authorization proof. Its public key and
+// signature are wire/decode-bounded by crypto.MaxPQPublicKeySize and
+// crypto.MaxPQSignatureSize (the largest sizes over all supported PQ schemes),
+// which feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize,
+// and the SignedTxn wire bound.
+type PQSig struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Scheme    PQScheme      `codec:"sch"`
+	Salt      PQAddressSalt `codec:"slt"`
+	PublicKey []byte        `codec:"pk"`
+	Signature []byte        `codec:"sig"`
+}
+
+// Blank returns true if the PQ authorization envelope is absent.
+func (p PQSig) Blank() bool {
+	var zeroScheme PQScheme
+	var zeroSalt PQAddressSalt
+
+	return p.Scheme == zeroScheme &&
+		p.Salt == zeroSalt &&
+		len(p.PublicKey) == 0 &&
+		len(p.Signature) == 0
+}
+
 // LogicSig contains logic for validating a transaction.
 // LogicSig is signed by an account, allowing delegation of operations.
 // OR
@@ -92,7 +117,7 @@ func (lsig LogicSig) Blank() bool {
 }
 
 // SignatureCount returns whether the LogicSig has each of the three possible signature types.
-func (lsig LogicSig) SignatureCount() (hasSig, hasMsig, hasLMsig bool, count int) {
+func (lsig LogicSig) SignatureCount() (hasSig, hasMsig, hasLMsig, hasPQsig bool, count int) {
 	if hasSig = (lsig.Sig != Signature{}); hasSig {
 		count++
 	}
@@ -100,6 +125,9 @@ func (lsig LogicSig) SignatureCount() (hasSig, hasMsig, hasLMsig bool, count int
 		count++
 	}
 	if hasLMsig = !lsig.LMsig.Blank(); hasLMsig {
+		count++
+	}
+	if hasPQsig = !lsig.PQsig.Blank(); hasPQsig {
 		count++
 	}
 	return

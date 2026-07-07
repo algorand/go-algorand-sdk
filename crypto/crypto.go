@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"filippo.io/edwards25519"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -506,7 +507,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		return false
 	}
 
-	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCount()
+	hasSig, hasMsig, hasLMsig, hasPQsig, count := lsig.SignatureCount()
 	if count > 1 {
 		return false
 	}
@@ -541,8 +542,22 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		toBeSigned := msigProgramToSign(addr, lsig.Logic)
 		return VerifyMultisig(addr, toBeSigned, lsig.LMsig)
 	}
+
+	if hasPQsig && lsig.PQsig.Scheme == types.PQSchemeFalcon1024 {
+		addr := PQAddressFromSig(lsig.PQsig)
+		toBeSigned := pqsigProgramToSign(addr, lsig.Logic)
+		return VerifyPQSig(toBeSigned, lsig.PQsig)
+	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
+}
+
+// pqsigProgramToSign returns the bytes a post-quantum scheme signs when
+// delegating a LogicSig to a PQ account: ("PQProgram" || address ||
+// program).
+func pqsigProgramToSign(addr types.Address, program []byte) []byte {
+	parts := [][]byte{pqProgramPrefix, addr[:], program}
+	return bytes.Join(parts, nil)
 }
 
 // signLogicSigTransactionWithAddress signs a transaction with a LogicSig.
@@ -598,6 +613,7 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	hasSig := lsig.Sig != (types.Signature{})
 	hasLMsig := !lsig.LMsig.Blank()
+	hasPQsig := !lsig.PQsig.Blank()
 
 	// the address that the LogicSig represents
 	var lsigAddress types.Address
@@ -617,11 +633,28 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 		if err != nil {
 			return
 		}
+	} else if hasPQsig {
+		lsigAddress = PQAddressFromSig(lsig.PQsig)
 	} else {
 		lsigAddress = LogicSigAddress(lsig)
 	}
 
 	txid, stxBytes, err = signLogicSigTransactionWithAddress(lsig, lsigAddress, tx)
+	return
+}
+
+// PQAddressFromSig returns the address of the account that performed a given PQ signature
+func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
+	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(sig.PublicKey))
+	buf = append(buf, pqAddressPrefix...)
+	buf = append(buf, types.PQSchemeFalcon1024[:]...)
+	buf = append(buf, uint8(sig.Salt))
+	buf = append(buf, sig.PublicKey[:]...)
+
+	digest := sha512.Sum512_256(buf)
+
+	copy(addr[:], digest[:])
+
 	return
 }
 
@@ -810,4 +843,14 @@ func HashLightBlockHeader(lightBlockHeader types.LightBlockHeader) types.Digest 
 	lightBlockHeaderData = append(lightBlockHeaderData, msgpack.Encode(lightBlockHeader)...)
 
 	return sha256.Sum256(lightBlockHeaderData)
+}
+
+// IsEdwards25519Point reports whether encoded can be decoded as an
+// Edwards25519 curve point.
+func IsEdwards25519Point(encoded []byte) bool {
+	if len(encoded) != 32 {
+		return false
+	}
+	_, err := new(edwards25519.Point).SetBytes(encoded)
+	return err == nil
 }

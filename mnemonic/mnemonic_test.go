@@ -2,6 +2,7 @@ package mnemonic
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"strings"
 	"testing"
 
@@ -92,4 +93,14 @@ func TestInvalidKeyLen(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, m)
 	}
+}
+
+// Based on pqMnemonic.json from algorandfoundation/algokit-polytest.
+func TestToPQSeed(t *testing.T) {
+	mnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon invest"
+	expectedSeed, err := base64.StdEncoding.DecodeString("EI+JCEv/+Kyqo5yvW6O2A/u0KKtLp5wWIjAvS5sT488=")
+	require.NoError(t, err)
+	seed, err := ToPQSeed(mnemonic, types.PQSchemeFalcon1024)
+	require.NoError(t, err)
+	require.Equal(t, expectedSeed, seed)
 }
