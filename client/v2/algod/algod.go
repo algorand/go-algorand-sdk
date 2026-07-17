@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 )
 
 const authHeader = "X-Algo-API-Token"
@@ -208,10 +207,6 @@ func (c *Client) TealCompile(source []byte) *TealCompile {
 
 func (c *Client) TealDisassemble(source []byte) *TealDisassemble {
 	return &TealDisassemble{c: c, source: source}
-}
-
-func (c *Client) TealDryrun(request models.DryrunRequest) *TealDryrun {
-	return &TealDryrun{c: c, request: request}
 }
 
 func (c *Client) GetBlockTimeStampOffset() *GetBlockTimeStampOffset {
