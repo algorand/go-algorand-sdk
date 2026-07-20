@@ -5,7 +5,7 @@ type Transaction struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	// Type of transaction
-	Type TxType `codec:"type"`
+	Type TxType `codec:"type,required"`
 
 	// Common fields for all types of transactions
 	Header
@@ -30,10 +30,12 @@ type Transaction struct {
 type SignedTxn struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sig      Signature   `codec:"sig"`
-	Msig     MultisigSig `codec:"msig"`
-	Lsig     LogicSig    `codec:"lsig"`
-	Txn      Transaction `codec:"txn"`
+	Sig   Signature   `codec:"sig"`
+	Msig  MultisigSig `codec:"msig"`
+	Lsig  LogicSig    `codec:"lsig"`
+	PQsig PQSig       `codec:"pqsig"`
+
+	Txn      Transaction `codec:"txn,required"`
 	AuthAddr Address     `codec:"sgnr"`
 }
 
@@ -124,7 +126,7 @@ type AssetFreezeTxnFields struct {
 type Header struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
-	Sender      Address    `codec:"snd"`
+	Sender      Address    `codec:"snd,required"`
 	Fee         MicroAlgos `codec:"fee"`
 	FirstValid  Round      `codec:"fv"`
 	LastValid   Round      `codec:"lv"`
@@ -230,4 +232,26 @@ func (tx *Transaction) Rekey(rekeyToAddress string) error {
 
 	tx.RekeyTo = addr
 	return nil
+}
+
+// PQScheme is a 2-byte ASCII identifier of a post-quantum account authorization scheme.
+// Conventionally, the first byte is the PQ-DSA family, and the second byte is a version
+// or variant identifier.
+//
+//msgp:test ignore PQScheme
+type PQScheme [2]byte
+
+// PQAddressSalt is a 1-byte salt that selects an address for a post-quantum
+// public key when deriving a 32-byte address; it is public and included in the
+// address derivation.
+type PQAddressSalt uint8
+
+// PQSig is a post-quantum transaction authorization proof.
+type PQSig struct {
+	_struct struct{} `codec:",omitempty"`
+
+	Scheme    PQScheme      `codec:"sch"`
+	Salt      PQAddressSalt `codec:"slt"`
+	PublicKey []byte        `codec:"pk"`
+	Signature []byte        `codec:"sig"`
 }
