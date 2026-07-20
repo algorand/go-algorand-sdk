@@ -99,7 +99,6 @@ var accountTxSigner transaction.BasicAccountTransactionSigner
 var methodArgs []interface{}
 var sigTxs [][]byte
 var accountTxAndSigner transaction.TransactionWithSigner
-var txTrace transaction.DryrunTxnResult
 var trace string
 var sourceMap logic.SourceMap
 var srcMapping map[string]interface{}
@@ -122,11 +121,6 @@ var assetTestFixture struct {
 var tealCompleResult struct {
 	status   int
 	response modelsV2.CompileResponse
-}
-
-var tealDryrunResult struct {
-	status   int
-	response modelsV2.DryrunResponse
 }
 
 var opt = godog.Options{
@@ -331,8 +325,6 @@ func FeatureContext(s *godog.ScenarioContext) {
 	s.Step(`^I compile a teal program "([^"]*)"$`, tealCompile)
 	s.Step(`^it is compiled with (\d+) and "([^"]*)" and "([^"]*)"$`, tealCheckCompile)
 	s.Step(`^base64 decoding the response is the same as the binary "([^"]*)"$`, tealCheckCompileAgainstFile)
-	s.Step(`^I dryrun a "([^"]*)" program "([^"]*)"$`, tealDryrun)
-	s.Step(`^I get execution result "([^"]*)"$`, tealCheckDryrun)
 	s.Step(`^I create the Method object from method signature "([^"]*)"$`, createMethodObjectFromSignature)
 	s.Step(`^I serialize the Method object into json$`, serializeMethodObjectIntoJson)
 	s.Step(`^the produced json should equal "([^"]*)" loaded from "([^"]*)"$`, checkSerializedMethodObject)
@@ -368,8 +360,6 @@ func FeatureContext(s *godog.ScenarioContext) {
 	s.Step(`^I create a transaction with signer with the current transaction\.$`, iCreateATransactionWithSignerWithTheCurrentTransaction)
 	s.Step(`^I create a transaction with an empty signer with the current transaction\.$`, iCreateATransactionWithAnEmptySignerWithTheCurrentTransaction)
 	s.Step(`^I append the current transaction with signer to the method arguments array\.$`, iAppendTheCurrentTransactionWithSignerToTheMethodArgumentsArray)
-	s.Step(`^a dryrun response file "([^"]*)" and a transaction at index "([^"]*)"$`, aDryrunResponseFileAndATransactionAtIndex)
-	s.Step(`^calling app trace produces "([^"]*)"$`, callingAppTraceProduces)
 	s.Step(`^I append to my Method objects list in the case of a non-empty signature "([^"]*)"$`, iAppendToMyMethodObjectsListInTheCaseOfANonemptySignature)
 	s.Step(`^I create an Interface object from my Method objects list$`, iCreateAnInterfaceObjectFromMyMethodObjectsList)
 	s.Step(`^I create a Contract object from my Method objects list$`, iCreateAContractObjectFromMyMethodObjectsList)
@@ -1703,62 +1693,6 @@ func tealCheckCompileAgainstFile(expectedFile string) error {
 	return nil
 }
 
-func tealDryrun(kind string, filename string) (err error) {
-	if len(filename) == 0 {
-		return fmt.Errorf("empty teal program file name")
-	}
-	tealProgram, err := loadResource(filename)
-	if err != nil {
-		return err
-	}
-
-	txns := []types.SignedTxn{{}}
-	sources := []modelsV2.DryrunSource{}
-	switch kind {
-	case "compiled":
-		txns[0].Lsig.Logic = tealProgram
-	case "source":
-		sources = append(sources, modelsV2.DryrunSource{
-			FieldName: "lsig",
-			Source:    string(tealProgram),
-			TxnIndex:  0,
-		})
-	default:
-		return fmt.Errorf("kind %s not in (source, compiled)", kind)
-	}
-
-	ddr := modelsV2.DryrunRequest{
-		Txns:    txns,
-		Sources: sources,
-	}
-
-	result, err := aclv2.TealDryrun(ddr).Do(context.Background())
-	if err != nil {
-		return
-	}
-
-	tealDryrunResult.response = result
-	return
-}
-
-func tealCheckDryrun(result string) error {
-	txnResult := tealDryrunResult.response.Txns[0]
-	var msgs []string
-	if txnResult.AppCallMessages != nil && len(txnResult.AppCallMessages) > 0 {
-		msgs = txnResult.AppCallMessages
-	} else if txnResult.LogicSigMessages != nil && len(txnResult.LogicSigMessages) > 0 {
-		msgs = txnResult.LogicSigMessages
-	}
-	if len(msgs) == 0 {
-		return fmt.Errorf("received no messages")
-	}
-
-	if msgs[len(msgs)-1] != result {
-		return fmt.Errorf("dryrun status %s != %s", result, msgs[len(msgs)-1])
-	}
-	return nil
-}
-
 func createMethodObjectFromSignature(methodSig string) error {
 	abiMethodLocal, err := abi.MethodFromSignature(methodSig)
 	abiMethod = abiMethodLocal
@@ -2435,38 +2369,6 @@ func theDecodedTransactionShouldEqualTheOriginal() error {
 		return fmt.Errorf("Transactions unequal: %#v != %#v", tx, decodedTx.Txn)
 	}
 
-	return nil
-}
-
-func aDryrunResponseFileAndATransactionAtIndex(arg1, arg2 string) error {
-	data, err := loadResource(arg1)
-	if err != nil {
-		return err
-	}
-	dr, err := transaction.NewDryrunResponseFromJSON(data)
-	if err != nil {
-		return err
-	}
-	idx, err := strconv.Atoi(arg2)
-	if err != nil {
-		return err
-	}
-	txTrace = dr.Txns[idx]
-	return nil
-}
-
-func callingAppTraceProduces(arg1 string) error {
-	cfg := transaction.DefaultStackPrinterConfig()
-	cfg.TopOfStackFirst = false
-	trace = txTrace.GetAppCallTrace(cfg)
-
-	data, err := loadResource(arg1)
-	if err != nil {
-		return err
-	}
-	if string(data) != trace {
-		return fmt.Errorf("No matching trace: \n'%s'\nvs\n'%s'\n", string(data), trace)
-	}
 	return nil
 }
 
