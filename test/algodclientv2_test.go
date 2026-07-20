@@ -12,7 +12,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
-	modelsV2 "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -49,8 +48,6 @@ func AlgodClientV2Context(s *godog.ScenarioContext) {
 	s.Step(`^we make a Pending Transactions By Address call against account "([^"]*)" and max (\d+) and format "([^"]*)"$`, weMakeAPendingTransactionsByAddressCallAgainstAccountAndMaxAndFormat)
 	s.Step(`^we make a Get Block call against block number (\d+) with format "([^"]*)"$`, weMakeAGetBlockCallAgainstBlockNumberWithFormat)
 	s.Step(`^we make a Get Block call for round (\d+) with format "([^"]*)" and header-only "([^"]*)"$`, weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly)
-	s.Step(`^we make any Dryrun call$`, weMakeAnyDryrunCall)
-	s.Step(`^the parsed Dryrun Response should have global delta "([^"]*)" with (\d+)$`, parsedDryrunResponseShouldHave)
 	s.Step(`^we make an Account Information call against account "([^"]*)" with exclude "([^"]*)"$`, weMakeAnAccountInformationCallAgainstAccountWithExclude)
 	s.Step(`^we make an Account Asset Information call against account "([^"]*)" assetID (\d+)$`, weMakeAnAccountAssetInformationCallAgainstAccountAssetID)
 	s.Step(`^we make an Account Application Information call against account "([^"]*)" applicationID (\d+)$`, weMakeAnAccountApplicationInformationCallAgainstAccountApplicationID)
@@ -265,35 +262,6 @@ func weMakeAGetBlockCallForRoundWithFormatAndHeaderOnly(round int, format, heade
 	}
 
 	_, globalErrForExamination = algodClient.Block(uint64(round)).HeaderOnly(headeronly == "true").Do(context.Background())
-	return nil
-}
-
-var dryrunResponse modelsV2.DryrunResponse
-
-func weMakeAnyDryrunCall() (err error) {
-	algodClient, err := algod.MakeClient(mockServer.URL, "")
-	if err != nil {
-		return
-	}
-
-	dryrunResponse, err = algodClient.TealDryrun(modelsV2.DryrunRequest{}).Do(context.Background())
-	return
-}
-
-func parsedDryrunResponseShouldHave(key string, action int) error {
-	if len(dryrunResponse.Txns) != 1 {
-		return fmt.Errorf("expected 1 txn in result but got %d", len(dryrunResponse.Txns))
-	}
-	gd := dryrunResponse.Txns[0].GlobalDelta
-	if len(gd) != 1 {
-		return fmt.Errorf("expected 1 global delta in result but got %d", len(gd))
-	}
-	if gd[0].Key != key {
-		return fmt.Errorf("key %s != %s", key, gd[0].Key)
-	}
-	if int(gd[0].Value.Action) != action {
-		return fmt.Errorf("action %d != %d", action, int(gd[0].Value.Action))
-	}
 	return nil
 }
 

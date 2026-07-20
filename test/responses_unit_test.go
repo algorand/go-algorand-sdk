@@ -151,8 +151,6 @@ func weMakeAnyCallTo(client /* algod/indexer */, endpoint string) (err error) {
 				TopTransactions:   top,
 				TotalTransactions: total,
 			}
-		case "DryRun":
-			response, err = algodC.TealDryrun(models.DryrunRequest{}).Do(context.Background())
 		case "GetTransactionProof":
 			fallthrough
 		case "Proof":
