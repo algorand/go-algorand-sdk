@@ -101,10 +101,6 @@ type ConsensusParams struct {
 	// group. The total available is len(group) * LogicSigMaxCost
 	EnableLogicSigCostPooling bool
 
-	// EnableLogicSigSizePooling specifies LogicSig sizes are pooled across a
-	// group. The total available is len(group) * LogicSigMaxSize
-	EnableLogicSigSizePooling bool
-
 	// RewardUnit specifies the number of MicroAlgos corresponding to one reward
 	// unit.
 	//
@@ -217,8 +213,14 @@ type ConsensusParams struct {
 	// 0 for no support, otherwise highest version supported
 	LogicSigVersion uint64
 
-	// len(LogicSig.Logic) + len(LogicSig.Args[*]) must be less than this (unless pooling is enabled)
+	// LogicSigMaxSize is the legacy LogicSig size unit used for the per-LogicSig
+	// args allowance and to compute group size pools and free program-byte
+	// allowance.
 	LogicSigMaxSize uint64
+
+	// MaxAbsoluteLogicSigProgramSize is the absolute maximum size of a LogicSig
+	// program.
+	MaxAbsoluteLogicSigProgramSize uint64
 
 	// sum of estimated op cost must be less than this
 	LogicSigMaxCost uint64
@@ -917,6 +919,7 @@ func initConsensusProtocols() {
 	v18.Asset = true
 	v18.LogicSigVersion = 1
 	v18.LogicSigMaxSize = 1000
+	v18.MaxAbsoluteLogicSigProgramSize = 1000
 	v18.LogicSigMaxCost = 20000
 	v18.LogicSigMsig = true
 	v18.MaxAssetsPerAccount = 1000
@@ -1338,8 +1341,7 @@ func initConsensusProtocols() {
 	v40.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 
 	v40.LogicSigVersion = 11
-
-	v40.EnableLogicSigSizePooling = true
+	v40.MaxAbsoluteLogicSigProgramSize = 16000
 
 	v40.Payouts.Enabled = true
 	v40.Payouts.Percent = 50
