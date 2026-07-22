@@ -246,9 +246,13 @@ type PQScheme [2]byte
 // address derivation.
 type PQAddressSalt uint8
 
-// PQSig is a post-quantum transaction authorization proof.
+// PQSig is a post-quantum transaction authorization proof. Its public key and
+// signature are wire/decode-bounded by crypto.MaxPQPublicKeySize and
+// crypto.MaxPQSignatureSize (the largest sizes over all supported PQ schemes),
+// which feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize,
+// and the SignedTxn wire bound.
 type PQSig struct {
-	_struct struct{} `codec:",omitempty"`
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
 	Scheme    PQScheme      `codec:"sch"`
 	Salt      PQAddressSalt `codec:"slt"`
