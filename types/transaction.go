@@ -259,3 +259,14 @@ type PQSig struct {
 	PublicKey []byte        `codec:"pk"`
 	Signature []byte        `codec:"sig"`
 }
+
+// Blank returns true if the PQ authorization envelope is absent.
+func (p PQSig) Blank() bool {
+	var zeroScheme PQScheme
+	var zeroSalt PQAddressSalt
+
+	return p.Scheme == zeroScheme &&
+		p.Salt == zeroSalt &&
+		len(p.PublicKey) == 0 &&
+		len(p.Signature) == 0
+}
