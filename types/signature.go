@@ -63,6 +63,9 @@ type LogicSig struct {
 	// Accepted on transactions if consensus param LogicSigLMsig=true
 	LMsig MultisigSig `codec:"lmsig"`
 
+	// The signature of the post-quantum account that has delegated to this LogicSig, if any
+	PQsig PQSig `codec:"pqsig"`
+
 	// Args are not signed, but checked by Logic
 	Args [][]byte `codec:"arg"`
 }
