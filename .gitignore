@@ -1,5 +1,6 @@
 # ignore cucumber test resources
 test-harness/
+.staged-sandbox/
 test/features/
 test/features/resources/**/*.json
 test/features/resources/**/*.base64
