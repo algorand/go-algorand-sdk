@@ -11,6 +11,18 @@ VERBOSE_HARNESS=1
 # REGARDLESS: modified features are ALWAYS overwritten.
 REMOVE_LOCAL_FEATURES=0
 
+# Build the harness's indexer and conduit against this working tree rather than
+# against the go-algorand-sdk release their go.mod files pin. Keep this on: the
+# pinned releases lag this repo, so they reject blocks that a freshly built
+# algod produces whenever a consensus version is in flight. Set to 0 to test
+# against the SDK release that indexer and conduit ship with instead.
+LOCAL_SDK_BUILD=1
+
+# The leading dot keeps the go tool from walking the staged sandbox: it ships
+# `disabled.go` files that would otherwise join this module and break `go list
+# ./...` for every other target.
+STAGED_SANDBOX=".staged-sandbox"
+
 # WARNING: Be careful when turning on the next variable.
 # In that case you'll need to provide all variables expected by `algorand-sdk-testing`'s `.env`
 OVERWRITE_TESTING_ENVIRONMENT=1
