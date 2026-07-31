@@ -1459,7 +1459,8 @@ func initConsensusProtocols() {
 	// vFnetX are like vAlphaX but for AF's FNet. These are the genesis and
 	// historical protocols for the FNet network; a mainline node needs them to
 	// open the FNet genesis ledger (proto fnet1) and to replay the pre-V40 chain.
-	// The on-chain upgrade path was fnet1->fnet2->fnet3->fnet4->V40.
+	// The on-chain upgrade path was fnet1->fnet2->fnet3->fnet4->V40, and continues
+	// V41->fnet5.
 	vFnet1 := v39
 	vFnet1.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
 	vFnet1.LogicSigVersion = 11 // When moving this to a release, put a new higher LogicSigVersion here
@@ -1496,6 +1497,31 @@ func initConsensusProtocols() {
 	vFnet3.ApprovedUpgrades[protocol.ConsensusVFnet4] = 10000
 
 	vFnet4.ApprovedUpgrades[protocol.ConsensusV40] = 10000
+
+	// vFnet5 is the protocol AF's FNet runs. It extends v41 with the parameter
+	// changes go-algorand released as ConsensusV42, restated here rather than
+	// derived from v42, so that fnet5 stays pinned to the values FNet runs with
+	// even if v42 is later amended.
+	vFnet5 := v41
+	vFnet5.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
+
+	vFnet5.LogicSigVersion = 13
+	vFnet5.AppSizeUpdates = true
+	vFnet5.AllowZeroLocalAppRef = true
+	vFnet5.EnforceAuthAddrSenderDiff = true
+	vFnet5.EnablePQSchemeFalcon1024 = true
+	vFnet5.LoadTracking = true
+	vFnet5.MaxAbsoluteTxnNoteBytes = 4096   // same as largest AVM value
+	vFnet5.MaxAbsoluteExtraProgramPages = 7 // Allow larger programs with extra fees
+	vFnet5.MaxAbsoluteTotalArgLen = 16384   // We _could_ make this as high as 16*4k
+	vFnet5.PerByteTxnSurcharge = 100        // Each charged byte adds 0.000100 of min fee
+	vFnet5.EnableSelectF128 = true
+
+	Consensus[protocol.ConsensusVFnet5] = vFnet5
+
+	// v41 can be upgraded to fnet5. As with the other FNet protocols the delay is
+	// MinUpgradeWaitRounds.
+	v41.ApprovedUpgrades[protocol.ConsensusVFnet5] = 10000
 }
 
 // Global defines global Algorand protocol parameters which should not be overridden.

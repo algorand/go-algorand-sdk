@@ -256,6 +256,11 @@ const ConsensusVFnet3 = ConsensusVersion("fnet3")
 // ConsensusV40.
 const ConsensusVFnet4 = ConsensusVersion("fnet4")
 
+// ConsensusVFnet5 is the protocol AF's FNet runs. It extends ConsensusV41 with
+// the parameter changes go-algorand released as ConsensusV42, restated rather
+// than derived, so that fnet5 remains pinned to the values FNet runs with.
+const ConsensusVFnet5 = ConsensusVersion("fnet5")
+
 // !!! ********************* !!!
 // !!! *** Please update ConsensusCurrentVersion when adding new protocol versions *** !!!
 // !!! ********************* !!!
