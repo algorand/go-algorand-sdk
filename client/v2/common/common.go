@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"context"
+	stdjson "encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -78,11 +79,6 @@ func MakeClientWithTransport(address string, apiHeader, apiToken string, headers
 	return
 }
 
-type BadRequest error
-type InvalidToken error
-type NotFound error
-type InternalError error
-
 // extractError checks if the response signifies an error.
 // If so, it returns the error.
 // Otherwise, it returns nil.
@@ -91,18 +87,30 @@ func extractError(code int, errorBuf []byte) error {
 		return nil
 	}
 
-	wrappedError := fmt.Errorf("HTTP %v: %s", code, errorBuf)
+	httpError := &HTTPError{
+		StatusCode: code,
+		RawBody:    errorBuf,
+	}
+	var response struct {
+		Message string         `json:"message"`
+		Data    map[string]any `json:"data,omitempty"`
+	}
+	if err := stdjson.Unmarshal(errorBuf, &response); err == nil {
+		httpError.Message = response.Message
+		httpError.Data = response.Data
+	}
+
 	switch code {
 	case 400:
-		return BadRequest(wrappedError)
+		return BadRequest{HTTPError: httpError}
 	case 401:
-		return InvalidToken(wrappedError)
+		return InvalidToken{HTTPError: httpError}
 	case 404:
-		return NotFound(wrappedError)
+		return NotFound{HTTPError: httpError}
 	case 500:
-		return InternalError(wrappedError)
+		return InternalError{HTTPError: httpError}
 	default:
-		return wrappedError
+		return httpError
 	}
 }
 

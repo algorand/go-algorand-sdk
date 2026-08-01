@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,23 +14,69 @@ import (
 
 func TestExtractError(t *testing.T) {
 	testcases := []struct {
-		name string
-		code int
-		err  error
+		name    string
+		code    int
+		wantErr string
 	}{
-		{name: "400", code: 400, err: BadRequest(fmt.Errorf("HTTP 400: "))},
-		{name: "401", code: 401, err: InvalidToken(fmt.Errorf("HTTP 401: "))},
-		{name: "404", code: 404, err: NotFound(fmt.Errorf("HTTP 404: "))},
-		{name: "500", code: 500, err: InternalError(fmt.Errorf("HTTP 500: "))},
-		{name: "200", code: 200, err: nil},
-		{name: "201", code: 201, err: nil},
+		{name: "400", code: 400, wantErr: "HTTP 400: "},
+		{name: "401", code: 401, wantErr: "HTTP 401: "},
+		{name: "404", code: 404, wantErr: "HTTP 404: "},
+		{name: "500", code: 500, wantErr: "HTTP 500: "},
+		{name: "200", code: 200},
+		{name: "201", code: 201},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.err, extractError(tc.code, []byte{}))
+			err := extractError(tc.code, []byte{})
+			if tc.wantErr == "" {
+				assert.NoError(t, err)
+				return
+			}
+			require.EqualError(t, err, tc.wantErr)
+
+			switch tc.code {
+			case 400:
+				assert.IsType(t, BadRequest{}, err)
+			case 401:
+				assert.IsType(t, InvalidToken{}, err)
+			case 404:
+				assert.IsType(t, NotFound{}, err)
+			case 500:
+				assert.IsType(t, InternalError{}, err)
+			}
 		})
 	}
+}
+
+func TestExtractErrorIncludesRESTData(t *testing.T) {
+	err := extractError(400, []byte(`{"message":"txn dead","data":{"pool-error":"logic eval error","pc":7}}`))
+	require.Error(t, err)
+	require.EqualError(t, err, `HTTP 400: txn dead`)
+
+	var httpErr *HTTPError
+	require.True(t, errors.As(err, &httpErr))
+	require.NotNil(t, httpErr)
+	assert.Equal(t, 400, httpErr.StatusCode)
+	assert.Equal(t, "txn dead", httpErr.Message)
+
+	data := httpErr.Data
+	require.NotNil(t, data)
+	assert.Equal(t, "logic eval error", data["pool-error"])
+	assert.Equal(t, float64(7), data["pc"])
+}
+
+func TestExtractErrorIgnoresInvalidJSON(t *testing.T) {
+	err := extractError(400, []byte("not json"))
+	require.Error(t, err)
+	require.EqualError(t, err, "HTTP 400: not json")
+
+	var httpErr *HTTPError
+	require.True(t, errors.As(err, &httpErr))
+	require.NotNil(t, httpErr)
+	assert.Empty(t, httpErr.Message)
+	assert.Nil(t, httpErr.Data)
+	assert.Equal(t, []byte("not json"), httpErr.RawBody)
 }
 
 func TestClient_Verbs(t *testing.T) {
