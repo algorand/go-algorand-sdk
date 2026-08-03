@@ -1,6 +1,6 @@
 # Configs for testing repo download:
 SDK_TESTING_URL="https://github.com/algorand/algorand-sdk-testing"
-SDK_TESTING_BRANCH="pq-tests"
+SDK_TESTING_BRANCH="master"
 SDK_TESTING_HARNESS="test-harness"
 
 INSTALL_ONLY=0
@@ -21,10 +21,6 @@ OVERWRITE_TESTING_ENVIRONMENT=0
 # algod produces whenever a consensus version is in flight. Set to 0 to test
 # against the SDK release that indexer and conduit ship with instead.
 LOCAL_SDK_BUILD=1
-
-# WARNING: Be careful when turning on the next variable.
-# In that case you'll need to provide all variables expected by `algorand-sdk-testing`'s `.env`
-OVERWRITE_TESTING_ENVIRONMENT=0
 
 # The leading dot keeps the go tool from walking the staged sandbox: it ships
 # `disabled.go` files that would otherwise join this module and break `go list
