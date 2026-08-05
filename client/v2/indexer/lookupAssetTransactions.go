@@ -71,6 +71,7 @@ type LookupAssetTransactionsParams struct {
 	// * sig - Standard
 	// * msig - MultiSig
 	// * lsig - LogicSig
+	// * pqsig - Post-Quantum
 	SigType string `url:"sig-type,omitempty"`
 
 	// TxType
@@ -220,6 +221,7 @@ func (s *LookupAssetTransactions) Round(Round uint64) *LookupAssetTransactions {
 // * sig - Standard
 // * msig - MultiSig
 // * lsig - LogicSig
+// * pqsig - Post-Quantum
 func (s *LookupAssetTransactions) SigType(SigType string) *LookupAssetTransactions {
 	s.p.SigType = SigType
 
