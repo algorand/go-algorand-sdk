@@ -246,37 +246,6 @@ func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount
 	return
 }
 
-// MakeLogicSigAccountDelegatedFalcon1024 creates delegated LogicSigAccount that can sign on behalf of a Falcon1024 account.
-func MakeLogicSigAccountDelegatedFalcon1024(program []byte, args [][]byte, pqsigAccount Falcon1024Account) (lsa LogicSigAccount, err error) {
-	if err = sanityCheckProgram(program); err != nil {
-		return
-	}
-
-	toSignBytes := pqsigProgramToSign(pqsigAccount.Address(), program)
-	sig, err := pqsigAccount.PrivateKey.SignCompressed(toSignBytes)
-	if err != nil {
-		return
-	}
-
-	pqsig := types.PQSig{
-		Scheme:    types.PQSchemeFalcon1024,
-		Salt:      pqsigAccount.Salt,
-		PublicKey: pqsigAccount.PublicKey[:],
-		Signature: sig,
-	}
-
-	lsig := types.LogicSig{
-		Logic: program,
-		Args:  args,
-		PQsig: pqsig,
-	}
-
-	lsa = LogicSigAccount{
-		Lsig: lsig,
-	}
-	return
-}
-
 // AppendMultisigSignature adds an additional signature from a member of the
 // delegating multisig account.
 //

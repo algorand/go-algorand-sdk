@@ -1,3 +1,5 @@
+//go:build falcon
+
 package crypto
 
 import (

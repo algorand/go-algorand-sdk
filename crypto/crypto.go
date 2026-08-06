@@ -546,7 +546,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	if hasPQsig && lsig.PQsig.Scheme == types.PQSchemeFalcon1024 {
 		addr := PQAddressFromSig(lsig.PQsig)
 		toBeSigned := pqsigProgramToSign(addr, lsig.Logic)
-		return VerifyPQSig(toBeSigned, lsig.PQsig)
+		return verifyPQSig(toBeSigned, lsig.PQsig)
 	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true

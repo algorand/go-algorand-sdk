@@ -87,9 +87,6 @@ patch_line() {
 # packages it embeds. $3 overrides the build command that install.sh runs.
 patch_sandbox_image() {
   local dir=$1 dockerfile=$2 build=${3:-make}
-  # FIXME: Remove once the sandbox is updated to reflect the sdk dep on cgo code
-  patch_line "$dir/$dockerfile" 'RUN apk add --no-cache git make bash' \
-    'RUN apk add --no-cache git make bash build-base' 'build-base'
   patch_line "$dir/$dockerfile" 'RUN /tmp/install\.sh' \
     'COPY images/local-sdk /tmp/local-sdk\n$&' 'COPY images/local-sdk'
   # Conduit has its own go.sum lacking any SDK changes, let's tidy it up

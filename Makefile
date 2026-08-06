@@ -19,15 +19,15 @@ build: generate
 	cd $(SRCPATH) && go test -run xxx_phony_test $(TEST_SOURCES)
 
 test:
-	go test $(TEST_SOURCES_NO_CUCUMBER)
+	go test -tags falcon $(TEST_SOURCES_NO_CUCUMBER)
 
 unit:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNIT_TAGS) --test.v .
+	cd test && go test -tags falcon -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNIT_TAGS) --test.v .
 
 integration:
 	go test $(TEST_SOURCES_NO_CUCUMBER)
-	cd test && go test -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
+	cd test && go test -tags falcon -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
 
 display-all-go-steps:
 	find test -name "*.go" | xargs grep "github.com/cucumber/godog" 2>/dev/null | cut -d: -f1 | sort | uniq | xargs grep -Eo "Step[(].[^\`]+" | awk '{sub(/:Step\(./,":")} 1' | sed -E 's/", [a-zA-Z0-9]+\)//g'
