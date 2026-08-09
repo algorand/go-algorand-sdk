@@ -90,42 +90,22 @@ func (e HTTPError) Error() string {
 
 // BadRequest is returned for HTTP 400 responses.
 type BadRequest struct {
-	StatusCode int
-	Message    string
-}
-
-func (e BadRequest) Error() string {
-	return fmt.Sprintf("HTTP %v: %s", e.StatusCode, e.Message)
+	HTTPError
 }
 
 // InvalidToken is returned for HTTP 401 responses.
 type InvalidToken struct {
-	StatusCode int
-	Message    string
-}
-
-func (e InvalidToken) Error() string {
-	return fmt.Sprintf("HTTP %v: %s", e.StatusCode, e.Message)
+	HTTPError
 }
 
 // NotFound is returned for HTTP 404 responses.
 type NotFound struct {
-	StatusCode int
-	Message    string
-}
-
-func (e NotFound) Error() string {
-	return fmt.Sprintf("HTTP %v: %s", e.StatusCode, e.Message)
+	HTTPError
 }
 
 // InternalError is returned for HTTP 500 responses.
 type InternalError struct {
-	StatusCode int
-	Message    string
-}
-
-func (e InternalError) Error() string {
-	return fmt.Sprintf("HTTP %v: %s", e.StatusCode, e.Message)
+	HTTPError
 }
 
 // extractError checks if the response signifies an error.
@@ -139,13 +119,13 @@ func extractError(code int, errorBuf []byte) error {
 	msg := string(errorBuf)
 	switch code {
 	case 400:
-		return BadRequest{StatusCode: code, Message: msg}
+		return BadRequest{HTTPError: HTTPError{StatusCode: code, Message: msg}}
 	case 401:
-		return InvalidToken{StatusCode: code, Message: msg}
+		return InvalidToken{HTTPError: HTTPError{StatusCode: code, Message: msg}}
 	case 404:
-		return NotFound{StatusCode: code, Message: msg}
+		return NotFound{HTTPError: HTTPError{StatusCode: code, Message: msg}}
 	case 500:
-		return InternalError{StatusCode: code, Message: msg}
+		return InternalError{HTTPError: HTTPError{StatusCode: code, Message: msg}}
 	default:
 		return HTTPError{StatusCode: code, Message: msg}
 	}

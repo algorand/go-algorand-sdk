@@ -17,10 +17,10 @@ func TestExtractError(t *testing.T) {
 		code int
 		err  error
 	}{
-		{name: "400", code: 400, err: BadRequest{StatusCode: 400, Message: ""}},
-		{name: "401", code: 401, err: InvalidToken{StatusCode: 401, Message: ""}},
-		{name: "404", code: 404, err: NotFound{StatusCode: 404, Message: ""}},
-		{name: "500", code: 500, err: InternalError{StatusCode: 500, Message: ""}},
+		{name: "400", code: 400, err: BadRequest{HTTPError: HTTPError{StatusCode: 400, Message: ""}}},
+		{name: "401", code: 401, err: InvalidToken{HTTPError: HTTPError{StatusCode: 401, Message: ""}}},
+		{name: "404", code: 404, err: NotFound{HTTPError: HTTPError{StatusCode: 404, Message: ""}}},
+		{name: "500", code: 500, err: InternalError{HTTPError: HTTPError{StatusCode: 500, Message: ""}}},
 		{name: "418", code: 418, err: HTTPError{StatusCode: 418, Message: ""}},
 		{name: "200", code: 200, err: nil},
 		{name: "201", code: 201, err: nil},
