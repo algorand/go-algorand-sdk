@@ -91,6 +91,7 @@ type Account struct {
 	// * sig
 	// * msig
 	// * lsig
+	// * pqsig
 	// * or null if unknown
 	SigType string `json:"sig-type,omitempty"`
 

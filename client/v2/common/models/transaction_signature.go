@@ -13,6 +13,11 @@ type TransactionSignature struct {
 	// crypto/multisig.go : MultisigSig
 	Multisig TransactionSignatureMultisig `json:"multisig,omitempty"`
 
+	// Pqsig structure holding a post-quantum signature.
+	// Definition:
+	// data/transactions/pqsig.go : PQSig
+	Pqsig TransactionSignaturePQsig `json:"pqsig,omitempty"`
+
 	// Sig (sig) Standard ed25519 signature.
 	Sig []byte `json:"sig,omitempty"`
 }

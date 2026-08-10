@@ -81,6 +81,7 @@ type SearchForTransactionsParams struct {
 	// * sig - Standard
 	// * msig - MultiSig
 	// * lsig - LogicSig
+	// * pqsig - Post-Quantum
 	SigType string `url:"sig-type,omitempty"`
 
 	// TxType
@@ -252,6 +253,7 @@ func (s *SearchForTransactions) Round(Round uint64) *SearchForTransactions {
 // * sig - Standard
 // * msig - MultiSig
 // * lsig - LogicSig
+// * pqsig - Post-Quantum
 func (s *SearchForTransactions) SigType(SigType string) *SearchForTransactions {
 	s.p.SigType = SigType
 
