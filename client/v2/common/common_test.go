@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,17 +17,39 @@ func TestExtractError(t *testing.T) {
 		code int
 		err  error
 	}{
-		{name: "400", code: 400, err: BadRequest(fmt.Errorf("HTTP 400: "))},
-		{name: "401", code: 401, err: InvalidToken(fmt.Errorf("HTTP 401: "))},
-		{name: "404", code: 404, err: NotFound(fmt.Errorf("HTTP 404: "))},
-		{name: "500", code: 500, err: InternalError(fmt.Errorf("HTTP 500: "))},
+		{name: "400", code: 400, err: BadRequest{HTTPError: HTTPError{StatusCode: 400, Message: ""}}},
+		{name: "401", code: 401, err: InvalidToken{HTTPError: HTTPError{StatusCode: 401, Message: ""}}},
+		{name: "404", code: 404, err: NotFound{HTTPError: HTTPError{StatusCode: 404, Message: ""}}},
+		{name: "500", code: 500, err: InternalError{HTTPError: HTTPError{StatusCode: 500, Message: ""}}},
+		{name: "418", code: 418, err: HTTPError{StatusCode: 418, Message: ""}},
 		{name: "200", code: 200, err: nil},
 		{name: "201", code: 201, err: nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.err, extractError(tc.code, []byte{}))
+			err := extractError(tc.code, []byte{})
+			assert.Equal(t, tc.err, err)
+			if err != nil {
+				// Ensure concrete types are distinguishable at runtime.
+				switch tc.code {
+				case 400:
+					_, ok := err.(BadRequest)
+					assert.True(t, ok)
+				case 401:
+					_, ok := err.(InvalidToken)
+					assert.True(t, ok)
+				case 404:
+					_, ok := err.(NotFound)
+					assert.True(t, ok)
+				case 500:
+					_, ok := err.(InternalError)
+					assert.True(t, ok)
+				default:
+					_, ok := err.(HTTPError)
+					assert.True(t, ok)
+				}
+			}
 		})
 	}
 }
