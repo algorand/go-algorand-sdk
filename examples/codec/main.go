@@ -46,7 +46,7 @@ func main() {
 	// Assuming we already have a pay transaction `ptxn`
 
 	// Sign the transaction
-	_, signedTxn, err := crypto.SignTransaction(acct1.PrivateKey, ptxn)
+	_, signedTxn, err := crypto.Ed25519SignTransaction(acct1.AsSigner(), ptxn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}

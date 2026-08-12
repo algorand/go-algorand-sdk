@@ -295,7 +295,7 @@ func TestGatherSignatures(t *testing.T) {
 	txWithSigners, _ := atc.BuildGroup()
 	require.Equal(t, types.Digest{}, txWithSigners[0].Txn.Group)
 
-	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
+	_, expectedSig, err := crypto.Ed25519SignTransaction(account.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Equal(t, len(sigs[0]), len(expectedSig))
 	require.Equal(t, sigs[0], expectedSig)

@@ -38,7 +38,11 @@ func aSigningAccountWithAddressAndMnemonic(address, mnem string) error {
 
 func signTheTransaction() error {
 	var err error
-	txid, stx, err = crypto.SignTransaction(sk1, tx)
+	sgnr, err := crypto.SKToInMemorySigner(sk1)
+	if err != nil {
+		return err
+	}
+	txid, stx, err = crypto.Ed25519SignTransaction(sgnr, tx)
 	return err
 }
 

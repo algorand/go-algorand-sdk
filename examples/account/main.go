@@ -62,7 +62,7 @@ func rekeyAccount(algodClient *algod.Client, acct crypto.Account, rekeyTarget cr
 	// Set the rekey parameter
 	rktxn.RekeyTo = rekeyTarget.Address
 
-	_, stxn, err := crypto.SignTransaction(acct.PrivateKey, rktxn)
+	_, stxn, err := crypto.Ed25519SignTransaction(acct.AsSigner(), rktxn)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 	}
@@ -85,7 +85,7 @@ func rekeyAccount(algodClient *algod.Client, acct crypto.Account, rekeyTarget cr
 	// rekey back
 	rktxn, _ = transaction.MakePaymentTxn(addr, addr, 0, nil, "", sp)
 	rktxn.RekeyTo = acct.Address
-	_, stxn, _ = crypto.SignTransaction(rekeyTarget.PrivateKey, rktxn)
+	_, stxn, _ = crypto.Ed25519SignTransaction(rekeyTarget.AsSigner(), rktxn)
 	txID, _ = algodClient.SendRawTransaction(stxn).Do(context.Background())
 	result, _ = transaction.WaitForConfirmation(algodClient, txID, 4, context.Background())
 }

@@ -20,16 +20,16 @@ type TransactionSigner interface { //nolint:revive // Ignore stuttering for back
 	Equals(other TransactionSigner) bool
 }
 
-// BasicAccountTransactionSigner that can sign transactions for the provided basic Account.
-type BasicAccountTransactionSigner struct {
-	Account crypto.Account
+// Ed25519AccountTransactionSigner that can sign transactions using the provided Ed25519 signer.
+type Ed25519AccountTransactionSigner struct {
+	Signer crypto.Ed25519Signer
 }
 
 // SignTransactions signs the provided transactions with the private key of the account.
-func (txSigner BasicAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignTransaction(txSigner.Account.PrivateKey, txGroup[pos])
+		_, stxBytes, err := crypto.Ed25519SignTransaction(txSigner.Signer, txGroup[pos])
 		if err != nil {
 			return nil, err
 		}
@@ -41,19 +41,81 @@ func (txSigner BasicAccountTransactionSigner) SignTransactions(txGroup []types.T
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
-func (txSigner BasicAccountTransactionSigner) Equals(other TransactionSigner) bool {
-	if castedSigner, ok := other.(BasicAccountTransactionSigner); ok {
-		otherJSON, err := json.Marshal(castedSigner)
+func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(Ed25519AccountTransactionSigner); ok {
+		pk1 := txSigner.Signer.Ed25519PublicKey()
+		pk2 := castedSigner.Signer.Ed25519PublicKey()
+		// NOTE: Assuming that two signers for the same PK are "equal"
+		return pk1 == pk2
+	}
+	return false
+}
+
+// MultiSigEd25519AccountTransactionSigner is a TransactionSigner that can sign
+// transactions for the provided MultiSig Account
+type MultiSigEd25519AccountTransactionSigner struct {
+	Msig    crypto.MultisigAccount
+	Signers []crypto.Ed25519Signer
+}
+
+// SignTransactions signs the provided transactions with the private keys of the account.
+func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		var unmergedStxs [][]byte
+		for _, sgnr := range txSigner.Signers {
+			_, unmergedStxBytes, err := crypto.Ed25519SignMultisigTransaction(sgnr, txSigner.Msig, txGroup[pos])
+			if err != nil {
+				return nil, err
+			}
+
+			unmergedStxs = append(unmergedStxs, unmergedStxBytes)
+		}
+
+		if len(txSigner.Signers) > 1 {
+			_, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
+			if err != nil {
+				return nil, err
+			}
+
+			stxs[i] = stxBytes
+		} else {
+			stxs[i] = unmergedStxs[0]
+		}
+	}
+
+	return stxs, nil
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(MultiSigEd25519AccountTransactionSigner); ok {
+		otherJSON, err := json.Marshal(castedSigner.Msig)
 		if err != nil {
 			return false
 		}
 
-		selfJSON, err := json.Marshal(txSigner)
+		selfJSON, err := json.Marshal(txSigner.Msig)
 		if err != nil {
 			return false
 		}
 
-		return string(otherJSON) == string(selfJSON)
+		if string(otherJSON) != string(selfJSON) {
+			return false
+		}
+
+		if len(txSigner.Signers) != len(castedSigner.Signers) {
+			return false
+		}
+
+		for idx, sgnr := range txSigner.Signers {
+			otherSgnr := castedSigner.Signers[idx]
+			if sgnr.Ed25519PublicKey() != otherSgnr.Ed25519PublicKey() {
+				return false
+			}
+		}
+
+		return true
 	}
 	return false
 }
@@ -82,60 +144,6 @@ func (txSigner LogicSigAccountTransactionSigner) SignTransactions(txGroup []type
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner LogicSigAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(LogicSigAccountTransactionSigner); ok {
-		otherJSON, err := json.Marshal(castedSigner)
-		if err != nil {
-			return false
-		}
-
-		selfJSON, err := json.Marshal(txSigner)
-		if err != nil {
-			return false
-		}
-
-		return string(otherJSON) == string(selfJSON)
-	}
-	return false
-}
-
-// MultiSigAccountTransactionSigner is a TransactionSigner that can
-// sign transactions for the provided MultiSig Account
-type MultiSigAccountTransactionSigner struct {
-	Msig crypto.MultisigAccount
-	Sks  [][]byte
-}
-
-// SignTransactions signs the provided transactions with the private keys of the account.
-func (txSigner MultiSigAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		var unmergedStxs [][]byte
-		for _, sk := range txSigner.Sks {
-			_, unmergedStxBytes, err := crypto.SignMultisigTransaction(sk, txSigner.Msig, txGroup[pos])
-			if err != nil {
-				return nil, err
-			}
-
-			unmergedStxs = append(unmergedStxs, unmergedStxBytes)
-		}
-
-		if len(txSigner.Sks) > 1 {
-			_, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
-			if err != nil {
-				return nil, err
-			}
-
-			stxs[i] = stxBytes
-		} else {
-			stxs[i] = unmergedStxs[0]
-		}
-	}
-
-	return stxs, nil
-}
-
-// Equals returns true if the other TransactionSigner equals this one.
-func (txSigner MultiSigAccountTransactionSigner) Equals(other TransactionSigner) bool {
-	if castedSigner, ok := other.(MultiSigAccountTransactionSigner); ok {
 		otherJSON, err := json.Marshal(castedSigner)
 		if err != nil {
 			return false

@@ -63,7 +63,7 @@ func main() {
 	seedAddr := seedAcct.Address.String()
 	sp, _ := algodClient.SuggestedParams().Do(context.Background())
 	txn, _ := transaction.MakePaymentTxn(seedAddr, lsa.String(), 1000000, nil, "", sp)
-	txid, stx, _ := crypto.SignTransaction(seedAcct.PrivateKey, txn)
+	txid, stx, _ := crypto.Ed25519SignTransaction(seedAcct.AsSigner(), txn)
 	algodClient.SendRawTransaction(stx).Do(context.Background())
 	transaction.WaitForConfirmation(algodClient, txid, 4, context.Background())
 
@@ -101,7 +101,7 @@ func main() {
 	// account signs the logic, and now the logic may be passed instead
 	// of a signature for a transaction
 	var args [][]byte
-	delSig, err := crypto.MakeLogicSigAccountDelegated(lsigBinary, args, seedAcct.PrivateKey)
+	delSig, err := crypto.Ed25519MakeLogicSigAccountDelegated(lsigBinary, args, seedAcct.AsSigner())
 	if err != nil {
 		log.Fatalf("failed to make delegate lsig: %s", err)
 	}

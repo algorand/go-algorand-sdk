@@ -606,14 +606,14 @@ func createMsigTxnZeroFee() error {
 
 func signMsigTxn() error {
 	var err error
-	txid, stx, err = crypto.SignMultisigTransaction(account.PrivateKey, msig, txn)
+	txid, stx, err = crypto.Ed25519SignMultisigTransaction(account.AsSigner(), msig, txn)
 
 	return err
 }
 
 func signTxn() error {
 	var err error
-	txid, stx, err = crypto.SignTransaction(account.PrivateKey, txn)
+	txid, stx, err = crypto.Ed25519SignTransaction(account.AsSigner(), txn)
 	if err != nil {
 		return err
 	}
@@ -1181,7 +1181,7 @@ func encDecBid() error {
 }
 
 func signBid() error {
-	signedBytes, err := crypto.SignBid(account.PrivateKey, bid)
+	signedBytes, err := crypto.Ed25519SignBid(account.AsSigner(), bid)
 	if err != nil {
 		return err
 	}
@@ -1277,7 +1277,7 @@ func appendMsig() error {
 	if err != nil {
 		return err
 	}
-	_, stx, err = crypto.AppendMultisigTransaction(account.PrivateKey, msig, stx)
+	_, stx, err = crypto.Ed25519AppendMultisigTransaction(account.AsSigner(), msig, stx)
 	return err
 }
 
@@ -1687,7 +1687,7 @@ func programHash(addr string) (err error) {
 }
 
 func iPerformTealsign() (err error) {
-	sig, err = crypto.TealSign(account.PrivateKey, data, account.Address)
+	sig, err = crypto.Ed25519TealSign(account.AsSigner(), data, account.Address)
 	return
 }
 

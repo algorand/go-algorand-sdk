@@ -77,7 +77,7 @@ func createAsset(algodClient *algod.Client, creator crypto.Account) uint64 {
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -124,7 +124,7 @@ func configureAsset(algodClient *algod.Client, assetID uint64, creator crypto.Ac
 		log.Fatalf("failed to make  txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -159,7 +159,7 @@ func optInAsset(algodClient *algod.Client, assetID uint64, user crypto.Account) 
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(user.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(user.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -195,7 +195,7 @@ func optOutAsset(algodClient *algod.Client, assetID uint64, creator, user crypto
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(user.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(user.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -233,7 +233,7 @@ func xferAsset(algodClient *algod.Client, assetID uint64, creator crypto.Account
 		log.Fatalf("failed to make asset txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -273,7 +273,7 @@ func freezeAsset(algodClient *algod.Client, assetID uint64, creator crypto.Accou
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -313,7 +313,7 @@ func clawbackAsset(algodClient *algod.Client, assetID uint64, creator crypto.Acc
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -352,7 +352,7 @@ func deleteAsset(algodClient *algod.Client, assetID uint64, creator crypto.Accou
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
