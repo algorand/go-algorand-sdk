@@ -10,9 +10,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
-func TestMakeBasicAccountTransactionSigner(t *testing.T) {
+func TestMakeEd25519AccountTransactionSigner(t *testing.T) {
 	account := crypto.GenerateAccount()
-	txSigner := BasicAccountTransactionSigner{Account: account}
+	txSigner := Ed25519AccountTransactionSigner{Signer: account.AsSigner()}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -112,7 +112,7 @@ func makeTestMultisigAccount(t *testing.T) (crypto.MultisigAccount, crypto.Ed255
 	return ma, sgnr1, sgnr2, sgnr3
 }
 
-func TestMakeMultiSigAccountTransactionSigner(t *testing.T) {
+func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
 	ma, sgnr1, _, _ := makeTestMultisigAccount(t)
 	fromAddr, err := ma.Address()
 	require.NoError(t, err)
