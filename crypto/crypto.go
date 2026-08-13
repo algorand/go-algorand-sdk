@@ -495,6 +495,9 @@ func sanityCheckProgram(program []byte) error {
 // whose delegating account is backed by a single private key (i.e. not a
 // multsig account). In that case, it should be the address of the delegating
 // account.
+//
+// Note: SDKs built without falcon support (-tags falcon) will return false for
+// any falcon signature.
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
