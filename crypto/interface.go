@@ -41,5 +41,5 @@ type Falcon1024Signer interface {
 type Falcon1024Salted interface {
 	// Falcon1024Salt returns the (maybe non-canonical) salt that identifies the
 	// account selected for this signer
-	Falcon1024Salt() (types.PQAddressSalt, error)
+	Falcon1024Salt() types.PQAddressSalt
 }
