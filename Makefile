@@ -22,11 +22,11 @@ test:
 	go test -tags falcon $(TEST_SOURCES_NO_CUCUMBER)
 
 unit:
-	go test $(TEST_SOURCES_NO_CUCUMBER)
+	go test -tags falcon $(TEST_SOURCES_NO_CUCUMBER)
 	cd test && go test -tags falcon -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(UNIT_TAGS) --test.v .
 
 integration:
-	go test $(TEST_SOURCES_NO_CUCUMBER)
+	go test -tags falcon $(TEST_SOURCES_NO_CUCUMBER)
 	cd test && go test -tags falcon -timeout 0s --godog.strict=true --godog.format=pretty --godog.tags=$(INTEGRATIONS_TAGS) --test.v .
 
 display-all-go-steps:

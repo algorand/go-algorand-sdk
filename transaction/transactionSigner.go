@@ -159,6 +159,46 @@ func (txSigner LogicSigAccountTransactionSigner) Equals(other TransactionSigner)
 	return false
 }
 
+// Falcon1024AccountTransactionSigner is a TransactionSigner that can
+// sign transactions using the provided Falcon1024 signer
+type Falcon1024AccountTransactionSigner struct {
+	Signer crypto.Falcon1024Signer
+}
+
+// SignTransactions signs the provided transactions with the Falcon1024 signer.
+func (txSigner Falcon1024AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	stxs := make([][]byte, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		_, stxBytes, err := crypto.SignFalcon1024AccountTransaction(txSigner.Signer, txGroup[pos])
+		if err != nil {
+			return nil, err
+		}
+
+		stxs[i] = stxBytes
+	}
+
+	return stxs, nil
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner Falcon1024AccountTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(Falcon1024AccountTransactionSigner); ok {
+		// NOTE: Assuming that two signers for the same (PK, salt) pair are "equal"
+		if txSigner.Signer.Falcon1024PublicKey() != castedSigner.Signer.Falcon1024PublicKey() {
+			return false
+		}
+		txSignerSalt, txSignerSaltErr := crypto.SaltForFalcon1024Signer(txSigner.Signer)
+		castedSignerSalt, castedSignerSaltErr := crypto.SaltForFalcon1024Signer(castedSigner.Signer)
+		// If both fail then they are the same weird thing
+		if txSignerSaltErr != castedSignerSaltErr {
+			return false
+		}
+		// Otherwise they should have the same salt
+		return txSignerSalt == castedSignerSalt
+	}
+	return false
+}
+
 // EmptyTransactionSigner is a TransactionSigner that produces signed transaction objects without
 // signatures. This is useful for simulating transactions, but it won't work for actual submission.
 type EmptyTransactionSigner struct{}

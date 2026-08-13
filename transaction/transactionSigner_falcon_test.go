@@ -5,10 +5,11 @@ package transaction
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/stretchr/testify/require"
 )
 
 func makeTestFalcon1024Account(t *testing.T) crypto.Falcon1024Account {
@@ -26,7 +27,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
-	txSigner := Falcon1024AccountTransactionSigner{Falcon1024Account: pqa}
+	txSigner := Falcon1024AccountTransactionSigner{Signer: pqa.AsSigner()}
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
@@ -46,7 +47,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.SignFalcon1024AccountTransaction(pqa, tx)
+	_, expectedSig, err := crypto.SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
 }

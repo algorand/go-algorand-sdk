@@ -4,6 +4,7 @@ package crypto
 
 import (
 	"encoding/base64"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,7 +78,7 @@ func TestSignFalcon1024AccountTransaction(t *testing.T) {
 	fromAddr := pqa.Address()
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	txid, txBytes, err := SignFalcon1024AccountTransaction(pqa, tx)
+	txid, txBytes, err := SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 	require.NotEmpty(t, txid)
 
@@ -97,6 +98,60 @@ func TestSignFalcon1024AccountTransaction(t *testing.T) {
 	require.False(t, VerifyPQSig(rawTransactionBytesToSign(stx.Txn), stx.PQsig))
 }
 
+type customFalconSigner struct {
+	pqa Falcon1024Account
+}
+
+// Falcon1024 signs the given bytes with a falcon1024 signature
+func (sgnr customFalconSigner) Falcon1024Sign(toBeSigned []byte) ([]byte, error) {
+	return nil, fmt.Errorf("Unimplemented")
+}
+
+// Falcon1024PublicKey returns the public key that should be used to verify the
+// signatures performed by this signer
+func (sgnr customFalconSigner) Falcon1024PublicKey() Falcon1024PublicKey {
+	return sgnr.pqa.PublicKey
+}
+
+func TestBasicSignerGetsCanonicalSalt(t *testing.T) {
+	pqa := makeTestFalcon1024Account(t)
+
+	sgnr := customFalconSigner{pqa: pqa}
+	salt, err := SaltForFalcon1024Signer(sgnr)
+	require.NoError(t, err)
+
+	defaultSgnr := pqa.AsSigner()
+	defaultSalt, err := SaltForFalcon1024Signer(defaultSgnr)
+	require.NoError(t, err)
+
+	require.Equal(t, defaultSalt, salt)
+}
+
+func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
+	pqa := makeTestFalcon1024Account(t)
+	defaultSgnr := pqa.AsSigner()
+	saltedSgnr := SaltedFalcon1024Signer{
+		Signer: defaultSgnr,
+		Salt:   types.PQAddressSalt(99),
+	}
+	fromAddr := pqa.Address()
+	tx := makeTestPaymentTxn(t, fromAddr)
+
+	_, txBytes, err := SignFalcon1024AccountTransaction(saltedSgnr, tx)
+	require.NoError(t, err)
+
+	var stx types.SignedTxn
+	require.NoError(t, msgpack.Decode(txBytes, &stx))
+
+	// We modified the salt, this means a different account made the signature
+	// and therefore AuthAddr is set.
+	require.NotEqual(t, types.Address{}, stx.AuthAddr)
+	require.Equal(t, types.PQAddressSalt(99), stx.PQsig.Salt)
+
+	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+	require.True(t, VerifyPQSig(bytesToSign, stx.PQsig))
+}
+
 func TestSignFalcon1024AccountTransactionWithAuthAddr(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	authAddr := pqa.Address()
@@ -106,7 +161,7 @@ func TestSignFalcon1024AccountTransactionWithAuthAddr(t *testing.T) {
 	require.NoError(t, err)
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := SignFalcon1024AccountTransaction(pqa, tx)
+	_, txBytes, err := SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 
 	var stx types.SignedTxn
@@ -119,7 +174,7 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	program := []byte{1, 32, 1, 1, 34}
 	args := [][]byte{{0x01}, {0x02, 0x03}}
 
-	lsa, err := MakeLogicSigAccountDelegatedFalcon1024(program, args, pqa)
+	lsa, err := MakeLogicSigAccountDelegatedFalcon1024(program, args, pqa.AsSigner())
 	require.NoError(t, err)
 	require.True(t, lsa.IsDelegated())
 	require.False(t, lsa.Lsig.PQsig.Blank())

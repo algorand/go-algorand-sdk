@@ -28,7 +28,7 @@ func (sgnr inMemoryEd25519Signer) Ed25519PublicKey() Ed25519PublicKey {
 
 // GenerateAddressFromSK take a secret key and returns the corresponding Address
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged
+// Deprecated: having in-memory cryptographic secrets is discouraged
 func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 	edsk := ed25519.PrivateKey(sk)
 
@@ -43,7 +43,7 @@ func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 
 // SKToInMemorySigner wraps an ed25519 private key with an Ed25519Signer implementation
 //
-// Note: usage of in-memory cryptographic APIs is discouraged
+// Note: having in-memory cryptographic secrets is discouraged
 func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
 	var pk Ed25519PublicKey
 	n := copy(pk[:], sk.Public().(ed25519.PublicKey))
@@ -59,7 +59,7 @@ func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
 // If the SK's corresponding address is different than the txn sender's, the SK's
 // corresponding address will be assigned as AuthAddr
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519SignTransaction instead
 func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -72,7 +72,7 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 
 // SignBytes signs the bytes and returns the signature
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519SignBytes instead
 func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -86,7 +86,7 @@ func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err
 // SignBid accepts a private key and a bid, and returns the signature of the
 // bid under that key
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519SignBid instead
 func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -101,7 +101,7 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error)
 // private key, returning the bytes of a signed transaction with the multisig field
 // partially populated, ready to be passed to other multisig signers to sign or broadcast.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519SignMultisigTransaction instead
 func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -114,7 +114,7 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 
 // AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519AppendMultisigToLogicSig instead
 func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -130,7 +130,7 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 // While we could compute the multisig preimage from the multisig blob, we ask the caller
 // to pass it back in, to explicitly check that they know who they are signing as.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519AppendMultisigTransaction instead
 func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -143,7 +143,7 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStx
 
 // TealSign creates a signature compatible with ed25519verify opcode from contract address
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519TealSign instead
 func TealSign(sk ed25519.PrivateKey, data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -156,7 +156,7 @@ func TealSign(sk ed25519.PrivateKey, data []byte, contractAddress types.Address)
 
 // TealSignFromProgram creates a signature compatible with ed25519verify opcode from raw program bytes
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519TealSignFromProgram instead
 func TealSignFromProgram(sk ed25519.PrivateKey, data []byte, program []byte) (rawSig types.Signature, err error) {
 	sgnr, err := SKToInMemorySigner(sk)

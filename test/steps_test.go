@@ -57,7 +57,7 @@ var gen string
 var a types.Address
 var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
-var falconAccount crypto.Falcon1024Account
+var falconSigner crypto.Falcon1024Signer
 var kcl kmd.Client
 var aclv2 *algodV2.Client
 var iclv2 *indexerV2.Client
@@ -662,53 +662,6 @@ func equalMsigGolden(golden string) error {
 	return nil
 }
 
-func genFalconKey() {
-	falconAccount = crypto.GenerateFalcon1024Account()
-}
-
-func loadFalconKey() error {
-	var err error
-	seed := [32]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	// Address: AZM6UV2ONIVHH7BK2CSBUPJCXNPZH5LFA2YFBCZPHSYXUFJ4LLLFJOUT5Y
-	falconAccount, err = crypto.Falcon1024AccountFromPQSeed(seed[:])
-	return err
-}
-
-func genAndFundFalconKey() (err error) {
-	genFalconKey()
-	err = initializeAccount(falconAccount.Address().String())
-	return
-}
-
-func mnForFalcon(mn string) error {
-	seed, err := mnemonic.ToPQSeed(mn, types.PQSchemeFalcon1024)
-	if err != nil {
-		return err
-	}
-	falconAccount, err = crypto.Falcon1024AccountFromPQSeed(seed)
-	return err
-}
-
-func createFalconTxn() error {
-	var err error
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         true,
-	}
-	txn, err = transaction.MakePaymentTxn(falconAccount.Address().String(), to, amt, note, close, paramsToUse)
-	return err
-}
-
-func signFalconTxn() error {
-	var err error
-	txid, stx, err = crypto.SignFalcon1024AccountTransaction(falconAccount, txn)
-	return err
-}
-
 func addFalcon1024Fee() error {
 	txn.Fee = types.MicroAlgos(3000)
 	return nil
@@ -985,9 +938,50 @@ func defaultTxn(iamt int, inote string) error {
 	return defaultTxnWithAddress(iamt, inote, accounts[0])
 }
 
+func genAndFundFalconKey() (err error) {
+	err = genFalconKey()
+	if err != nil {
+		return
+	}
+	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	err = initializeAccount(addr.String())
+	return
+}
+
+func createFalconTxn() error {
+	var err error
+	paramsToUse := types.SuggestedParams{
+		Fee:             types.MicroAlgos(fee),
+		GenesisID:       gen,
+		GenesisHash:     gh,
+		FirstRoundValid: types.Round(fv),
+		LastRoundValid:  types.Round(lv),
+		FlatFee:         true,
+	}
+	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	txn, err = transaction.MakePaymentTxn(addr.String(), to, amt, note, close, paramsToUse)
+	return err
+}
+
+func signFalconTxn() error {
+	var err error
+	txid, stx, err = crypto.SignFalcon1024AccountTransaction(falconSigner, txn)
+	return err
+}
+
 func defaultPQsigTxn(iamt int, inote string) error {
 	var err error
-	senderAddress := falconAccount.Address().String()
+	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	senderAddress := addr.String()
 	if inote != "none" {
 		note, err = base64.StdEncoding.DecodeString(inote)
 		if err != nil {

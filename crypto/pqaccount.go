@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -14,40 +15,163 @@ var pqAddressPrefix = []byte("PQA")
 // post-quantum scheme signs for a delegated LogicSig.
 var pqProgramPrefix = []byte("PQProgram")
 
-const Falcon1024PublicKeySize = 1793
-const Falcon1024PrivateKeySize = 2305
-
-// Falcon1024Account holds both the public and private information associated with a
-// falcon address.
-type Falcon1024Account struct {
-	PublicKey  [Falcon1024PublicKeySize]byte
-	PrivateKey [Falcon1024PrivateKeySize]byte
-	Salt       types.PQAddressSalt
+// internalFalcon1024Signer represents the ability to perform falcon1024
+// signatures on behalf of some public key (using a given salt to avoid address
+// clashes with possible ed25519 accounts)
+type internalFalcon1024Signer interface {
+	// Falcon1024 signs the given bytes with a falcon1024 signature
+	Falcon1024Sign(toBeSigned []byte) ([]byte, error)
+	// Falcon1024PublicKey returns the public key that should be used to verify
+	// the signatures performed by this signer
+	Falcon1024PublicKey() Falcon1024PublicKey
+	// Falcon1024Salted equips a signer with the ability to specify a custom (maybe
+	// non-canonical) salt
+	Falcon1024Salt() types.PQAddressSalt
 }
 
-// Address returns the account address for the given Falcon1024Account.
+// SaltedFalcon1024Signer wraps a given Falcon1024Signer overriding its salt
+// with a new one
+type SaltedFalcon1024Signer struct {
+	Signer Falcon1024Signer
+	Salt   types.PQAddressSalt
+}
+
+// Falcon1024Sign signs the given bytes with a falcon1024 signature
+func (sgnr SaltedFalcon1024Signer) Falcon1024Sign(toBeSigned []byte) ([]byte, error) {
+	return sgnr.Signer.Falcon1024Sign(toBeSigned)
+}
+
+// Falcon1024PublicKey returns the public key that should be used to verify the
+// signatures performed by this signer
+func (sgnr SaltedFalcon1024Signer) Falcon1024PublicKey() Falcon1024PublicKey {
+	return sgnr.Signer.Falcon1024PublicKey()
+}
+
+// Falcon1024Salt returns the (maybe non-canonical) salt that identifies the
+// account selected for this signer
+func (sgnr SaltedFalcon1024Signer) Falcon1024Salt() types.PQAddressSalt {
+	return sgnr.Salt
+}
+
+// falcon1024Address returns the account address for the given Falcon1024Account.
 // Hash("PQA"  || scheme ||  salt || publicKey)
-func (pqa Falcon1024Account) Address() (addr types.Address) {
-	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(pqa.PublicKey))
+func falcon1024Address(pk Falcon1024PublicKey, salt types.PQAddressSalt) (addr types.Address) {
+	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(pk))
 	buf = append(buf, pqAddressPrefix...)
 	buf = append(buf, types.PQSchemeFalcon1024[:]...)
-	buf = append(buf, uint8(pqa.Salt))
-	buf = append(buf, pqa.PublicKey[:]...)
+	buf = append(buf, uint8(salt))
+	buf = append(buf, pk[:]...)
 
 	digest := sha512.Sum512_256(buf)
 
 	copy(addr[:], digest[:])
-
 	return
 }
 
-// Validate returns an error if the given Falcon1024Account address could be interpreted as an ed25519 public key
-func (pqa Falcon1024Account) Validate() error {
-	addr := pqa.Address()
+// Falcon1024SignerAddress returns the address for a given falcon1024 signer
+func Falcon1024SignerAddress(signer Falcon1024Signer) (addr types.Address, err error) {
+	salt, err := SaltForFalcon1024Signer(signer)
+	if err != nil {
+		return
+	}
+	return falcon1024Address(signer.Falcon1024PublicKey(), salt), nil
+}
 
-	if IsEdwards25519Point([]byte(addr[:])) {
-		return fmt.Errorf("Account address overlaps with a valid ed25519 account")
+// SaltForFalcon1024Signer returns the salt that will be used when performing PQ
+// signatures.
+//
+// For signers implementing Falcon1024Salted this salt will be used, otherwise
+// the canonical one will be calculated.
+func SaltForFalcon1024Signer(sgnr Falcon1024Signer) (types.PQAddressSalt, error) {
+	if internal, ok := sgnr.(internalFalcon1024Signer); ok {
+		return internal.Falcon1024Salt(), nil
 	}
 
-	return nil
+	return canonicalSaltForFalcon1024PK(sgnr.Falcon1024PublicKey())
+}
+
+func canonicalSaltForFalcon1024PK(pk Falcon1024PublicKey) (types.PQAddressSalt, error) {
+	for salt := 0; salt <= 0xff; salt++ {
+		addr := falcon1024Address(pk, types.PQAddressSalt(salt))
+		if !IsEdwards25519Point(addr[:]) {
+			return types.PQAddressSalt(salt), nil
+		}
+	}
+
+	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %s", pk)
+}
+
+// SignFalcon1024AccountTransaction signs the given transaction with the given Falcon1024Account private key. On success it returns both transaction id and transaction bytes.
+func SignFalcon1024AccountTransaction(sgnr Falcon1024Signer, txn types.Transaction) (txid string, stxBytes []byte, err error) {
+	txnBytes := rawTransactionBytesToSign(txn)
+	txid = txIDFromRawTxnBytesToSign(txnBytes)
+
+	sig, err := sgnr.Falcon1024Sign(txnBytes)
+	if err != nil {
+		return
+	}
+
+	pk := sgnr.Falcon1024PublicKey()
+	salt, err := SaltForFalcon1024Signer(sgnr)
+	if err != nil {
+		return
+	}
+
+	pqsig := types.PQSig{
+		Scheme:    types.PQSchemeFalcon1024,
+		Salt:      salt,
+		PublicKey: pk[:],
+		Signature: sig,
+	}
+
+	stx := types.SignedTxn{
+		Txn:   txn,
+		PQsig: pqsig,
+	}
+
+	addr := falcon1024Address(pk, salt)
+	if stx.Txn.Sender != addr {
+		stx.AuthAddr = addr
+	}
+
+	stxBytes = msgpack.Encode(stx)
+	return
+}
+
+// MakeLogicSigAccountDelegatedFalcon1024 creates delegated LogicSigAccount that can sign on behalf of a Falcon1024 account.
+func MakeLogicSigAccountDelegatedFalcon1024(program []byte, args [][]byte, sgnr Falcon1024Signer) (lsa LogicSigAccount, err error) {
+	if err = sanityCheckProgram(program); err != nil {
+		return
+	}
+
+	pk := sgnr.Falcon1024PublicKey()
+	salt, err := SaltForFalcon1024Signer(sgnr)
+	if err != nil {
+		return
+	}
+
+	addr := falcon1024Address(pk, salt)
+	toSignBytes := pqsigProgramToSign(addr, program)
+	sig, err := sgnr.Falcon1024Sign(toSignBytes)
+	if err != nil {
+		return
+	}
+
+	pqsig := types.PQSig{
+		Scheme:    types.PQSchemeFalcon1024,
+		Salt:      salt,
+		PublicKey: pk[:],
+		Signature: sig,
+	}
+
+	lsig := types.LogicSig{
+		Logic: program,
+		Args:  args,
+		PQsig: pqsig,
+	}
+
+	lsa = LogicSigAccount{
+		Lsig: lsig,
+	}
+	return
 }

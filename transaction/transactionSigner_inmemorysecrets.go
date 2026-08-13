@@ -9,7 +9,7 @@ import (
 
 // BasicAccountTransactionSigner that can sign transactions for the provided basic Account.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519AccountTransactionSigner instead
 type BasicAccountTransactionSigner struct {
 	Account crypto.Account
@@ -42,7 +42,7 @@ func (txSigner BasicAccountTransactionSigner) Equals(other TransactionSigner) bo
 // MultiSigAccountTransactionSigner is a TransactionSigner that can
 // sign transactions for the provided MultiSig Account
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // MultiSigEd25519AccountTransactionSigner instead
 type MultiSigAccountTransactionSigner struct {
 	Msig crypto.MultisigAccount

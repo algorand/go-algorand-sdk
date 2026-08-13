@@ -11,7 +11,7 @@ import (
 // Account holds both the public and private information associated with an
 // Algorand address
 //
-// Note: usage of in-memory cryptographic APIs is discouraged
+// Note: having in-memory cryptographic secrets is discouraged
 type Account struct {
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
@@ -28,7 +28,7 @@ func init() {
 
 // GenerateAccount generates a random Account
 //
-// Note: usage of in-memory cryptographic APIs is discouraged
+// Note: having in-memory cryptographic secrets is discouraged
 func GenerateAccount() (kp Account) {
 	// Generate an ed25519 keypair. This should never fail
 	pk, sk, err := ed25519.GenerateKey(nil)
@@ -54,7 +54,7 @@ func GenerateAccount() (kp Account) {
 // private key. The argument sk must have a length equal to
 // ed25519.PrivateKeySize.
 //
-// Note: usage of in-memory cryptographic APIs is discouraged
+// Note: having in-memory cryptographic secrets is discouraged
 func AccountFromPrivateKey(sk ed25519.PrivateKey) (account Account, err error) {
 	if len(sk) != ed25519.PrivateKeySize {
 		err = errInvalidPrivateKey
@@ -94,7 +94,7 @@ func (acc Account) AsSigner() Ed25519Signer {
 //
 // The parameter signer is the private key of the delegating account.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519MakeLogicSigAccountDelegated instead
 func MakeLogicSigAccountDelegated(program []byte, args [][]byte, sk ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -117,7 +117,7 @@ func MakeLogicSigAccountDelegated(program []byte, args [][]byte, sk ed25519.Priv
 // delegating multisig account. Use the method AppendMultisigSignature on the
 // returned LogicSigAccount to add additional signatures from other members.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519MakeLogicSigAccountDelegatedMsig instead
 func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, sk ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
@@ -134,7 +134,7 @@ func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount
 // The LogicSigAccount must represent a delegated LogicSig backed by a multisig
 // account.
 //
-// Deprecated: usage of in-memory cryptographic APIs is discouraged, use
+// Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519AppendMultisigSignature instead
 func (lsa *LogicSigAccount) AppendMultisigSignature(sk ed25519.PrivateKey) error {
 	signer, err := SKToInMemorySigner(sk)
