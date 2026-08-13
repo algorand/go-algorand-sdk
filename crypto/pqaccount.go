@@ -69,7 +69,7 @@ func Falcon1024SignerAddress(signer Falcon1024Signer) (addr types.Address, err e
 // For signers implementing Falcon1024Salted this salt will be used, otherwise
 // the canonical one will be calculated.
 func SaltForFalcon1024Signer(sgnr Falcon1024Signer) (types.PQAddressSalt, error) {
-	if salted, ok := sgnr.(SaltedFalcon1024Signer); ok {
+	if salted, ok := sgnr.(Falcon1024Salted); ok {
 		return salted.Falcon1024Salt(), nil
 	}
 
