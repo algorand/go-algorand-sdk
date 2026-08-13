@@ -15,20 +15,6 @@ var pqAddressPrefix = []byte("PQA")
 // post-quantum scheme signs for a delegated LogicSig.
 var pqProgramPrefix = []byte("PQProgram")
 
-// internalFalcon1024Signer represents the ability to perform falcon1024
-// signatures on behalf of some public key (using a given salt to avoid address
-// clashes with possible ed25519 accounts)
-type internalFalcon1024Signer interface {
-	// Falcon1024 signs the given bytes with a falcon1024 signature
-	Falcon1024Sign(toBeSigned []byte) ([]byte, error)
-	// Falcon1024PublicKey returns the public key that should be used to verify
-	// the signatures performed by this signer
-	Falcon1024PublicKey() Falcon1024PublicKey
-	// Falcon1024Salted equips a signer with the ability to specify a custom (maybe
-	// non-canonical) salt
-	Falcon1024Salt() types.PQAddressSalt
-}
-
 // SaltedFalcon1024Signer wraps a given Falcon1024Signer overriding its salt
 // with a new one
 type SaltedFalcon1024Signer struct {
@@ -83,8 +69,8 @@ func Falcon1024SignerAddress(signer Falcon1024Signer) (addr types.Address, err e
 // For signers implementing Falcon1024Salted this salt will be used, otherwise
 // the canonical one will be calculated.
 func SaltForFalcon1024Signer(sgnr Falcon1024Signer) (types.PQAddressSalt, error) {
-	if internal, ok := sgnr.(internalFalcon1024Signer); ok {
-		return internal.Falcon1024Salt(), nil
+	if salted, ok := sgnr.(SaltedFalcon1024Signer); ok {
+		return salted.Falcon1024Salt(), nil
 	}
 
 	return canonicalSaltForFalcon1024PK(sgnr.Falcon1024PublicKey())
