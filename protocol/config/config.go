@@ -63,10 +63,9 @@ func SetConfigurableConsensusProtocols(newConsensus ConsensusProtocols) Consensu
 	oldConsensus := Consensus
 	Consensus = newConsensus
 	// Set allocation limits
-	// checkSetAllocBounds not ported to sdk https://github.com/algorand/go-algorand/blob/e68b54e90cd9dc1b52c3a9df85e0aeb56e8206d5/config/consensus.go#L723
-	// for _, p := range Consensus {
-	// 	checkSetAllocBounds(p)
-	// }
+	for _, p := range Consensus {
+		checkSetAllocBounds(p)
+	}
 	return oldConsensus
 }
 
