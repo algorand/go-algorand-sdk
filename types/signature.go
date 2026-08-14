@@ -134,3 +134,28 @@ type HeartbeatProof struct {
 	// PK2Sig is a signature of OneTimeSignatureSubkeyBatchID(PK2, Batch) under the master key (OneTimeSignatureVerifier).
 	PK2Sig ed25519Signature `codec:"p2s"`
 }
+
+// PQSig is a post-quantum transaction authorization proof. Its public key and
+// signature are wire/decode-bounded by crypto.MaxPQPublicKeySize and
+// crypto.MaxPQSignatureSize (the largest sizes over all supported PQ schemes),
+// which feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize,
+// and the SignedTxn wire bound.
+type PQSig struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Scheme    PQScheme      `codec:"sch"`
+	Salt      PQAddressSalt `codec:"slt"`
+	PublicKey []byte        `codec:"pk"`
+	Signature []byte        `codec:"sig"`
+}
+
+// Blank returns true if the PQ authorization envelope is absent.
+func (p PQSig) Blank() bool {
+	var zeroScheme PQScheme
+	var zeroSalt PQAddressSalt
+
+	return p.Scheme == zeroScheme &&
+		p.Salt == zeroSalt &&
+		len(p.PublicKey) == 0 &&
+		len(p.Signature) == 0
+}
