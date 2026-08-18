@@ -79,7 +79,6 @@ make smoke-test-examples
   - `transaction.go`: Core transaction construction functions
   - `atomicTransactionComposer.go`: ATC for atomic transaction groups and ABI calls
   - `transactionSigner.go`: Transaction signing interfaces
-  - `dryrun.go`: Dryrun request utilities
 
 - **`encoding/`**: Serialization utilities
   - `json/`: JSON encoding/decoding

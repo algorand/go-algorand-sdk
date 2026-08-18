@@ -7,6 +7,11 @@ type TransactionHeartbeat struct {
 	// HbAddress (hbad) HbAddress is the account this txn is proving onlineness for.
 	HbAddress string `json:"hb-address"`
 
+	// HbChallengeDiscount (hbc) HbChallengeDiscount requests the challenge fee
+	// discount, reducing the required fee by one min fee. It is a request, not an
+	// assertion: it is granted only if HbAddress is actually under challenge.
+	HbChallengeDiscount bool `json:"hb-challenge-discount,omitempty"`
+
 	// HbKeyDilution (hbkd) HbKeyDilution must match HbAddress account's current
 	// KeyDilution.
 	HbKeyDilution uint64 `json:"hb-key-dilution"`

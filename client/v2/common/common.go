@@ -19,7 +19,6 @@ var rawRequestPaths = map[string]bool{
 	"/v2/transactions":          true,
 	"/v2/teal/compile":          true,
 	"/v2/teal/disassemble":      true,
-	"/v2/teal/dryrun":           true,
 	"/v2/transactions/simulate": true,
 }
 
