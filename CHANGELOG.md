@@ -1,3 +1,41 @@
+# v2.12.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.12.0 -->
+
+## What's Changed
+### Bugfixes
+* fix: make API error wrappers distinguishable at runtime by @mitre88 in https://github.com/algorand/go-algorand-sdk/pull/831
+### New Features
+* API: box API values, prefix, and round by @joe-p in https://github.com/algorand/go-algorand-sdk/pull/804
+* feat: support consensus v42 by @joe-p in https://github.com/algorand/go-algorand-sdk/pull/840
+### Enhancements
+* build: use Go 1.25 by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/753
+* Types: Support Custom Consensus by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/756
+* refactor: omit unnecessary reassignment by @dulanting in https://github.com/algorand/go-algorand-sdk/pull/752
+* build(deps): bump golang.org/x/crypto from 0.35.0 to 0.45.0 by @dependabot[bot] in https://github.com/algorand/go-algorand-sdk/pull/759
+* Types: Synchronize consensus parameters by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/760
+* API: Support for Applications/Assets Pagination and new exclude parameters by @gmalouf in https://github.com/algorand/go-algorand-sdk/pull/778
+* consensus: add congestion tracking by @algorandskiy in https://github.com/algorand/go-algorand-sdk/pull/781
+* types: regenerate types after scripts/export_sdk_types.py update by @algorandskiy in https://github.com/algorand/go-algorand-sdk/pull/782
+* Chore: Sync for the consensus changes in big transasctions PR 6528 by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/797
+* API: Regenerate code with the latest specification file (990a3d20) by @github-actions[bot] in https://github.com/algorand/go-algorand-sdk/pull/816
+* feat: PQ account by @cusma in https://github.com/algorand/go-algorand-sdk/pull/815
+* types: sync consensus params by @algorandskiy in https://github.com/algorand/go-algorand-sdk/pull/822
+* sync: fnet and enableF128sortition by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/824
+* Types: Add pqsig to logicsig by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/827
+* Sync: Update for v42 consensus by @jannotti in https://github.com/algorand/go-algorand-sdk/pull/828
+* protocol: add fnet5 consensus version by @tasosbit in https://github.com/algorand/go-algorand-sdk/pull/826
+
+## New Contributors
+* @dulanting made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/752
+* @tinyfoolish made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/758
+* @joe-p made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/804
+* @cusma made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/815
+* @tasosbit made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/826
+* @mitre88 made their first contribution in https://github.com/algorand/go-algorand-sdk/pull/831
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.11.1...v2.12.0
+
 # v2.11.1
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.11.1 -->
