@@ -57,7 +57,7 @@ var gen string
 var a types.Address
 var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
-var falconSigner crypto.Falcon1024Signer
+var falconSigner crypto.PQSigner
 var kcl kmd.Client
 var aclv2 *algodV2.Client
 var iclv2 *indexerV2.Client
@@ -943,7 +943,7 @@ func genAndFundFalconKey() (err error) {
 	if err != nil {
 		return
 	}
-	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	addr, err := crypto.PQSignerAddress(falconSigner)
 	if err != nil {
 		return err
 	}
@@ -961,7 +961,7 @@ func createFalconTxn() error {
 		LastRoundValid:  types.Round(lv),
 		FlatFee:         true,
 	}
-	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	addr, err := crypto.PQSignerAddress(falconSigner)
 	if err != nil {
 		return err
 	}
@@ -971,13 +971,13 @@ func createFalconTxn() error {
 
 func signFalconTxn() error {
 	var err error
-	txid, stx, err = crypto.SignFalcon1024AccountTransaction(falconSigner, txn)
+	txid, stx, err = crypto.SignPQAccountTransaction(falconSigner, txn)
 	return err
 }
 
 func defaultPQsigTxn(iamt int, inote string) error {
 	var err error
-	addr, err := crypto.Falcon1024SignerAddress(falconSigner)
+	addr, err := crypto.PQSignerAddress(falconSigner)
 	if err != nil {
 		return err
 	}

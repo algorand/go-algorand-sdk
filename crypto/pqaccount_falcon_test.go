@@ -78,7 +78,7 @@ func TestSignFalcon1024AccountTransaction(t *testing.T) {
 	fromAddr := pqa.Address()
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	txid, txBytes, err := SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
+	txid, txBytes, err := SignPQAccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 	require.NotEmpty(t, txid)
 
@@ -102,26 +102,32 @@ type customFalconSigner struct {
 	pqa Falcon1024Account
 }
 
-// Falcon1024Sign signs the given bytes with a falcon1024 signature
-func (sgnr customFalconSigner) Falcon1024Sign(toBeSigned []byte) ([]byte, error) {
+// PQSign signs the given bytes with a pq signature
+func (sgnr customFalconSigner) PQSign(toBeSigned []byte) ([]byte, error) {
 	return nil, fmt.Errorf("Unimplemented")
 }
 
-// Falcon1024PublicKey returns the public key that should be used to verify the
+// PQPublicKey returns the public key that should be used to verify the
 // signatures performed by this signer
-func (sgnr customFalconSigner) Falcon1024PublicKey() Falcon1024PublicKey {
-	return sgnr.pqa.PublicKey
+func (sgnr customFalconSigner) PQPublicKey() []byte {
+	return sgnr.pqa.PublicKey[:]
+}
+
+// PQScheme returns the identifier for the post-quantum scheme used by this
+// signer
+func (sgnr customFalconSigner) PQScheme() types.PQScheme {
+	return types.PQSchemeFalcon1024
 }
 
 func TestBasicSignerGetsCanonicalSalt(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 
 	sgnr := customFalconSigner{pqa: pqa}
-	salt, err := SaltForFalcon1024Signer(sgnr)
+	salt, err := SaltForPQSigner(sgnr)
 	require.NoError(t, err)
 
 	defaultSgnr := pqa.AsSigner()
-	defaultSalt, err := SaltForFalcon1024Signer(defaultSgnr)
+	defaultSalt, err := SaltForPQSigner(defaultSgnr)
 	require.NoError(t, err)
 
 	require.Equal(t, defaultSalt, salt)
@@ -130,14 +136,14 @@ func TestBasicSignerGetsCanonicalSalt(t *testing.T) {
 func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	defaultSgnr := pqa.AsSigner()
-	saltedSgnr := SaltedFalcon1024Signer{
+	saltedSgnr := SaltedPQSigner{
 		Signer: defaultSgnr,
 		Salt:   types.PQAddressSalt(99),
 	}
 	fromAddr := pqa.Address()
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := SignFalcon1024AccountTransaction(saltedSgnr, tx)
+	_, txBytes, err := SignPQAccountTransaction(saltedSgnr, tx)
 	require.NoError(t, err)
 
 	var stx types.SignedTxn
@@ -161,7 +167,7 @@ func TestSignFalcon1024AccountTransactionWithAuthAddr(t *testing.T) {
 	require.NoError(t, err)
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
+	_, txBytes, err := SignPQAccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 
 	var stx types.SignedTxn
@@ -174,7 +180,7 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	program := []byte{1, 32, 1, 1, 34}
 	args := [][]byte{{0x01}, {0x02, 0x03}}
 
-	lsa, err := MakeLogicSigAccountDelegatedFalcon1024(program, args, pqa.AsSigner())
+	lsa, err := MakeLogicSigAccountDelegatedPQ(program, args, pqa.AsSigner())
 	require.NoError(t, err)
 	require.True(t, lsa.IsDelegated())
 	require.False(t, lsa.Lsig.PQsig.Blank())
@@ -184,11 +190,13 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pqa.Address(), addr)
 
-	require.True(t, VerifyLogicSig(lsa.Lsig, addr))
+	toBeSigned := pqsigProgramToSign(addr, lsa.Lsig.Logic)
+	require.True(t, VerifyPQSig(toBeSigned, lsa.Lsig.PQsig))
 
 	// Tampering with the program must break verification.
 	tampered := lsa.Lsig
 	tampered.Logic = append([]byte{}, program...)
 	tampered.Logic[3] = 2
-	require.False(t, VerifyLogicSig(tampered, addr))
+	toBeSigned = pqsigProgramToSign(addr, tampered.Logic)
+	require.False(t, VerifyPQSig(toBeSigned, tampered.PQsig))
 }

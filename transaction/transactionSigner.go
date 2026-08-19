@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
@@ -238,14 +239,14 @@ func (txSigner LogicSigAccountTransactionSigner) Equals(other TransactionSigner)
 // Falcon1024AccountTransactionSigner is a TransactionSigner that can
 // sign transactions using the provided Falcon1024 signer
 type Falcon1024AccountTransactionSigner struct {
-	Signer crypto.Falcon1024Signer
+	Signer crypto.PQSigner
 }
 
 // SignTransactions signs the provided transactions with the Falcon1024 signer.
 func (txSigner Falcon1024AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignFalcon1024AccountTransaction(txSigner.Signer, txGroup[pos])
+		_, stxBytes, err := crypto.SignPQAccountTransaction(txSigner.Signer, txGroup[pos])
 		if err != nil {
 			return nil, err
 		}
@@ -260,18 +261,18 @@ func (txSigner Falcon1024AccountTransactionSigner) SignTransactions(txGroup []ty
 // program will have the authority to sign transactions on behalf of the signing
 // account, called the delegating account.
 func (txSigner Falcon1024AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
-	return crypto.MakeLogicSigAccountDelegatedFalcon1024(program, args, txSigner.Signer)
+	return crypto.MakeLogicSigAccountDelegatedPQ(program, args, txSigner.Signer)
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner Falcon1024AccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(Falcon1024AccountTransactionSigner); ok {
 		// NOTE: Assuming that two signers for the same (PK, salt) pair are "equal"
-		if txSigner.Signer.Falcon1024PublicKey() != castedSigner.Signer.Falcon1024PublicKey() {
+		if bytes.Equal(txSigner.Signer.PQPublicKey(), castedSigner.Signer.PQPublicKey()) {
 			return false
 		}
-		txSignerSalt, txSignerSaltErr := crypto.SaltForFalcon1024Signer(txSigner.Signer)
-		castedSignerSalt, castedSignerSaltErr := crypto.SaltForFalcon1024Signer(castedSigner.Signer)
+		txSignerSalt, txSignerSaltErr := crypto.SaltForPQSigner(txSigner.Signer)
+		castedSignerSalt, castedSignerSaltErr := crypto.SaltForPQSigner(castedSigner.Signer)
 		// If both fail then they are the same weird thing
 		if txSignerSaltErr != castedSignerSaltErr {
 			return false

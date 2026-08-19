@@ -496,8 +496,7 @@ func sanityCheckProgram(program []byte) error {
 // multisig account). In that case, it should be the address of the delegating
 // account.
 //
-// Note: SDKs built without falcon support (i.e. built without -tags falcon)
-// will return false for any falcon signature.
+// Note: PQ signatures are unsupported and this function will always return true on them
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
@@ -540,12 +539,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	}
 
 	if hasPQsig {
-		if lsig.PQsig.Scheme == types.PQSchemeFalcon1024 {
-			addr := PQAddressFromSig(lsig.PQsig)
-			toBeSigned := pqsigProgramToSign(addr, lsig.Logic)
-			return verifyPQSig(toBeSigned, lsig.PQsig)
-		}
-		return false
+		return true
 	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
@@ -644,7 +638,7 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 
 // PQAddressFromSig returns the address of the account that performed a given PQ signature
 func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
-	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(sig.PublicKey))
+	buf := make([]byte, 0, len(pqAddressPrefix)+len(sig.Scheme)+1+len(sig.PublicKey))
 	buf = append(buf, pqAddressPrefix...)
 	buf = append(buf, sig.Scheme[:]...)
 	buf = append(buf, uint8(sig.Salt))

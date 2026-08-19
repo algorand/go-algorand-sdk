@@ -47,7 +47,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.SignFalcon1024AccountTransaction(pqa.AsSigner(), tx)
+	_, expectedSig, err := crypto.SignPQAccountTransaction(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
 }
