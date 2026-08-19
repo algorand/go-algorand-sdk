@@ -62,7 +62,7 @@ func GetTxID(tx types.Transaction) string {
 	return txIDFromRawTxnBytesToSign(rawTx)
 }
 
-// Ed25519SignTransaction accepts an elliptic curve signed and a transaction,
+// Ed25519SignTransaction accepts an elliptic curve signer and a transaction,
 // and returns the bytes of a signed transaction ready to be broadcasted to the
 // network
 // If the SK's corresponding address is different than the txn sender's, the SK's
@@ -493,11 +493,11 @@ func sanityCheckProgram(program []byte) error {
 //
 // The singleSigner argument is only used in the case of a delegated LogicSig
 // whose delegating account is backed by a single private key (i.e. not a
-// multsig account). In that case, it should be the address of the delegating
+// multisig account). In that case, it should be the address of the delegating
 // account.
 //
-// Note: SDKs built without falcon support (-tags falcon) will return false for
-// any falcon signature.
+// Note: SDKs built without falcon support (i.e. built without -tags falcon)
+// will return false for any falcon signature.
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
@@ -539,10 +539,13 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		return VerifyMultisig(addr, toBeSigned, lsig.LMsig)
 	}
 
-	if hasPQsig && lsig.PQsig.Scheme == types.PQSchemeFalcon1024 {
-		addr := PQAddressFromSig(lsig.PQsig)
-		toBeSigned := pqsigProgramToSign(addr, lsig.Logic)
-		return verifyPQSig(toBeSigned, lsig.PQsig)
+	if hasPQsig {
+		if lsig.PQsig.Scheme == types.PQSchemeFalcon1024 {
+			addr := PQAddressFromSig(lsig.PQsig)
+			toBeSigned := pqsigProgramToSign(addr, lsig.Logic)
+			return verifyPQSig(toBeSigned, lsig.PQsig)
+		}
+		return false
 	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
@@ -643,7 +646,7 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
 	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(sig.PublicKey))
 	buf = append(buf, pqAddressPrefix...)
-	buf = append(buf, types.PQSchemeFalcon1024[:]...)
+	buf = append(buf, sig.Scheme[:]...)
 	buf = append(buf, uint8(sig.Salt))
 	buf = append(buf, sig.PublicKey[:]...)
 

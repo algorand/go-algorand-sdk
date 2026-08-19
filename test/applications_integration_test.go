@@ -74,6 +74,9 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 		return err
 	}
 	sgnr, err := crypto.SKToInMemorySigner(lsk.PrivateKey)
+	if err != nil {
+		return err
+	}
 	ltxid, lstx, err := crypto.Ed25519SignTransaction(sgnr, ltxn)
 	if err != nil {
 		return err

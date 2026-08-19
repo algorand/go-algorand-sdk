@@ -90,9 +90,9 @@ func (acc Account) AsSigner() Ed25519Signer {
 // MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount. This
 // type of LogicSig has the authority to sign transactions on behalf of another
 // account, called the delegating account. If the delegating account is a
-// multisig account, use MakeLogicSigAccountDelegated instead.
+// multisig account, use MakeLogicSigAccountDelegatedMsig instead.
 //
-// The parameter signer is the private key of the delegating account.
+// The parameter sk is the private key of the delegating account.
 //
 // Deprecated: having in-memory cryptographic secrets is discouraged, use
 // Ed25519MakeLogicSigAccountDelegated instead
@@ -113,7 +113,7 @@ func MakeLogicSigAccountDelegated(program []byte, args [][]byte, sk ed25519.Priv
 //
 // The parameter msigAccount is the delegating multisig account.
 //
-// The parameter signer is the private key of one of the members of the
+// The parameter sk is the private key of one of the members of the
 // delegating multisig account. Use the method AppendMultisigSignature on the
 // returned LogicSigAccount to add additional signatures from other members.
 //

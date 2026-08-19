@@ -29,7 +29,7 @@ type Ed25519Signer interface {
 //
 // Signers for non-canonical accounts should also implement Falcon1024Salted
 type Falcon1024Signer interface {
-	// Falcon1024 signs the given bytes with a falcon1024 signature
+	// Falcon1024Sign signs the given bytes with a falcon1024 signature
 	Falcon1024Sign(toBeSigned []byte) ([]byte, error)
 	// Falcon1024PublicKey returns the public key that should be used to verify
 	// the signatures performed by this signer

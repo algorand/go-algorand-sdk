@@ -39,8 +39,9 @@ func (sgnr SaltedFalcon1024Signer) Falcon1024Salt() types.PQAddressSalt {
 	return sgnr.Salt
 }
 
-// falcon1024Address returns the account address for the given Falcon1024Account.
-// Hash("PQA"  || scheme ||  salt || publicKey)
+// falcon1024Address returns the account address for the given falcon1024 public
+// key and salt.
+// Hash("PQA" || scheme || salt || publicKey)
 func falcon1024Address(pk Falcon1024PublicKey, salt types.PQAddressSalt) (addr types.Address) {
 	buf := make([]byte, 0, len(pqAddressPrefix)+len(types.PQSchemeFalcon1024)+1+len(pk))
 	buf = append(buf, pqAddressPrefix...)
@@ -87,7 +88,7 @@ func canonicalSaltForFalcon1024PK(pk Falcon1024PublicKey) (types.PQAddressSalt, 
 	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %s", pk)
 }
 
-// SignFalcon1024AccountTransaction signs the given transaction with the given Falcon1024Account private key. On success it returns both transaction id and transaction bytes.
+// SignFalcon1024AccountTransaction signs the given transaction with the given Falcon1024Signer. On success it returns both transaction id and transaction bytes.
 func SignFalcon1024AccountTransaction(sgnr Falcon1024Signer, txn types.Transaction) (txid string, stxBytes []byte, err error) {
 	txnBytes := rawTransactionBytesToSign(txn)
 	txid = txIDFromRawTxnBytesToSign(txnBytes)
@@ -124,7 +125,7 @@ func SignFalcon1024AccountTransaction(sgnr Falcon1024Signer, txn types.Transacti
 	return
 }
 
-// MakeLogicSigAccountDelegatedFalcon1024 creates delegated LogicSigAccount that can sign on behalf of a Falcon1024 account.
+// MakeLogicSigAccountDelegatedFalcon1024 creates a delegated LogicSigAccount that can sign on behalf of a Falcon1024 account.
 func MakeLogicSigAccountDelegatedFalcon1024(program []byte, args [][]byte, sgnr Falcon1024Signer) (lsa LogicSigAccount, err error) {
 	if err = sanityCheckProgram(program); err != nil {
 		return

@@ -2,7 +2,7 @@ version: "2"
 run:
   tests: true
   build-tags:
-   - falcon
+    - falcon
 linters:
   default: none
   enable:

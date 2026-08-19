@@ -102,7 +102,7 @@ type customFalconSigner struct {
 	pqa Falcon1024Account
 }
 
-// Falcon1024 signs the given bytes with a falcon1024 signature
+// Falcon1024Sign signs the given bytes with a falcon1024 signature
 func (sgnr customFalconSigner) Falcon1024Sign(toBeSigned []byte) ([]byte, error) {
 	return nil, fmt.Errorf("Unimplemented")
 }

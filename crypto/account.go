@@ -139,7 +139,7 @@ func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAc
 // another account, called the delegating account. If the delegating account is
 // a multisig account, use Ed25519MakeLogicSigAccountDelegatedMsig instead.
 //
-// The parameter signer is the private key of the delegating account.
+// The parameter signer is an Ed25519Signer for the delegating account.
 func Ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
 	var ma MultisigAccount
 	lsig, err := makeLogicSig(program, args, signer, ma)
@@ -164,7 +164,7 @@ func Ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer E
 //
 // The parameter msigAccount is the delegating multisig account.
 //
-// The parameter signer is an Ed25519Signed of one of the members of the
+// The parameter signer is an Ed25519Signer of one of the members of the
 // delegating multisig account. Use the method Ed25519AppendMultisigSignature on
 // the returned LogicSigAccount to add additional signatures from other members.
 func Ed25519MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer Ed25519Signer) (lsa LogicSigAccount, err error) {

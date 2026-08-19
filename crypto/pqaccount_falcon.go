@@ -24,7 +24,7 @@ type Falcon1024Account struct {
 }
 
 // Address returns the account address for the given Falcon1024Account.
-// Hash("PQA"  || scheme ||  salt || publicKey)
+// Hash("PQA" || scheme || salt || publicKey)
 func (pqa Falcon1024Account) Address() (addr types.Address) {
 	return falcon1024Address(pqa.PublicKey, pqa.Salt)
 }
@@ -48,7 +48,7 @@ type basicFalcon1024AccountSigner struct {
 	Account Falcon1024Account
 }
 
-// Falcon1024 signs the given bytes with a falcon1024 signature
+// Falcon1024Sign signs the given bytes with a falcon1024 signature
 func (sgnr basicFalcon1024AccountSigner) Falcon1024Sign(toBeSigned []byte) ([]byte, error) {
 	sk := falcon.PrivateKey(sgnr.Account.PrivateKey)
 	return sk.SignCompressed(toBeSigned)
@@ -60,15 +60,15 @@ func (sgnr basicFalcon1024AccountSigner) Falcon1024PublicKey() Falcon1024PublicK
 	return sgnr.Account.PublicKey
 }
 
-// Falcon1024Salted equips a signer with the ability to specify a custom (maybe
-// non-canonical) salt
+// Falcon1024Salt returns the (maybe non-canonical) salt that identifies the
+// account selected for this signer
 func (sgnr basicFalcon1024AccountSigner) Falcon1024Salt() types.PQAddressSalt {
 	return sgnr.Account.Salt
 }
 
 // AsSigner transforms this account to a Falcon1024Signer
 //
-// # The resulting signer will respect the salt of the source account
+// The resulting signer will respect the salt of the source account.
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func (pqa Falcon1024Account) AsSigner() Falcon1024Signer {
@@ -78,7 +78,7 @@ func (pqa Falcon1024Account) AsSigner() Falcon1024Signer {
 }
 
 // Falcon1024AccountFromPQSeed returns the corresponding Falcon1024Account for a given seed.
-// In conjunction with mnemonic.ToPQSeed() It can be used to generate falcon1024 accounts from regular 25 word mnemonics.
+// In conjunction with mnemonic.ToPQSeed() it can be used to generate falcon1024 accounts from regular 25 word mnemonics.
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func Falcon1024AccountFromPQSeed(pqseed []byte) (pqa Falcon1024Account, err error) {
@@ -94,9 +94,9 @@ func Falcon1024AccountFromPQSeed(pqseed []byte) (pqa Falcon1024Account, err erro
 	}
 
 	pqa = Falcon1024Account{
-		PublicKey:  Falcon1024PublicKey(pk),
+		PublicKey:  pqaPK,
 		PrivateKey: sk,
-		Salt:       types.PQAddressSalt(salt),
+		Salt:       salt,
 	}
 	return
 }

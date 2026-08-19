@@ -20,12 +20,13 @@ type TransactionSigner interface { //nolint:revive // Ignore stuttering for back
 	Equals(other TransactionSigner) bool
 }
 
-// Ed25519AccountTransactionSigner that can sign transactions using the provided Ed25519 signer.
+// Ed25519AccountTransactionSigner is a TransactionSigner that can sign
+// transactions using the provided Ed25519 signer.
 type Ed25519AccountTransactionSigner struct {
 	Signer crypto.Ed25519Signer
 }
 
-// SignTransactions signs the provided transactions with the private key of the account.
+// SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
@@ -58,7 +59,7 @@ type MultiSigEd25519AccountTransactionSigner struct {
 	Signers []crypto.Ed25519Signer
 }
 
-// SignTransactions signs the provided transactions with the private keys of the account.
+// SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
