@@ -20,6 +20,31 @@ type TransactionSigner interface { //nolint:revive // Ignore stuttering for back
 	Equals(other TransactionSigner) bool
 }
 
+// DelegatableSigner represents a signer that can delegate its authority to a LogicSig program.
+type DelegatableSigner interface {
+	// SignDelegationTo signs a delegation to the given LogicSig program. This
+	// program will have the authority to sign transactions on behalf of the
+	// signing account, called the delegating account.
+	SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error)
+}
+
+// Ed25519TransactionSigner represents a signer that can perform operations
+// exclusive to elliptic curve accounts (like signing ed25519 multisig
+// accounts).
+type Ed25519TransactionSigner interface {
+	// SignBytes signs the bytes and returns the signature
+	SignBytes(bytesToSign []byte) (signature []byte, err error)
+	// TealSign creates a signature compatible with ed25519verify opcode from
+	// contract address
+	TealSign(data []byte, contractAddress types.Address) (rawSig types.Signature, err error)
+	// AppendSignature appends the signature corresponding to the given signer,
+	// returning an encoded signed multisig transaction including the signature.
+	AppendSignature(ma crypto.MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error)
+	// AppendDelegationSignature adds an additional signature from a member of
+	// the delegating multisig account.
+	AppendDelegationSignature(lsa *crypto.LogicSigAccount) error
+}
+
 // Ed25519AccountTransactionSigner is a TransactionSigner that can sign
 // transactions using the provided Ed25519 signer.
 type Ed25519AccountTransactionSigner struct {
@@ -50,6 +75,38 @@ func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) 
 		return pk1 == pk2
 	}
 	return false
+}
+
+// SignDelegationTo signs a delegation to the given LogicSig program. This
+// program will have the authority to sign transactions on behalf of the signing
+// account, called the delegating account.
+func (txSigner Ed25519AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
+	return crypto.Ed25519MakeLogicSigAccountDelegated(program, args, txSigner.Signer)
+}
+
+// SignBytes signs the bytes and returns the signature
+func (txSigner Ed25519AccountTransactionSigner) SignBytes(bytesToSign []byte) (signature []byte, err error) {
+	return crypto.Ed25519SignBytes(txSigner.Signer, bytesToSign)
+}
+
+// TealSign creates a signature compatible with ed25519verify opcode from
+// contract address
+func (txSigner Ed25519AccountTransactionSigner) TealSign(data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
+	return crypto.Ed25519TealSign(txSigner.Signer, data, contractAddress)
+}
+
+// AppendSignature appends the signature corresponding to the given signer,
+// returning an encoded signed multisig transaction including the signature.
+func (txSigner Ed25519AccountTransactionSigner) AppendSignature(ma crypto.MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
+	txid, stxBytes, err = crypto.Ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
+	return
+}
+
+// AppendDelegationSignature adds an additional signature from a member of the
+// delegating multisig account.
+func (txSigner Ed25519AccountTransactionSigner) AppendDelegationSignature(lsa *crypto.LogicSigAccount) error {
+	err := lsa.Ed25519AppendMultisigSignature(txSigner.Signer)
+	return err
 }
 
 // MultiSigEd25519AccountTransactionSigner is a TransactionSigner that can sign
@@ -121,6 +178,24 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 	return false
 }
 
+// SignDelegationTo signs a delegation to the given LogicSig program. This
+// program will have the authority to sign transactions on behalf of the signing
+// account, called the delegating account.
+func (txSigner MultiSigEd25519AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
+	firstSigner := txSigner.Signers[0]
+	lsa, err = crypto.Ed25519MakeLogicSigAccountDelegatedMsig(program, args, txSigner.Msig, firstSigner)
+	if err != nil {
+		return
+	}
+	for _, signer := range txSigner.Signers[1:] {
+		err = lsa.Ed25519AppendMultisigSignature(signer)
+		if err != nil {
+			return crypto.LogicSigAccount{}, err
+		}
+	}
+	return
+}
+
 // LogicSigAccountTransactionSigner is a TransactionSigner that can
 // sign transactions for the provided LogicSigAccount.
 type LogicSigAccountTransactionSigner struct {
@@ -179,6 +254,13 @@ func (txSigner Falcon1024AccountTransactionSigner) SignTransactions(txGroup []ty
 	}
 
 	return stxs, nil
+}
+
+// SignDelegationTo signs a delegation to the given LogicSig program. This
+// program will have the authority to sign transactions on behalf of the signing
+// account, called the delegating account.
+func (txSigner Falcon1024AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
+	return crypto.MakeLogicSigAccountDelegatedFalcon1024(program, args, txSigner.Signer)
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
