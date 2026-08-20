@@ -268,7 +268,7 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 func (txSigner PQAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(PQAccountTransactionSigner); ok {
 		// NOTE: Assuming that two signers for the same (PK, salt) pair are "equal"
-		if bytes.Equal(txSigner.Signer.PQPublicKey(), castedSigner.Signer.PQPublicKey()) {
+		if !bytes.Equal(txSigner.Signer.PQPublicKey(), castedSigner.Signer.PQPublicKey()) {
 			return false
 		}
 		txSignerSalt, txSignerSaltErr := crypto.SaltForPQSigner(txSigner.Signer)
