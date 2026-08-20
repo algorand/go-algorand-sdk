@@ -1511,7 +1511,16 @@ var Protocol = Global{
 	BigLambda:   15000 * time.Millisecond,
 }
 
+// checkSetAllocBounds is a no-op in the SDK: go-algorand uses it to set msgpack
+// decode allocation limits derived from consensus parameters, which the SDK
+// does not do. It exists so the SDK can stay in sync with go-algorand's init().
+func checkSetAllocBounds(p ConsensusParams) {}
+
 func init() {
 	Consensus = make(ConsensusProtocols)
 	initConsensusProtocols()
+	// Set allocation limits
+	for _, p := range Consensus {
+		checkSetAllocBounds(p)
+	}
 }
