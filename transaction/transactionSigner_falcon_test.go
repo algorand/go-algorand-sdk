@@ -27,7 +27,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
-	txSigner := Falcon1024AccountTransactionSigner{Signer: pqa.AsSigner()}
+	txSigner := PQAccountTransactionSigner{Signer: pqa.AsSigner()}
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
