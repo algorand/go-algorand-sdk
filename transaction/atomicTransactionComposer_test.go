@@ -251,6 +251,24 @@ func TestAddMethodCallWithAccess(t *testing.T) {
 	require.Equal(t, arg_addr, txns[0].Txn.Access[0].Address)
 	require.Equal(t, types.AssetIndex(5), txns[0].Txn.Access[1].Asset)
 	require.Equal(t, types.AppIndex(1), txns[0].Txn.Access[2].App)
+
+	// Asset 0 becomes an empty ResourceRef (empty box), not an asset.
+	params.ForeignAssets = []uint64{0}
+	var atcZero AtomicTransactionComposer
+	err = atcZero.AddMethodCall(params)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "foreign asset 0")
+	require.Equal(t, atcZero.Count(), 0)
+
+	// Empty box refs remain the way to request an empty ResourceRef.
+	params.ForeignAssets = []uint64{5}
+	params.BoxReferences = []types.AppBoxReference{{AppID: 4, Name: nil}}
+	var atcBox AtomicTransactionComposer
+	err = atcBox.AddMethodCall(params)
+	require.NoError(t, err)
+	boxTxns, err := atcBox.BuildGroup()
+	require.NoError(t, err)
+	require.Equal(t, types.BoxReference{ForeignAppIdx: 0, Name: nil}, boxTxns[0].Txn.Access[3].Box)
 }
 
 func TestGatherSignatures(t *testing.T) {

@@ -1356,7 +1356,11 @@ func MakeApplicationCallTxWithAccess(
 		ensure(types.ResourceRef{Address: addr})
 	}
 	for _, asset := range parsedForeignAssets {
-		ensure(types.ResourceRef{Asset: asset})
+		assetRef, err := accessAssetRef(asset)
+		if err != nil {
+			return tx, err
+		}
+		ensure(assetRef)
 	}
 	for _, app := range parsedForeignApps {
 		ensure(types.ResourceRef{App: app})
@@ -1372,8 +1376,12 @@ func MakeApplicationCallTxWithAccess(
 		if !hr.address.IsZero() {
 			addrIdx = ensure(types.ResourceRef{Address: hr.address})
 		}
+		assetRef, err := accessAssetRef(hr.asset)
+		if err != nil {
+			return tx, err
+		}
 		tx.Access = append(tx.Access, types.ResourceRef{Holding: types.HoldingRef{
-			Asset:   ensure(types.ResourceRef{Asset: hr.asset}),
+			Asset:   ensure(assetRef),
 			Address: addrIdx,
 		}})
 	}
@@ -1487,6 +1495,15 @@ func parseTxnForeignAssets(foreignAssets []uint64) (parsed []types.AssetIndex) {
 		parsed = append(parsed, types.AssetIndex(aidx))
 	}
 	return
+}
+
+// accessAssetRef builds an Access ResourceRef for an asset ID.
+// Asset 0 encodes as an empty ResourceRef, which the AVM treats as an empty box.
+func accessAssetRef(asset types.AssetIndex) (types.ResourceRef, error) {
+	if asset == 0 {
+		return types.ResourceRef{}, fmt.Errorf("foreign asset 0 is not a valid access reference; empty ResourceRef is a box, pass an empty box ref instead")
+	}
+	return types.ResourceRef{Asset: asset}, nil
 }
 
 type appHoldingRef struct {
