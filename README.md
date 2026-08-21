@@ -9,7 +9,7 @@ The Algorand golang SDK provides:
 - Standalone functionality for interacting with the Algorand protocol, including transaction signing, message encoding, etc.
 
 > [!NOTE]
-> Support for falcon signatures is gated under the `falcon` tag since it requires using the [algorand/falcon](https://github.com/algorand/falcon) cgo library.
+> Support for falcon signing and verification is gated under the `falcon` tag since it requires using the [algorand/falcon](https://github.com/algorand/falcon) cgo library. An SDK built without `falcon` can still use `SignPQAccountTransaction` and `MakeLogicSigAccountDelegatedPQ` when given a `PQSigner`implementation.
 
 ## Documentation
 
