@@ -116,7 +116,7 @@ func appCreate(algodClient *algod.Client, creator crypto.Account) uint64 {
 		log.Fatalf("failed to make txn: %s", err)
 	}
 
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -153,7 +153,7 @@ func appOptIn(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 		log.Fatalf("failed to make txn: %s", err)
 	}
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -200,7 +200,7 @@ func appNoOp(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -247,7 +247,7 @@ func appUpdate(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -291,7 +291,7 @@ func appCloseOut(algodClient *algod.Client, appID uint64, caller crypto.Account)
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -336,7 +336,7 @@ func appClearState(algodClient *algod.Client, appID uint64, caller crypto.Accoun
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -383,7 +383,7 @@ func appCall(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -427,7 +427,7 @@ func appDelete(algodClient *algod.Client, appID uint64, caller crypto.Account) {
 	}
 
 	// sign the transaction
-	txid, stx, err := crypto.SignTransaction(caller.PrivateKey, txn)
+	txid, stx, err := crypto.Ed25519SignTransaction(caller.AsSigner(), txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}

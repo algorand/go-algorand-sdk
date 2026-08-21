@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/sha512"
-	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/ed25519"
@@ -12,68 +11,6 @@ import (
 
 // prefix for multisig transaction signing
 const msigAddrPrefix = "MultisigAddr"
-
-// Account holds both the public and private information associated with an
-// Algorand address
-type Account struct {
-	PublicKey  ed25519.PublicKey
-	PrivateKey ed25519.PrivateKey
-	Address    types.Address
-}
-
-func init() {
-	addrLen := len(types.Address{})
-	pkLen := ed25519.PublicKeySize
-	if addrLen != pkLen {
-		panic("address and public key are different sizes")
-	}
-}
-
-// GenerateAccount generates a random Account
-func GenerateAccount() (kp Account) {
-	// Generate an ed25519 keypair. This should never fail
-	pk, sk, err := ed25519.GenerateKey(nil)
-	if err != nil {
-		panic(err)
-	}
-
-	// Convert the public key to an address
-	var a types.Address
-	n := copy(a[:], pk)
-	if n != ed25519.PublicKeySize {
-		panic("generated public key is the wrong size")
-	}
-
-	// Build the account
-	kp.PublicKey = pk
-	kp.PrivateKey = sk
-	kp.Address = a
-	return
-}
-
-// AccountFromPrivateKey derives the remaining Account fields from only a
-// private key. The argument sk must have a length equal to
-// ed25519.PrivateKeySize.
-func AccountFromPrivateKey(sk ed25519.PrivateKey) (account Account, err error) {
-	if len(sk) != ed25519.PrivateKeySize {
-		err = errInvalidPrivateKey
-		return
-	}
-
-	// copy sk
-	account.PrivateKey = make(ed25519.PrivateKey, len(sk))
-	copy(account.PrivateKey, sk)
-
-	account.PublicKey = sk.Public().(ed25519.PublicKey)
-	if len(account.PublicKey) != ed25519.PublicKeySize {
-		err = errors.New("generated public key is the wrong size")
-		return
-	}
-
-	copy(account.Address[:], account.PublicKey)
-
-	return
-}
 
 /* Multisig Support */
 
@@ -197,44 +134,40 @@ func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAc
 	return LogicSigAccount{Lsig: lsig}, nil
 }
 
-// MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount. This
-// type of LogicSig has the authority to sign transactions on behalf of another
-// account, called the delegating account. If the delegating account is a
-// multisig account, use MakeLogicSigAccountDelegated instead.
+// Ed25519MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount.
+// This type of LogicSig has the authority to sign transactions on behalf of
+// another account, called the delegating account. If the delegating account is
+// a multisig account, use Ed25519MakeLogicSigAccountDelegatedMsig instead.
 //
-// The parameter signer is the private key of the delegating account.
-func MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
+// The parameter signer is an Ed25519Signer for the delegating account.
+func Ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
 	var ma MultisigAccount
 	lsig, err := makeLogicSig(program, args, signer, ma)
 	if err != nil {
 		return
 	}
 
-	signerAccount, err := AccountFromPrivateKey(signer)
-	if err != nil {
-		return
-	}
-
+	pk := signer.Ed25519PublicKey()
 	lsa = LogicSigAccount{
 		Lsig: lsig,
 		// attach SigningKey to remember which account the signature belongs to
-		SigningKey: signerAccount.PublicKey,
+		SigningKey: pk[:],
 	}
 	return
 }
 
-// MakeLogicSigAccountDelegatedMsig creates a new delegated LogicSigAccount.
-// This type of LogicSig has the authority to sign transactions on behalf of
-// another account, called the delegating account. Use this function if the
-// delegating account is a multisig account, otherwise use
-// MakeLogicSigAccountDelegated.
+// Ed25519MakeLogicSigAccountDelegatedMsig creates a new delegated
+// LogicSigAccount.  This type of LogicSig has the authority to sign
+// transactions on behalf of another account, called the delegating account. Use
+// this function if the delegating account is a multisig account, otherwise use
+// Ed25519MakeLogicSigAccountDelegated.
 //
 // The parameter msigAccount is the delegating multisig account.
 //
-// The parameter signer is the private key of one of the members of the
-// delegating multisig account. Use the method AppendMultisigSignature on the
-// returned LogicSigAccount to add additional signatures from other members.
-func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
+// The parameter signer is an Ed25519Signer of one of the members of the
+// delegating multisig account. Use the method Ed25519AppendMultisigSignature on
+// the returned LogicSigAccount to add additional signatures from other members.
+func Ed25519MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
 	lsig, err := makeLogicSig(program, args, signer, msigAccount)
 	if err != nil {
 		return
@@ -246,13 +179,13 @@ func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount
 	return
 }
 
-// AppendMultisigSignature adds an additional signature from a member of the
+// Ed25519AppendMultisigSignature adds an additional signature from a member of the
 // delegating multisig account.
 //
 // The LogicSigAccount must represent a delegated LogicSig backed by a multisig
 // account.
-func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) error {
-	return AppendMultisigToLogicSig(&lsa.Lsig, signer)
+func (lsa *LogicSigAccount) Ed25519AppendMultisigSignature(signer Ed25519Signer) error {
+	return Ed25519AppendMultisigToLogicSig(&lsa.Lsig, signer)
 }
 
 // LogicSigAccountFromLogicSig creates a LogicSigAccount from an existing
@@ -264,7 +197,7 @@ func (lsa *LogicSigAccount) AppendMultisigSignature(signer ed25519.PrivateKey) e
 // the delegating account. In all other cases, an error will be returned if
 // signerPublicKey is present.
 func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.PublicKey) (lsa LogicSigAccount, err error) {
-	hasSig, _, _, count := lsig.SignatureCount()
+	hasSig, _, _, _, count := lsig.SignatureCount()
 
 	if count > 1 {
 		err = errLsigTooManySignatures
@@ -308,7 +241,8 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 	hasSig := lsa.Lsig.Sig != (types.Signature{})
 	hasMsig := !lsa.Lsig.Msig.Blank()
 	hasLMsig := !lsa.Lsig.LMsig.Blank()
-	return hasSig || hasMsig || hasLMsig
+	hasPQsig := !lsa.Lsig.PQsig.Blank()
+	return hasSig || hasMsig || hasLMsig || hasPQsig
 }
 
 // Address returns the address of this LogicSigAccount.
@@ -319,7 +253,7 @@ func (lsa LogicSigAccount) IsDelegated() bool {
 // If the LogicSig is not delegated to another account, this will return an
 // escrow address that is the hash of the LogicSig's program code.
 func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
-	hasSig, hasMsig, hasLMsig, err := lsa.hasSignatures()
+	hasSig, hasMsig, hasLMsig, hasPQsig, err := lsa.hasSignatures()
 	if err != nil {
 		return types.Address{}, err
 	}
@@ -352,13 +286,18 @@ func (lsa LogicSigAccount) Address() (addr types.Address, err error) {
 		return
 	}
 
+	if hasPQsig {
+		addr = PQAddressFromSig(lsa.Lsig.PQsig)
+		return
+	}
+
 	addr = LogicSigAddress(lsa.Lsig)
 	return
 }
 
-func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig bool, err error) {
+func (lsa LogicSigAccount) hasSignatures() (hasSig, hasMsig, hasLMsig, hasPQsig bool, err error) {
 	var count int
-	if hasSig, hasMsig, hasLMsig, count = lsa.Lsig.SignatureCount(); count > 1 {
+	if hasSig, hasMsig, hasLMsig, hasPQsig, count = lsa.Lsig.SignatureCount(); count > 1 {
 		err = errLsigTooManySignatures
 	}
 	return

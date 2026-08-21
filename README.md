@@ -8,6 +8,9 @@ The Algorand golang SDK provides:
 - HTTP clients for the algod (agreement) and kmd (key management) APIs
 - Standalone functionality for interacting with the Algorand protocol, including transaction signing, message encoding, etc.
 
+> [!NOTE]
+> Support for falcon signing and verification is gated under the `falcon` tag since it requires using the [algorand/falcon](https://github.com/algorand/falcon) cgo library. An SDK built without `falcon` can still use `SignPQAccountTransaction` and `MakeLogicSigAccountDelegatedPQ` when given a `PQSigner`implementation.
+
 ## Documentation
 
 Full documentation is available [on pkg.go.dev](https://pkg.go.dev/github.com/algorand/go-algorand-sdk/v2). You can also self-host the documentation by running `godoc -http=:8099` and visiting `http://localhost:8099/pkg/github.com/algorand/go-algorand-sdk/v2` in your web browser.

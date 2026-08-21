@@ -86,7 +86,7 @@ func main() {
 	// example: TRANSACTION_PAYMENT_CREATE
 
 	// example: TRANSACTION_PAYMENT_SIGN
-	_, sptxn, err := crypto.SignTransaction(acct.PrivateKey, ptxn)
+	_, sptxn, err := crypto.Ed25519SignTransaction(acct.AsSigner(), ptxn)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return

@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"crypto/ed25519"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,9 +10,9 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
-func TestMakeBasicAccountTransactionSigner(t *testing.T) {
+func TestMakeEd25519AccountTransactionSigner(t *testing.T) {
 	account := crypto.GenerateAccount()
-	txSigner := BasicAccountTransactionSigner{Account: account}
+	txSigner := Ed25519AccountTransactionSigner{Signer: account.AsSigner()}
 
 	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
@@ -36,7 +35,7 @@ func TestMakeBasicAccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
+	_, expectedSig, err := crypto.Ed25519SignTransaction(account.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Len(t, sigs, 1)
 	require.Equal(t, sigs[0], expectedSig)
@@ -49,7 +48,7 @@ func TestMakeLogicSigAccountTransactionSigner(t *testing.T) {
 		{0x02, 0x03},
 	}
 	account := crypto.GenerateAccount()
-	lsig, err := crypto.MakeLogicSigAccountDelegated(program, args, account.PrivateKey)
+	lsig, err := crypto.Ed25519MakeLogicSigAccountDelegated(program, args, account.AsSigner())
 	require.NoError(t, err)
 
 	programHash := "6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY"
@@ -83,7 +82,7 @@ func TestMakeLogicSigAccountTransactionSigner(t *testing.T) {
 	require.Equal(t, sigs[0], expectedSig)
 }
 
-func makeTestMultisigAccount(t *testing.T) (crypto.MultisigAccount, ed25519.PrivateKey, ed25519.PrivateKey, ed25519.PrivateKey) {
+func makeTestMultisigAccount(t *testing.T) (crypto.MultisigAccount, crypto.Ed25519Signer, crypto.Ed25519Signer, crypto.Ed25519Signer) {
 	addr1, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 	addr2, err := types.DecodeAddress("BFRTECKTOOE7A5LHCF3TTEOH2A7BW46IYT2SX5VP6ANKEXHZYJY77SJTVM")
@@ -99,22 +98,28 @@ func makeTestMultisigAccount(t *testing.T) (crypto.MultisigAccount, ed25519.Priv
 	mn1 := "auction inquiry lava second expand liberty glass involve ginger illness length room item discover ahead table doctor term tackle cement bonus profit right above catch"
 	sk1, err := mnemonic.ToPrivateKey(mn1)
 	require.NoError(t, err)
+	sgnr1, err := crypto.SKToInMemorySigner(sk1)
+	require.NoError(t, err)
 	mn2 := "since during average anxiety protect cherry club long lawsuit loan expand embark forum theory winter park twenty ball kangaroo cram burst board host ability left"
 	sk2, err := mnemonic.ToPrivateKey(mn2)
 	require.NoError(t, err)
+	sgnr2, err := crypto.SKToInMemorySigner(sk2)
+	require.NoError(t, err)
 	mn3 := "advice pudding treat near rule blouse same whisper inner electric quit surface sunny dismiss leader blood seat clown cost exist hospital century reform able sponsor"
 	sk3, err := mnemonic.ToPrivateKey(mn3)
-	return ma, sk1, sk2, sk3
+	sgnr3, err := crypto.SKToInMemorySigner(sk3)
+	require.NoError(t, err)
+	return ma, sgnr1, sgnr2, sgnr3
 }
 
-func TestMakeMultiSigAccountTransactionSigner(t *testing.T) {
-	ma, sk1, _, _ := makeTestMultisigAccount(t)
+func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
+	ma, sgnr1, _, _ := makeTestMultisigAccount(t)
 	fromAddr, err := ma.Address()
 	require.NoError(t, err)
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
-	txSigner := MultiSigAccountTransactionSigner{Msig: ma, Sks: [][]byte{sk1}}
+	txSigner := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: []crypto.Ed25519Signer{sgnr1}}
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
@@ -134,7 +139,7 @@ func TestMakeMultiSigAccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.SignMultisigTransaction(sk1, ma, tx)
+	_, expectedSig, err := crypto.Ed25519SignMultisigTransaction(sgnr1, ma, tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
 }
