@@ -496,7 +496,8 @@ func sanityCheckProgram(program []byte) error {
 // multisig account). In that case, it should be the address of the delegating
 // account.
 //
-// Note: PQ signatures are unsupported and this function will always return true on them
+// Deprecated: This function is unsupported and unmantained. PQ signatures will
+// not be validated and will always be treated as valid
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
