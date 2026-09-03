@@ -62,12 +62,7 @@ func GetTxID(tx types.Transaction) string {
 	return txIDFromRawTxnBytesToSign(rawTx)
 }
 
-// Ed25519SignTransaction accepts an elliptic curve signer and a transaction,
-// and returns the bytes of a signed transaction ready to be broadcasted to the
-// network
-// If the SK's corresponding address is different than the txn sender's, the SK's
-// corresponding address will be assigned as AuthAddr
-func Ed25519SignTransaction(sgnr Ed25519Signer, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+func ed25519SignTransaction(sgnr Ed25519Signer, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	s, txid, err := rawSignTransaction(sgnr, tx)
 	if err != nil {
 		return
@@ -240,11 +235,7 @@ func multisigSingle(sgnr Ed25519Signer, ma MultisigAccount, customSigner signer)
 	return
 }
 
-// Ed25519SignMultisigTransaction signs the given transaction, and multisig
-// preimage, with the signer, returning the bytes of a signed transaction with
-// the multisig field partially populated, ready to be passed to other multisig
-// signers to sign or broadcast.
-func Ed25519SignMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+func ed25519SignMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	err = ma.Validate()
 	if err != nil {
 		return
@@ -359,18 +350,13 @@ func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byt
 	return
 }
 
-// Ed25519AppendMultisigTransaction appends the signature corresponding to the
-// given signer, returning an encoded signed multisig transaction including the
-// signature.  While we could compute the multisig preimage from the multisig
-// blob, we ask the caller to pass it back in, to explicitly check that they
-// know who they are signing as.
-func Ed25519AppendMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
+func ed25519AppendMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
 	preStx := types.SignedTxn{}
 	err = msgpack.Decode(preStxBytes, &preStx)
 	if err != nil {
 		return
 	}
-	_, partStxBytes, err := Ed25519SignMultisigTransaction(sgnr, ma, preStx.Txn)
+	_, partStxBytes, err := ed25519SignMultisigTransaction(sgnr, ma, preStx.Txn)
 	if err != nil {
 		return
 	}
@@ -503,7 +489,11 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		return false
 	}
 
-	hasSig, hasMsig, hasLMsig, hasPQsig, count := lsig.SignatureCount()
+	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCount()
+	hasPQsig := !lsig.PQsig.Blank()
+	if hasPQsig {
+		count++
+	}
 	if count > 1 {
 		return false
 	}

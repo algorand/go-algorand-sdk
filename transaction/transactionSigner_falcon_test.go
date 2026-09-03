@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
@@ -46,8 +47,12 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
+	require.Len(t, sigs, 1)
 
-	_, expectedSig, err := crypto.SignPQAccountTransaction(pqa.AsSigner(), tx)
-	require.NoError(t, err)
-	require.Equal(t, sigs[0], expectedSig)
+	var stx types.SignedTxn
+	require.NoError(t, msgpack.Decode(sigs[0], &stx))
+	require.Equal(t, tx, stx.Txn)
+	require.Equal(t, types.Address{}, stx.AuthAddr)
+	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
+	require.True(t, crypto.VerifyPQSig(transactionBytesToSign(tx), stx.PQsig))
 }

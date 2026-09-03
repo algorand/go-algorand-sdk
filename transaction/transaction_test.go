@@ -59,7 +59,7 @@ func TestMakePaymentTxn(t *testing.T) {
 	sgnr, err := crypto.SKToInMemorySigner(key)
 	require.NoError(t, err)
 
-	id, bytes, err := crypto.Ed25519SignTransaction(sgnr, txn)
+	id, bytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, txn)
 	require.NoError(t, err)
 
 	stxBytes := byteFromBase64(golden)
@@ -108,7 +108,7 @@ func TestMakePaymentTxnWithLease(t *testing.T) {
 	sgnr, err := crypto.SKToInMemorySigner(key)
 	require.NoError(t, err)
 
-	id, stxBytes, err := crypto.Ed25519SignTransaction(sgnr, txn)
+	id, stxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, txn)
 	require.NoError(t, err)
 
 	goldenBytes := byteFromBase64(golden)
@@ -146,7 +146,7 @@ func TestKeyRegTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	txid, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, expKeyRegTxn)
+	txid, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, expKeyRegTxn)
 	require.NoError(t, err)
 	require.Equal(t, "MDRIUVH5AW4Z3GMOB67WP44LYLEVM2MP3ZEPKFHUB5J47A2J6TUQ", txid)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -304,7 +304,7 @@ func TestMakeAssetCreateTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQEDd1OMRoQI/rzNlU4iiF50XQXmup3k5czI9hEsNqHT7K4KsfmA/0DUVkbzOwtJdRsHS8trm3Arjpy9r7AXlbAujdHhuh6RhcGFyiaJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aF0ZKJ1bqN0c3SjZmVlzQ+0omZ2zgAE7A+iZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToiomx2zgAE7/ejc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aR0eXBlpGFjZmc="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -366,7 +366,7 @@ func TestMakeAssetCreateTxnWithDecimals(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQCj5xLqNozR5ahB+LNBlTG+d0gl0vWBrGdAXj1ibsCkvAwOsXs5KHZK1YdLgkdJecQiWm4oiZ+pm5Yg0m3KFqgqjdHhuh6RhcGFyiqJhbcQgZkFDUE80blJnTzU1ajFuZEFLM1c2U2djNEFQa2N5RmiiYW6odGVzdGNvaW6iYXWnd2Vic2l0ZaFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aJkYwGhZsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hbcQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hcsQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2hdGSidW6jdHN0o2ZlZc0P3KJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -418,7 +418,7 @@ func TestMakeAssetConfigTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQBBkfw5n6UevuIMDo2lHyU4dS80JCCQ/vTRUcTx5m0ivX68zTKyuVRrHaTbxbRRc3YpJ4zeVEnC9Fiw3Wf4REwejdHhuiKRhcGFyhKFjxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFmxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFtxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aFyxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRjYWlkzQTSo2ZlZc0NSKJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/3o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaRhY2Zn"
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -483,7 +483,7 @@ func TestMakeAssetDestroyTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQBSP7HtzD/Lvn4aVvaNpeR4T93dQgo4LvywEwcZgDEoc/WVl3aKsZGcZkcRFoiWk8AidhfOZzZYutckkccB8RgGjdHhuh6RjYWlkAaNmZWXNB1iiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWNmZw=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -531,7 +531,7 @@ func TestMakeAssetFreezeTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQAhru5V2Xvr19s4pGnI0aslqwY4lA2skzpYtDTAN9DKSH5+qsfQQhm4oq+9VHVj7e1rQC49S28vQZmzDTVnYDQGjdHhuiaRhZnJ6w6RmYWRkxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRmYWlkAaNmZWXNCRqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv+KNzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWkYWZyeg=="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -593,7 +593,7 @@ func TestMakeAssetTransferTxn(t *testing.T) {
 
 	// now compare tx against a golden
 	const signedGolden = "gqNzaWfEQNkEs3WdfFq6IQKJdF1n0/hbV9waLsvojy9pM1T4fvwfMNdjGQDy+LeesuQUfQVTneJD4VfMP7zKx4OUlItbrwSjdHhuiqRhYW10AaZhY2xvc2XEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pGFyY3bEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9o2ZlZc0KvqJmds4ABOwPomdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4ABO/4o3NuZMQgCfvSdiwI+Gxa5r9t16epAd5mdddQ4H6MXHaYZH224f2kdHlwZaVheGZlcqR4YWlkAQ=="
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
 }
@@ -641,7 +641,7 @@ func TestMakeAssetAcceptanceTxn(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQJ7q2rOT8Sb/wB0F87ld+1zMprxVlYqbUbe+oz0WM63FctIi+K9eYFSqT26XBZ4Rr3+VTJpBE+JLKs8nctl9hgijdHhuiKRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCOiiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))
@@ -701,7 +701,7 @@ func TestMakeAssetRevocationTransaction(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(private)
 	require.NoError(t, err)
-	_, newStxBytes, err := crypto.Ed25519SignTransaction(sgnr, tx)
+	_, newStxBytes, err := SignTransaction(Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	require.NoError(t, err)
 	signedGolden := "gqNzaWfEQHsgfEAmEHUxLLLR9s+Y/yq5WeoGo/jAArCbany+7ZYwExMySzAhmV7M7S8+LBtJalB4EhzEUMKmt3kNKk6+vAWjdHhuiqRhYW10AaRhcmN2xCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aRhc25kxCAJ+9J2LAj4bFrmv23Xp6kB3mZ111Dgfoxcdphkfbbh/aNmZWXNCqqiZnbOAATsD6JnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAATv96NzbmTEIAn70nYsCPhsWua/bdenqQHeZnXXUOB+jFx2mGR9tuH9pHR5cGWlYXhmZXKkeGFpZAE="
 	require.EqualValues(t, newStxBytes, byteFromBase64(signedGolden))

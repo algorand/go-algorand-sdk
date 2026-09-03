@@ -63,7 +63,7 @@ func main() {
 	seedAddr := seedAcct.Address.String()
 	sp, _ := algodClient.SuggestedParams().Do(context.Background())
 	txn, _ := transaction.MakePaymentTxn(seedAddr, lsa.String(), 1000000, nil, "", sp)
-	txid, stx, _ := crypto.Ed25519SignTransaction(seedAcct.AsSigner(), txn)
+	txid, stx, _ := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: seedAcct.AsSigner()}, txn)
 	algodClient.SendRawTransaction(stx).Do(context.Background())
 	transaction.WaitForConfirmation(algodClient, txid, 4, context.Background())
 

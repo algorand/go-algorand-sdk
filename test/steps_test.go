@@ -606,14 +606,14 @@ func createMsigTxnZeroFee() error {
 
 func signMsigTxn() error {
 	var err error
-	txid, stx, err = crypto.Ed25519SignMultisigTransaction(account.AsSigner(), msig, txn)
+	txid, stx, err = transaction.SignTransaction(transaction.MultiSigEd25519AccountTransactionSigner{Msig: msig, Signers: []crypto.Ed25519Signer{account.AsSigner()}}, txn)
 
 	return err
 }
 
 func signTxn() error {
 	var err error
-	txid, stx, err = crypto.Ed25519SignTransaction(account.AsSigner(), txn)
+	txid, stx, err = transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: account.AsSigner()}, txn)
 	if err != nil {
 		return err
 	}
@@ -971,7 +971,7 @@ func createFalconTxn() error {
 
 func signFalconTxn() error {
 	var err error
-	txid, stx, err = crypto.SignPQAccountTransaction(falconSigner, txn)
+	txid, stx, err = transaction.SignTransaction(transaction.PQAccountTransactionSigner{Signer: falconSigner}, txn)
 	return err
 }
 
@@ -1271,7 +1271,7 @@ func appendMsig() error {
 	if err != nil {
 		return err
 	}
-	_, stx, err = crypto.Ed25519AppendMultisigTransaction(account.AsSigner(), msig, stx)
+	_, stx, err = (transaction.Ed25519AccountTransactionSigner{Signer: account.AsSigner()}).AppendSignature(msig, stx)
 	return err
 }
 

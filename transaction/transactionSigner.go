@@ -56,7 +56,7 @@ type Ed25519AccountTransactionSigner struct {
 func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.Ed25519SignTransaction(txSigner.Signer, txGroup[pos])
+		stxBytes, err := ed25519SignTransaction(txSigner.Signer, txGroup[pos])
 		if err != nil {
 			return nil, err
 		}
@@ -99,8 +99,7 @@ func (txSigner Ed25519AccountTransactionSigner) TealSign(data []byte, contractAd
 // AppendSignature appends the signature corresponding to the given signer,
 // returning an encoded signed multisig transaction including the signature.
 func (txSigner Ed25519AccountTransactionSigner) AppendSignature(ma crypto.MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
-	txid, stxBytes, err = crypto.Ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
-	return
+	return ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
 }
 
 // AppendDelegationSignature adds an additional signature from a member of the
@@ -123,7 +122,7 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup
 	for i, pos := range indexesToSign {
 		var unmergedStxs [][]byte
 		for _, sgnr := range txSigner.Signers {
-			_, unmergedStxBytes, err := crypto.Ed25519SignMultisigTransaction(sgnr, txSigner.Msig, txGroup[pos])
+			unmergedStxBytes, err := ed25519SignMultisigTransaction(sgnr, txSigner.Msig, txGroup[pos])
 			if err != nil {
 				return nil, err
 			}
@@ -207,7 +206,7 @@ type LogicSigAccountTransactionSigner struct {
 func (txSigner LogicSigAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignLogicSigAccountTransaction(txSigner.LogicSigAccount, txGroup[pos])
+		stxBytes, err := signLogicSigAccountTransaction(txSigner.LogicSigAccount, txGroup[pos])
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +245,7 @@ type PQAccountTransactionSigner struct {
 func (txSigner PQAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignPQAccountTransaction(txSigner.Signer, txGroup[pos])
+		stxBytes, err := signPQAccountTransaction(txSigner.Signer, txGroup[pos])
 		if err != nil {
 			return nil, err
 		}

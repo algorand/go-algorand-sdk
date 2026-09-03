@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"fmt"
 
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -92,43 +91,6 @@ func canonicalSaltForPQPK(pk []byte, scheme types.PQScheme) (types.PQAddressSalt
 	}
 
 	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %s", pk)
-}
-
-// SignPQAccountTransaction signs the given transaction with the given PQSigner. On success it returns both transaction id and transaction bytes.
-func SignPQAccountTransaction(sgnr PQSigner, txn types.Transaction) (txid string, stxBytes []byte, err error) {
-	txnBytes := rawTransactionBytesToSign(txn)
-	txid = txIDFromRawTxnBytesToSign(txnBytes)
-
-	sig, err := sgnr.PQSign(txnBytes)
-	if err != nil {
-		return
-	}
-
-	pk := sgnr.PQPublicKey()
-	salt, err := SaltForPQSigner(sgnr)
-	if err != nil {
-		return
-	}
-
-	pqsig := types.PQSig{
-		Scheme:    sgnr.PQScheme(),
-		Salt:      salt,
-		PublicKey: pk[:],
-		Signature: sig,
-	}
-
-	stx := types.SignedTxn{
-		Txn:   txn,
-		PQsig: pqsig,
-	}
-
-	addr := pqAddress(pk, sgnr.PQScheme(), salt)
-	if stx.Txn.Sender != addr {
-		stx.AuthAddr = addr
-	}
-
-	stxBytes = msgpack.Encode(stx)
-	return
 }
 
 // MakeLogicSigAccountDelegatedPQ creates a delegated LogicSigAccount that can sign on behalf of a PQ account.

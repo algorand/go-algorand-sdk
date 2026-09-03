@@ -35,7 +35,7 @@ func TestMakeEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.Ed25519SignTransaction(account.AsSigner(), tx)
+	expectedSig, err := ed25519SignTransaction(account.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Len(t, sigs, 1)
 	require.Equal(t, sigs[0], expectedSig)
@@ -139,7 +139,7 @@ func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.Ed25519SignMultisigTransaction(sgnr1, ma, tx)
+	expectedSig, err := ed25519SignMultisigTransaction(sgnr1, ma, tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
 }

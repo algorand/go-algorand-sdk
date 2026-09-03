@@ -42,7 +42,7 @@ func signTheTransaction() error {
 	if err != nil {
 		return err
 	}
-	txid, stx, err = crypto.Ed25519SignTransaction(sgnr, tx)
+	txid, stx, err = transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: sgnr}, tx)
 	return err
 }
 

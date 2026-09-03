@@ -45,6 +45,39 @@ func makeTestPaymentTxn(t *testing.T, sender types.Address) types.Transaction {
 	}
 }
 
+// signPQAccountTransactionFixture preserves the old test fixture setup. Transaction
+// envelope construction is tested by the transaction package.
+func signPQAccountTransactionFixture(sgnr PQSigner, txn types.Transaction) (txid string, stxBytes []byte, err error) {
+	txnBytes := rawTransactionBytesToSign(txn)
+	txid = txIDFromRawTxnBytesToSign(txnBytes)
+	sig, err := sgnr.PQSign(txnBytes)
+	if err != nil {
+		return
+	}
+	salt, err := SaltForPQSigner(sgnr)
+	if err != nil {
+		return
+	}
+	stx := types.SignedTxn{
+		Txn: txn,
+		PQsig: types.PQSig{
+			Scheme:    sgnr.PQScheme(),
+			Salt:      salt,
+			PublicKey: sgnr.PQPublicKey(),
+			Signature: sig,
+		},
+	}
+	addr, err := PQSignerAddress(sgnr)
+	if err != nil {
+		return
+	}
+	if txn.Sender != addr {
+		stx.AuthAddr = addr
+	}
+	stxBytes = msgpack.Encode(stx)
+	return
+}
+
 func TestAddress(t *testing.T) {
 	seed, err := base64.StdEncoding.DecodeString("EI+JCEv/+Kyqo5yvW6O2A/u0KKtLp5wWIjAvS5sT488=")
 	require.NoError(t, err)
@@ -78,7 +111,7 @@ func TestSignFalcon1024AccountTransaction(t *testing.T) {
 	fromAddr := pqa.Address()
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	txid, txBytes, err := SignPQAccountTransaction(pqa.AsSigner(), tx)
+	txid, txBytes, err := signPQAccountTransactionFixture(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 	require.NotEmpty(t, txid)
 
@@ -143,7 +176,7 @@ func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
 	fromAddr := pqa.Address()
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := SignPQAccountTransaction(saltedSgnr, tx)
+	_, txBytes, err := signPQAccountTransactionFixture(saltedSgnr, tx)
 	require.NoError(t, err)
 
 	var stx types.SignedTxn
@@ -167,7 +200,7 @@ func TestSignFalcon1024AccountTransactionWithAuthAddr(t *testing.T) {
 	require.NoError(t, err)
 	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := SignPQAccountTransaction(pqa.AsSigner(), tx)
+	_, txBytes, err := signPQAccountTransactionFixture(pqa.AsSigner(), tx)
 	require.NoError(t, err)
 
 	var stx types.SignedTxn

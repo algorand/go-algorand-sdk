@@ -47,12 +47,12 @@ func main() {
 	// example: ATOMIC_GROUP_TXNS
 
 	// example: ATOMIC_GROUP_SIGN
-	_, stx1, err := crypto.Ed25519SignTransaction(acct1.AsSigner(), tx1)
+	_, stx1, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: acct1.AsSigner()}, tx1)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return
 	}
-	_, stx2, err := crypto.Ed25519SignTransaction(acct2.AsSigner(), tx2)
+	_, stx2, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: acct2.AsSigner()}, tx2)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 	}
