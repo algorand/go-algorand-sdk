@@ -61,6 +61,16 @@ func TestSKToInMemorySigner(t *testing.T) {
 	sig, err := sgnr.Ed25519Sign(message)
 	require.NoError(t, err)
 	require.True(t, ed25519.Verify(acct.PublicKey, message, sig))
+
+	// Invalid keys
+	_, err = SKToInMemorySigner(nil)
+	require.ErrorIs(t, err, errInvalidPrivateKey)
+
+	_, err = SKToInMemorySigner(ed25519.PrivateKey(make([]byte, 32)))
+	require.ErrorIs(t, err, errInvalidPrivateKey)
+
+	_, err = SKToInMemorySigner(ed25519.PrivateKey(make([]byte, 65)))
+	require.ErrorIs(t, err, errInvalidPrivateKey)
 }
 
 func TestInMemorySecretsDelegateToEd25519Signer(t *testing.T) {

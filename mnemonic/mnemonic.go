@@ -118,7 +118,7 @@ func ToKey(mnemonic string) ([]byte, error) {
 }
 
 // ToPQSeed converts a mnemonic generated using this library into the
-// corresponding falcon PQ seed. It returns an error if the passed mnemonic
+// corresponding post-quantum (PQ) seed. It returns an error if the passed mnemonic
 // has an incorrect checksum, if the number of words is unexpected, or if one
 // of the passed words is not found in the words list.
 // The resulting seed is Hash("PQK" || scheme || mnemonicBytes).

@@ -482,8 +482,9 @@ func sanityCheckProgram(program []byte) error {
 // multisig account). In that case, it should be the address of the delegating
 // account.
 //
-// Deprecated: This function is unsupported and unmantained. PQ signatures will
-// not be validated and will always be treated as valid
+// Deprecated: This function is unsupported and unmaintained. PQ signature
+// validity will not be cryptographically validated beyond checking the
+// delegating address.
 func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result bool) {
 	if err := sanityCheckProgram(lsig.Logic); err != nil {
 		return false
@@ -530,7 +531,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	}
 
 	if hasPQsig {
-		return true
+		return singleSigner == PQAddressFromSig(lsig.PQsig)
 	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
@@ -629,17 +630,7 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 
 // PQAddressFromSig returns the address of the account that performed a given PQ signature
 func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
-	buf := make([]byte, 0, len(pqAddressPrefix)+len(sig.Scheme)+1+len(sig.PublicKey))
-	buf = append(buf, pqAddressPrefix...)
-	buf = append(buf, sig.Scheme[:]...)
-	buf = append(buf, uint8(sig.Salt))
-	buf = append(buf, sig.PublicKey[:]...)
-
-	digest := sha512.Sum512_256(buf)
-
-	copy(addr[:], digest[:])
-
-	return
+	return PQAddress(sig.PublicKey, sig.Scheme, sig.Salt)
 }
 
 func programToSign(program []byte) []byte {

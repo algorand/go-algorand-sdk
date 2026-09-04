@@ -129,6 +129,12 @@ func GenerateFalcon1024Account() Falcon1024Account {
 
 // VerifyPQSig checks that the given pqsig corresponds to the expected toBeSigned byte sequence.
 func VerifyPQSig(toBeSigned []byte, pqsig types.PQSig) bool {
+	if pqsig.Scheme != types.PQSchemeFalcon1024 {
+		return false
+	}
+	if len(pqsig.PublicKey) != Falcon1024PublicKeySize {
+		return false
+	}
 	pk := falcon.PublicKey(pqsig.PublicKey)
 	sig := falcon.CompressedSignature(pqsig.Signature)
 	return pk.Verify(sig, toBeSigned) == nil

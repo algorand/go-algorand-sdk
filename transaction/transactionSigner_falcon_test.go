@@ -56,3 +56,40 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
 	require.True(t, crypto.VerifyPQSig(transactionBytesToSign(tx), stx.PQsig))
 }
+
+func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
+	pqa := makeTestFalcon1024Account(t)
+	fromAddr := pqa.Address()
+	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
+	require.NoError(t, err)
+
+	txSigner := PQEmptyTransactionSigner{Signer: pqa.AsSigner()}
+	tx := types.Transaction{
+		Type: types.PaymentTx,
+		Header: types.Header{
+			Sender:     fromAddr,
+			Fee:        217000,
+			FirstValid: 972508,
+			LastValid:  973508,
+			GenesisID:  "testnet-v31.0",
+		},
+		PaymentTxnFields: types.PaymentTxnFields{
+			Receiver: toAddr,
+			Amount:   5000,
+		},
+	}
+
+	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
+	require.NoError(t, err)
+	require.Len(t, sigs, 1)
+
+	var stx types.SignedTxn
+	require.NoError(t, msgpack.Decode(sigs[0], &stx))
+	require.Equal(t, tx, stx.Txn)
+	require.Equal(t, types.Address{}, stx.AuthAddr)
+	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
+	require.Equal(t, pqa.Salt, stx.PQsig.Salt)
+	require.Equal(t, pqa.PublicKey[:], stx.PQsig.PublicKey)
+	require.Empty(t, stx.PQsig.Signature)
+	require.True(t, txSigner.Equals(PQEmptyTransactionSigner{Signer: pqa.AsSigner()}))
+}

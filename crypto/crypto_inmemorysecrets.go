@@ -45,10 +45,14 @@ func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
+	if len(sk) != ed25519.PrivateKeySize {
+		return nil, errInvalidPrivateKey
+	}
+
 	var pk Ed25519PublicKey
 	n := copy(pk[:], sk.Public().(ed25519.PublicKey))
 	if n != ed25519.PublicKeySize {
-		return inMemoryEd25519Signer{}, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
+		return nil, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
 	}
 
 	return inMemoryEd25519Signer{sk: sk, pk: Ed25519PublicKey(pk)}, nil

@@ -44,10 +44,10 @@ func (sgnr SaltedPQSigner) PQSalt() types.PQAddressSalt {
 	return sgnr.Salt
 }
 
-// pqAddress returns the account address for the given pq public key, scheme and
+// PQAddress returns the account address for the given pq public key, scheme and
 // salt.
 // Hash("PQA" || scheme || salt || publicKey)
-func pqAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) (addr types.Address) {
+func PQAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) (addr types.Address) {
 	buf := make([]byte, 0, len(pqAddressPrefix)+len(scheme)+1+len(pk))
 	buf = append(buf, pqAddressPrefix...)
 	buf = append(buf, scheme[:]...)
@@ -60,13 +60,17 @@ func pqAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) (addr
 	return
 }
 
+func pqAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) types.Address {
+	return PQAddress(pk, scheme, salt)
+}
+
 // PQSignerAddress returns the address for a given PQSigner
 func PQSignerAddress(signer PQSigner) (addr types.Address, err error) {
 	salt, err := SaltForPQSigner(signer)
 	if err != nil {
 		return
 	}
-	return pqAddress(signer.PQPublicKey(), signer.PQScheme(), salt), nil
+	return PQAddress(signer.PQPublicKey(), signer.PQScheme(), salt), nil
 }
 
 // SaltForPQSigner returns the salt that will be used when performing PQ
@@ -84,13 +88,13 @@ func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
 
 func canonicalSaltForPQPK(pk []byte, scheme types.PQScheme) (types.PQAddressSalt, error) {
 	for salt := 0; salt <= 0xff; salt++ {
-		addr := pqAddress(pk, scheme, types.PQAddressSalt(salt))
+		addr := PQAddress(pk, scheme, types.PQAddressSalt(salt))
 		if !IsEdwards25519Point(addr[:]) {
 			return types.PQAddressSalt(salt), nil
 		}
 	}
 
-	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %s", pk)
+	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %x", pk)
 }
 
 // MakeLogicSigAccountDelegatedPQ creates a delegated LogicSigAccount that can sign on behalf of a PQ account.

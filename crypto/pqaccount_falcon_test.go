@@ -67,10 +67,7 @@ func signPQAccountTransactionFixture(sgnr PQSigner, txn types.Transaction) (txid
 			Signature: sig,
 		},
 	}
-	addr, err := PQSignerAddress(sgnr)
-	if err != nil {
-		return
-	}
+	addr := PQAddress(sgnr.PQPublicKey(), sgnr.PQScheme(), salt)
 	if txn.Sender != addr {
 		stx.AuthAddr = addr
 	}
@@ -232,4 +229,20 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	tampered.Logic[3] = 2
 	toBeSigned = pqsigProgramToSign(addr, tampered.Logic)
 	require.False(t, VerifyPQSig(toBeSigned, tampered.PQsig))
+
+	// VerifyLogicSig checks that the delegating singleSigner matches the PQ signature
+	require.True(t, VerifyLogicSig(lsa.Lsig, addr))
+	wrongAddr := types.Address{1, 2, 3}
+	require.False(t, VerifyLogicSig(lsa.Lsig, wrongAddr))
+	require.False(t, VerifyLogicSig(lsa.Lsig, types.Address{}))
+
+	// VerifyPQSig rejects mismatched scheme
+	wrongSchemeSig := lsa.Lsig.PQsig
+	wrongSchemeSig.Scheme = types.PQScheme{'x', 'x'}
+	require.False(t, VerifyPQSig(toBeSigned, wrongSchemeSig))
+
+	// VerifyPQSig rejects wrong public key length
+	wrongLenSig := lsa.Lsig.PQsig
+	wrongLenSig.PublicKey = make([]byte, 32)
+	require.False(t, VerifyPQSig(toBeSigned, wrongLenSig))
 }

@@ -21,7 +21,7 @@ type Ed25519Signer interface {
 // PQSigner represents the ability to perform pq signatures on
 // behalf of some public key
 //
-// Signers for non-canonical accounts should also implement Falcon1024Salted
+// Signers for non-canonical accounts should also implement PQSalted
 type PQSigner interface {
 	// PQSign signs the given bytes with a pq signature
 	PQSign(toBeSigned []byte) ([]byte, error)

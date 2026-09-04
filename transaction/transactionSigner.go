@@ -3,6 +3,7 @@ package transaction
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -118,6 +119,10 @@ type MultiSigEd25519AccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	if len(txSigner.Signers) == 0 {
+		return nil, errors.New("multisig signer has no signing keys")
+	}
+
 	stxs := make([][]byte, len(indexesToSign))
 	for i, pos := range indexesToSign {
 		var unmergedStxs [][]byte
@@ -182,6 +187,9 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 // program will have the authority to sign transactions on behalf of the signing
 // account, called the delegating account.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
+	if len(txSigner.Signers) == 0 {
+		return crypto.LogicSigAccount{}, errors.New("multisig signer has no signing keys")
+	}
 	firstSigner := txSigner.Signers[0]
 	lsa, err = crypto.Ed25519MakeLogicSigAccountDelegatedMsig(program, args, txSigner.Msig, firstSigner)
 	if err != nil {
@@ -266,17 +274,21 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner PQAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(PQAccountTransactionSigner); ok {
-		// NOTE: Assuming that two signers for the same (PK, salt) pair are "equal"
+		if txSigner.Signer == nil || castedSigner.Signer == nil {
+			return txSigner.Signer == castedSigner.Signer
+		}
+		// NOTE: Assuming that two signers for the same (scheme, PK, salt) are "equal"
+		if txSigner.Signer.PQScheme() != castedSigner.Signer.PQScheme() {
+			return false
+		}
 		if !bytes.Equal(txSigner.Signer.PQPublicKey(), castedSigner.Signer.PQPublicKey()) {
 			return false
 		}
 		txSignerSalt, txSignerSaltErr := crypto.SaltForPQSigner(txSigner.Signer)
 		castedSignerSalt, castedSignerSaltErr := crypto.SaltForPQSigner(castedSigner.Signer)
-		// If both fail then they are the same weird thing
-		if txSignerSaltErr != castedSignerSaltErr {
+		if txSignerSaltErr != nil || castedSignerSaltErr != nil {
 			return false
 		}
-		// Otherwise they should have the same salt
 		return txSignerSalt == castedSignerSalt
 	}
 	return false
@@ -302,4 +314,51 @@ func (txSigner EmptyTransactionSigner) SignTransactions(txGroup []types.Transact
 func (txSigner EmptyTransactionSigner) Equals(other TransactionSigner) bool {
 	_, ok := other.(EmptyTransactionSigner)
 	return ok
+}
+
+// PQEmptyTransactionSigner is a TransactionSigner that produces signed transaction
+// objects with an empty post-quantum signature envelope (scheme, salt, and public key populated,
+// but signature bytes empty). This is useful for simulating transactions with the
+// allowEmptySignatures option enabled, allowing algod to charge the post-quantum fee surcharge
+// without paying the computational cost of generating a real post-quantum signature.
+type PQEmptyTransactionSigner struct {
+	Signer crypto.PQSigner
+}
+
+// SignTransactions returns SignedTxn bytes with placeholder PQ signatures.
+func (txSigner PQEmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	salt, err := crypto.SaltForPQSigner(txSigner.Signer)
+	if err != nil {
+		return nil, err
+	}
+	pk := txSigner.Signer.PQPublicKey()
+	scheme := txSigner.Signer.PQScheme()
+	authAddr := crypto.PQAddress(pk, scheme, salt)
+
+	stxs := make([][]byte, len(indexesToSign))
+	for i, pos := range indexesToSign {
+		tx := txGroup[pos]
+		stx := types.SignedTxn{
+			Txn: tx,
+			PQsig: types.PQSig{
+				Scheme:    scheme,
+				Salt:      salt,
+				PublicKey: pk,
+				Signature: []byte{},
+			},
+		}
+		if tx.Sender != authAddr {
+			stx.AuthAddr = authAddr
+		}
+		stxs[i] = msgpack.Encode(&stx)
+	}
+	return stxs, nil
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner PQEmptyTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(PQEmptyTransactionSigner); ok {
+		return (PQAccountTransactionSigner{Signer: txSigner.Signer}).Equals(PQAccountTransactionSigner{Signer: castedSigner.Signer})
+	}
+	return false
 }

@@ -135,10 +135,7 @@ func signPQAccountTransaction(signer crypto.PQSigner, tx types.Transaction) ([]b
 			Signature: signature,
 		},
 	}
-	address, err := crypto.PQSignerAddress(signer)
-	if err != nil {
-		return nil, err
-	}
+	address := crypto.PQAddress(signer.PQPublicKey(), signer.PQScheme(), salt)
 	if tx.Sender != address {
 		stx.AuthAddr = address
 	}

@@ -143,3 +143,63 @@ func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
 }
+
+func TestMultiSigEd25519AccountTransactionSignerEmptySigners(t *testing.T) {
+	ma, _, _, _ := makeTestMultisigAccount(t)
+	txSigner := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: nil}
+
+	tx := types.Transaction{}
+	_, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "multisig signer has no signing keys")
+
+	_, err = txSigner.SignDelegationTo([]byte{1, 2, 3}, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "multisig signer has no signing keys")
+}
+
+type mockBasicPQSigner struct {
+	scheme    types.PQScheme
+	publicKey []byte
+}
+
+func (m mockBasicPQSigner) PQSign(toBeSigned []byte) ([]byte, error) {
+	return []byte("sig"), nil
+}
+
+func (m mockBasicPQSigner) PQPublicKey() []byte {
+	return m.publicKey
+}
+
+func (m mockBasicPQSigner) PQScheme() types.PQScheme {
+	return m.scheme
+}
+
+type mockSaltedPQSigner struct {
+	mockBasicPQSigner
+	salt types.PQAddressSalt
+}
+
+func (m mockSaltedPQSigner) PQSalt() types.PQAddressSalt {
+	return m.salt
+}
+
+func TestPQAccountTransactionSignerEquals(t *testing.T) {
+	pk := []byte("12345678901234567890123456789012")
+	scheme1 := types.PQScheme{'f', '1'}
+	scheme2 := types.PQScheme{'m', '2'}
+
+	s1 := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 0}}
+	s1Same := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 0}}
+	sDiffScheme := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme2, publicKey: pk}, salt: 0}}
+	sDiffPK := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}, salt: 0}}
+	sDiffSalt := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 1}}
+
+	require.True(t, s1.Equals(s1Same))
+	require.False(t, s1.Equals(sDiffScheme))
+	require.False(t, s1.Equals(sDiffPK))
+	require.False(t, s1.Equals(sDiffSalt))
+	require.False(t, s1.Equals(EmptyTransactionSigner{}))
+	require.False(t, s1.Equals(PQAccountTransactionSigner{Signer: nil}))
+	require.True(t, (PQAccountTransactionSigner{Signer: nil}).Equals(PQAccountTransactionSigner{Signer: nil}))
+}
