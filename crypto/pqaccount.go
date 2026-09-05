@@ -17,25 +17,8 @@ var pqProgramPrefix = []byte("PQProgram")
 // SaltedPQSigner wraps a given PQSigner overriding its salt
 // with a new one
 type SaltedPQSigner struct {
-	Signer PQSigner
-	Salt   types.PQAddressSalt
-}
-
-// PQSign signs the given bytes with a pq signature
-func (sgnr SaltedPQSigner) PQSign(toBeSigned []byte) ([]byte, error) {
-	return sgnr.Signer.PQSign(toBeSigned)
-}
-
-// PQPublicKey returns the public key that should be used to verify the
-// signatures performed by this signer
-func (sgnr SaltedPQSigner) PQPublicKey() []byte {
-	return sgnr.Signer.PQPublicKey()
-}
-
-// PQScheme returns the identifier for the post-quantum scheme used by this
-// signer
-func (sgnr SaltedPQSigner) PQScheme() types.PQScheme {
-	return sgnr.Signer.PQScheme()
+	PQSigner
+	Salt types.PQAddressSalt
 }
 
 // PQSalt returns the (maybe non-canonical) salt that identifies the
@@ -58,10 +41,6 @@ func PQAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) (addr
 
 	copy(addr[:], digest[:])
 	return
-}
-
-func pqAddress(pk []byte, scheme types.PQScheme, salt types.PQAddressSalt) types.Address {
-	return PQAddress(pk, scheme, salt)
 }
 
 // PQSignerAddress returns the address for a given PQSigner
@@ -97,40 +76,48 @@ func canonicalSaltForPQPK(pk []byte, scheme types.PQScheme) (types.PQAddressSalt
 	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %x", pk)
 }
 
+// pqSig assembles the PQSig envelope that identifies the signer's account and
+// carries the given signature bytes.
+func pqSig(sgnr PQSigner, signature []byte) (sig types.PQSig, addr types.Address, err error) {
+	salt, err := SaltForPQSigner(sgnr)
+	if err != nil {
+		return
+	}
+
+	sig = types.PQSig{
+		Scheme:    sgnr.PQScheme(),
+		Salt:      salt,
+		PublicKey: sgnr.PQPublicKey(),
+		Signature: signature,
+	}
+	addr = PQAddress(sig.PublicKey, sig.Scheme, salt)
+	return
+}
+
 // MakeLogicSigAccountDelegatedPQ creates a delegated LogicSigAccount that can sign on behalf of a PQ account.
 func MakeLogicSigAccountDelegatedPQ(program []byte, args [][]byte, sgnr PQSigner) (lsa LogicSigAccount, err error) {
 	if err = sanityCheckProgram(program); err != nil {
 		return
 	}
 
-	pk := sgnr.PQPublicKey()
-	salt, err := SaltForPQSigner(sgnr)
+	// the delegation signature commits to the address it delegates from, so the
+	// envelope is assembled first and its signature filled in afterwards
+	pqsig, addr, err := pqSig(sgnr, nil)
 	if err != nil {
 		return
 	}
 
-	addr := pqAddress(pk, sgnr.PQScheme(), salt)
-	toSignBytes := pqsigProgramToSign(addr, program)
-	sig, err := sgnr.PQSign(toSignBytes)
+	pqsig.Signature, err = sgnr.PQSign(pqsigProgramToSign(addr, program))
 	if err != nil {
 		return
-	}
-
-	pqsig := types.PQSig{
-		Scheme:    sgnr.PQScheme(),
-		Salt:      salt,
-		PublicKey: pk[:],
-		Signature: sig,
-	}
-
-	lsig := types.LogicSig{
-		Logic: program,
-		Args:  args,
-		PQsig: pqsig,
 	}
 
 	lsa = LogicSigAccount{
-		Lsig: lsig,
+		Lsig: types.LogicSig{
+			Logic: program,
+			Args:  args,
+			PQsig: pqsig,
+		},
 	}
 	return
 }

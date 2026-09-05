@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
@@ -45,36 +44,6 @@ func makeTestPaymentTxn(t *testing.T, sender types.Address) types.Transaction {
 	}
 }
 
-// signPQAccountTransactionFixture preserves the old test fixture setup. Transaction
-// envelope construction is tested by the transaction package.
-func signPQAccountTransactionFixture(sgnr PQSigner, txn types.Transaction) (txid string, stxBytes []byte, err error) {
-	txnBytes := rawTransactionBytesToSign(txn)
-	txid = txIDFromRawTxnBytesToSign(txnBytes)
-	sig, err := sgnr.PQSign(txnBytes)
-	if err != nil {
-		return
-	}
-	salt, err := SaltForPQSigner(sgnr)
-	if err != nil {
-		return
-	}
-	stx := types.SignedTxn{
-		Txn: txn,
-		PQsig: types.PQSig{
-			Scheme:    sgnr.PQScheme(),
-			Salt:      salt,
-			PublicKey: sgnr.PQPublicKey(),
-			Signature: sig,
-		},
-	}
-	addr := PQAddress(sgnr.PQPublicKey(), sgnr.PQScheme(), salt)
-	if txn.Sender != addr {
-		stx.AuthAddr = addr
-	}
-	stxBytes = msgpack.Encode(stx)
-	return
-}
-
 func TestAddress(t *testing.T) {
 	seed, err := base64.StdEncoding.DecodeString("EI+JCEv/+Kyqo5yvW6O2A/u0KKtLp5wWIjAvS5sT488=")
 	require.NoError(t, err)
@@ -103,29 +72,33 @@ func TestFalcon1024AccountFromPQSeed(t *testing.T) {
 	require.False(t, IsEdwards25519Point(addr[:]))
 }
 
-func TestSignFalcon1024AccountTransaction(t *testing.T) {
+func TestSignFalcon1024AccountSigner(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
-	fromAddr := pqa.Address()
-	tx := makeTestPaymentTxn(t, fromAddr)
+	sgnr := pqa.AsSigner()
 
-	txid, txBytes, err := signPQAccountTransactionFixture(pqa.AsSigner(), tx)
+	// The signer signs on behalf of the account it was derived from.
+	addr, err := PQSignerAddress(sgnr)
 	require.NoError(t, err)
-	require.NotEmpty(t, txid)
+	require.Equal(t, pqa.Address(), addr)
+	require.Equal(t, types.PQSchemeFalcon1024, sgnr.PQScheme())
 
-	var stx types.SignedTxn
-	require.NoError(t, msgpack.Decode(txBytes, &stx))
+	toBeSigned := rawTransactionBytesToSign(makeTestPaymentTxn(t, addr))
+	pqsig, err := signWith(sgnr, toBeSigned)
+	require.NoError(t, err)
+	require.True(t, VerifyPQSig(toBeSigned, pqsig))
 
-	// Sender == signer, so no AuthAddr is set.
-	require.Equal(t, types.Address{}, stx.AuthAddr)
-	require.Equal(t, tx, stx.Txn)
-	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
+	// A tampered message must not verify against the signature.
+	require.False(t, VerifyPQSig(append(toBeSigned, 0), pqsig))
+}
 
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
-	require.True(t, VerifyPQSig(bytesToSign, stx.PQsig))
-
-	// A tampered transaction must not verify against the signature.
-	stx.Txn.Amount++
-	require.False(t, VerifyPQSig(rawTransactionBytesToSign(stx.Txn), stx.PQsig))
+// signWith signs the given bytes and returns the resulting PQSig envelope
+func signWith(sgnr PQSigner, toBeSigned []byte) (types.PQSig, error) {
+	signature, err := sgnr.PQSign(toBeSigned)
+	if err != nil {
+		return types.PQSig{}, err
+	}
+	pqsig, _, err := pqSig(sgnr, signature)
+	return pqsig, err
 }
 
 type customFalconSigner struct {
@@ -167,42 +140,32 @@ func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	defaultSgnr := pqa.AsSigner()
 	saltedSgnr := SaltedPQSigner{
-		Signer: defaultSgnr,
-		Salt:   types.PQAddressSalt(99),
+		PQSigner: defaultSgnr,
+		Salt:     types.PQAddressSalt(99),
 	}
-	fromAddr := pqa.Address()
-	tx := makeTestPaymentTxn(t, fromAddr)
 
-	_, txBytes, err := signPQAccountTransactionFixture(saltedSgnr, tx)
+	// The key material is the one of the wrapped signer...
+	require.Equal(t, defaultSgnr.PQScheme(), saltedSgnr.PQScheme())
+	require.Equal(t, defaultSgnr.PQPublicKey(), saltedSgnr.PQPublicKey())
+
+	salt, err := SaltForPQSigner(saltedSgnr)
 	require.NoError(t, err)
+	require.Equal(t, types.PQAddressSalt(99), salt)
 
-	var stx types.SignedTxn
-	require.NoError(t, msgpack.Decode(txBytes, &stx))
-
-	// We modified the salt, this means a different account made the signature
-	// and therefore AuthAddr is set.
-	require.NotEqual(t, types.Address{}, stx.AuthAddr)
-	require.Equal(t, types.PQAddressSalt(99), stx.PQsig.Salt)
-
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
-	require.True(t, VerifyPQSig(bytesToSign, stx.PQsig))
-}
-
-func TestSignFalcon1024AccountTransactionWithAuthAddr(t *testing.T) {
-	pqa := makeTestFalcon1024Account(t)
-	authAddr := pqa.Address()
-
-	// Sender differs from the signer: the account has been rekeyed to the PQ key.
-	fromAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
+	// ...but the overridden salt selects a different account.
+	defaultAddr, err := PQSignerAddress(defaultSgnr)
 	require.NoError(t, err)
-	tx := makeTestPaymentTxn(t, fromAddr)
-
-	_, txBytes, err := signPQAccountTransactionFixture(pqa.AsSigner(), tx)
+	saltedAddr, err := PQSignerAddress(saltedSgnr)
 	require.NoError(t, err)
+	require.NotEqual(t, defaultAddr, saltedAddr)
+	require.Equal(t, PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, salt), saltedAddr)
 
-	var stx types.SignedTxn
-	require.NoError(t, msgpack.Decode(txBytes, &stx))
-	require.Equal(t, authAddr, stx.AuthAddr)
+	// Signatures still verify, they are made by the same key.
+	toBeSigned := rawTransactionBytesToSign(makeTestPaymentTxn(t, saltedAddr))
+	pqsig, err := signWith(saltedSgnr, toBeSigned)
+	require.NoError(t, err)
+	require.Equal(t, types.PQAddressSalt(99), pqsig.Salt)
+	require.True(t, VerifyPQSig(toBeSigned, pqsig))
 }
 
 func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {

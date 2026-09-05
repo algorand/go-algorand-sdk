@@ -461,7 +461,7 @@ func TestLogicSigMultisigLegacy(t *testing.T) {
 		},
 	}
 	require.False(t, VerifyLogicSig(lsig, sender))
-	singleSig, err := signProgram(sgnr2, logic)
+	singleSig, err := ed25519SignatureFor(sgnr2, programToSign(logic))
 	require.NoError(t, err)
 	lsig.Msig.Subsigs[1].Sig = singleSig
 	require.True(t, VerifyLogicSig(lsig, sender))

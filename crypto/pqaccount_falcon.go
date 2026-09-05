@@ -32,7 +32,7 @@ type Falcon1024Account struct {
 // Address returns the account address for the given Falcon1024Account.
 // Hash("PQA" || scheme || salt || publicKey)
 func (pqa Falcon1024Account) Address() (addr types.Address) {
-	return pqAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, pqa.Salt)
+	return PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, pqa.Salt)
 }
 
 // Validate returns an error if the given Falcon1024Account address could be interpreted as an ed25519 public key
