@@ -64,6 +64,9 @@ func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(Ed25519AccountTransactionSigner); ok {
+		if txSigner.Signer == nil || castedSigner.Signer == nil {
+			return txSigner.Signer == castedSigner.Signer
+		}
 		pk1 := txSigner.Signer.Ed25519PublicKey()
 		pk2 := castedSigner.Signer.Ed25519PublicKey()
 		// NOTE: Assuming that two signers for the same PK are "equal"
@@ -148,6 +151,12 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 
 		for idx, sgnr := range txSigner.Signers {
 			otherSgnr := castedSigner.Signers[idx]
+			if sgnr == nil || otherSgnr == nil {
+				if sgnr != otherSgnr {
+					return false
+				}
+				continue
+			}
 			if sgnr.Ed25519PublicKey() != otherSgnr.Ed25519PublicKey() {
 				return false
 			}

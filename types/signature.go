@@ -88,6 +88,9 @@ func (lsig LogicSig) Blank() bool {
 	if lsig.Sig != (Signature{}) {
 		return false
 	}
+	if !lsig.PQsig.Blank() {
+		return false
+	}
 	return true
 }
 

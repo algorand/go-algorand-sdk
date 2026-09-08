@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/sha512"
+	"errors"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -17,8 +18,25 @@ var pqProgramPrefix = []byte("PQProgram")
 // SaltedPQSigner wraps a given PQSigner overriding its salt
 // with a new one
 type SaltedPQSigner struct {
-	PQSigner
-	Salt types.PQAddressSalt
+	Signer PQSigner
+	Salt   types.PQAddressSalt
+}
+
+// PQSign signs the given bytes with a pq signature
+func (sgnr SaltedPQSigner) PQSign(toBeSigned []byte) ([]byte, error) {
+	return sgnr.Signer.PQSign(toBeSigned)
+}
+
+// PQPublicKey returns the public key that should be used to verify the
+// signatures performed by this signer
+func (sgnr SaltedPQSigner) PQPublicKey() []byte {
+	return sgnr.Signer.PQPublicKey()
+}
+
+// PQScheme returns the identifier for the post-quantum scheme used by this
+// signer
+func (sgnr SaltedPQSigner) PQScheme() types.PQScheme {
+	return sgnr.Signer.PQScheme()
 }
 
 // PQSalt returns the (maybe non-canonical) salt that identifies the
@@ -58,6 +76,9 @@ func PQSignerAddress(signer PQSigner) (addr types.Address, err error) {
 // For signers implementing PQSalted this salt will be used, otherwise
 // the canonical one will be calculated.
 func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
+	if sgnr == nil {
+		return 0, errors.New("pq signer cannot be nil")
+	}
 	if salted, ok := sgnr.(PQSalted); ok {
 		return salted.PQSalt(), nil
 	}
@@ -96,6 +117,9 @@ func pqSig(sgnr PQSigner, signature []byte) (sig types.PQSig, addr types.Address
 
 // MakeLogicSigAccountDelegatedPQ creates a delegated LogicSigAccount that can sign on behalf of a PQ account.
 func MakeLogicSigAccountDelegatedPQ(program []byte, args [][]byte, sgnr PQSigner) (lsa LogicSigAccount, err error) {
+	if sgnr == nil {
+		return LogicSigAccount{}, errors.New("cannot create a delegated LogicSig without a signer")
+	}
 	if err = sanityCheckProgram(program); err != nil {
 		return
 	}

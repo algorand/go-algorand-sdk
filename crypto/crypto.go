@@ -117,9 +117,10 @@ func ed25519SignatureFor(sgnr Ed25519Signer, toBeSigned []byte) (s types.Signatu
 		return
 	}
 
-	if copy(s[:], signature) != len(s) {
-		err = errInvalidSignatureReturned
+	if len(signature) != len(s) {
+		return s, errInvalidSignatureReturned
 	}
+	copy(s[:], signature)
 	return
 }
 
@@ -594,7 +595,10 @@ func SignLogicSigAccountTransaction(logicSigAccount LogicSigAccount, tx types.Tr
 // account. In order to properly handle that case, create a LogicSigAccount and
 // use SignLogicSigAccountTransaction instead.
 func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	hasSig, _, hasLMsig, hasPQsig, _ := lsigSignatures(lsig)
+	hasSig, _, hasLMsig, hasPQsig, err := lsigSignatures(lsig)
+	if err != nil {
+		return "", nil, err
+	}
 
 	// the address that the LogicSig represents
 	var lsigAddress types.Address

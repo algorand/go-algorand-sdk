@@ -69,7 +69,7 @@ func equalBySerialization(signer, other interface{}) bool {
 		return false
 	}
 
-	return string(signerJSON) == string(otherJSON)
+	return bytes.Equal(signerJSON, otherJSON)
 }
 
 // ed25519Signature signs the given bytes and returns the result as a
@@ -81,9 +81,10 @@ func ed25519Signature(signer crypto.Ed25519Signer, toBeSigned []byte) (sig types
 		return
 	}
 
-	if copy(sig[:], signature) != len(sig) {
-		err = errInvalidSignatureReturned
+	if len(signature) != len(sig) {
+		return sig, errInvalidSignatureReturned
 	}
+	copy(sig[:], signature)
 	return
 }
 
@@ -144,15 +145,8 @@ func ed25519AppendMultisigTransaction(signer crypto.Ed25519Signer, account crypt
 }
 
 func signLogicSigAccountTransaction(account crypto.LogicSigAccount, tx types.Transaction) ([]byte, error) {
-	address, err := account.Address()
-	if err != nil {
-		return nil, err
-	}
-	if !crypto.VerifyLogicSig(account.Lsig, address) { //nolint:staticcheck // Preserve legacy signing validation behavior.
-		return nil, errors.New("invalid logicsig signature")
-	}
-
-	return encodeSignedTxn(types.SignedTxn{Lsig: account.Lsig, Txn: tx}, address), nil
+	_, stxBytes, err := crypto.SignLogicSigAccountTransaction(account, tx)
+	return stxBytes, err
 }
 
 // pqSignedTxn returns the encoded SignedTxn carrying the given post-quantum

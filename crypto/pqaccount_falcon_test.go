@@ -140,8 +140,8 @@ func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	defaultSgnr := pqa.AsSigner()
 	saltedSgnr := SaltedPQSigner{
-		PQSigner: defaultSgnr,
-		Salt:     types.PQAddressSalt(99),
+		Signer: defaultSgnr,
+		Salt:   types.PQAddressSalt(99),
 	}
 
 	// The key material is the one of the wrapped signer...
@@ -208,4 +208,12 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	wrongLenSig := lsa.Lsig.PQsig
 	wrongLenSig.PublicKey = make([]byte, 32)
 	require.False(t, VerifyPQSig(toBeSigned, wrongLenSig))
+}
+
+func TestPQAccountNilSignerChecks(t *testing.T) {
+	_, err := SaltForPQSigner(nil)
+	require.Error(t, err)
+
+	_, err = MakeLogicSigAccountDelegatedPQ([]byte{1, 2, 3}, nil, nil)
+	require.Error(t, err)
 }

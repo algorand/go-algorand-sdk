@@ -578,6 +578,13 @@ func TestSignLogicsigTransaction(t *testing.T) {
 			_, _, err := SignLogicSigTransaction(lsig, txn)
 			require.Error(t, err, errLsigInvalidSignature)
 		})
+
+		t.Run("too many signatures", func(t *testing.T) {
+			multiSigLsig := lsig
+			multiSigLsig.PQsig = types.PQSig{Scheme: types.PQSchemeFalcon1024}
+			_, _, err := SignLogicSigTransaction(multiSigLsig, types.Transaction{})
+			require.ErrorIs(t, err, errLsigTooManySignatures)
+		})
 	})
 
 	t.Run("multi sig", func(t *testing.T) {
@@ -855,4 +862,28 @@ func falcon1024GoldenTxn(t *testing.T, sender types.Address) types.Transaction {
 			GenesisHash: genesisHash,
 		},
 	}
+}
+
+type mockEd25519SignerWithLen struct {
+	sigLen int
+}
+
+func (m mockEd25519SignerWithLen) Ed25519Sign(message []byte) ([]byte, error) {
+	return make([]byte, m.sigLen), nil
+}
+
+func (m mockEd25519SignerWithLen) Ed25519PublicKey() Ed25519PublicKey {
+	return Ed25519PublicKey{}
+}
+
+func TestEd25519SignatureForLengthValidation(t *testing.T) {
+	// Oversized signature (65 bytes) must be rejected
+	sgnrOversized := mockEd25519SignerWithLen{sigLen: 65}
+	_, err := ed25519SignatureFor(sgnrOversized, []byte("test"))
+	require.ErrorIs(t, err, errInvalidSignatureReturned)
+
+	// Undersized signature (63 bytes) must be rejected
+	sgnrUndersized := mockEd25519SignerWithLen{sigLen: 63}
+	_, err = ed25519SignatureFor(sgnrUndersized, []byte("test"))
+	require.ErrorIs(t, err, errInvalidSignatureReturned)
 }
