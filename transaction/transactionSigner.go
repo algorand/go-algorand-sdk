@@ -114,11 +114,11 @@ type MultiSigEd25519AccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	if len(txSigner.Signers) == 0 {
-		return nil, errNoMultisigSigners
-	}
-
 	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		if len(txSigner.Signers) == 0 {
+			return nil, errNoMultisigSigners
+		}
+
 		unmergedStxs := make([][]byte, len(txSigner.Signers))
 		for i, sgnr := range txSigner.Signers {
 			stxBytes, err := ed25519SignMultisigTransaction(sgnr, txSigner.Msig, tx)

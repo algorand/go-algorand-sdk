@@ -174,6 +174,10 @@ func pqSignedTxn(signer crypto.PQSigner, tx types.Transaction, signature []byte)
 }
 
 func pqSignTransaction(signer crypto.PQSigner, tx types.Transaction) ([]byte, error) {
+	if signer == nil {
+		return nil, errors.New("pq signer cannot be nil")
+	}
+
 	signature, err := signer.PQSign(transactionBytesToSign(tx))
 	if err != nil {
 		return nil, err

@@ -148,8 +148,12 @@ func TestMultiSigEd25519AccountTransactionSignerEmptySigners(t *testing.T) {
 	ma, _, _, _ := makeTestMultisigAccount(t)
 	txSigner := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: nil}
 
+	stxs, err := txSigner.SignTransactions(nil, nil)
+	require.NoError(t, err)
+	require.Empty(t, stxs)
+
 	tx := types.Transaction{}
-	_, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
+	_, err = txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "multisig signer has no signing keys")
 
@@ -202,6 +206,13 @@ func TestPQAccountTransactionSignerEquals(t *testing.T) {
 	require.False(t, s1.Equals(EmptyTransactionSigner{}))
 	require.False(t, s1.Equals(PQAccountTransactionSigner{Signer: nil}))
 	require.True(t, (PQAccountTransactionSigner{Signer: nil}).Equals(PQAccountTransactionSigner{Signer: nil}))
+}
+
+func TestPQAccountTransactionSignerNilSigner(t *testing.T) {
+	txSigner := PQAccountTransactionSigner{Signer: nil}
+
+	_, err := txSigner.SignTransactions([]types.Transaction{{}}, []int{0})
+	require.ErrorContains(t, err, "pq signer cannot be nil")
 }
 
 func TestEd25519AccountTransactionSignerEqualsNilSigner(t *testing.T) {
