@@ -15,8 +15,10 @@ jobs:
           go-version-file: 'go.mod'
       - name: Check format
         run: test -z `go fmt ./...`
-      - name: Vet
+      - name: Vet (nofalcon)
         run: go vet ./...
+      - name: Vet (falcon)
+        run: go vet -tags falcon ./...
       - name: reviewdog-golangci-lint
         uses: reviewdog/action-golangci-lint@v2.8
         with:

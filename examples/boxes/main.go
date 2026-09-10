@@ -193,7 +193,7 @@ return
 		log.Fatalf("failed to make txn: %s", err)
 	}
 
-	txid, stx, err := crypto.SignTransaction(creator.PrivateKey, txn)
+	txid, stx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: creator.AsSigner()}, txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -226,7 +226,7 @@ func fundApp(algodClient *algod.Client, sender crypto.Account, appAddr types.Add
 		log.Fatalf("failed to make txn: %s", err)
 	}
 
-	txid, stx, err := crypto.SignTransaction(sender.PrivateKey, txn)
+	txid, stx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: sender.AsSigner()}, txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}
@@ -271,7 +271,7 @@ func setBoxes(algodClient *algod.Client, appID uint64, sender crypto.Account, na
 		log.Fatalf("failed to make txn: %s", err)
 	}
 
-	txid, stx, err := crypto.SignTransaction(sender.PrivateKey, txn)
+	txid, stx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: sender.AsSigner()}, txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}

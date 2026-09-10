@@ -57,6 +57,7 @@ var gen string
 var a types.Address
 var msig crypto.MultisigAccount
 var msigsig types.MultisigSig
+var falconSigner crypto.PQSigner
 var kcl kmd.Client
 var aclv2 *algodV2.Client
 var iclv2 *indexerV2.Client
@@ -243,6 +244,12 @@ func FeatureContext(s *godog.ScenarioContext) {
 	s.Step(`the signed transaction should equal the golden "([^"]*)"`, equalGolden)
 	s.Step(`the multisig transaction should equal the golden "([^"]*)"`, equalMsigGolden)
 	s.Step(`the multisig address should equal the golden "([^"]*)"`, equalMsigAddrGolden)
+	s.Step("I get the default falcon1024 account", loadFalconKey)
+	s.Step("I generate and fund a falcon1024 key", genAndFundFalconKey)
+	s.Step(`mnemonic for falcon1024 private key "([^"]*)"`, mnForFalcon)
+	s.Step("I create the falcon1024 payment transaction$", createFalconTxn)
+	s.Step("I sign the falcon1024 transaction with the private key", signFalconTxn)
+	s.Step("I add a fee to cover falcon1024 signatures", addFalcon1024Fee)
 	s.Step("I get versions with algod", aclV)
 	s.Step("v1 should be in the versions", v1InVersions)
 	s.Step("v2 should be in the versions", v2InVersions)
@@ -264,6 +271,7 @@ func FeatureContext(s *godog.ScenarioContext) {
 	s.Step("a kmd client", kmdClient)
 	s.Step("wallet information", walletInfo)
 	s.Step(`default transaction with parameters (\d+) "([^"]*)"`, defaultTxn)
+	s.Step(`default falcon1024 transaction with parameters (\d+) "([^"]*)"`, defaultPQsigTxn)
 	s.Step(`default multisig transaction with parameters (\d+) "([^"]*)"`, defaultMsigTxn)
 	s.Step("I get the private key", getSk)
 	s.Step("I send the transaction", sendTxn)
@@ -558,16 +566,22 @@ func iSetTheFromAddressTo(address string) error {
 	return nil
 }
 
-func createMsigTxn() error {
-	var err error
-	paramsToUse := types.SuggestedParams{
+// stepSuggestedParams builds the suggested params out of the values gathered by
+// the preceding steps
+func stepSuggestedParams(flatFee bool) types.SuggestedParams {
+	return types.SuggestedParams{
 		Fee:             types.MicroAlgos(fee),
 		GenesisID:       gen,
 		GenesisHash:     gh,
 		FirstRoundValid: types.Round(fv),
 		LastRoundValid:  types.Round(lv),
-		FlatFee:         false,
+		FlatFee:         flatFee,
 	}
+}
+
+func createMsigTxn() error {
+	var err error
+	paramsToUse := stepSuggestedParams(false)
 	msigaddr, _ := msig.Address()
 	txn, err = transaction.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
 	if err != nil {
@@ -579,14 +593,7 @@ func createMsigTxn() error {
 
 func createMsigTxnZeroFee() error {
 	var err error
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         true,
-	}
+	paramsToUse := stepSuggestedParams(true)
 	msigaddr, _ := msig.Address()
 	txn, err = transaction.MakePaymentTxn(msigaddr.String(), to, amt, note, close, paramsToUse)
 	if err != nil {
@@ -598,14 +605,14 @@ func createMsigTxnZeroFee() error {
 
 func signMsigTxn() error {
 	var err error
-	txid, stx, err = crypto.SignMultisigTransaction(account.PrivateKey, msig, txn)
+	txid, stx, err = transaction.SignTransaction(transaction.MultiSigEd25519AccountTransactionSigner{Msig: msig, Signers: []crypto.Ed25519Signer{account.AsSigner()}}, txn)
 
 	return err
 }
 
 func signTxn() error {
 	var err error
-	txid, stx, err = crypto.SignTransaction(account.PrivateKey, txn)
+	txid, stx, err = transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: account.AsSigner()}, txn)
 	if err != nil {
 		return err
 	}
@@ -651,6 +658,14 @@ func equalMsigGolden(golden string) error {
 	if !bytes.Equal(goldenDecoded, stx) {
 		return fmt.Errorf("NOT EQUAL")
 	}
+	return nil
+}
+
+// falcon1024Fee covers the fee surcharge of a falcon1024 signature
+const falcon1024Fee = 3000
+
+func addFalcon1024Fee() error {
+	txn.Fee = types.MicroAlgos(falcon1024Fee)
 	return nil
 }
 
@@ -896,17 +911,19 @@ func walletInfo() error {
 }
 
 // Helper function for making default transactions.
-func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
+// defaultTxnParams sets the globals shared by the default transaction steps and
+// returns the suggested params to build the transaction with.
+func defaultTxnParams(iamt int, inote string, senderAddress string) (types.SuggestedParams, error) {
 	var err error
 	if inote != "none" {
 		note, err = base64.StdEncoding.DecodeString(inote)
 		if err != nil {
-			return err
+			return types.SuggestedParams{}, err
 		}
 	} else {
 		note, err = base64.StdEncoding.DecodeString("")
 		if err != nil {
-			return err
+			return types.SuggestedParams{}, err
 		}
 	}
 
@@ -914,15 +931,67 @@ func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
 	pk = senderAddress
 	params, err := aclv2.SuggestedParams().Do(context.Background())
 	if err != nil {
-		return err
+		return types.SuggestedParams{}, err
 	}
 	lastRound = uint64(params.FirstRoundValid)
+	return params, nil
+}
+
+func defaultTxnWithAddress(iamt int, inote string, senderAddress string) error {
+	params, err := defaultTxnParams(iamt, inote, senderAddress)
+	if err != nil {
+		return err
+	}
 	txn, err = transaction.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
 	return err
 }
 
 func defaultTxn(iamt int, inote string) error {
 	return defaultTxnWithAddress(iamt, inote, accounts[0])
+}
+
+func genAndFundFalconKey() (err error) {
+	err = genFalconKey()
+	if err != nil {
+		return
+	}
+	addr, err := crypto.PQSignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	err = initializeAccount(addr.String())
+	return
+}
+
+func createFalconTxn() error {
+	addr, err := crypto.PQSignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	txn, err = transaction.MakePaymentTxn(addr.String(), to, amt, note, close, stepSuggestedParams(true))
+	return err
+}
+
+func signFalconTxn() error {
+	var err error
+	txid, stx, err = transaction.SignTransaction(transaction.PQAccountTransactionSigner{Signer: falconSigner}, txn)
+	return err
+}
+
+func defaultPQsigTxn(iamt int, inote string) error {
+	addr, err := crypto.PQSignerAddress(falconSigner)
+	if err != nil {
+		return err
+	}
+	senderAddress := addr.String()
+	params, err := defaultTxnParams(iamt, inote, senderAddress)
+	if err != nil {
+		return err
+	}
+	// post-quantum signatures carry a fee surcharge
+	params.Fee = falcon1024Fee
+	txn, err = transaction.MakePaymentTxn(senderAddress, accounts[1], amt, note, "", params)
+	return err
 }
 
 func defaultMsigTxn(iamt int, inote string) error {
@@ -1094,7 +1163,7 @@ func encDecBid() error {
 }
 
 func signBid() error {
-	signedBytes, err := crypto.SignBid(account.PrivateKey, bid)
+	signedBytes, err := crypto.Ed25519SignBid(account.AsSigner(), bid)
 	if err != nil {
 		return err
 	}
@@ -1159,15 +1228,7 @@ func mdkToMn() error {
 
 func createTxnFlat() error {
 	var err error
-	paramsToUse := types.SuggestedParams{
-		Fee:             types.MicroAlgos(fee),
-		GenesisID:       gen,
-		GenesisHash:     gh,
-		FirstRoundValid: types.Round(fv),
-		LastRoundValid:  types.Round(lv),
-		FlatFee:         true,
-	}
-	txn, err = transaction.MakePaymentTxn(a.String(), to, amt, note, close, paramsToUse)
+	txn, err = transaction.MakePaymentTxn(a.String(), to, amt, note, close, stepSuggestedParams(true))
 	if err != nil {
 		return err
 	}
@@ -1190,7 +1251,7 @@ func appendMsig() error {
 	if err != nil {
 		return err
 	}
-	_, stx, err = crypto.AppendMultisigTransaction(account.PrivateKey, msig, stx)
+	_, stx, err = (transaction.Ed25519AccountTransactionSigner{Signer: account.AsSigner()}).AppendSignature(msig, stx)
 	return err
 }
 
@@ -1600,7 +1661,7 @@ func programHash(addr string) (err error) {
 }
 
 func iPerformTealsign() (err error) {
-	sig, err = crypto.TealSign(account.PrivateKey, data, account.Address)
+	sig, err = crypto.Ed25519TealSign(account.AsSigner(), data, account.Address)
 	return
 }
 
