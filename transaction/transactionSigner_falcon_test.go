@@ -14,18 +14,21 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
-func makeTestFalcon1024Account(t *testing.T) crypto.Falcon1024Account {
+// makeTestFalcon1024Account returns a deterministic Falcon-1024 account
+// alongside its address.
+func makeTestFalcon1024Account(t *testing.T) (crypto.Falcon1024Account, types.Address) {
 	mn := "auction inquiry lava second expand liberty glass involve ginger illness length room item discover ahead table doctor term tackle cement bonus profit right above catch"
 	seed, err := mnemonic.ToPQSeed(mn, types.PQSchemeFalcon1024)
 	require.NoError(t, err)
 	pqa, err := crypto.Falcon1024AccountFromPQSeed(seed)
 	require.NoError(t, err)
-	return pqa
+	addr, err := pqa.Address()
+	require.NoError(t, err)
+	return pqa, addr
 }
 
 func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
-	pqa := makeTestFalcon1024Account(t)
-	fromAddr := pqa.Address()
+	pqa, fromAddr := makeTestFalcon1024Account(t)
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
@@ -59,7 +62,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 }
 
 func TestMakeFalcon1024AccountTransactionSignerWithAuthAddr(t *testing.T) {
-	pqa := makeTestFalcon1024Account(t)
+	pqa, pqaAddr := makeTestFalcon1024Account(t)
 
 	// Sender differs from the signer: the account has been rekeyed to the PQ key.
 	fromAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
@@ -76,12 +79,11 @@ func TestMakeFalcon1024AccountTransactionSignerWithAuthAddr(t *testing.T) {
 
 	var stx types.SignedTxn
 	require.NoError(t, msgpack.Decode(sigs[0], &stx))
-	require.Equal(t, pqa.Address(), stx.AuthAddr)
+	require.Equal(t, pqaAddr, stx.AuthAddr)
 }
 
 func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
-	pqa := makeTestFalcon1024Account(t)
-	fromAddr := pqa.Address()
+	pqa, fromAddr := makeTestFalcon1024Account(t)
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
@@ -110,7 +112,9 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 	require.Equal(t, tx, stx.Txn)
 	require.Equal(t, types.Address{}, stx.AuthAddr)
 	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
-	require.Equal(t, pqa.Salt, stx.PQsig.Salt)
+	canonicalSalt, err := crypto.SaltForPQSigner(pqa.AsSigner())
+	require.NoError(t, err)
+	require.Equal(t, canonicalSalt, stx.PQsig.Salt)
 	require.Equal(t, pqa.PublicKey[:], stx.PQsig.PublicKey)
 	require.Empty(t, stx.PQsig.Signature)
 	require.True(t, txSigner.Equals(PQEmptyTransactionSigner{Signer: pqa.AsSigner()}))
@@ -121,12 +125,15 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 // transaction, re-signs it, and asserts the result equals the fixture's golden
 // signed-transaction blob byte-for-byte.
 
-// falcon1024GoldenAccount returns the fixed PQ account shared by all fixtures.
-func falcon1024GoldenAccount(t *testing.T) crypto.Falcon1024Account {
+// falcon1024GoldenAccount returns the fixed PQ account shared by all fixtures,
+// alongside its address.
+func falcon1024GoldenAccount(t *testing.T) (crypto.Falcon1024Account, types.Address) {
 	seed := [32]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	pqa, err := crypto.Falcon1024AccountFromPQSeed(seed[:])
 	require.NoError(t, err)
-	return pqa
+	addr, err := pqa.Address()
+	require.NoError(t, err)
+	return pqa, addr
 }
 
 // falcon1024GoldenTxn builds the fixture payment transaction with the given sender.
@@ -151,12 +158,12 @@ func falcon1024GoldenTxn(t *testing.T, sender types.Address) types.Transaction {
 
 // Based on pqPayment.json.
 func TestSignFalcon1024PaymentGolden(t *testing.T) {
-	pqa := falcon1024GoldenAccount(t)
+	pqa, pqaAddr := falcon1024GoldenAccount(t)
 
 	// The derived address must match the fixture sender.
-	require.Equal(t, "AZM6UV2ONIVHH7BK2CSBUPJCXNPZH5LFA2YFBCZPHSYXUFJ4LLLFJOUT5Y", pqa.Address().String())
+	require.Equal(t, "AZM6UV2ONIVHH7BK2CSBUPJCXNPZH5LFA2YFBCZPHSYXUFJ4LLLFJOUT5Y", pqaAddr.String())
 
-	txn := falcon1024GoldenTxn(t, pqa.Address())
+	txn := falcon1024GoldenTxn(t, pqaAddr)
 	_, stxBytes, err := SignTransaction(PQAccountTransactionSigner{Signer: pqa.AsSigner()}, txn)
 	require.NoError(t, err)
 
@@ -166,7 +173,7 @@ func TestSignFalcon1024PaymentGolden(t *testing.T) {
 
 // Based on pqRekeyedPayment.json.
 func TestSignFalcon1024RekeyedPaymentGolden(t *testing.T) {
-	pqa := falcon1024GoldenAccount(t)
+	pqa, _ := falcon1024GoldenAccount(t)
 
 	sender, err := types.DecodeAddress("BO6DI2SXMZ6DQAJAXWOH7V7FDUWF7X7KG7GS6W7UAWZMNP3PFV4J7HWYYY")
 	require.NoError(t, err)

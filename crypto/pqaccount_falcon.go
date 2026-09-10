@@ -3,8 +3,6 @@
 package crypto
 
 import (
-	"fmt"
-
 	"github.com/algorand/falcon"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -26,24 +24,12 @@ type Falcon1024PublicKey [Falcon1024PublicKeySize]byte
 type Falcon1024Account struct {
 	PublicKey  Falcon1024PublicKey
 	PrivateKey [Falcon1024PrivateKeySize]byte
-	Salt       types.PQAddressSalt
 }
 
-// Address returns the account address for the given Falcon1024Account.
-// Hash("PQA" || scheme || salt || publicKey)
-func (pqa Falcon1024Account) Address() (addr types.Address) {
-	return PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, pqa.Salt)
-}
-
-// Validate returns an error if the given Falcon1024Account address could be interpreted as an ed25519 public key
-func (pqa Falcon1024Account) Validate() error {
-	addr := pqa.Address()
-
-	if IsEdwards25519Point([]byte(addr[:])) {
-		return fmt.Errorf("Account address overlaps with a valid ed25519 account")
-	}
-
-	return nil
+// Address returns the account address for the given Falcon1024Account, derived
+// from its public key with the canonical salt.
+func (pqa Falcon1024Account) Address() (addr types.Address, err error) {
+	return PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024)
 }
 
 // basicFalcon1024AccountSigner is a simple signer that wraps an in-memory
@@ -72,15 +58,7 @@ func (sgnr basicFalcon1024AccountSigner) PQScheme() types.PQScheme {
 	return types.PQSchemeFalcon1024
 }
 
-// PQSalt returns the (maybe non-canonical) salt that identifies the
-// account selected for this signer
-func (sgnr basicFalcon1024AccountSigner) PQSalt() types.PQAddressSalt {
-	return sgnr.Account.Salt
-}
-
 // AsSigner transforms this account to a PQSigner
-//
-// The resulting signer will respect the salt of the source account.
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func (pqa Falcon1024Account) AsSigner() PQSigner {
@@ -100,20 +78,20 @@ func Falcon1024AccountFromPQSeed(pqseed []byte) (pqa Falcon1024Account, err erro
 	}
 
 	pqaPK := Falcon1024PublicKey(pk)
-	salt, err := canonicalSaltForPQPK(pqaPK[:], types.PQSchemeFalcon1024)
-	if err != nil {
+	// fail here rather than at Address() time if this key admits no salt whose
+	// address falls outside the ed25519 curve
+	if _, err = canonicalSaltForPQPK(pqaPK[:], types.PQSchemeFalcon1024); err != nil {
 		return
 	}
 
 	pqa = Falcon1024Account{
 		PublicKey:  pqaPK,
 		PrivateKey: sk,
-		Salt:       salt,
 	}
 	return
 }
 
-// GenerateFalcon1024Account returns a new canonical Falcon1024Account
+// GenerateFalcon1024Account returns a new Falcon1024Account
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func GenerateFalcon1024Account() Falcon1024Account {

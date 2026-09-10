@@ -21,7 +21,8 @@ type Ed25519Signer interface {
 // PQSigner represents the ability to perform pq signatures on
 // behalf of some public key
 //
-// Signers for non-canonical accounts should also implement PQSalted
+// The account a signer signs for is fully determined by its scheme and public
+// key: its address always uses the canonical salt for that pair.
 type PQSigner interface {
 	// PQSign signs the given bytes with a pq signature
 	PQSign(toBeSigned []byte) ([]byte, error)
@@ -31,12 +32,4 @@ type PQSigner interface {
 	// PQScheme returns the identifier for the post-quantum scheme used by this
 	// signer
 	PQScheme() types.PQScheme
-}
-
-// PQSalted equips a signer with the ability to specify a custom (maybe
-// non-canonical) salt
-type PQSalted interface {
-	// PQSalt returns the (maybe non-canonical) salt that identifies the
-	// account selected for this signer
-	PQSalt() types.PQAddressSalt
 }

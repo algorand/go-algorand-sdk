@@ -232,7 +232,8 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 // equalPQSigners reports whether two PQ signers sign on behalf of the same
 // account.
 //
-// NOTE: Assuming that two signers for the same (scheme, PK, salt) are "equal"
+// NOTE: Assuming that two signers for the same (scheme, PK) are "equal". The
+// salt, and so the address, is derived from that pair.
 func equalPQSigners(signer, other crypto.PQSigner) bool {
 	if signer == nil || other == nil {
 		return signer == other
@@ -240,15 +241,7 @@ func equalPQSigners(signer, other crypto.PQSigner) bool {
 	if signer.PQScheme() != other.PQScheme() {
 		return false
 	}
-	if !bytes.Equal(signer.PQPublicKey(), other.PQPublicKey()) {
-		return false
-	}
-	signerSalt, signerSaltErr := crypto.SaltForPQSigner(signer)
-	otherSalt, otherSaltErr := crypto.SaltForPQSigner(other)
-	if signerSaltErr != nil || otherSaltErr != nil {
-		return false
-	}
-	return signerSalt == otherSalt
+	return bytes.Equal(signer.PQPublicKey(), other.PQPublicKey())
 }
 
 // Equals returns true if the other TransactionSigner equals this one.

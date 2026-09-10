@@ -178,30 +178,19 @@ func (m mockBasicPQSigner) PQScheme() types.PQScheme {
 	return m.scheme
 }
 
-type mockSaltedPQSigner struct {
-	mockBasicPQSigner
-	salt types.PQAddressSalt
-}
-
-func (m mockSaltedPQSigner) PQSalt() types.PQAddressSalt {
-	return m.salt
-}
-
 func TestPQAccountTransactionSignerEquals(t *testing.T) {
 	pk := []byte("12345678901234567890123456789012")
 	scheme1 := types.PQScheme{'f', '1'}
 	scheme2 := types.PQScheme{'m', '2'}
 
-	s1 := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 0}}
-	s1Same := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 0}}
-	sDiffScheme := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme2, publicKey: pk}, salt: 0}}
-	sDiffPK := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}, salt: 0}}
-	sDiffSalt := PQAccountTransactionSigner{Signer: mockSaltedPQSigner{mockBasicPQSigner: mockBasicPQSigner{scheme: scheme1, publicKey: pk}, salt: 1}}
+	s1 := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
+	s1Same := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
+	sDiffScheme := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme2, publicKey: pk}}
+	sDiffPK := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}}
 
 	require.True(t, s1.Equals(s1Same))
 	require.False(t, s1.Equals(sDiffScheme))
 	require.False(t, s1.Equals(sDiffPK))
-	require.False(t, s1.Equals(sDiffSalt))
 	require.False(t, s1.Equals(EmptyTransactionSigner{}))
 	require.False(t, s1.Equals(PQAccountTransactionSigner{Signer: nil}))
 	require.True(t, (PQAccountTransactionSigner{Signer: nil}).Equals(PQAccountTransactionSigner{Signer: nil}))

@@ -51,24 +51,27 @@ func TestAddress(t *testing.T) {
 	require.NoError(t, err)
 	expectedAddress, err := types.DecodeAddress("UGEDBJQD4LZF6OMFQDQ3BLY6CRX36Y75AZPDKJ3TTRU4TOGJ36EL34CWRI")
 	require.NoError(t, err)
-	require.Equal(t, expectedAddress, account.Address())
+	accountAddr, err := account.Address()
+	require.NoError(t, err)
+	require.Equal(t, expectedAddress, accountAddr)
 }
 
 func TestGenerateFalcon1024Account(t *testing.T) {
 	pqa := GenerateFalcon1024Account()
-	require.NoError(t, pqa.Validate())
-	require.NotEqual(t, types.Address{}, pqa.Address())
+	addr, err := pqa.Address()
+	require.NoError(t, err)
+	require.NotEqual(t, types.Address{}, addr)
 }
 
 func TestFalcon1024AccountFromPQSeed(t *testing.T) {
-	// Same seed must always yield the same account (deterministic keygen + salt).
+	// Same seed must always yield the same account (deterministic keygen).
 	pqa1 := makeTestFalcon1024Account(t)
 	pqa2 := makeTestFalcon1024Account(t)
 	require.Equal(t, pqa1, pqa2)
-	require.NoError(t, pqa1.Validate())
 
 	// A valid PQ address must not double as a valid ed25519 point.
-	addr := pqa1.Address()
+	addr, err := pqa1.Address()
+	require.NoError(t, err)
 	require.False(t, IsEdwards25519Point(addr[:]))
 }
 
@@ -79,7 +82,9 @@ func TestSignFalcon1024AccountSigner(t *testing.T) {
 	// The signer signs on behalf of the account it was derived from.
 	addr, err := PQSignerAddress(sgnr)
 	require.NoError(t, err)
-	require.Equal(t, pqa.Address(), addr)
+	pqaAddr, err := pqa.Address()
+	require.NoError(t, err)
+	require.Equal(t, pqaAddr, addr)
 	require.Equal(t, types.PQSchemeFalcon1024, sgnr.PQScheme())
 
 	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, addr))
@@ -122,7 +127,9 @@ func (sgnr customFalconSigner) PQScheme() types.PQScheme {
 	return types.PQSchemeFalcon1024
 }
 
-func TestBasicSignerGetsCanonicalSalt(t *testing.T) {
+// Any signer for the same key material selects the same account: the salt is
+// derived from the (scheme, public key) pair, not carried by the signer.
+func TestEverySignerGetsCanonicalSalt(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 
 	sgnr := customFalconSigner{pqa: pqa}
@@ -134,37 +141,25 @@ func TestBasicSignerGetsCanonicalSalt(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, defaultSalt, salt)
-}
 
-func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
-	pqa := makeTestFalcon1024Account(t)
-	defaultSgnr := pqa.AsSigner()
-	saltedSgnr := SaltedPQSigner{
-		Signer: defaultSgnr,
-		Salt:   types.PQAddressSalt(99),
-	}
-
-	// The key material is the one of the wrapped signer...
-	require.Equal(t, defaultSgnr.PQScheme(), saltedSgnr.PQScheme())
-	require.Equal(t, defaultSgnr.PQPublicKey(), saltedSgnr.PQPublicKey())
-
-	salt, err := SaltForPQSigner(saltedSgnr)
+	// That salt is the canonical one, and the addresses agree on it.
+	canonical, err := canonicalSaltForPQPK(pqa.PublicKey[:], types.PQSchemeFalcon1024)
 	require.NoError(t, err)
-	require.Equal(t, types.PQAddressSalt(99), salt)
+	require.Equal(t, canonical, salt)
 
-	// ...but the overridden salt selects a different account.
+	addr, err := PQSignerAddress(sgnr)
+	require.NoError(t, err)
 	defaultAddr, err := PQSignerAddress(defaultSgnr)
 	require.NoError(t, err)
-	saltedAddr, err := PQSignerAddress(saltedSgnr)
-	require.NoError(t, err)
-	require.NotEqual(t, defaultAddr, saltedAddr)
-	require.Equal(t, PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, salt), saltedAddr)
+	require.Equal(t, defaultAddr, addr)
+	require.Equal(t, pqAddressWithSalt(pqa.PublicKey[:], types.PQSchemeFalcon1024, canonical), addr)
 
-	// Signatures still verify, they are made by the same key.
-	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, saltedAddr))
-	pqsig, err := signWith(saltedSgnr, toBeSigned)
+	// Signatures made by that signer carry the canonical salt too.
+	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, addr))
+	pqsig, err := signWith(defaultSgnr, toBeSigned)
 	require.NoError(t, err)
-	require.Equal(t, types.PQAddressSalt(99), pqsig.Salt)
+	require.Equal(t, canonical, pqsig.Salt)
+	require.Equal(t, addr, PQAddressFromSig(pqsig))
 	require.True(t, VerifyPQSig(toBeSigned, pqsig))
 }
 
@@ -181,7 +176,9 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	// A delegated PQ lsig's address is the delegating PQ account.
 	addr, err := lsa.Address()
 	require.NoError(t, err)
-	require.Equal(t, pqa.Address(), addr)
+	pqaAddr, err := pqa.Address()
+	require.NoError(t, err)
+	require.Equal(t, pqaAddr, addr)
 
 	toBeSigned := pqsigProgramToSign(addr, lsa.Lsig.Logic)
 	require.True(t, VerifyPQSig(toBeSigned, lsa.Lsig.PQsig))
@@ -214,6 +211,9 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 
 func TestPQAccountNilSignerChecks(t *testing.T) {
 	_, err := SaltForPQSigner(nil)
+	require.Error(t, err)
+
+	_, err = PQSignerAddress(nil)
 	require.Error(t, err)
 
 	_, err = MakeLogicSigAccountDelegatedPQ([]byte{1, 2, 3}, nil, nil)

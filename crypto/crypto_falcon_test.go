@@ -11,23 +11,26 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
-// getFalcon1024GoldenAccount returns the fixed PQ account shared by all fixtures.
-func getFalcon1024GoldenAccount(t *testing.T) Falcon1024Account {
+// getFalcon1024GoldenAccount returns the fixed PQ account shared by all
+// fixtures, alongside its address.
+func getFalcon1024GoldenAccount(t *testing.T) (Falcon1024Account, types.Address) {
 	var falcon1024GoldenSeed = [32]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	pqa, err := Falcon1024AccountFromPQSeed(falcon1024GoldenSeed[:])
 	require.NoError(t, err)
-	return pqa
+	addr, err := pqa.Address()
+	require.NoError(t, err)
+	return pqa, addr
 }
 
 // Based on pqDelegatedPayment.json.
 func TestSignFalcon1024DelegatedPaymentGolden(t *testing.T) {
-	pqa := getFalcon1024GoldenAccount(t)
+	pqa, pqaAddr := getFalcon1024GoldenAccount(t)
 
 	program := []byte{1, 32, 1, 1, 34}
 	lsa, err := MakeLogicSigAccountDelegatedPQ(program, nil, pqa.AsSigner())
 	require.NoError(t, err)
 
-	txn := falcon1024GoldenTxn(t, pqa.Address())
+	txn := falcon1024GoldenTxn(t, pqaAddr)
 	_, stxBytes, err := SignLogicSigAccountTransaction(lsa, txn)
 	require.NoError(t, err)
 
@@ -38,12 +41,12 @@ func TestSignFalcon1024DelegatedPaymentGolden(t *testing.T) {
 // With falcon available, VerifyLogicSig cryptographically verifies the PQ
 // delegation signature rather than only checking the delegating address.
 func TestVerifyLogicSigFalcon1024Delegation(t *testing.T) {
-	pqa := getFalcon1024GoldenAccount(t)
+	pqa, pqaAddr := getFalcon1024GoldenAccount(t)
 
 	program := []byte{1, 32, 1, 1, 34}
 	lsa, err := MakeLogicSigAccountDelegatedPQ(program, nil, pqa.AsSigner())
 	require.NoError(t, err)
-	require.True(t, VerifyLogicSig(lsa.Lsig, pqa.Address()))
+	require.True(t, VerifyLogicSig(lsa.Lsig, pqaAddr))
 
 	// A delegation signature over a different program must be rejected, even
 	// though the envelope still names the right delegating account.
@@ -53,25 +56,25 @@ func TestVerifyLogicSigFalcon1024Delegation(t *testing.T) {
 
 	swapped := lsa.Lsig
 	swapped.PQsig.Signature = otherLsa.Lsig.PQsig.Signature
-	require.False(t, VerifyLogicSig(swapped, pqa.Address()))
+	require.False(t, VerifyLogicSig(swapped, pqaAddr))
 
 	// So must a corrupted one.
 	tampered := lsa.Lsig
 	tampered.PQsig.Signature = append([]byte(nil), lsa.Lsig.PQsig.Signature...)
 	tampered.PQsig.Signature[len(tampered.PQsig.Signature)-1] ^= 0xff
-	require.False(t, VerifyLogicSig(tampered, pqa.Address()))
+	require.False(t, VerifyLogicSig(tampered, pqaAddr))
 
 	// Signing gates on VerifyLogicSig, so a bad delegation cannot be sent.
 	_, _, err = SignLogicSigAccountTransaction(
 		LogicSigAccount{Lsig: tampered},
-		falcon1024GoldenTxn(t, pqa.Address()),
+		falcon1024GoldenTxn(t, pqaAddr),
 	)
 	require.ErrorIs(t, err, errLsigInvalidSignature)
 }
 
 // Based on pqRekeyedDelegatedPayment.json.
 func TestSignFalcon1024RekeyedDelegatedPaymentGolden(t *testing.T) {
-	pqa := getFalcon1024GoldenAccount(t)
+	pqa, _ := getFalcon1024GoldenAccount(t)
 
 	program := []byte{1, 32, 1, 1, 34}
 	lsa, err := MakeLogicSigAccountDelegatedPQ(program, nil, pqa.AsSigner())

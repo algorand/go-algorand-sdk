@@ -662,9 +662,15 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 	return
 }
 
-// PQAddressFromSig returns the address of the account that performed a given PQ signature
+// PQAddressFromSig returns the address of the account that performed a given PQ
+// signature.
+//
+// The salt carried by the envelope is used as-is. Consensus does not require it
+// to be the canonical salt for the envelope's scheme and public key, so an
+// account on a non-canonical salt is a real account that this must resolve
+// correctly, even though this SDK will only ever sign for canonical ones.
 func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
-	return PQAddress(sig.PublicKey, sig.Scheme, sig.Salt)
+	return pqAddressWithSalt(sig.PublicKey, sig.Scheme, sig.Salt)
 }
 
 func programToSign(program []byte) []byte {
