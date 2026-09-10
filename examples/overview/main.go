@@ -9,7 +9,6 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common"
-	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 )
@@ -86,7 +85,7 @@ func main() {
 	// example: TRANSACTION_PAYMENT_CREATE
 
 	// example: TRANSACTION_PAYMENT_SIGN
-	_, sptxn, err := crypto.Ed25519SignTransaction(acct.AsSigner(), ptxn)
+	_, sptxn, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: acct.AsSigner()}, ptxn)
 	if err != nil {
 		fmt.Printf("Failed to sign transaction: %s\n", err)
 		return

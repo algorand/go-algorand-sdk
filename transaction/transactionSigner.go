@@ -2,12 +2,14 @@ package transaction
 
 import (
 	"bytes"
-	"encoding/json"
+	"errors"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
+
+var errNoMultisigSigners = errors.New("multisig signer has no signing keys")
 
 // TransactionSigner represents a function which can sign transactions from an atomic transaction group.
 // @param txnGroup - The atomic group containing transactions to be signed
@@ -54,22 +56,17 @@ type Ed25519AccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.Ed25519SignTransaction(txSigner.Signer, txGroup[pos])
-		if err != nil {
-			return nil, err
-		}
-
-		stxs[i] = stxBytes
-	}
-
-	return stxs, nil
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		return ed25519SignTransaction(txSigner.Signer, tx)
+	})
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(Ed25519AccountTransactionSigner); ok {
+		if txSigner.Signer == nil || castedSigner.Signer == nil {
+			return txSigner.Signer == castedSigner.Signer
+		}
 		pk1 := txSigner.Signer.Ed25519PublicKey()
 		pk2 := castedSigner.Signer.Ed25519PublicKey()
 		// NOTE: Assuming that two signers for the same PK are "equal"
@@ -99,15 +96,13 @@ func (txSigner Ed25519AccountTransactionSigner) TealSign(data []byte, contractAd
 // AppendSignature appends the signature corresponding to the given signer,
 // returning an encoded signed multisig transaction including the signature.
 func (txSigner Ed25519AccountTransactionSigner) AppendSignature(ma crypto.MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
-	txid, stxBytes, err = crypto.Ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
-	return
+	return ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
 }
 
 // AppendDelegationSignature adds an additional signature from a member of the
 // delegating multisig account.
 func (txSigner Ed25519AccountTransactionSigner) AppendDelegationSignature(lsa *crypto.LogicSigAccount) error {
-	err := lsa.Ed25519AppendMultisigSignature(txSigner.Signer)
-	return err
+	return lsa.Ed25519AppendMultisigSignature(txSigner.Signer)
 }
 
 // MultiSigEd25519AccountTransactionSigner is a TransactionSigner that can sign
@@ -119,47 +114,34 @@ type MultiSigEd25519AccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the Ed25519Signer.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		var unmergedStxs [][]byte
-		for _, sgnr := range txSigner.Signers {
-			_, unmergedStxBytes, err := crypto.Ed25519SignMultisigTransaction(sgnr, txSigner.Msig, txGroup[pos])
-			if err != nil {
-				return nil, err
-			}
-
-			unmergedStxs = append(unmergedStxs, unmergedStxBytes)
-		}
-
-		if len(txSigner.Signers) > 1 {
-			_, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
-			if err != nil {
-				return nil, err
-			}
-
-			stxs[i] = stxBytes
-		} else {
-			stxs[i] = unmergedStxs[0]
-		}
+	if len(txSigner.Signers) == 0 {
+		return nil, errNoMultisigSigners
 	}
 
-	return stxs, nil
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		unmergedStxs := make([][]byte, len(txSigner.Signers))
+		for i, sgnr := range txSigner.Signers {
+			stxBytes, err := ed25519SignMultisigTransaction(sgnr, txSigner.Msig, tx)
+			if err != nil {
+				return nil, err
+			}
+
+			unmergedStxs[i] = stxBytes
+		}
+
+		if len(unmergedStxs) == 1 {
+			return unmergedStxs[0], nil
+		}
+
+		_, stxBytes, err := crypto.MergeMultisigTransactions(unmergedStxs...)
+		return stxBytes, err
+	})
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(MultiSigEd25519AccountTransactionSigner); ok {
-		otherJSON, err := json.Marshal(castedSigner.Msig)
-		if err != nil {
-			return false
-		}
-
-		selfJSON, err := json.Marshal(txSigner.Msig)
-		if err != nil {
-			return false
-		}
-
-		if string(otherJSON) != string(selfJSON) {
+		if !equalBySerialization(txSigner.Msig, castedSigner.Msig) {
 			return false
 		}
 
@@ -169,6 +151,12 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 
 		for idx, sgnr := range txSigner.Signers {
 			otherSgnr := castedSigner.Signers[idx]
+			if sgnr == nil || otherSgnr == nil {
+				if sgnr != otherSgnr {
+					return false
+				}
+				continue
+			}
 			if sgnr.Ed25519PublicKey() != otherSgnr.Ed25519PublicKey() {
 				return false
 			}
@@ -183,6 +171,9 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 // program will have the authority to sign transactions on behalf of the signing
 // account, called the delegating account.
 func (txSigner MultiSigEd25519AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
+	if len(txSigner.Signers) == 0 {
+		return crypto.LogicSigAccount{}, errNoMultisigSigners
+	}
 	firstSigner := txSigner.Signers[0]
 	lsa, err = crypto.Ed25519MakeLogicSigAccountDelegatedMsig(program, args, txSigner.Msig, firstSigner)
 	if err != nil {
@@ -205,33 +196,15 @@ type LogicSigAccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the private key of the account.
 func (txSigner LogicSigAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignLogicSigAccountTransaction(txSigner.LogicSigAccount, txGroup[pos])
-		if err != nil {
-			return nil, err
-		}
-
-		stxs[i] = stxBytes
-	}
-
-	return stxs, nil
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		return signLogicSigAccountTransaction(txSigner.LogicSigAccount, tx)
+	})
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner LogicSigAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(LogicSigAccountTransactionSigner); ok {
-		otherJSON, err := json.Marshal(castedSigner)
-		if err != nil {
-			return false
-		}
-
-		selfJSON, err := json.Marshal(txSigner)
-		if err != nil {
-			return false
-		}
-
-		return string(otherJSON) == string(selfJSON)
+		return equalBySerialization(txSigner, castedSigner)
 	}
 	return false
 }
@@ -244,17 +217,9 @@ type PQAccountTransactionSigner struct {
 
 // SignTransactions signs the provided transactions with the PQSigner signer.
 func (txSigner PQAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		_, stxBytes, err := crypto.SignPQAccountTransaction(txSigner.Signer, txGroup[pos])
-		if err != nil {
-			return nil, err
-		}
-
-		stxs[i] = stxBytes
-	}
-
-	return stxs, nil
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		return pqSignTransaction(txSigner.Signer, tx)
+	})
 }
 
 // SignDelegationTo signs a delegation to the given LogicSig program. This
@@ -264,21 +229,25 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 	return crypto.MakeLogicSigAccountDelegatedPQ(program, args, txSigner.Signer)
 }
 
+// equalPQSigners reports whether two PQ signers sign on behalf of the same
+// account.
+//
+// NOTE: Assuming that two signers for the same (scheme, PK) are "equal". The
+// salt, and so the address, is derived from that pair.
+func equalPQSigners(signer, other crypto.PQSigner) bool {
+	if signer == nil || other == nil {
+		return signer == other
+	}
+	if signer.PQScheme() != other.PQScheme() {
+		return false
+	}
+	return bytes.Equal(signer.PQPublicKey(), other.PQPublicKey())
+}
+
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner PQAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(PQAccountTransactionSigner); ok {
-		// NOTE: Assuming that two signers for the same (PK, salt) pair are "equal"
-		if !bytes.Equal(txSigner.Signer.PQPublicKey(), castedSigner.Signer.PQPublicKey()) {
-			return false
-		}
-		txSignerSalt, txSignerSaltErr := crypto.SaltForPQSigner(txSigner.Signer)
-		castedSignerSalt, castedSignerSaltErr := crypto.SaltForPQSigner(castedSigner.Signer)
-		// If both fail then they are the same weird thing
-		if txSignerSaltErr != castedSignerSaltErr {
-			return false
-		}
-		// Otherwise they should have the same salt
-		return txSignerSalt == castedSignerSalt
+		return equalPQSigners(txSigner.Signer, castedSigner.Signer)
 	}
 	return false
 }
@@ -289,18 +258,37 @@ type EmptyTransactionSigner struct{}
 
 // SignTransactions returns SignedTxn bytes but does not sign them.
 func (txSigner EmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
-	stxs := make([][]byte, len(indexesToSign))
-	for i, pos := range indexesToSign {
-		stx := types.SignedTxn{
-			Txn: txGroup[pos],
-		}
-		stxs[i] = msgpack.Encode(&stx)
-	}
-	return stxs, nil
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		return msgpack.Encode(&types.SignedTxn{Txn: tx}), nil
+	})
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner EmptyTransactionSigner) Equals(other TransactionSigner) bool {
 	_, ok := other.(EmptyTransactionSigner)
 	return ok
+}
+
+// PQEmptyTransactionSigner is a TransactionSigner that produces signed transaction
+// objects with an empty post-quantum signature envelope (scheme, salt, and public key populated,
+// but signature bytes empty). This is useful for simulating transactions with the
+// allowEmptySignatures option enabled, allowing algod to charge the post-quantum fee surcharge
+// without paying the computational cost of generating a real post-quantum signature.
+type PQEmptyTransactionSigner struct {
+	Signer crypto.PQSigner
+}
+
+// SignTransactions returns SignedTxn bytes with placeholder PQ signatures.
+func (txSigner PQEmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
+	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
+		return pqSignedTxn(txSigner.Signer, tx, []byte{})
+	})
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner PQEmptyTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(PQEmptyTransactionSigner); ok {
+		return equalPQSigners(txSigner.Signer, castedSigner.Signer)
+	}
+	return false
 }

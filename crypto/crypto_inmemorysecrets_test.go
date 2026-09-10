@@ -61,6 +61,16 @@ func TestSKToInMemorySigner(t *testing.T) {
 	sig, err := sgnr.Ed25519Sign(message)
 	require.NoError(t, err)
 	require.True(t, ed25519.Verify(acct.PublicKey, message, sig))
+
+	// Invalid keys
+	_, err = SKToInMemorySigner(nil)
+	require.ErrorIs(t, err, errInvalidPrivateKey)
+
+	_, err = SKToInMemorySigner(ed25519.PrivateKey(make([]byte, 32)))
+	require.ErrorIs(t, err, errInvalidPrivateKey)
+
+	_, err = SKToInMemorySigner(ed25519.PrivateKey(make([]byte, 65)))
+	require.ErrorIs(t, err, errInvalidPrivateKey)
 }
 
 func TestInMemorySecretsDelegateToEd25519Signer(t *testing.T) {
@@ -79,7 +89,7 @@ func TestInMemorySecretsDelegateToEd25519Signer(t *testing.T) {
 		txid, stx, err := SignTransaction(acct1.PrivateKey, tx)
 		require.NoError(t, err)
 
-		expectedTxid, expectedStx, err := Ed25519SignTransaction(sgnr1, tx)
+		expectedTxid, expectedStx, err := ed25519SignTransaction(sgnr1, tx)
 		require.NoError(t, err)
 		require.Equal(t, expectedTxid, txid)
 		require.Equal(t, expectedStx, stx)
@@ -120,7 +130,7 @@ func TestInMemorySecretsDelegateToEd25519Signer(t *testing.T) {
 		txid, stx, err := SignMultisigTransaction(acct1.PrivateKey, ma, tx)
 		require.NoError(t, err)
 
-		expectedTxid, expectedStx, err := Ed25519SignMultisigTransaction(sgnr1, ma, tx)
+		expectedTxid, expectedStx, err := ed25519SignMultisigTransaction(sgnr1, ma, tx)
 		require.NoError(t, err)
 		require.Equal(t, expectedTxid, txid)
 		require.Equal(t, expectedStx, stx)
@@ -130,13 +140,13 @@ func TestInMemorySecretsDelegateToEd25519Signer(t *testing.T) {
 		maAddr, err := ma.Address()
 		require.NoError(t, err)
 		tx := makeInMemoryTestTxn(maAddr)
-		_, preStx, err := Ed25519SignMultisigTransaction(sgnr1, ma, tx)
+		_, preStx, err := ed25519SignMultisigTransaction(sgnr1, ma, tx)
 		require.NoError(t, err)
 
 		txid, stx, err := AppendMultisigTransaction(acct2.PrivateKey, ma, preStx)
 		require.NoError(t, err)
 
-		expectedTxid, expectedStx, err := Ed25519AppendMultisigTransaction(sgnr2, ma, preStx)
+		expectedTxid, expectedStx, err := ed25519AppendMultisigTransaction(sgnr2, ma, preStx)
 		require.NoError(t, err)
 		require.Equal(t, expectedTxid, txid)
 		require.Equal(t, expectedStx, stx)

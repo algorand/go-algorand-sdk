@@ -35,7 +35,7 @@ func TestMakeEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.Ed25519SignTransaction(account.AsSigner(), tx)
+	expectedSig, err := ed25519SignTransaction(account.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Len(t, sigs, 1)
 	require.Equal(t, sigs[0], expectedSig)
@@ -139,7 +139,111 @@ func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	_, expectedSig, err := crypto.Ed25519SignMultisigTransaction(sgnr1, ma, tx)
+	expectedSig, err := ed25519SignMultisigTransaction(sgnr1, ma, tx)
 	require.NoError(t, err)
 	require.Equal(t, sigs[0], expectedSig)
+}
+
+func TestMultiSigEd25519AccountTransactionSignerEmptySigners(t *testing.T) {
+	ma, _, _, _ := makeTestMultisigAccount(t)
+	txSigner := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: nil}
+
+	// A signer with no keys is misconfigured, so every entry point rejects it
+	// eagerly rather than only once there is a transaction to sign.
+	_, err := txSigner.SignTransactions(nil, nil)
+	require.ErrorIs(t, err, errNoMultisigSigners)
+
+	tx := types.Transaction{}
+	_, err = txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
+	require.ErrorIs(t, err, errNoMultisigSigners)
+
+	_, err = txSigner.SignDelegationTo([]byte{1, 2, 3}, nil)
+	require.ErrorIs(t, err, errNoMultisigSigners)
+}
+
+type mockBasicPQSigner struct {
+	scheme    types.PQScheme
+	publicKey []byte
+}
+
+func (m mockBasicPQSigner) PQSign(toBeSigned []byte) ([]byte, error) {
+	return []byte("sig"), nil
+}
+
+func (m mockBasicPQSigner) PQPublicKey() []byte {
+	return m.publicKey
+}
+
+func (m mockBasicPQSigner) PQScheme() types.PQScheme {
+	return m.scheme
+}
+
+func TestPQAccountTransactionSignerEquals(t *testing.T) {
+	pk := []byte("12345678901234567890123456789012")
+	scheme1 := types.PQScheme{'f', '1'}
+	scheme2 := types.PQScheme{'m', '2'}
+
+	s1 := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
+	s1Same := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
+	sDiffScheme := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme2, publicKey: pk}}
+	sDiffPK := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}}
+
+	require.True(t, s1.Equals(s1Same))
+	require.False(t, s1.Equals(sDiffScheme))
+	require.False(t, s1.Equals(sDiffPK))
+	require.False(t, s1.Equals(EmptyTransactionSigner{}))
+	require.False(t, s1.Equals(PQAccountTransactionSigner{Signer: nil}))
+	require.True(t, (PQAccountTransactionSigner{Signer: nil}).Equals(PQAccountTransactionSigner{Signer: nil}))
+}
+
+func TestPQAccountTransactionSignerNilSigner(t *testing.T) {
+	txSigner := PQAccountTransactionSigner{Signer: nil}
+
+	_, err := txSigner.SignTransactions([]types.Transaction{{}}, []int{0})
+	require.ErrorContains(t, err, "pq signer cannot be nil")
+}
+
+func TestEd25519AccountTransactionSignerEqualsNilSigner(t *testing.T) {
+	account := crypto.GenerateAccount()
+	s1 := Ed25519AccountTransactionSigner{Signer: account.AsSigner()}
+
+	require.True(t, (Ed25519AccountTransactionSigner{Signer: nil}).Equals(Ed25519AccountTransactionSigner{Signer: nil}))
+	require.False(t, s1.Equals(Ed25519AccountTransactionSigner{Signer: nil}))
+	require.False(t, (Ed25519AccountTransactionSigner{Signer: nil}).Equals(s1))
+}
+
+func TestMultiSigEd25519AccountTransactionSignerEqualsNilSigners(t *testing.T) {
+	ma, sgnr1, _, _ := makeTestMultisigAccount(t)
+	s1 := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: []crypto.Ed25519Signer{sgnr1, nil}}
+	s1Same := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: []crypto.Ed25519Signer{sgnr1, nil}}
+	s1Diff := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: []crypto.Ed25519Signer{sgnr1, sgnr1}}
+
+	require.True(t, s1.Equals(s1Same))
+	require.False(t, s1.Equals(s1Diff))
+}
+
+type mockEd25519SignerWithLen struct {
+	sigLen int
+}
+
+func (m mockEd25519SignerWithLen) Ed25519Sign(message []byte) ([]byte, error) {
+	return make([]byte, m.sigLen), nil
+}
+
+func (m mockEd25519SignerWithLen) Ed25519PublicKey() crypto.Ed25519PublicKey {
+	return crypto.Ed25519PublicKey{}
+}
+
+func TestEd25519SignatureLengthValidation(t *testing.T) {
+	tx := types.Transaction{}
+
+	// Oversized signature (65 bytes) must be rejected
+	signerOversized := Ed25519AccountTransactionSigner{Signer: mockEd25519SignerWithLen{sigLen: 65}}
+	_, _, err := SignTransaction(signerOversized, tx)
+	require.ErrorIs(t, err, crypto.ErrInvalidSignatureReturned)
+
+	// Undersized signature (63 bytes) must be rejected
+	signerUndersized := Ed25519AccountTransactionSigner{Signer: mockEd25519SignerWithLen{sigLen: 63}}
+	_, _, err = SignTransaction(signerUndersized, tx)
+	require.ErrorIs(t, err, crypto.ErrInvalidSignatureReturned)
 }

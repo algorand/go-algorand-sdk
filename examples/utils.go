@@ -214,7 +214,7 @@ func DeployApp(algodClient *algod.Client, creator crypto.Account) uint64 {
 		log.Fatalf("failed to make txn: %s", err)
 	}
 
-	txid, stx, err := crypto.Ed25519SignTransaction(creator.AsSigner(), txn)
+	txid, stx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: creator.AsSigner()}, txn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}

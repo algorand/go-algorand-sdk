@@ -249,4 +249,8 @@ var PQSchemeFalcon1024 = PQScheme{'f', '1'}
 // PQAddressSalt is a 1-byte salt that selects an address for a post-quantum
 // public key when deriving a 32-byte address; it is public and included in the
 // address derivation.
+//
+// The SDK only ever derives and signs for the canonical salt of a (scheme,
+// public key) pair: the lowest one whose address is not a point on the ed25519
+// curve. See crypto.PQAddress.
 type PQAddressSalt uint8

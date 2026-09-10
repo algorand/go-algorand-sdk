@@ -45,10 +45,14 @@ func GenerateAddressFromSK(sk []byte) (types.Address, error) {
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
+	if len(sk) != ed25519.PrivateKeySize {
+		return nil, errInvalidPrivateKey
+	}
+
 	var pk Ed25519PublicKey
 	n := copy(pk[:], sk.Public().(ed25519.PublicKey))
 	if n != ed25519.PublicKeySize {
-		return inMemoryEd25519Signer{}, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
+		return nil, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
 	}
 
 	return inMemoryEd25519Signer{sk: sk, pk: Ed25519PublicKey(pk)}, nil
@@ -59,15 +63,15 @@ func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
 // If the SK's corresponding address is different than the txn sender's, the SK's
 // corresponding address will be assigned as AuthAddr
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519SignTransaction instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.SignTransaction with transaction.Ed25519AccountTransactionSigner instead.
 func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519SignTransaction(sgnr, tx)
+	return ed25519SignTransaction(sgnr, tx)
 }
 
 // SignBytes signs the bytes and returns the signature
@@ -101,15 +105,15 @@ func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error)
 // private key, returning the bytes of a signed transaction with the multisig field
 // partially populated, ready to be passed to other multisig signers to sign or broadcast.
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519SignMultisigTransaction instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.SignTransaction with transaction.MultiSigEd25519AccountTransactionSigner instead.
 func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519SignMultisigTransaction(sgnr, ma, tx)
+	return ed25519SignMultisigTransaction(sgnr, ma, tx)
 }
 
 // AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
@@ -130,15 +134,15 @@ func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error
 // While we could compute the multisig preimage from the multisig blob, we ask the caller
 // to pass it back in, to explicitly check that they know who they are signing as.
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519AppendMultisigTransaction instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.AppendSignature instead.
 func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519AppendMultisigTransaction(sgnr, ma, preStxBytes)
+	return ed25519AppendMultisigTransaction(sgnr, ma, preStxBytes)
 }
 
 // TealSign creates a signature compatible with ed25519verify opcode from contract address

@@ -9,7 +9,9 @@ The Algorand golang SDK provides:
 - Standalone functionality for interacting with the Algorand protocol, including transaction signing, message encoding, etc.
 
 > [!NOTE]
-> Support for falcon signing and verification is gated under the `falcon` tag since it requires using the [algorand/falcon](https://github.com/algorand/falcon) cgo library. An SDK built without `falcon` can still use `SignPQAccountTransaction` and `MakeLogicSigAccountDelegatedPQ` when given a `PQSigner`implementation.
+> Support for falcon signing and verification is gated under the `falcon` tag since it requires using the [algorand/falcon](https://github.com/algorand/falcon) cgo library. An SDK built without `falcon` can still use `transaction.SignTransaction` with a `PQAccountTransactionSigner`, and `crypto.MakeLogicSigAccountDelegatedPQ`, when given a `PQSigner` implementation.
+>
+> Two further notes on post-quantum support without the `falcon` tag: `crypto.VerifyLogicSig` only checks the delegating address of a PQ-delegated LogicSig, since verifying the delegation signature itself needs the falcon library; and `transaction.PQEmptyTransactionSigner` produces a PQ envelope with no signature bytes, which lets `algod` charge the post-quantum fee surcharge when simulating with `allowEmptySignatures` without the cost of generating a real signature.
 
 ## Documentation
 
