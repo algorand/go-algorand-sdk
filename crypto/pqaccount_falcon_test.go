@@ -190,8 +190,8 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	tampered := lsa.Lsig
 	tampered.Logic = append([]byte{}, program...)
 	tampered.Logic[3] = 2
-	toBeSigned = pqsigProgramToSign(addr, tampered.Logic)
-	require.False(t, VerifyPQSig(toBeSigned, tampered.PQsig))
+	tamperedToBeSigned := pqsigProgramToSign(addr, tampered.Logic)
+	require.False(t, VerifyPQSig(tamperedToBeSigned, tampered.PQsig))
 
 	// VerifyLogicSig checks that the delegating singleSigner matches the PQ signature
 	require.True(t, VerifyLogicSig(lsa.Lsig, addr))
@@ -199,12 +199,14 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	require.False(t, VerifyLogicSig(lsa.Lsig, wrongAddr))
 	require.False(t, VerifyLogicSig(lsa.Lsig, types.Address{}))
 
-	// VerifyPQSig rejects mismatched scheme
+	// VerifyPQSig rejects a mismatched scheme, even though the signature is
+	// otherwise valid for toBeSigned.
 	wrongSchemeSig := lsa.Lsig.PQsig
 	wrongSchemeSig.Scheme = types.PQScheme{'x', 'x'}
 	require.False(t, VerifyPQSig(toBeSigned, wrongSchemeSig))
 
-	// VerifyPQSig rejects wrong public key length
+	// Likewise for a public key that is not falcon1024-sized: without the
+	// length check, converting it to a falcon.PublicKey array would panic.
 	wrongLenSig := lsa.Lsig.PQsig
 	wrongLenSig.PublicKey = make([]byte, 32)
 	require.False(t, VerifyPQSig(toBeSigned, wrongLenSig))
