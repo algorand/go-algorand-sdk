@@ -55,7 +55,7 @@ func TestMakeFalcon1024AccountTransactionSigner(t *testing.T) {
 	require.Equal(t, tx, stx.Txn)
 	require.Equal(t, types.Address{}, stx.AuthAddr)
 	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
-	require.True(t, crypto.VerifyPQSig(transactionBytesToSign(tx), stx.PQsig))
+	require.True(t, crypto.VerifyPQSig(crypto.TransactionBytesToSign(tx), stx.PQsig))
 }
 
 func TestMakeFalcon1024AccountTransactionSignerWithAuthAddr(t *testing.T) {

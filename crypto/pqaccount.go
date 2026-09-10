@@ -77,7 +77,7 @@ func PQSignerAddress(signer PQSigner) (addr types.Address, err error) {
 // the canonical one will be calculated.
 func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
 	if sgnr == nil {
-		return 0, errors.New("pq signer cannot be nil")
+		return 0, ErrNilPQSigner
 	}
 	if salted, ok := sgnr.(PQSalted); ok {
 		return salted.PQSalt(), nil
@@ -97,9 +97,13 @@ func canonicalSaltForPQPK(pk []byte, scheme types.PQScheme) (types.PQAddressSalt
 	return 0, fmt.Errorf("no valid salt with an address outside the ed25519 curve exists for %x", pk)
 }
 
-// pqSig assembles the PQSig envelope that identifies the signer's account and
-// carries the given signature bytes.
-func pqSig(sgnr PQSigner, signature []byte) (sig types.PQSig, addr types.Address, err error) {
+// PQSigFor assembles the PQSig envelope that identifies the signer's account
+// and carries the given signature bytes, alongside the address of that account.
+//
+// The signature is not checked, and may be empty: callers that need an envelope
+// without a real signature (to size or simulate a transaction, say) can pass
+// nil.
+func PQSigFor(sgnr PQSigner, signature []byte) (sig types.PQSig, addr types.Address, err error) {
 	salt, err := SaltForPQSigner(sgnr)
 	if err != nil {
 		return
@@ -126,7 +130,7 @@ func MakeLogicSigAccountDelegatedPQ(program []byte, args [][]byte, sgnr PQSigner
 
 	// the delegation signature commits to the address it delegates from, so the
 	// envelope is assembled first and its signature filled in afterwards
-	pqsig, addr, err := pqSig(sgnr, nil)
+	pqsig, addr, err := PQSigFor(sgnr, nil)
 	if err != nil {
 		return
 	}

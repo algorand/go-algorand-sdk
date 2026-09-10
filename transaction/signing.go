@@ -3,15 +3,12 @@ package transaction
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
-
-var errInvalidSignatureReturned = errors.New("ed25519 signer returned an invalid signature")
 
 // SignTransaction signs one transaction with the provided TransactionSigner.
 func SignTransaction(signer TransactionSigner, tx types.Transaction) (txid string, stxBytes []byte, err error) {
@@ -42,11 +39,6 @@ func signTransactions(txGroup []types.Transaction, indexesToSign []int, signOne 
 	return stxs, nil
 }
 
-// transactionBytesToSign returns the byte form of the tx that we actually sign.
-func transactionBytesToSign(tx types.Transaction) []byte {
-	return append([]byte("TX"), msgpack.Encode(tx)...)
-}
-
 // encodeSignedTxn encodes the SignedTxn, assigning the signing account as the
 // AuthAddr when it is not the sender of the transaction.
 func encodeSignedTxn(stx types.SignedTxn, signerAddress types.Address) []byte {
@@ -72,24 +64,8 @@ func equalBySerialization(signer, other interface{}) bool {
 	return bytes.Equal(signerJSON, otherJSON)
 }
 
-// ed25519Signature signs the given bytes and returns the result as a
-// types.Signature, erroring out if the signer returned a signature of an
-// unexpected length.
-func ed25519Signature(signer crypto.Ed25519Signer, toBeSigned []byte) (sig types.Signature, err error) {
-	signature, err := signer.Ed25519Sign(toBeSigned)
-	if err != nil {
-		return
-	}
-
-	if len(signature) != len(sig) {
-		return sig, errInvalidSignatureReturned
-	}
-	copy(sig[:], signature)
-	return
-}
-
 func ed25519SignTransaction(signer crypto.Ed25519Signer, tx types.Transaction) ([]byte, error) {
-	sig, err := ed25519Signature(signer, transactionBytesToSign(tx))
+	sig, err := crypto.Ed25519RawSignature(signer, crypto.TransactionBytesToSign(tx))
 	if err != nil {
 		return nil, err
 	}
@@ -102,28 +78,10 @@ func ed25519SignMultisigTransaction(signer crypto.Ed25519Signer, account crypto.
 		return nil, err
 	}
 
-	publicKey := signer.Ed25519PublicKey()
-	signerIndex := -1
-	msig := types.MultisigSig{
-		Version:   account.Version,
-		Threshold: account.Threshold,
-		Subsigs:   make([]types.MultisigSubsig, len(account.Pks)),
-	}
-	for i, key := range account.Pks {
-		msig.Subsigs[i].Key = append([]byte(nil), key...)
-		if bytes.Equal(publicKey[:], key) {
-			signerIndex = i
-		}
-	}
-	if signerIndex == -1 {
-		return nil, errors.New("secret key has no corresponding public identity in multisig preimage")
-	}
-
-	sig, err := ed25519Signature(signer, transactionBytesToSign(tx))
+	msig, err := crypto.Ed25519MultisigSigWith(signer, account, crypto.TransactionBytesToSign(tx))
 	if err != nil {
 		return nil, err
 	}
-	msig.Subsigs[signerIndex].Sig = sig
 
 	address, err := account.Address()
 	if err != nil {
@@ -155,30 +113,20 @@ func signLogicSigAccountTransaction(account crypto.LogicSigAccount, tx types.Tra
 // The signature may be empty, which produces an envelope suitable for
 // simulating transactions with the allowEmptySignatures option enabled.
 func pqSignedTxn(signer crypto.PQSigner, tx types.Transaction, signature []byte) ([]byte, error) {
-	salt, err := crypto.SaltForPQSigner(signer)
+	pqsig, address, err := crypto.PQSigFor(signer, signature)
 	if err != nil {
 		return nil, err
 	}
 
-	publicKey, scheme := signer.PQPublicKey(), signer.PQScheme()
-	stx := types.SignedTxn{
-		Txn: tx,
-		PQsig: types.PQSig{
-			Scheme:    scheme,
-			Salt:      salt,
-			PublicKey: publicKey,
-			Signature: signature,
-		},
-	}
-	return encodeSignedTxn(stx, crypto.PQAddress(publicKey, scheme, salt)), nil
+	return encodeSignedTxn(types.SignedTxn{Txn: tx, PQsig: pqsig}, address), nil
 }
 
 func pqSignTransaction(signer crypto.PQSigner, tx types.Transaction) ([]byte, error) {
 	if signer == nil {
-		return nil, errors.New("pq signer cannot be nil")
+		return nil, crypto.ErrNilPQSigner
 	}
 
-	signature, err := signer.PQSign(transactionBytesToSign(tx))
+	signature, err := signer.PQSign(crypto.TransactionBytesToSign(tx))
 	if err != nil {
 		return nil, err
 	}

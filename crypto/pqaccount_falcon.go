@@ -139,3 +139,10 @@ func VerifyPQSig(toBeSigned []byte, pqsig types.PQSig) bool {
 	sig := falcon.CompressedSignature(pqsig.Signature)
 	return pk.Verify(sig, toBeSigned) == nil
 }
+
+func init() {
+	// with falcon available, VerifyLogicSig can cryptographically verify the
+	// delegation signature of a PQ-delegated LogicSig instead of only checking
+	// the delegating address
+	verifyPQDelegation = VerifyPQSig
+}

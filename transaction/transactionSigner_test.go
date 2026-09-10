@@ -148,18 +148,17 @@ func TestMultiSigEd25519AccountTransactionSignerEmptySigners(t *testing.T) {
 	ma, _, _, _ := makeTestMultisigAccount(t)
 	txSigner := MultiSigEd25519AccountTransactionSigner{Msig: ma, Signers: nil}
 
-	stxs, err := txSigner.SignTransactions(nil, nil)
-	require.NoError(t, err)
-	require.Empty(t, stxs)
+	// A signer with no keys is misconfigured, so every entry point rejects it
+	// eagerly rather than only once there is a transaction to sign.
+	_, err := txSigner.SignTransactions(nil, nil)
+	require.ErrorIs(t, err, errNoMultisigSigners)
 
 	tx := types.Transaction{}
 	_, err = txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "multisig signer has no signing keys")
+	require.ErrorIs(t, err, errNoMultisigSigners)
 
 	_, err = txSigner.SignDelegationTo([]byte{1, 2, 3}, nil)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "multisig signer has no signing keys")
+	require.ErrorIs(t, err, errNoMultisigSigners)
 }
 
 type mockBasicPQSigner struct {
@@ -252,10 +251,10 @@ func TestEd25519SignatureLengthValidation(t *testing.T) {
 	// Oversized signature (65 bytes) must be rejected
 	signerOversized := Ed25519AccountTransactionSigner{Signer: mockEd25519SignerWithLen{sigLen: 65}}
 	_, _, err := SignTransaction(signerOversized, tx)
-	require.ErrorIs(t, err, errInvalidSignatureReturned)
+	require.ErrorIs(t, err, crypto.ErrInvalidSignatureReturned)
 
 	// Undersized signature (63 bytes) must be rejected
 	signerUndersized := Ed25519AccountTransactionSigner{Signer: mockEd25519SignerWithLen{sigLen: 63}}
 	_, _, err = SignTransaction(signerUndersized, tx)
-	require.ErrorIs(t, err, errInvalidSignatureReturned)
+	require.ErrorIs(t, err, crypto.ErrInvalidSignatureReturned)
 }

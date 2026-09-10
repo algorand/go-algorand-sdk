@@ -82,7 +82,7 @@ func TestSignFalcon1024AccountSigner(t *testing.T) {
 	require.Equal(t, pqa.Address(), addr)
 	require.Equal(t, types.PQSchemeFalcon1024, sgnr.PQScheme())
 
-	toBeSigned := rawTransactionBytesToSign(makeTestPaymentTxn(t, addr))
+	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, addr))
 	pqsig, err := signWith(sgnr, toBeSigned)
 	require.NoError(t, err)
 	require.True(t, VerifyPQSig(toBeSigned, pqsig))
@@ -97,7 +97,7 @@ func signWith(sgnr PQSigner, toBeSigned []byte) (types.PQSig, error) {
 	if err != nil {
 		return types.PQSig{}, err
 	}
-	pqsig, _, err := pqSig(sgnr, signature)
+	pqsig, _, err := PQSigFor(sgnr, signature)
 	return pqsig, err
 }
 
@@ -161,7 +161,7 @@ func TestSaltedSignerOnlyDiffersInSaltAndAddress(t *testing.T) {
 	require.Equal(t, PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024, salt), saltedAddr)
 
 	// Signatures still verify, they are made by the same key.
-	toBeSigned := rawTransactionBytesToSign(makeTestPaymentTxn(t, saltedAddr))
+	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, saltedAddr))
 	pqsig, err := signWith(saltedSgnr, toBeSigned)
 	require.NoError(t, err)
 	require.Equal(t, types.PQAddressSalt(99), pqsig.Salt)

@@ -35,6 +35,40 @@ func TestSignFalcon1024DelegatedPaymentGolden(t *testing.T) {
 	require.Equal(t, golden, base64.StdEncoding.EncodeToString(stxBytes))
 }
 
+// With falcon available, VerifyLogicSig cryptographically verifies the PQ
+// delegation signature rather than only checking the delegating address.
+func TestVerifyLogicSigFalcon1024Delegation(t *testing.T) {
+	pqa := getFalcon1024GoldenAccount(t)
+
+	program := []byte{1, 32, 1, 1, 34}
+	lsa, err := MakeLogicSigAccountDelegatedPQ(program, nil, pqa.AsSigner())
+	require.NoError(t, err)
+	require.True(t, VerifyLogicSig(lsa.Lsig, pqa.Address()))
+
+	// A delegation signature over a different program must be rejected, even
+	// though the envelope still names the right delegating account.
+	otherProgram := []byte{1, 32, 1, 2, 34}
+	otherLsa, err := MakeLogicSigAccountDelegatedPQ(otherProgram, nil, pqa.AsSigner())
+	require.NoError(t, err)
+
+	swapped := lsa.Lsig
+	swapped.PQsig.Signature = otherLsa.Lsig.PQsig.Signature
+	require.False(t, VerifyLogicSig(swapped, pqa.Address()))
+
+	// So must a corrupted one.
+	tampered := lsa.Lsig
+	tampered.PQsig.Signature = append([]byte(nil), lsa.Lsig.PQsig.Signature...)
+	tampered.PQsig.Signature[len(tampered.PQsig.Signature)-1] ^= 0xff
+	require.False(t, VerifyLogicSig(tampered, pqa.Address()))
+
+	// Signing gates on VerifyLogicSig, so a bad delegation cannot be sent.
+	_, _, err = SignLogicSigAccountTransaction(
+		LogicSigAccount{Lsig: tampered},
+		falcon1024GoldenTxn(t, pqa.Address()),
+	)
+	require.ErrorIs(t, err, errLsigInvalidSignature)
+}
+
 // Based on pqRekeyedDelegatedPayment.json.
 func TestSignFalcon1024RekeyedDelegatedPaymentGolden(t *testing.T) {
 	pqa := getFalcon1024GoldenAccount(t)

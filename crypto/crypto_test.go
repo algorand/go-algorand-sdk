@@ -81,7 +81,7 @@ func TestSignMultisigTransaction(t *testing.T) {
 	require.Equal(t, types.Address{}, stx.AuthAddr)
 	require.Equal(t, tx, stx.Txn)
 
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+	bytesToSign := TransactionBytesToSign(stx.Txn)
 	verified := VerifyMultisig(fromAddr, bytesToSign, stx.Msig)
 	require.False(t, verified) // not enough signatures
 }
@@ -124,7 +124,7 @@ func TestSignMultisigTransactionWithAuthAddr(t *testing.T) {
 	require.Equal(t, multisigAddr, stx.AuthAddr)
 	require.Equal(t, tx, stx.Txn)
 
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+	bytesToSign := TransactionBytesToSign(stx.Txn)
 	verified := VerifyMultisig(multisigAddr, bytesToSign, stx.Msig)
 	require.False(t, verified) // not enough signatures
 }
@@ -143,7 +143,7 @@ func TestAppendMultisigTransaction(t *testing.T) {
 	var stx types.SignedTxn
 	err = msgpack.Decode(txBytes, &stx)
 	require.NoError(t, err)
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+	bytesToSign := TransactionBytesToSign(stx.Txn)
 
 	fromAddr, err := ma.Address()
 	require.NoError(t, err)
@@ -175,7 +175,7 @@ func TestAppendMultisigTransactionWithAuthAddr(t *testing.T) {
 	var stx types.SignedTxn
 	err = msgpack.Decode(txBytes, &stx)
 	require.NoError(t, err)
-	bytesToSign := rawTransactionBytesToSign(stx.Txn)
+	bytesToSign := TransactionBytesToSign(stx.Txn)
 
 	multisigAddr, err := ma.Address()
 	require.NoError(t, err)
@@ -461,7 +461,7 @@ func TestLogicSigMultisigLegacy(t *testing.T) {
 		},
 	}
 	require.False(t, VerifyLogicSig(lsig, sender))
-	singleSig, err := ed25519SignatureFor(sgnr2, programToSign(logic))
+	singleSig, err := Ed25519RawSignature(sgnr2, programToSign(logic))
 	require.NoError(t, err)
 	lsig.Msig.Subsigs[1].Sig = singleSig
 	require.True(t, VerifyLogicSig(lsig, sender))
@@ -879,11 +879,11 @@ func (m mockEd25519SignerWithLen) Ed25519PublicKey() Ed25519PublicKey {
 func TestEd25519SignatureForLengthValidation(t *testing.T) {
 	// Oversized signature (65 bytes) must be rejected
 	sgnrOversized := mockEd25519SignerWithLen{sigLen: 65}
-	_, err := ed25519SignatureFor(sgnrOversized, []byte("test"))
-	require.ErrorIs(t, err, errInvalidSignatureReturned)
+	_, err := Ed25519RawSignature(sgnrOversized, []byte("test"))
+	require.ErrorIs(t, err, ErrInvalidSignatureReturned)
 
 	// Undersized signature (63 bytes) must be rejected
 	sgnrUndersized := mockEd25519SignerWithLen{sigLen: 63}
-	_, err = ed25519SignatureFor(sgnrUndersized, []byte("test"))
-	require.ErrorIs(t, err, errInvalidSignatureReturned)
+	_, err = Ed25519RawSignature(sgnrUndersized, []byte("test"))
+	require.ErrorIs(t, err, ErrInvalidSignatureReturned)
 }
