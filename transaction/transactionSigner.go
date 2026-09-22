@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"bytes"
 	"errors"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
@@ -64,13 +63,7 @@ func (txSigner Ed25519AccountTransactionSigner) SignTransactions(txGroup []types
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(Ed25519AccountTransactionSigner); ok {
-		if txSigner.Signer == nil || castedSigner.Signer == nil {
-			return txSigner.Signer == castedSigner.Signer
-		}
-		pk1 := txSigner.Signer.Ed25519PublicKey()
-		pk2 := castedSigner.Signer.Ed25519PublicKey()
-		// NOTE: Assuming that two signers for the same PK are "equal"
-		return pk1 == pk2
+		return equalSignerImplementations(txSigner.Signer, castedSigner.Signer)
 	}
 	return false
 }
@@ -150,14 +143,7 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) Equals(other Transaction
 		}
 
 		for idx, sgnr := range txSigner.Signers {
-			otherSgnr := castedSigner.Signers[idx]
-			if sgnr == nil || otherSgnr == nil {
-				if sgnr != otherSgnr {
-					return false
-				}
-				continue
-			}
-			if sgnr.Ed25519PublicKey() != otherSgnr.Ed25519PublicKey() {
+			if !equalSignerImplementations(sgnr, castedSigner.Signers[idx]) {
 				return false
 			}
 		}
@@ -229,19 +215,10 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 	return crypto.MakeLogicSigAccountDelegatedPQ(program, args, txSigner.Signer)
 }
 
-// equalPQSigners reports whether two PQ signers sign on behalf of the same
-// account.
-//
-// NOTE: Assuming that two signers for the same (scheme, PK) are "equal". The
-// salt, and so the address, is derived from that pair.
+// equalPQSigners reports whether two PQ signer interface values refer to the
+// same signer implementation.
 func equalPQSigners(signer, other crypto.PQSigner) bool {
-	if signer == nil || other == nil {
-		return signer == other
-	}
-	if signer.PQScheme() != other.PQScheme() {
-		return false
-	}
-	return bytes.Equal(signer.PQPublicKey(), other.PQPublicKey())
+	return equalSignerImplementations(signer, other)
 }
 
 // Equals returns true if the other TransactionSigner equals this one.

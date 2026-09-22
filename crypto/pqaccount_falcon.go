@@ -62,7 +62,7 @@ func (sgnr basicFalcon1024AccountSigner) PQScheme() types.PQScheme {
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func (pqa Falcon1024Account) AsSigner() PQSigner {
-	return basicFalcon1024AccountSigner{
+	return &basicFalcon1024AccountSigner{
 		Account: pqa,
 	}
 }

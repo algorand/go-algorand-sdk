@@ -55,7 +55,7 @@ func SKToInMemorySigner(sk ed25519.PrivateKey) (Ed25519Signer, error) {
 		return nil, fmt.Errorf("generated public key has the wrong size, expected %d, got %d", ed25519.PublicKeySize, n)
 	}
 
-	return inMemoryEd25519Signer{sk: sk, pk: Ed25519PublicKey(pk)}, nil
+	return &inMemoryEd25519Signer{sk: sk, pk: Ed25519PublicKey(pk)}, nil
 }
 
 // SignTransaction accepts a private key and a transaction, and returns the

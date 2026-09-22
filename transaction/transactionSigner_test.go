@@ -182,13 +182,16 @@ func TestPQAccountTransactionSignerEquals(t *testing.T) {
 	pk := []byte("12345678901234567890123456789012")
 	scheme1 := types.PQScheme{'f', '1'}
 	scheme2 := types.PQScheme{'m', '2'}
+	signer := &mockBasicPQSigner{scheme: scheme1, publicKey: pk}
 
-	s1 := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
-	s1Same := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
-	sDiffScheme := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme2, publicKey: pk}}
-	sDiffPK := PQAccountTransactionSigner{Signer: mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}}
+	s1 := PQAccountTransactionSigner{Signer: signer}
+	s1Same := PQAccountTransactionSigner{Signer: signer}
+	sSameAccount := PQAccountTransactionSigner{Signer: &mockBasicPQSigner{scheme: scheme1, publicKey: pk}}
+	sDiffScheme := PQAccountTransactionSigner{Signer: &mockBasicPQSigner{scheme: scheme2, publicKey: pk}}
+	sDiffPK := PQAccountTransactionSigner{Signer: &mockBasicPQSigner{scheme: scheme1, publicKey: []byte("other-pk-1234567890123456789012")}}
 
 	require.True(t, s1.Equals(s1Same))
+	require.False(t, s1.Equals(sSameAccount))
 	require.False(t, s1.Equals(sDiffScheme))
 	require.False(t, s1.Equals(sDiffPK))
 	require.False(t, s1.Equals(EmptyTransactionSigner{}))

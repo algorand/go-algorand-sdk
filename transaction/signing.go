@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
@@ -62,6 +63,21 @@ func equalBySerialization(signer, other interface{}) bool {
 	}
 
 	return bytes.Equal(signerJSON, otherJSON)
+}
+
+// equalSignerImplementations reports whether two signer interface values refer
+// to the same implementation. In particular, pointers are compared by identity
+// rather than by the account they sign for.
+func equalSignerImplementations(signer, other interface{}) bool {
+	if signer == nil || other == nil {
+		return signer == nil && other == nil
+	}
+
+	signerType := reflect.TypeOf(signer)
+	if signerType != reflect.TypeOf(other) || !signerType.Comparable() {
+		return false
+	}
+	return signer == other
 }
 
 func ed25519SignTransaction(signer crypto.Ed25519Signer, tx types.Transaction) ([]byte, error) {

@@ -81,7 +81,7 @@ func AccountFromPrivateKey(sk ed25519.PrivateKey) (account Account, err error) {
 //
 // Panics if the private key is not well-formed.
 func (acc Account) AsSigner() Ed25519Signer {
-	return inMemoryEd25519Signer{
+	return &inMemoryEd25519Signer{
 		sk: acc.PrivateKey,
 		pk: Ed25519PublicKey(acc.PrivateKey.Public().(ed25519.PublicKey)),
 	}

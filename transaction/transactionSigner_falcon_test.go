@@ -117,7 +117,8 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 	require.Equal(t, canonicalSalt, stx.PQsig.Salt)
 	require.Equal(t, pqa.PublicKey[:], stx.PQsig.PublicKey)
 	require.Empty(t, stx.PQsig.Signature)
-	require.True(t, txSigner.Equals(PQEmptyTransactionSigner{Signer: pqa.AsSigner()}))
+	require.True(t, txSigner.Equals(txSigner))
+	require.False(t, txSigner.Equals(PQEmptyTransactionSigner{Signer: pqa.AsSigner()}))
 }
 
 // The following golden tests are based on the PQ (Falcon-1024) fixtures from
