@@ -38,3 +38,15 @@ func TestBlockFromBase64String(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, vbl.CurrentProtocol, protocol)
 }
+
+func TestLogicSigBlank(t *testing.T) {
+	require.True(t, (LogicSig{}).Blank())
+
+	require.False(t, (LogicSig{Args: [][]byte{{1}}}).Blank())
+	require.False(t, (LogicSig{Logic: []byte{1}}).Blank())
+	require.False(t, (LogicSig{Sig: Signature{1}}).Blank())
+	require.False(t, (LogicSig{Msig: MultisigSig{Version: 1}}).Blank())
+	require.False(t, (LogicSig{LMsig: MultisigSig{Version: 1}}).Blank())
+	require.False(t, (LogicSig{PQsig: PQSig{Scheme: PQSchemeFalcon1024}}).Blank())
+	require.False(t, (LogicSig{PQsig: PQSig{Signature: []byte{1}}}).Blank())
+}

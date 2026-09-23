@@ -295,10 +295,47 @@ func TestGatherSignatures(t *testing.T) {
 	txWithSigners, _ := atc.BuildGroup()
 	require.Equal(t, types.Digest{}, txWithSigners[0].Txn.Group)
 
-	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
+	expectedSig, err := ed25519SignTransaction(account.AsSigner(), tx)
 	require.NoError(t, err)
 	require.Equal(t, len(sigs[0]), len(expectedSig))
 	require.Equal(t, sigs[0], expectedSig)
+}
+
+type trackedEd25519Signer struct {
+	publicKey crypto.Ed25519PublicKey
+	signCount int
+}
+
+func (s *trackedEd25519Signer) Ed25519Sign([]byte) ([]byte, error) {
+	s.signCount++
+	return make([]byte, 64), nil
+}
+
+func (s *trackedEd25519Signer) Ed25519PublicKey() crypto.Ed25519PublicKey {
+	return s.publicKey
+}
+
+func TestGatherSignaturesDoesNotCoalesceDistinctSameKeySigners(t *testing.T) {
+	var atc AtomicTransactionComposer
+	publicKey := crypto.Ed25519PublicKey{1}
+	first := &trackedEd25519Signer{publicKey: publicKey}
+	second := &trackedEd25519Signer{publicKey: publicKey}
+	firstTxSigner := Ed25519AccountTransactionSigner{Signer: first}
+	require.True(t, firstTxSigner.Equals(firstTxSigner))
+	require.False(t, firstTxSigner.Equals(Ed25519AccountTransactionSigner{Signer: second}))
+
+	for _, signer := range []crypto.Ed25519Signer{first, second} {
+		err := atc.AddTransaction(TransactionWithSigner{
+			Txn:    types.Transaction{Header: types.Header{Sender: types.Address(publicKey)}},
+			Signer: Ed25519AccountTransactionSigner{Signer: signer},
+		})
+		require.NoError(t, err)
+	}
+
+	_, err := atc.GatherSignatures()
+	require.NoError(t, err)
+	require.Equal(t, 1, first.signCount)
+	require.Equal(t, 1, second.signCount)
 }
 
 func TestATCWithRejectVersion(t *testing.T) {
