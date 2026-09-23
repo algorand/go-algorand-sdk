@@ -560,10 +560,7 @@ var verifyPQDelegation = func(_ []byte, _ types.PQSig) bool {
 // lsigSignatures reports which of the mutually exclusive delegation signatures
 // the LogicSig carries. It errors out if more than one of them is present.
 func lsigSignatures(lsig types.LogicSig) (hasSig, hasMsig, hasLMsig, hasPQsig bool, err error) {
-	hasSig, hasMsig, hasLMsig, count := lsig.SignatureCount()
-	if hasPQsig = !lsig.PQsig.Blank(); hasPQsig {
-		count++
-	}
+	hasSig, hasMsig, hasLMsig, hasPQsig, count := lsig.SignatureCount()
 	if count > 1 {
 		err = errLsigTooManySignatures
 	}
