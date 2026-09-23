@@ -3,6 +3,8 @@
 package crypto
 
 import (
+	"fmt"
+
 	"github.com/algorand/falcon"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -13,6 +15,9 @@ const Falcon1024PrivateKeySize = 2305
 
 // Falcon1024PublicKeySize is the size in bytes of a falcon1024 public key
 const Falcon1024PublicKeySize = 1793
+
+// Falcon1024SeedSize is the required size in bytes of a Falcon-1024 seed.
+const Falcon1024SeedSize = 32
 
 // Falcon1024PublicKey represents a 1793 byte falcon1024 public key.
 type Falcon1024PublicKey [Falcon1024PublicKeySize]byte
@@ -72,6 +77,10 @@ func (pqa Falcon1024Account) AsSigner() PQSigner {
 //
 // Note: having in-memory cryptographic secrets is discouraged
 func Falcon1024AccountFromPQSeed(pqseed []byte) (pqa Falcon1024Account, err error) {
+	if len(pqseed) != Falcon1024SeedSize {
+		return pqa, fmt.Errorf("invalid Falcon-1024 seed length: expected %d bytes, got %d", Falcon1024SeedSize, len(pqseed))
+	}
+
 	pk, sk, err := falcon.GenerateKey(pqseed)
 	if err != nil {
 		return

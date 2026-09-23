@@ -75,6 +75,13 @@ func TestFalcon1024AccountFromPQSeed(t *testing.T) {
 	require.False(t, IsEdwards25519Point(addr[:]))
 }
 
+func TestFalcon1024AccountFromPQSeedRejectsInvalidLengths(t *testing.T) {
+	for _, length := range []int{0, Falcon1024SeedSize - 1, Falcon1024SeedSize + 1} {
+		_, err := Falcon1024AccountFromPQSeed(make([]byte, length))
+		require.ErrorContains(t, err, fmt.Sprintf("expected %d bytes, got %d", Falcon1024SeedSize, length))
+	}
+}
+
 func TestSignFalcon1024AccountSigner(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	sgnr := pqa.AsSigner()
