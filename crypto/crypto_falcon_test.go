@@ -61,7 +61,7 @@ func pqDelegatedLogicSigAccount(t *testing.T, pqa Falcon1024Account, program []b
 	sgnr := pqa.AsSigner()
 	addr, err := pqa.Address()
 	require.NoError(t, err)
-	salt, err := SaltForPQSigner(sgnr)
+	salt, err := CanonicalSaltForPQAddress(sgnr.PQPublicKey(), sgnr.PQScheme())
 	require.NoError(t, err)
 
 	signature, err := sgnr.PQSign(bytes.Join([][]byte{[]byte("PQProgram"), addr[:], program}, nil))

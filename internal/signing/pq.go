@@ -38,10 +38,10 @@ func IsEdwards25519Point(encoded []byte) bool {
 	return err == nil
 }
 
-// CanonicalSaltForPQPK returns the canonical salt for the given pq public key
+// CanonicalSaltForPQAddress returns the canonical salt for the given pq public key
 // and scheme: the lowest salt whose address cannot be read as a point on the
 // ed25519 curve, so that it can only ever be spent by the pq key.
-func CanonicalSaltForPQPK(pk []byte, scheme types.PQScheme) (types.PQAddressSalt, error) {
+func CanonicalSaltForPQAddress(pk []byte, scheme types.PQScheme) (types.PQAddressSalt, error) {
 	for salt := 0; salt <= 0xff; salt++ {
 		addr := PQAddressWithSalt(pk, scheme, types.PQAddressSalt(salt))
 		if !IsEdwards25519Point(addr[:]) {
@@ -59,7 +59,7 @@ func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
 		return 0, ErrNilPQSigner
 	}
 
-	return CanonicalSaltForPQPK(sgnr.PQPublicKey(), sgnr.PQScheme())
+	return CanonicalSaltForPQAddress(sgnr.PQPublicKey(), sgnr.PQScheme())
 }
 
 // PQSigFor assembles the PQSig envelope that identifies the signer's account

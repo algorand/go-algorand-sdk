@@ -110,7 +110,7 @@ func signWith(sgnr PQSigner, toBeSigned []byte) (types.PQSig, error) {
 	if err != nil {
 		return types.PQSig{}, err
 	}
-	salt, err := SaltForPQSigner(sgnr)
+	salt, err := CanonicalSaltForPQAddress(sgnr.PQPublicKey(), sgnr.PQScheme())
 	if err != nil {
 		return types.PQSig{}, err
 	}
@@ -149,11 +149,11 @@ func TestEverySignerGetsCanonicalSalt(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 
 	sgnr := customFalconSigner{pqa: pqa}
-	salt, err := SaltForPQSigner(sgnr)
+	salt, err := CanonicalSaltForPQAddress(sgnr.PQPublicKey(), sgnr.PQScheme())
 	require.NoError(t, err)
 
 	defaultSgnr := pqa.AsSigner()
-	defaultSalt, err := SaltForPQSigner(defaultSgnr)
+	defaultSalt, err := CanonicalSaltForPQAddress(defaultSgnr.PQPublicKey(), defaultSgnr.PQScheme())
 	require.NoError(t, err)
 
 	require.Equal(t, defaultSalt, salt)
@@ -226,9 +226,6 @@ func TestLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 }
 
 func TestPQAccountNilSignerChecks(t *testing.T) {
-	_, err := SaltForPQSigner(nil)
-	require.Error(t, err)
-
-	_, err = PQSignerAddress(nil)
+	_, err := PQSignerAddress(nil)
 	require.Error(t, err)
 }

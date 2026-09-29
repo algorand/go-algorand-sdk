@@ -112,7 +112,7 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 	require.Equal(t, tx, stx.Txn)
 	require.Equal(t, types.Address{}, stx.AuthAddr)
 	require.Equal(t, types.PQSchemeFalcon1024, stx.PQsig.Scheme)
-	canonicalSalt, err := crypto.SaltForPQSigner(pqa.AsSigner())
+	canonicalSalt, err := crypto.CanonicalSaltForPQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024)
 	require.NoError(t, err)
 	require.Equal(t, canonicalSalt, stx.PQsig.Salt)
 	require.Equal(t, pqa.PublicKey[:], stx.PQsig.PublicKey)

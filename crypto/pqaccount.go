@@ -8,7 +8,7 @@ import (
 // PQAddress returns the account address for the given pq public key and scheme,
 // using the canonical salt for that pair.
 func PQAddress(pk []byte, scheme types.PQScheme) (addr types.Address, err error) {
-	salt, err := signing.CanonicalSaltForPQPK(pk, scheme)
+	salt, err := signing.CanonicalSaltForPQAddress(pk, scheme)
 	if err != nil {
 		return
 	}
@@ -23,8 +23,9 @@ func PQSignerAddress(signer PQSigner) (addr types.Address, err error) {
 	return PQAddress(signer.PQPublicKey(), signer.PQScheme())
 }
 
-// SaltForPQSigner returns the canonical salt that will be used when performing
-// PQ signatures on behalf of the given signer.
-func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
-	return signing.SaltForPQSigner(sgnr)
+// CanonicalSaltForPQAddress returns the canonical salt for the given pq public key
+// and scheme: the lowest salt whose derived address is not a valid ed25519
+// point. Only the canonical salt is currently supported when signing.
+func CanonicalSaltForPQAddress(pk []byte, scheme types.PQScheme) (types.PQAddressSalt, error) {
+	return signing.CanonicalSaltForPQAddress(pk, scheme)
 }
