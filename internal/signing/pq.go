@@ -80,20 +80,6 @@ func PQSigFor(sgnr PQSigner, signature []byte) (sig types.PQSig, addr types.Addr
 	return
 }
 
-// PQSignedTxn returns the encoded SignedTxn carrying the given post-quantum
-// signature bytes on behalf of the signer's account.
-//
-// The signature may be empty, which produces an envelope suitable for
-// simulating transactions with the allowEmptySignatures option enabled.
-func PQSignedTxn(sgnr PQSigner, tx types.Transaction, signature []byte) ([]byte, error) {
-	pqsig, address, err := PQSigFor(sgnr, signature)
-	if err != nil {
-		return nil, err
-	}
-
-	return EncodeSignedTxn(types.SignedTxn{Txn: tx, PQsig: pqsig}, address), nil
-}
-
 // PQSignTransaction signs tx, returning the encoded SignedTxn.
 func PQSignTransaction(sgnr PQSigner, tx types.Transaction) ([]byte, error) {
 	signature, err := sgnr.PQSign(TransactionBytesToSign(tx))
@@ -101,5 +87,10 @@ func PQSignTransaction(sgnr PQSigner, tx types.Transaction) ([]byte, error) {
 		return nil, err
 	}
 
-	return PQSignedTxn(sgnr, tx, signature)
+	pqsig, address, err := PQSigFor(sgnr, signature)
+	if err != nil {
+		return nil, err
+	}
+
+	return EncodeSignedTxn(types.SignedTxn{Txn: tx, PQsig: pqsig}, address), nil
 }

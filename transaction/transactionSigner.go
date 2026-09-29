@@ -274,8 +274,19 @@ type PQEmptyTransactionSigner struct {
 // SignTransactions returns SignedTxn bytes with placeholder PQ signatures.
 func (txSigner PQEmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
-		return signing.PQSignedTxn(txSigner.Signer, tx, []byte{})
+		return signing.PQSignTransaction(emptyPQSigner{txSigner.Signer}, tx)
 	})
+}
+
+// emptyPQSigner is a PQSigner that identifies as the wrapped signer but
+// produces empty signatures.
+type emptyPQSigner struct {
+	crypto.PQSigner
+}
+
+// PQSign returns an empty signature without signing.
+func (emptyPQSigner) PQSign([]byte) ([]byte, error) {
+	return []byte{}, nil
 }
 
 // Equals returns true if the other TransactionSigner equals this one.
