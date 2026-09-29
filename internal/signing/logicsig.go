@@ -12,8 +12,6 @@ import (
 // LogicSig that is not delegated to a multisig account.
 var ErrLsigEmptyMsig = errors.New("empty multisig in logicsig")
 
-var errLsigNilSigner = errors.New("cannot create a delegated LogicSig without a signer")
-
 func isASCIIPrintableByte(symbol byte) bool {
 	isBreakLine := symbol == '\n'
 	isStdPrintable := symbol >= ' ' && symbol <= '~'
@@ -118,9 +116,6 @@ func Ed25519AppendMultisigToLogicSig(lsig *types.LogicSig, sgnr Ed25519Signer) e
 
 // PQDelegatedLogicSig returns a LogicSig delegated to the PQ account of sgnr.
 func PQDelegatedLogicSig(program []byte, args [][]byte, sgnr PQSigner) (lsig types.LogicSig, err error) {
-	if sgnr == nil {
-		return types.LogicSig{}, errLsigNilSigner
-	}
 	if err = SanityCheckProgram(program); err != nil {
 		return
 	}
