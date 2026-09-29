@@ -6,11 +6,9 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
-
-// prefix for multisig transaction signing
-const msigAddrPrefix = "MultisigAddr"
 
 /* Multisig Support */
 
@@ -38,46 +36,21 @@ func MultisigAccountWithParams(version uint8, threshold uint8, addrs []types.Add
 
 // MultisigAccountFromSig is a convenience method that creates an account
 // from a sig in a signed tx. Useful for getting addresses from signed msig txs, etc.
-func MultisigAccountFromSig(sig types.MultisigSig) (ma MultisigAccount, err error) {
-	ma.Version = sig.Version
-	ma.Threshold = sig.Threshold
-	ma.Pks = make([]ed25519.PublicKey, len(sig.Subsigs))
-	for i := 0; i < len(sig.Subsigs); i++ {
-		c := make([]byte, len(sig.Subsigs[i].Key))
-		copy(c, sig.Subsigs[i].Key)
-		ma.Pks[i] = c
-	}
-	err = ma.Validate()
-	return
+func MultisigAccountFromSig(sig types.MultisigSig) (MultisigAccount, error) {
+	ma, err := signing.MultisigAccountFromSig(sig)
+	return MultisigAccount(ma), err
 }
 
 // Address takes this multisig preimage data, and generates the corresponding identifying
 // address, committing to the exact group, version, and public keys that it requires to sign.
 // Hash("MultisigAddr" || version uint8 || threshold uint8 || PK1 || PK2 || ...)
 func (ma MultisigAccount) Address() (addr types.Address, err error) {
-	// See go-algorand/crypto/multisig.go
-	err = ma.Validate()
-	if err != nil {
-		return
-	}
-	buffer := append([]byte(msigAddrPrefix), byte(ma.Version), byte(ma.Threshold))
-	for _, pki := range ma.Pks {
-		buffer = append(buffer, pki[:]...)
-	}
-	return sha512.Sum512_256(buffer), nil
+	return signing.MultisigAccount(ma).Address()
 }
 
 // Validate ensures that this multisig setup is a valid multisig account
 func (ma MultisigAccount) Validate() (err error) {
-	if ma.Version != 1 {
-		err = errMsigUnknownVersion
-		return
-	}
-	if ma.Threshold == 0 || len(ma.Pks) == 0 || int(ma.Threshold) > len(ma.Pks) {
-		err = errMsigInvalidThreshold
-		return
-	}
-	return
+	return signing.MultisigAccount(ma).Validate()
 }
 
 // Blank return true if MultisigAccount is empty
@@ -102,7 +75,7 @@ func (ma MultisigAccount) Blank() bool {
 // NOTE: If the LogicSig is delegated to another account this will not
 // return the delegated address of the LogicSig.
 func LogicSigAddress(lsig types.LogicSig) types.Address {
-	toBeSigned := programToSign(lsig.Logic)
+	toBeSigned := signing.ProgramToSign(lsig.Logic)
 	checksum := sha512.Sum512_256(toBeSigned)
 
 	var addr types.Address
@@ -134,13 +107,10 @@ func MakeLogicSigAccountEscrowChecked(program []byte, args [][]byte) (LogicSigAc
 	return LogicSigAccount{Lsig: lsig}, nil
 }
 
-// Ed25519MakeLogicSigAccountDelegated creates a new delegated LogicSigAccount.
-// This type of LogicSig has the authority to sign transactions on behalf of
-// another account, called the delegating account. If the delegating account is
-// a multisig account, use Ed25519MakeLogicSigAccountDelegatedMsig instead.
-//
-// The parameter signer is an Ed25519Signer for the delegating account.
-func Ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
+// ed25519MakeLogicSigAccountDelegated backs the deprecated in-memory
+// MakeLogicSigAccountDelegated. Delegation signing itself lives in the
+// transaction package.
+func ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
 	var ma MultisigAccount
 	lsig, err := makeLogicSig(program, args, signer, ma)
 	if err != nil {
@@ -156,18 +126,10 @@ func Ed25519MakeLogicSigAccountDelegated(program []byte, args [][]byte, signer E
 	return
 }
 
-// Ed25519MakeLogicSigAccountDelegatedMsig creates a new delegated
-// LogicSigAccount.  This type of LogicSig has the authority to sign
-// transactions on behalf of another account, called the delegating account. Use
-// this function if the delegating account is a multisig account, otherwise use
-// Ed25519MakeLogicSigAccountDelegated.
-//
-// The parameter msigAccount is the delegating multisig account.
-//
-// The parameter signer is an Ed25519Signer of one of the members of the
-// delegating multisig account. Use the method Ed25519AppendMultisigSignature on
-// the returned LogicSigAccount to add additional signatures from other members.
-func Ed25519MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
+// ed25519MakeLogicSigAccountDelegatedMsig backs the deprecated in-memory
+// MakeLogicSigAccountDelegatedMsig. Delegation signing itself lives in the
+// transaction package.
+func ed25519MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, signer Ed25519Signer) (lsa LogicSigAccount, err error) {
 	lsig, err := makeLogicSig(program, args, signer, msigAccount)
 	if err != nil {
 		return
@@ -177,15 +139,6 @@ func Ed25519MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msig
 		// do not attach SigningKey, since that doesn't apply to an msig signature
 	}
 	return
-}
-
-// Ed25519AppendMultisigSignature adds an additional signature from a member of the
-// delegating multisig account.
-//
-// The LogicSigAccount must represent a delegated LogicSig backed by a multisig
-// account.
-func (lsa *LogicSigAccount) Ed25519AppendMultisigSignature(signer Ed25519Signer) error {
-	return Ed25519AppendMultisigToLogicSig(&lsa.Lsig, signer)
 }
 
 // LogicSigAccountFromLogicSig creates a LogicSigAccount from an existing
@@ -208,7 +161,7 @@ func LogicSigAccountFromLogicSig(lsig types.LogicSig, signerPublicKey *ed25519.P
 			return
 		}
 
-		toBeSigned := programToSign(lsig.Logic)
+		toBeSigned := signing.ProgramToSign(lsig.Logic)
 		valid := ed25519.Verify(*signerPublicKey, toBeSigned, lsig.Sig[:])
 		if !valid {
 			err = errLsigInvalidPublicKey

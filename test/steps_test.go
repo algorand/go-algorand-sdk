@@ -1163,7 +1163,7 @@ func encDecBid() error {
 }
 
 func signBid() error {
-	signedBytes, err := crypto.Ed25519SignBid(account.AsSigner(), bid)
+	signedBytes, err := crypto.SignBid(account.PrivateKey, bid)
 	if err != nil {
 		return err
 	}
@@ -1661,7 +1661,7 @@ func programHash(addr string) (err error) {
 }
 
 func iPerformTealsign() (err error) {
-	sig, err = crypto.Ed25519TealSign(account.AsSigner(), data, account.Address)
+	sig, err = transaction.Ed25519AccountTransactionSigner{Signer: account.AsSigner()}.TealSign(data, account.Address)
 	return
 }
 

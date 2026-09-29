@@ -35,7 +35,7 @@ func TestMakeEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	expectedSig, err := ed25519SignTransaction(account.AsSigner(), tx)
+	_, expectedSig, err := crypto.SignTransaction(account.PrivateKey, tx)
 	require.NoError(t, err)
 	require.Len(t, sigs, 1)
 	require.Equal(t, sigs[0], expectedSig)
@@ -48,7 +48,7 @@ func TestMakeLogicSigAccountTransactionSigner(t *testing.T) {
 		{0x02, 0x03},
 	}
 	account := crypto.GenerateAccount()
-	lsig, err := crypto.Ed25519MakeLogicSigAccountDelegated(program, args, account.AsSigner())
+	lsig, err := Ed25519AccountTransactionSigner{Signer: account.AsSigner()}.SignDelegationTo(program, args)
 	require.NoError(t, err)
 
 	programHash := "6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY"
@@ -139,9 +139,9 @@ func TestMakeMultiSigEd25519AccountTransactionSigner(t *testing.T) {
 	sigs, err := txSigner.SignTransactions([]types.Transaction{tx}, []int{0})
 	require.NoError(t, err)
 
-	expectedSig, err := ed25519SignMultisigTransaction(sgnr1, ma, tx)
-	require.NoError(t, err)
-	require.Equal(t, sigs[0], expectedSig)
+	// same transaction and keys as crypto's TestSignMultisigTransaction
+	expectedBytes := []byte{130, 164, 109, 115, 105, 103, 131, 166, 115, 117, 98, 115, 105, 103, 147, 130, 162, 112, 107, 196, 32, 27, 126, 192, 176, 75, 234, 97, 183, 150, 144, 151, 230, 203, 244, 7, 225, 8, 167, 5, 53, 29, 11, 201, 138, 190, 177, 34, 9, 168, 171, 129, 120, 161, 115, 196, 64, 118, 246, 119, 203, 209, 172, 34, 112, 79, 186, 215, 112, 41, 206, 201, 203, 230, 167, 215, 112, 156, 141, 37, 117, 149, 203, 209, 1, 132, 10, 96, 236, 87, 193, 248, 19, 228, 31, 230, 43, 94, 17, 231, 187, 158, 96, 148, 216, 202, 128, 206, 243, 48, 88, 234, 68, 38, 5, 169, 86, 146, 111, 121, 0, 129, 162, 112, 107, 196, 32, 9, 99, 50, 9, 83, 115, 137, 240, 117, 103, 17, 119, 57, 145, 199, 208, 62, 27, 115, 200, 196, 245, 43, 246, 175, 240, 26, 162, 92, 249, 194, 113, 129, 162, 112, 107, 196, 32, 231, 240, 248, 77, 6, 129, 29, 249, 243, 28, 141, 135, 139, 17, 85, 244, 103, 29, 81, 161, 133, 194, 0, 144, 134, 103, 244, 73, 88, 112, 104, 161, 163, 116, 104, 114, 2, 161, 118, 1, 163, 116, 120, 110, 137, 163, 97, 109, 116, 205, 19, 136, 163, 102, 101, 101, 206, 0, 3, 79, 168, 162, 102, 118, 206, 0, 14, 214, 220, 163, 103, 101, 110, 173, 116, 101, 115, 116, 110, 101, 116, 45, 118, 51, 49, 46, 48, 162, 108, 118, 206, 0, 14, 218, 196, 164, 110, 111, 116, 101, 196, 8, 180, 81, 121, 57, 252, 250, 210, 113, 163, 114, 99, 118, 196, 32, 27, 126, 192, 176, 75, 234, 97, 183, 150, 144, 151, 230, 203, 244, 7, 225, 8, 167, 5, 53, 29, 11, 201, 138, 190, 177, 34, 9, 168, 171, 129, 120, 163, 115, 110, 100, 196, 32, 141, 146, 180, 137, 144, 1, 115, 160, 77, 250, 67, 89, 163, 102, 106, 106, 252, 234, 44, 66, 160, 93, 217, 193, 247, 62, 235, 165, 71, 128, 55, 233, 164, 116, 121, 112, 101, 163, 112, 97, 121}
+	require.Equal(t, expectedBytes, sigs[0])
 }
 
 func TestMultiSigEd25519AccountTransactionSignerEmptySigners(t *testing.T) {
@@ -204,6 +204,9 @@ func TestPQAccountTransactionSignerNilSigner(t *testing.T) {
 
 	_, err := txSigner.SignTransactions([]types.Transaction{{}}, []int{0})
 	require.ErrorContains(t, err, "pq signer cannot be nil")
+
+	_, err = txSigner.SignDelegationTo([]byte{1, 2, 3}, nil)
+	require.Error(t, err)
 }
 
 func TestEd25519AccountTransactionSignerEqualsNilSigner(t *testing.T) {

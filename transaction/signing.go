@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
-	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -38,15 +38,6 @@ func signTransactions(txGroup []types.Transaction, indexesToSign []int, signOne 
 	}
 
 	return stxs, nil
-}
-
-// encodeSignedTxn encodes the SignedTxn, assigning the signing account as the
-// AuthAddr when it is not the sender of the transaction.
-func encodeSignedTxn(stx types.SignedTxn, signerAddress types.Address) []byte {
-	if stx.Txn.Sender != signerAddress {
-		stx.AuthAddr = signerAddress
-	}
-	return msgpack.Encode(&stx)
 }
 
 // equalBySerialization reports whether two signers hold equivalent parameters,
@@ -81,71 +72,16 @@ func equalSignerImplementations(signer, other interface{}) bool {
 }
 
 func ed25519SignTransaction(signer crypto.Ed25519Signer, tx types.Transaction) ([]byte, error) {
-	sig, err := crypto.Ed25519RawSignature(signer, crypto.TransactionBytesToSign(tx))
-	if err != nil {
-		return nil, err
-	}
-
-	return encodeSignedTxn(types.SignedTxn{Sig: sig, Txn: tx}, types.Address(signer.Ed25519PublicKey())), nil
+	_, stxBytes, err := signing.Ed25519SignTransaction(signer, tx)
+	return stxBytes, err
 }
 
 func ed25519SignMultisigTransaction(signer crypto.Ed25519Signer, account crypto.MultisigAccount, tx types.Transaction) ([]byte, error) {
-	if err := account.Validate(); err != nil {
-		return nil, err
-	}
-
-	msig, err := crypto.Ed25519MultisigSigWith(signer, account, crypto.TransactionBytesToSign(tx))
-	if err != nil {
-		return nil, err
-	}
-
-	address, err := account.Address()
-	if err != nil {
-		return nil, err
-	}
-	return encodeSignedTxn(types.SignedTxn{Msig: msig, Txn: tx}, address), nil
-}
-
-func ed25519AppendMultisigTransaction(signer crypto.Ed25519Signer, account crypto.MultisigAccount, encoded []byte) (txid string, stxBytes []byte, err error) {
-	var stx types.SignedTxn
-	if err = msgpack.Decode(encoded, &stx); err != nil {
-		return
-	}
-	partial, err := ed25519SignMultisigTransaction(signer, account, stx.Txn)
-	if err != nil {
-		return "", nil, err
-	}
-	return crypto.MergeMultisigTransactions(partial, encoded)
+	_, stxBytes, err := signing.Ed25519SignMultisigTransaction(signer, signing.MultisigAccount(account), tx)
+	return stxBytes, err
 }
 
 func signLogicSigAccountTransaction(account crypto.LogicSigAccount, tx types.Transaction) ([]byte, error) {
 	_, stxBytes, err := crypto.SignLogicSigAccountTransaction(account, tx)
 	return stxBytes, err
-}
-
-// pqSignedTxn returns the encoded SignedTxn carrying the given post-quantum
-// signature bytes on behalf of the signer's account.
-//
-// The signature may be empty, which produces an envelope suitable for
-// simulating transactions with the allowEmptySignatures option enabled.
-func pqSignedTxn(signer crypto.PQSigner, tx types.Transaction, signature []byte) ([]byte, error) {
-	pqsig, address, err := crypto.PQSigFor(signer, signature)
-	if err != nil {
-		return nil, err
-	}
-
-	return encodeSignedTxn(types.SignedTxn{Txn: tx, PQsig: pqsig}, address), nil
-}
-
-func pqSignTransaction(signer crypto.PQSigner, tx types.Transaction) ([]byte, error) {
-	if signer == nil {
-		return nil, crypto.ErrNilPQSigner
-	}
-
-	signature, err := signer.PQSign(crypto.TransactionBytesToSign(tx))
-	if err != nil {
-		return nil, err
-	}
-
-	return pqSignedTxn(signer, tx, signature)
 }

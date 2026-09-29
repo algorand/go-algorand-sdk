@@ -7,6 +7,7 @@ import (
 
 	"github.com/algorand/falcon"
 
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -89,7 +90,7 @@ func Falcon1024AccountFromPQSeed(pqseed []byte) (pqa Falcon1024Account, err erro
 	pqaPK := Falcon1024PublicKey(pk)
 	// fail here rather than at Address() time if this key admits no salt whose
 	// address falls outside the ed25519 curve
-	if _, err = canonicalSaltForPQPK(pqaPK[:], types.PQSchemeFalcon1024); err != nil {
+	if _, err = signing.CanonicalSaltForPQPK(pqaPK[:], types.PQSchemeFalcon1024); err != nil {
 		return
 	}
 

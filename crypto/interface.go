@@ -1,12 +1,15 @@
 package crypto
 
-import "github.com/algorand/go-algorand-sdk/v2/types"
+import (
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
+	"github.com/algorand/go-algorand-sdk/v2/types"
+)
 
 // Ed25519PublicKeySize is the size in bytes of an ed25519 public key
-const Ed25519PublicKeySize = 32
+const Ed25519PublicKeySize = signing.Ed25519PublicKeySize
 
 // Ed25519PublicKey represents a 32 byte ed25519 public key.
-type Ed25519PublicKey [Ed25519PublicKeySize]byte
+type Ed25519PublicKey = signing.Ed25519PublicKey
 
 // Ed25519Signer represents the ability to perform ed25519 signatures on behalf
 // of some public key

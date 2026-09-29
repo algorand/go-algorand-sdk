@@ -3,6 +3,7 @@
 package crypto
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"testing"
@@ -109,8 +110,16 @@ func signWith(sgnr PQSigner, toBeSigned []byte) (types.PQSig, error) {
 	if err != nil {
 		return types.PQSig{}, err
 	}
-	pqsig, _, err := PQSigFor(sgnr, signature)
-	return pqsig, err
+	salt, err := SaltForPQSigner(sgnr)
+	if err != nil {
+		return types.PQSig{}, err
+	}
+	return types.PQSig{
+		Scheme:    sgnr.PQScheme(),
+		Salt:      salt,
+		PublicKey: sgnr.PQPublicKey(),
+		Signature: signature,
+	}, nil
 }
 
 type customFalconSigner struct {
@@ -149,34 +158,31 @@ func TestEverySignerGetsCanonicalSalt(t *testing.T) {
 
 	require.Equal(t, defaultSalt, salt)
 
-	// That salt is the canonical one, and the addresses agree on it.
-	canonical, err := canonicalSaltForPQPK(pqa.PublicKey[:], types.PQSchemeFalcon1024)
-	require.NoError(t, err)
-	require.Equal(t, canonical, salt)
-
+	// The addresses agree on that salt.
 	addr, err := PQSignerAddress(sgnr)
 	require.NoError(t, err)
 	defaultAddr, err := PQSignerAddress(defaultSgnr)
 	require.NoError(t, err)
 	require.Equal(t, defaultAddr, addr)
-	require.Equal(t, pqAddressWithSalt(pqa.PublicKey[:], types.PQSchemeFalcon1024, canonical), addr)
+	pqAddr, err := PQAddress(pqa.PublicKey[:], types.PQSchemeFalcon1024)
+	require.NoError(t, err)
+	require.Equal(t, pqAddr, addr)
 
 	// Signatures made by that signer carry the canonical salt too.
 	toBeSigned := TransactionBytesToSign(makeTestPaymentTxn(t, addr))
 	pqsig, err := signWith(defaultSgnr, toBeSigned)
 	require.NoError(t, err)
-	require.Equal(t, canonical, pqsig.Salt)
+	require.Equal(t, salt, pqsig.Salt)
 	require.Equal(t, addr, PQAddressFromSig(pqsig))
 	require.True(t, VerifyPQSig(toBeSigned, pqsig))
 }
 
-func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
+func TestLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	pqa := makeTestFalcon1024Account(t)
 	program := []byte{1, 32, 1, 1, 34}
 	args := [][]byte{{0x01}, {0x02, 0x03}}
 
-	lsa, err := MakeLogicSigAccountDelegatedPQ(program, args, pqa.AsSigner())
-	require.NoError(t, err)
+	lsa := pqDelegatedLogicSigAccount(t, pqa, program, args)
 	require.True(t, lsa.IsDelegated())
 	require.False(t, lsa.Lsig.PQsig.Blank())
 
@@ -187,14 +193,17 @@ func TestMakeLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pqaAddr, addr)
 
-	toBeSigned := pqsigProgramToSign(addr, lsa.Lsig.Logic)
+	pqProgramToSign := func(addr types.Address, program []byte) []byte {
+		return bytes.Join([][]byte{[]byte("PQProgram"), addr[:], program}, nil)
+	}
+	toBeSigned := pqProgramToSign(addr, lsa.Lsig.Logic)
 	require.True(t, VerifyPQSig(toBeSigned, lsa.Lsig.PQsig))
 
 	// Tampering with the program must break verification.
 	tampered := lsa.Lsig
 	tampered.Logic = append([]byte{}, program...)
 	tampered.Logic[3] = 2
-	tamperedToBeSigned := pqsigProgramToSign(addr, tampered.Logic)
+	tamperedToBeSigned := pqProgramToSign(addr, tampered.Logic)
 	require.False(t, VerifyPQSig(tamperedToBeSigned, tampered.PQsig))
 
 	// VerifyLogicSig checks that the delegating singleSigner matches the PQ signature
@@ -221,8 +230,5 @@ func TestPQAccountNilSignerChecks(t *testing.T) {
 	require.Error(t, err)
 
 	_, err = PQSignerAddress(nil)
-	require.Error(t, err)
-
-	_, err = MakeLogicSigAccountDelegatedPQ([]byte{1, 2, 3}, nil, nil)
 	require.Error(t, err)
 }

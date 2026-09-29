@@ -5,6 +5,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -72,30 +73,41 @@ func (txSigner Ed25519AccountTransactionSigner) Equals(other TransactionSigner) 
 // program will have the authority to sign transactions on behalf of the signing
 // account, called the delegating account.
 func (txSigner Ed25519AccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
-	return crypto.Ed25519MakeLogicSigAccountDelegated(program, args, txSigner.Signer)
+	lsig, err := signing.Ed25519DelegatedLogicSig(program, args, txSigner.Signer)
+	if err != nil {
+		return
+	}
+
+	pk := txSigner.Signer.Ed25519PublicKey()
+	lsa = crypto.LogicSigAccount{
+		Lsig: lsig,
+		// attach SigningKey to remember which account the signature belongs to
+		SigningKey: pk[:],
+	}
+	return
 }
 
 // SignBytes signs the bytes and returns the signature
 func (txSigner Ed25519AccountTransactionSigner) SignBytes(bytesToSign []byte) (signature []byte, err error) {
-	return crypto.Ed25519SignBytes(txSigner.Signer, bytesToSign)
+	return signing.Ed25519SignBytes(txSigner.Signer, bytesToSign)
 }
 
 // TealSign creates a signature compatible with ed25519verify opcode from
 // contract address
 func (txSigner Ed25519AccountTransactionSigner) TealSign(data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
-	return crypto.Ed25519TealSign(txSigner.Signer, data, contractAddress)
+	return signing.Ed25519TealSign(txSigner.Signer, data, contractAddress)
 }
 
 // AppendSignature appends the signature corresponding to the given signer,
 // returning an encoded signed multisig transaction including the signature.
 func (txSigner Ed25519AccountTransactionSigner) AppendSignature(ma crypto.MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
-	return ed25519AppendMultisigTransaction(txSigner.Signer, ma, preStxBytes)
+	return signing.Ed25519AppendMultisigTransaction(txSigner.Signer, signing.MultisigAccount(ma), preStxBytes)
 }
 
 // AppendDelegationSignature adds an additional signature from a member of the
 // delegating multisig account.
 func (txSigner Ed25519AccountTransactionSigner) AppendDelegationSignature(lsa *crypto.LogicSigAccount) error {
-	return lsa.Ed25519AppendMultisigSignature(txSigner.Signer)
+	return signing.Ed25519AppendMultisigToLogicSig(&lsa.Lsig, txSigner.Signer)
 }
 
 // MultiSigEd25519AccountTransactionSigner is a TransactionSigner that can sign
@@ -160,18 +172,18 @@ func (txSigner MultiSigEd25519AccountTransactionSigner) SignDelegationTo(program
 	if len(txSigner.Signers) == 0 {
 		return crypto.LogicSigAccount{}, errNoMultisigSigners
 	}
-	firstSigner := txSigner.Signers[0]
-	lsa, err = crypto.Ed25519MakeLogicSigAccountDelegatedMsig(program, args, txSigner.Msig, firstSigner)
+	lsig, err := signing.Ed25519MultisigDelegatedLogicSig(program, args, signing.MultisigAccount(txSigner.Msig), txSigner.Signers[0])
 	if err != nil {
 		return
 	}
 	for _, signer := range txSigner.Signers[1:] {
-		err = lsa.Ed25519AppendMultisigSignature(signer)
+		err = signing.Ed25519AppendMultisigToLogicSig(&lsig, signer)
 		if err != nil {
 			return crypto.LogicSigAccount{}, err
 		}
 	}
-	return
+	// do not attach SigningKey, since that doesn't apply to an msig signature
+	return crypto.LogicSigAccount{Lsig: lsig}, nil
 }
 
 // LogicSigAccountTransactionSigner is a TransactionSigner that can
@@ -204,7 +216,7 @@ type PQAccountTransactionSigner struct {
 // SignTransactions signs the provided transactions with the PQSigner signer.
 func (txSigner PQAccountTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
-		return pqSignTransaction(txSigner.Signer, tx)
+		return signing.PQSignTransaction(txSigner.Signer, tx)
 	})
 }
 
@@ -212,7 +224,11 @@ func (txSigner PQAccountTransactionSigner) SignTransactions(txGroup []types.Tran
 // program will have the authority to sign transactions on behalf of the signing
 // account, called the delegating account.
 func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args [][]byte) (lsa crypto.LogicSigAccount, err error) {
-	return crypto.MakeLogicSigAccountDelegatedPQ(program, args, txSigner.Signer)
+	lsig, err := signing.PQDelegatedLogicSig(program, args, txSigner.Signer)
+	if err != nil {
+		return
+	}
+	return crypto.LogicSigAccount{Lsig: lsig}, nil
 }
 
 // equalPQSigners reports whether two PQ signer interface values refer to the
@@ -258,7 +274,7 @@ type PQEmptyTransactionSigner struct {
 // SignTransactions returns SignedTxn bytes with placeholder PQ signatures.
 func (txSigner PQEmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
-		return pqSignedTxn(txSigner.Signer, tx, []byte{})
+		return signing.PQSignedTxn(txSigner.Signer, tx, []byte{})
 	})
 }
 

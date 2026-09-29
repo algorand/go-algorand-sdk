@@ -1142,7 +1142,7 @@ func TestLogicSig(t *testing.T) {
 	require.NoError(t, err)
 	sgnr, err := crypto.SKToInMemorySigner(key)
 	require.NoError(t, err)
-	lsig, err := crypto.Ed25519MakeLogicSigAccountDelegated(program, args, sgnr)
+	lsig, err := Ed25519AccountTransactionSigner{Signer: sgnr}.SignDelegationTo(program, args)
 	require.NoError(t, err)
 
 	_, stxBytes, err := crypto.SignLogicSigAccountTransaction(lsig, tx)

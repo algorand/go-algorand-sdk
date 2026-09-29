@@ -5,38 +5,21 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/base32"
-	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 
-	"filippo.io/edwards25519"
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
-
-// txidPrefix is prepended to a transaction when computing its txid
-var txidPrefix = []byte("TX")
 
 // tgidPrefix is prepended to a transaction group when computing the group ID
 var tgidPrefix = []byte("TG")
 
 // bidPrefix is prepended to a bid when signing it
 var bidPrefix = []byte("aB")
-
-// bytesPrefix is prepended to a message when signing
-var bytesPrefix = []byte("MX")
-
-// programPrefix is prepended to a logic program when computing a hash
-var programPrefix = []byte("Program")
-
-// msigProgramPrefix is prepended to a logic program when computing a hash for a program signed by multisig
-var msigProgramPrefix = []byte("MsigProgram")
-
-// programDataPrefix is prepended to teal sign data
-var programDataPrefix = []byte("ProgData")
 
 // appIDPrefix is prepended to application IDs in order to compute addresses
 var appIDPrefix = []byte("appID")
@@ -61,29 +44,6 @@ func GetTxID(tx types.Transaction) string {
 	return TransactionIDString(tx)
 }
 
-// ed25519SignTransaction backs the deprecated in-memory SignTransaction.
-// Transaction signing itself lives in the transaction package.
-func ed25519SignTransaction(sgnr Ed25519Signer, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	s, txid, err := rawSignTransaction(sgnr, tx)
-	if err != nil {
-		return
-	}
-	// Construct the SignedTxn
-	stx := types.SignedTxn{
-		Sig: s,
-		Txn: tx,
-	}
-
-	a := types.Address(sgnr.Ed25519PublicKey())
-	if stx.Txn.Sender != a {
-		stx.AuthAddr = a
-	}
-
-	// Encode the SignedTxn
-	stxBytes = msgpack.Encode(stx)
-	return
-}
-
 // TransactionBytesToSign returns the byte form of the tx that we actually sign
 // and compute txID from: the canonical msgpack encoding of tx, prefixed with
 // "TX" for domain separation.
@@ -91,14 +51,7 @@ func ed25519SignTransaction(sgnr Ed25519Signer, tx types.Transaction) (txid stri
 // Signer implementations outside this package should build the bytes they sign
 // with this function, so that all of them commit to the same byte sequence.
 func TransactionBytesToSign(tx types.Transaction) []byte {
-	// Encode the transaction as msgpack, prepending the hashable prefix
-	return bytes.Join([][]byte{txidPrefix, msgpack.Encode(tx)}, nil)
-}
-
-// txIDFromRawTxnBytesToSign computes a transaction id base32 string from raw transaction bytes
-func txIDFromRawTxnBytesToSign(toBeSigned []byte) string {
-	txidBytes := sha512.Sum512_256(toBeSigned)
-	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(txidBytes[:])
+	return signing.TransactionBytesToSign(tx)
 }
 
 // TransactionID is the unique identifier for a Transaction in progress
@@ -109,61 +62,17 @@ func TransactionID(tx types.Transaction) (txid []byte) {
 
 // TransactionIDString is a base32 representation of a TransactionID
 func TransactionIDString(tx types.Transaction) string {
-	return txIDFromRawTxnBytesToSign(TransactionBytesToSign(tx))
-}
-
-// Ed25519RawSignature signs toBeSigned and returns the result as a
-// types.Signature, returning ErrInvalidSignatureReturned if the signer produced
-// a signature of an unexpected length.
-//
-// toBeSigned is signed as-is: no domain-separation prefix is added, so callers
-// are responsible for building the full byte sequence (see for example
-// TransactionBytesToSign).
-func Ed25519RawSignature(sgnr Ed25519Signer, toBeSigned []byte) (s types.Signature, err error) {
-	signature, err := sgnr.Ed25519Sign(toBeSigned)
-	if err != nil {
-		return
-	}
-
-	if len(signature) != len(s) {
-		return s, ErrInvalidSignatureReturned
-	}
-	copy(s[:], signature)
-	return
-}
-
-// rawSignTransaction signs the msgpack-encoded tx (with prepended "TX" prefix), and returns the sig and txid
-func rawSignTransaction(sgnr Ed25519Signer, tx types.Transaction) (s types.Signature, txid string, err error) {
-	toBeSigned := TransactionBytesToSign(tx)
-
-	s, err = Ed25519RawSignature(sgnr, toBeSigned)
-	if err != nil {
-		return
-	}
-
-	// Populate txID
-	txid = txIDFromRawTxnBytesToSign(toBeSigned)
-	return
-}
-
-// bytesToSign returns the bytes that are actually signed by Ed25519SignBytes
-func bytesToSign(message []byte) []byte {
-	return bytes.Join([][]byte{bytesPrefix, message}, nil)
-}
-
-// Ed25519SignBytes signs the bytes and returns the signature
-func Ed25519SignBytes(sgnr Ed25519Signer, message []byte) (signature []byte, err error) {
-	return sgnr.Ed25519Sign(bytesToSign(message))
+	return signing.TxIDFromBytesToSign(TransactionBytesToSign(tx))
 }
 
 // VerifyBytes verifies that the signature is valid
 func VerifyBytes(pk ed25519.PublicKey, message, signature []byte) bool {
-	return ed25519.Verify(pk, bytesToSign(message), signature)
+	return ed25519.Verify(pk, signing.BytesToSign(message), signature)
 }
 
-// Ed25519SignBid accepts an Ed25519Signer and a bid, and returns the signature
+// ed25519SignBid accepts an Ed25519Signer and a bid, and returns the signature
 // of the bid under that key
-func Ed25519SignBid(sgnr Ed25519Signer, bid types.Bid) (signedBid []byte, err error) {
+func ed25519SignBid(sgnr Ed25519Signer, bid types.Bid) (signedBid []byte, err error) {
 	// Encode the bid as msgpack
 	encodedBid := msgpack.Encode(bid)
 
@@ -172,7 +81,7 @@ func Ed25519SignBid(sgnr Ed25519Signer, bid types.Bid) (signedBid []byte, err er
 	toBeSigned := bytes.Join(msgParts, nil)
 
 	// Sign the encoded bid
-	s, err := Ed25519RawSignature(sgnr, toBeSigned)
+	s, err := signing.Ed25519RawSignature(sgnr, toBeSigned)
 	if err != nil {
 		return
 	}
@@ -193,186 +102,10 @@ func Ed25519SignBid(sgnr Ed25519Signer, bid types.Bid) (signedBid []byte, err er
 
 /* Multisig Support */
 
-type signer func() (signature types.Signature, err error)
-
-// Service function to make a single signature in Multisig
-func multisigSingle(sgnr Ed25519Signer, ma MultisigAccount, customSigner signer) (msig types.MultisigSig, myIndex int, err error) {
-	// check that sgnr.pk exists in the list of public keys in MultisigAccount ma
-	myIndex = len(ma.Pks)
-	myPublicKey := sgnr.Ed25519PublicKey()
-	for i := 0; i < len(ma.Pks); i++ {
-		if bytes.Equal(myPublicKey[:], ma.Pks[i]) {
-			myIndex = i
-		}
-	}
-	if myIndex == len(ma.Pks) {
-		err = errMsigInvalidSecretKey
-		return
-	}
-
-	// now, create the signed transaction
-	msig.Version = ma.Version
-	msig.Threshold = ma.Threshold
-	msig.Subsigs = make([]types.MultisigSubsig, len(ma.Pks))
-	for i := 0; i < len(ma.Pks); i++ {
-		c := make([]byte, len(ma.Pks[i]))
-		copy(c, ma.Pks[i])
-		msig.Subsigs[i].Key = c
-	}
-	rawSig, err := customSigner()
-	if err != nil {
-		return
-	}
-	msig.Subsigs[myIndex].Sig = rawSig
-	return
-}
-
-// Ed25519MultisigSigWith returns a MultisigSig for the multisig account ma, with
-// every subsig keyed but only the one belonging to sgnr populated by signing
-// toBeSigned. It returns an error if sgnr is not a member of ma.
-//
-// toBeSigned is signed as-is, see Ed25519RawSignature. Callers that need all of
-// ma's subsigs should merge the results with MergeMultisigTransactions.
-func Ed25519MultisigSigWith(sgnr Ed25519Signer, ma MultisigAccount, toBeSigned []byte) (types.MultisigSig, error) {
-	msig, _, err := multisigSingle(sgnr, ma, func() (types.Signature, error) {
-		return Ed25519RawSignature(sgnr, toBeSigned)
-	})
-	return msig, err
-}
-
-// ed25519SignMultisigTransaction backs the deprecated in-memory
-// SignMultisigTransaction. Transaction signing itself lives in the transaction
-// package.
-func ed25519SignMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, tx types.Transaction) (txid string, stxBytes []byte, err error) {
-	err = ma.Validate()
-	if err != nil {
-		return
-	}
-
-	// this signer signs a transaction and sets txid from the closure
-	customSigner := func() (rawSig types.Signature, err error) {
-		rawSig, txid, err = rawSignTransaction(sgnr, tx)
-		return rawSig, err
-	}
-
-	sig, _, err := multisigSingle(sgnr, ma, customSigner)
-	if err != nil {
-		return
-	}
-
-	// Encode the signedTxn
-	stx := types.SignedTxn{
-		Msig: sig,
-		Txn:  tx,
-	}
-
-	maAddress, err := ma.Address()
-	if err != nil {
-		return
-	}
-
-	if stx.Txn.Sender != maAddress {
-		stx.AuthAddr = maAddress
-	}
-
-	stxBytes = msgpack.Encode(stx)
-	return
-}
-
 // MergeMultisigTransactions merges the given (partially) signed multisig transactions, and
 // returns an encoded signed multisig transaction with the component signatures.
 func MergeMultisigTransactions(stxsBytes ...[]byte) (txid string, stxBytes []byte, err error) {
-	if len(stxsBytes) < 2 {
-		err = errMsigMergeLessThanTwo
-		return
-	}
-	var sig types.MultisigSig
-	var refAddr *types.Address
-	var refTx types.Transaction
-	var refAuthAddr types.Address
-	for _, partStxBytes := range stxsBytes {
-		partStx := types.SignedTxn{}
-		err = msgpack.Decode(partStxBytes, &partStx)
-		if err != nil {
-			return
-		}
-		// check that multisig parameters match
-		partMa, innerErr := MultisigAccountFromSig(partStx.Msig)
-		if innerErr != nil {
-			err = innerErr
-			return
-		}
-		partAddr, innerErr := partMa.Address()
-		if innerErr != nil {
-			err = innerErr
-			return
-		}
-		if refAddr == nil {
-			refAddr = &partAddr
-			// add parameters to new merged txn
-			sig.Version = partStx.Msig.Version
-			sig.Threshold = partStx.Msig.Threshold
-			sig.Subsigs = make([]types.MultisigSubsig, len(partStx.Msig.Subsigs))
-			for i := 0; i < len(sig.Subsigs); i++ {
-				c := make([]byte, len(partStx.Msig.Subsigs[i].Key))
-				copy(c, partStx.Msig.Subsigs[i].Key)
-				sig.Subsigs[i].Key = c
-			}
-			refTx = partStx.Txn
-			refAuthAddr = partStx.AuthAddr
-		}
-
-		if partAddr != *refAddr {
-			err = errMsigMergeKeysMismatch
-			return
-		}
-
-		if partStx.AuthAddr != refAuthAddr {
-			err = errMsigMergeAuthAddrMismatch
-			return
-		}
-
-		// now, add subsignatures appropriately
-		zeroSig := types.Signature{}
-		for i := 0; i < len(sig.Subsigs); i++ {
-			mSubsig := partStx.Msig.Subsigs[i]
-			if mSubsig.Sig != zeroSig {
-				if sig.Subsigs[i].Sig == zeroSig {
-					sig.Subsigs[i].Sig = mSubsig.Sig
-				} else if sig.Subsigs[i].Sig != mSubsig.Sig {
-					err = errMsigMergeInvalidDups
-					return
-				}
-			}
-		}
-	}
-	// Encode the signedTxn
-	stx := types.SignedTxn{
-		Msig:     sig,
-		Txn:      refTx,
-		AuthAddr: refAuthAddr,
-	}
-	stxBytes = msgpack.Encode(stx)
-	// let's also compute the txid.
-	txid = TransactionIDString(refTx)
-	return
-}
-
-// ed25519AppendMultisigTransaction backs the deprecated in-memory
-// AppendMultisigTransaction. Transaction signing itself lives in the
-// transaction package.
-func ed25519AppendMultisigTransaction(sgnr Ed25519Signer, ma MultisigAccount, preStxBytes []byte) (txid string, stxBytes []byte, err error) {
-	preStx := types.SignedTxn{}
-	err = msgpack.Decode(preStxBytes, &preStx)
-	if err != nil {
-		return
-	}
-	_, partStxBytes, err := ed25519SignMultisigTransaction(sgnr, ma, preStx.Txn)
-	if err != nil {
-		return
-	}
-	txid, stxBytes, err = MergeMultisigTransactions(partStxBytes, preStxBytes)
-	return
+	return signing.MergeMultisigTransactions(stxsBytes...)
 }
 
 // VerifyMultisig verifies an assembled MultisigSig
@@ -452,37 +185,10 @@ func ComputeGroupID(txgroup []types.Transaction) (gid types.Digest, err error) {
 
 /* LogicSig support */
 
-func isASCIIPrintableByte(symbol byte) bool {
-	isBreakLine := symbol == '\n'
-	isStdPrintable := symbol >= ' ' && symbol <= '~'
-	return isBreakLine || isStdPrintable
-}
-
-func isASCIIPrintable(program []byte) bool {
-	for _, b := range program {
-		if !isASCIIPrintableByte(b) {
-			return false
-		}
-	}
-	return true
-}
-
 // sanityCheckProgram performs heuristic program validation:
 // check if passed in bytes are Algorand address or is B64 encoded, rather than Teal bytes
 func sanityCheckProgram(program []byte) error {
-	if len(program) == 0 {
-		return fmt.Errorf("empty program")
-	}
-	if isASCIIPrintable(program) {
-		if _, err := types.DecodeAddress(string(program)); err == nil {
-			return fmt.Errorf("requesting program bytes, get Algorand address")
-		}
-		if _, err := base64.StdEncoding.DecodeString(string(program)); err == nil {
-			return fmt.Errorf("program should not be b64 encoded")
-		}
-		return fmt.Errorf("program bytes are all ASCII printable characters, not looking like Teal byte code")
-	}
-	return nil
+	return signing.SanityCheckProgram(program)
 }
 
 // VerifyLogicSig verifies that a LogicSig contains a valid program and, if a
@@ -507,7 +213,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	}
 
 	if hasSig {
-		toBeSigned := programToSign(lsig.Logic)
+		toBeSigned := signing.ProgramToSign(lsig.Logic)
 		return ed25519.Verify(singleSigner[:], toBeSigned, lsig.Sig[:])
 	}
 
@@ -520,7 +226,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		if err != nil {
 			return false
 		}
-		toBeSigned := programToSign(lsig.Logic)
+		toBeSigned := signing.ProgramToSign(lsig.Logic)
 		return VerifyMultisig(addr, toBeSigned, lsig.Msig)
 	}
 
@@ -533,7 +239,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		if err != nil {
 			return false
 		}
-		toBeSigned := msigProgramToSign(addr, lsig.Logic)
+		toBeSigned := signing.MsigProgramToSign(addr, lsig.Logic)
 		return VerifyMultisig(addr, toBeSigned, lsig.LMsig)
 	}
 
@@ -542,7 +248,7 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 		if singleSigner != addr {
 			return false
 		}
-		return verifyPQDelegation(pqsigProgramToSign(addr, lsig.Logic), lsig.PQsig)
+		return verifyPQDelegation(signing.PQProgramToSign(addr, lsig.Logic), lsig.PQsig)
 	}
 	// the lsig account is the hash of its program bytes, nothing left to verify
 	return true
@@ -565,14 +271,6 @@ func lsigSignatures(lsig types.LogicSig) (hasSig, hasMsig, hasLMsig, hasPQsig bo
 		err = errLsigTooManySignatures
 	}
 	return
-}
-
-// pqsigProgramToSign returns the bytes a post-quantum scheme signs when
-// delegating a LogicSig to a PQ account: ("PQProgram" || address ||
-// program).
-func pqsigProgramToSign(addr types.Address, program []byte) []byte {
-	parts := [][]byte{pqProgramPrefix, addr[:], program}
-	return bytes.Join(parts, nil)
 }
 
 // signLogicSigTransactionWithAddress signs a transaction with a LogicSig.
@@ -667,32 +365,12 @@ func SignLogicSigTransaction(lsig types.LogicSig, tx types.Transaction) (txid st
 // account on a non-canonical salt is a real account that this must resolve
 // correctly, even though this SDK will only ever sign for canonical ones.
 func PQAddressFromSig(sig types.PQSig) (addr types.Address) {
-	return pqAddressWithSalt(sig.PublicKey, sig.Scheme, sig.Salt)
-}
-
-func programToSign(program []byte) []byte {
-	parts := [][]byte{programPrefix, program}
-	toBeSigned := bytes.Join(parts, nil)
-	return toBeSigned
-}
-
-func msigProgramToSign(msigAddr types.Address, program []byte) []byte {
-	parts := [][]byte{msigProgramPrefix, msigAddr[:], program}
-	toBeSigned := bytes.Join(parts, nil)
-	return toBeSigned
-}
-
-// msigProgramSigner returns a signer that signs the given program on behalf of
-// the delegating multisig account at msigAddr
-func msigProgramSigner(sgnr Ed25519Signer, msigAddr types.Address, program []byte) signer {
-	return func() (types.Signature, error) {
-		return Ed25519RawSignature(sgnr, msigProgramToSign(msigAddr, program))
-	}
+	return signing.PQAddressWithSalt(sig.PublicKey, sig.Scheme, sig.Salt)
 }
 
 // AddressFromProgram returns escrow account address derived from TEAL bytecode
 func AddressFromProgram(program []byte) types.Address {
-	toBeHashed := programToSign(program)
+	toBeHashed := signing.ProgramToSign(program)
 	hash := sha512.Sum512_256(toBeHashed)
 	return types.Address(hash)
 }
@@ -703,101 +381,21 @@ func AddressFromProgram(program []byte) types.Address {
 // 1. If no sgnr and ma provided then it returns contract-only LogicSig
 // 2. If no ma provides, it returns Sig delegated LogicSig
 // 3. If both sgnr and ma specified the function returns Multisig delegated LogicSig
-func makeLogicSig(program []byte, args [][]byte, sgnr Ed25519Signer, ma MultisigAccount) (lsig types.LogicSig, err error) {
-	if err = sanityCheckProgram(program); err != nil {
-		return
-	}
-
+func makeLogicSig(program []byte, args [][]byte, sgnr Ed25519Signer, ma MultisigAccount) (types.LogicSig, error) {
 	if sgnr == nil && ma.Blank() {
-		lsig.Logic = program
-		lsig.Args = args
-		return
+		return signing.EscrowLogicSig(program, args)
 	}
 
 	if ma.Blank() {
-		var sig types.Signature
-		sig, err = Ed25519RawSignature(sgnr, programToSign(program))
-		if err != nil {
-			return
-		}
-
-		lsig.Logic = program
-		lsig.Args = args
-		lsig.Sig = sig
-		return
+		return signing.Ed25519DelegatedLogicSig(program, args, sgnr)
 	}
 
-	// Format Multisig
-	err = ma.Validate()
-	if err != nil {
-		return
-	}
-
-	multisigAddr, err := ma.Address()
-	if err != nil {
-		return
-	}
-
-	// this signer signs a program
-	msig, _, err := multisigSingle(sgnr, ma, msigProgramSigner(sgnr, multisigAddr, program))
-	if err != nil {
-		return
-	}
-
-	lsig.Logic = program
-	lsig.Args = args
-	lsig.LMsig = msig
-
-	return
-}
-
-// Ed25519AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
-func Ed25519AppendMultisigToLogicSig(lsig *types.LogicSig, sgnr Ed25519Signer) error {
-	if lsig.LMsig.Blank() {
-		return errLsigEmptyMsig
-	}
-
-	ma, err := MultisigAccountFromSig(lsig.LMsig)
-	if err != nil {
-		return err
-	}
-
-	multisigAddr, err := ma.Address()
-	if err != nil {
-		return err
-	}
-
-	msig, idx, err := multisigSingle(sgnr, ma, msigProgramSigner(sgnr, multisigAddr, lsig.Logic))
-	if err != nil {
-		return err
-	}
-
-	lsig.LMsig.Subsigs[idx] = msig.Subsigs[idx]
-
-	return nil
-}
-
-// tealSignData returns the bytes signed by Ed25519TealSign
-func tealSignData(data []byte, contractAddress types.Address) []byte {
-	return bytes.Join([][]byte{programDataPrefix, contractAddress[:], data}, nil)
-}
-
-// Ed25519TealSign creates a signature compatible with ed25519verify opcode from
-// contract address
-func Ed25519TealSign(sgnr Ed25519Signer, data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
-	return Ed25519RawSignature(sgnr, tealSignData(data, contractAddress))
-}
-
-// Ed25519TealSignFromProgram creates a signature compatible with ed25519verify
-// opcode from raw program bytes
-func Ed25519TealSignFromProgram(sgnr Ed25519Signer, data []byte, program []byte) (rawSig types.Signature, err error) {
-	addr := AddressFromProgram(program)
-	return Ed25519TealSign(sgnr, data, addr)
+	return signing.Ed25519MultisigDelegatedLogicSig(program, args, signing.MultisigAccount(ma), sgnr)
 }
 
 // TealVerify verifies signatures generated by TealSign and TealSignFromProgram
 func TealVerify(pk ed25519.PublicKey, data []byte, contractAddress types.Address, rawSig types.Signature) bool {
-	return ed25519.Verify(pk, tealSignData(data, contractAddress), rawSig[:])
+	return ed25519.Verify(pk, signing.TealSignData(data, contractAddress), rawSig[:])
 }
 
 // GetApplicationAddress returns the address corresponding to an application's escrow account.
@@ -837,9 +435,5 @@ func HashLightBlockHeader(lightBlockHeader types.LightBlockHeader) types.Digest 
 // IsEdwards25519Point reports whether encoded can be decoded as an
 // Edwards25519 curve point.
 func IsEdwards25519Point(encoded []byte) bool {
-	if len(encoded) != 32 {
-		return false
-	}
-	_, err := new(edwards25519.Point).SetBytes(encoded)
-	return err == nil
+	return signing.IsEdwards25519Point(encoded)
 }

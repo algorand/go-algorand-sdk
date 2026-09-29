@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -71,34 +72,33 @@ func SignTransaction(sk ed25519.PrivateKey, tx types.Transaction) (txid string, 
 		return
 	}
 
-	return ed25519SignTransaction(sgnr, tx)
+	return signing.Ed25519SignTransaction(sgnr, tx)
 }
 
 // SignBytes signs the bytes and returns the signature
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519SignBytes instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.SignBytes instead.
 func SignBytes(sk ed25519.PrivateKey, bytesToSign []byte) (signature []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519SignBytes(sgnr, bytesToSign)
+	return signing.Ed25519SignBytes(sgnr, bytesToSign)
 }
 
 // SignBid accepts a private key and a bid, and returns the signature of the
 // bid under that key
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519SignBid instead
+// Deprecated: having in-memory cryptographic secrets is discouraged
 func SignBid(sk ed25519.PrivateKey, bid types.Bid) (signedBid []byte, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519SignBid(sgnr, bid)
+	return ed25519SignBid(sgnr, bid)
 }
 
 // SignMultisigTransaction signs the given transaction, and multisig preimage, with the
@@ -113,20 +113,20 @@ func SignMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, tx types
 		return
 	}
 
-	return ed25519SignMultisigTransaction(sgnr, ma, tx)
+	return signing.Ed25519SignMultisigTransaction(sgnr, signing.MultisigAccount(ma), tx)
 }
 
 // AppendMultisigToLogicSig adds a new signature to multisigned LogicSig
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519AppendMultisigToLogicSig instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.AppendDelegationSignature instead.
 func AppendMultisigToLogicSig(lsig *types.LogicSig, sk ed25519.PrivateKey) error {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return err
 	}
 
-	return Ed25519AppendMultisigToLogicSig(lsig, sgnr)
+	return signing.Ed25519AppendMultisigToLogicSig(lsig, sgnr)
 }
 
 // AppendMultisigTransaction appends the signature corresponding to the given private key,
@@ -142,31 +142,32 @@ func AppendMultisigTransaction(sk ed25519.PrivateKey, ma MultisigAccount, preStx
 		return
 	}
 
-	return ed25519AppendMultisigTransaction(sgnr, ma, preStxBytes)
+	return signing.Ed25519AppendMultisigTransaction(sgnr, signing.MultisigAccount(ma), preStxBytes)
 }
 
 // TealSign creates a signature compatible with ed25519verify opcode from contract address
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519TealSign instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.TealSign instead.
 func TealSign(sk ed25519.PrivateKey, data []byte, contractAddress types.Address) (rawSig types.Signature, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519TealSign(sgnr, data, contractAddress)
+	return signing.Ed25519TealSign(sgnr, data, contractAddress)
 }
 
 // TealSignFromProgram creates a signature compatible with ed25519verify opcode from raw program bytes
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519TealSignFromProgram instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.TealSign with AddressFromProgram
+// instead.
 func TealSignFromProgram(sk ed25519.PrivateKey, data []byte, program []byte) (rawSig types.Signature, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519TealSignFromProgram(sgnr, data, program)
+	return signing.Ed25519TealSign(sgnr, data, AddressFromProgram(program))
 }

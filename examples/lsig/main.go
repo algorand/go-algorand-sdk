@@ -101,7 +101,7 @@ func main() {
 	// account signs the logic, and now the logic may be passed instead
 	// of a signature for a transaction
 	var args [][]byte
-	delSig, err := crypto.Ed25519MakeLogicSigAccountDelegated(lsigBinary, args, seedAcct.AsSigner())
+	delSig, err := transaction.Ed25519AccountTransactionSigner{Signer: seedAcct.AsSigner()}.SignDelegationTo(lsigBinary, args)
 	if err != nil {
 		log.Fatalf("failed to make delegate lsig: %s", err)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/crypto/ed25519"
 
+	"github.com/algorand/go-algorand-sdk/v2/internal/signing"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
@@ -94,15 +95,15 @@ func (acc Account) AsSigner() Ed25519Signer {
 //
 // The parameter sk is the private key of the delegating account.
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519MakeLogicSigAccountDelegated instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.SignDelegationTo instead.
 func MakeLogicSigAccountDelegated(program []byte, args [][]byte, sk ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519MakeLogicSigAccountDelegated(program, args, sgnr)
+	return ed25519MakeLogicSigAccountDelegated(program, args, sgnr)
 }
 
 // MakeLogicSigAccountDelegatedMsig creates a new delegated LogicSigAccount.
@@ -117,15 +118,15 @@ func MakeLogicSigAccountDelegated(program []byte, args [][]byte, sk ed25519.Priv
 // delegating multisig account. Use the method AppendMultisigSignature on the
 // returned LogicSigAccount to add additional signatures from other members.
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519MakeLogicSigAccountDelegatedMsig instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.MultiSigEd25519AccountTransactionSigner.SignDelegationTo instead.
 func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount MultisigAccount, sk ed25519.PrivateKey) (lsa LogicSigAccount, err error) {
 	sgnr, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return
 	}
 
-	return Ed25519MakeLogicSigAccountDelegatedMsig(program, args, msigAccount, sgnr)
+	return ed25519MakeLogicSigAccountDelegatedMsig(program, args, msigAccount, sgnr)
 }
 
 // AppendMultisigSignature adds an additional signature from a member of the
@@ -134,12 +135,12 @@ func MakeLogicSigAccountDelegatedMsig(program []byte, args [][]byte, msigAccount
 // The LogicSigAccount must represent a delegated LogicSig backed by a multisig
 // account.
 //
-// Deprecated: having in-memory cryptographic secrets is discouraged, use
-// Ed25519AppendMultisigSignature instead
+// Deprecated: having in-memory cryptographic secrets is discouraged. Use
+// transaction.Ed25519AccountTransactionSigner.AppendDelegationSignature instead.
 func (lsa *LogicSigAccount) AppendMultisigSignature(sk ed25519.PrivateKey) error {
 	signer, err := SKToInMemorySigner(sk)
 	if err != nil {
 		return err
 	}
-	return lsa.Ed25519AppendMultisigSignature(signer)
+	return signing.Ed25519AppendMultisigToLogicSig(&lsa.Lsig, signer)
 }
