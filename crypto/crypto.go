@@ -254,15 +254,6 @@ func VerifyLogicSig(lsig types.LogicSig, singleSigner types.Address) (result boo
 	return true
 }
 
-// verifyPQDelegation checks the delegation signature of a PQ-delegated
-// LogicSig. Verifying a post-quantum signature needs the cgo falcon library, so
-// builds without the `falcon` tag accept any signature and rely on the
-// delegating address check alone; pqaccount_falcon.go replaces this with a real
-// verification.
-var verifyPQDelegation = func(_ []byte, _ types.PQSig) bool {
-	return true
-}
-
 // lsigSignatures reports which of the mutually exclusive delegation signatures
 // the LogicSig carries. It errors out if more than one of them is present.
 func lsigSignatures(lsig types.LogicSig) (hasSig, hasMsig, hasLMsig, hasPQsig bool, err error) {
