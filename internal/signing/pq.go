@@ -55,10 +55,6 @@ func CanonicalSaltForPQAddress(pk []byte, scheme types.PQScheme) (types.PQAddres
 // SaltForPQSigner returns the canonical salt that will be used when performing
 // PQ signatures on behalf of the given signer.
 func SaltForPQSigner(sgnr PQSigner) (types.PQAddressSalt, error) {
-	if sgnr == nil {
-		return 0, ErrNilPQSigner
-	}
-
 	return CanonicalSaltForPQAddress(sgnr.PQPublicKey(), sgnr.PQScheme())
 }
 
@@ -100,10 +96,6 @@ func PQSignedTxn(sgnr PQSigner, tx types.Transaction, signature []byte) ([]byte,
 
 // PQSignTransaction signs tx, returning the encoded SignedTxn.
 func PQSignTransaction(sgnr PQSigner, tx types.Transaction) ([]byte, error) {
-	if sgnr == nil {
-		return nil, ErrNilPQSigner
-	}
-
 	signature, err := sgnr.PQSign(TransactionBytesToSign(tx))
 	if err != nil {
 		return nil, err

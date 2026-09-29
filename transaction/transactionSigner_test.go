@@ -199,16 +199,6 @@ func TestPQAccountTransactionSignerEquals(t *testing.T) {
 	require.True(t, (PQAccountTransactionSigner{Signer: nil}).Equals(PQAccountTransactionSigner{Signer: nil}))
 }
 
-func TestPQAccountTransactionSignerNilSigner(t *testing.T) {
-	txSigner := PQAccountTransactionSigner{Signer: nil}
-
-	_, err := txSigner.SignTransactions([]types.Transaction{{}}, []int{0})
-	require.ErrorContains(t, err, "pq signer cannot be nil")
-
-	_, err = txSigner.SignDelegationTo([]byte{1, 2, 3}, nil)
-	require.Error(t, err)
-}
-
 func TestEd25519AccountTransactionSignerEqualsNilSigner(t *testing.T) {
 	account := crypto.GenerateAccount()
 	s1 := Ed25519AccountTransactionSigner{Signer: account.AsSigner()}

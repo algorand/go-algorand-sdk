@@ -224,8 +224,3 @@ func TestLogicSigAccountDelegatedFalcon1024(t *testing.T) {
 	wrongLenSig.PublicKey = make([]byte, 32)
 	require.False(t, VerifyPQSig(toBeSigned, wrongLenSig))
 }
-
-func TestPQAccountNilSignerChecks(t *testing.T) {
-	_, err := PQSignerAddress(nil)
-	require.Error(t, err)
-}

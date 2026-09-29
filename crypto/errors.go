@@ -10,10 +10,6 @@ import (
 // signature whose length is not ed25519.SignatureSize.
 var ErrInvalidSignatureReturned = signing.ErrInvalidSignatureReturned
 
-// ErrNilPQSigner is returned when a post-quantum signing operation is given no
-// signer to sign with.
-var ErrNilPQSigner = signing.ErrNilPQSigner
-
 var errInvalidPrivateKey = errors.New("invalid private key")
 var errLsigTooManySignatures = errors.New("logicsig has too many signatures, at most one of Sig, Msig, LMsig or PQsig may be defined")
 var errLsigInvalidSignature = errors.New("invalid logicsig signature")

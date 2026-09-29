@@ -42,10 +42,6 @@ type PQSigner interface {
 // signature whose length is not ed25519.SignatureSize.
 var ErrInvalidSignatureReturned = errors.New("ed25519 library returned an invalid signature")
 
-// ErrNilPQSigner is returned when a post-quantum signing operation is given no
-// signer to sign with.
-var ErrNilPQSigner = errors.New("pq signer cannot be nil")
-
 // txidPrefix is prepended to a transaction when computing its txid
 var txidPrefix = []byte("TX")
 

@@ -17,9 +17,6 @@ func PQAddress(pk []byte, scheme types.PQScheme) (addr types.Address, err error)
 
 // PQSignerAddress returns the address for a given PQSigner
 func PQSignerAddress(signer PQSigner) (addr types.Address, err error) {
-	if signer == nil {
-		return types.Address{}, ErrNilPQSigner
-	}
 	return PQAddress(signer.PQPublicKey(), signer.PQScheme())
 }
 
