@@ -275,18 +275,7 @@ func signLogicSigTransactionWithAddress(lsig types.LogicSig, lsigAddress types.A
 	}
 
 	txid = TransactionIDString(tx)
-	// Construct the SignedTxn
-	stx := types.SignedTxn{
-		Lsig: lsig,
-		Txn:  tx,
-	}
-
-	if stx.Txn.Sender != lsigAddress {
-		stx.AuthAddr = lsigAddress
-	}
-
-	// Encode the SignedTxn
-	stxBytes = msgpack.Encode(stx)
+	stxBytes = signing.EncodeSignedTxn(types.SignedTxn{Lsig: lsig, Txn: tx}, lsigAddress)
 	return
 }
 
