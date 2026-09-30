@@ -87,7 +87,7 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 	toAddr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
 	require.NoError(t, err)
 
-	txSigner := PQEmptyTransactionSigner{Signer: pqa.AsSigner()}
+	txSigner := PQEmptyTransactionSigner{PublicKey: pqa.PublicKey[:], Scheme: types.PQSchemeFalcon1024}
 	tx := types.Transaction{
 		Type: types.PaymentTx,
 		Header: types.Header{
@@ -118,7 +118,7 @@ func TestMakeFalcon1024EmptyTransactionSigner(t *testing.T) {
 	require.Equal(t, pqa.PublicKey[:], stx.PQsig.PublicKey)
 	require.Empty(t, stx.PQsig.Signature)
 	require.True(t, txSigner.Equals(txSigner))
-	require.False(t, txSigner.Equals(PQEmptyTransactionSigner{Signer: pqa.AsSigner()}))
+	require.True(t, txSigner.Equals(PQEmptyTransactionSigner{PublicKey: pqa.PublicKey[:], Scheme: types.PQSchemeFalcon1024}))
 }
 
 // The following golden tests are based on the PQ (Falcon-1024) fixtures from

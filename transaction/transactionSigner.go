@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"bytes"
 	"errors"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
@@ -231,16 +232,10 @@ func (txSigner PQAccountTransactionSigner) SignDelegationTo(program []byte, args
 	return crypto.LogicSigAccount{Lsig: lsig}, nil
 }
 
-// equalPQSigners reports whether two PQ signer interface values refer to the
-// same signer implementation.
-func equalPQSigners(signer, other crypto.PQSigner) bool {
-	return equalSignerImplementations(signer, other)
-}
-
 // Equals returns true if the other TransactionSigner equals this one.
 func (txSigner PQAccountTransactionSigner) Equals(other TransactionSigner) bool {
 	if castedSigner, ok := other.(PQAccountTransactionSigner); ok {
-		return equalPQSigners(txSigner.Signer, castedSigner.Signer)
+		return equalSignerImplementations(txSigner.Signer, castedSigner.Signer)
 	}
 	return false
 }
@@ -268,20 +263,30 @@ func (txSigner EmptyTransactionSigner) Equals(other TransactionSigner) bool {
 // allowEmptySignatures option enabled, allowing algod to charge the post-quantum fee surcharge
 // without paying the computational cost of generating a real post-quantum signature.
 type PQEmptyTransactionSigner struct {
-	Signer crypto.PQSigner
+	PublicKey []byte
+	Scheme    types.PQScheme
 }
 
 // SignTransactions returns SignedTxn bytes with placeholder PQ signatures.
 func (txSigner PQEmptyTransactionSigner) SignTransactions(txGroup []types.Transaction, indexesToSign []int) ([][]byte, error) {
 	return signTransactions(txGroup, indexesToSign, func(tx types.Transaction) ([]byte, error) {
-		return signing.PQSignTransaction(emptyPQSigner{txSigner.Signer}, tx)
+		return signing.PQSignTransaction(emptyPQSigner(txSigner), tx)
 	})
+}
+
+// Equals returns true if the other TransactionSigner equals this one.
+func (txSigner PQEmptyTransactionSigner) Equals(other TransactionSigner) bool {
+	if castedSigner, ok := other.(PQEmptyTransactionSigner); ok {
+		return bytes.Equal(txSigner.PublicKey, castedSigner.PublicKey) && txSigner.Scheme == castedSigner.Scheme
+	}
+	return false
 }
 
 // emptyPQSigner is a PQSigner that identifies as the wrapped signer but
 // produces empty signatures.
 type emptyPQSigner struct {
-	crypto.PQSigner
+	PublicKey []byte
+	Scheme    types.PQScheme
 }
 
 // PQSign returns an empty signature without signing.
@@ -289,10 +294,10 @@ func (emptyPQSigner) PQSign([]byte) ([]byte, error) {
 	return []byte{}, nil
 }
 
-// Equals returns true if the other TransactionSigner equals this one.
-func (txSigner PQEmptyTransactionSigner) Equals(other TransactionSigner) bool {
-	if castedSigner, ok := other.(PQEmptyTransactionSigner); ok {
-		return equalPQSigners(txSigner.Signer, castedSigner.Signer)
-	}
-	return false
+func (txSigner emptyPQSigner) PQPublicKey() []byte {
+	return txSigner.PublicKey
+}
+
+func (txSigner emptyPQSigner) PQScheme() types.PQScheme {
+	return txSigner.Scheme
 }
