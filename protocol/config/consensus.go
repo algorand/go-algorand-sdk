@@ -593,6 +593,14 @@ type ConsensusParams struct {
 	// EnableSelectF128 changes the sortition algorithm to use a 128-bit software
 	// floating point binomial CDF implementation for committee selection.
 	EnableSelectF128 bool
+
+	// RequireLogicSigArgAccess requires that a LogicSig carry no argument it did
+	// not read: nothing above the highest index it read, and nothing unread
+	// below that index unless it is empty. Args are covered by no signature, and
+	// are part of neither the transaction ID nor the group hash, so without this
+	// rule a third party can append bytes to a transaction in flight, and the
+	// program has no way to detect it.
+	RequireLogicSigArgAccess bool
 }
 
 // ProposerPayoutRules puts several related consensus parameters in one place. The same
@@ -1423,6 +1431,8 @@ func initConsensusProtocols() {
 
 	vFuture.LogicSigVersion = 14 // When moving this to a release, put a new higher LogicSigVersion here
 
+	vFuture.RequireLogicSigArgAccess = true
+
 	Consensus[protocol.ConsensusFuture] = vFuture
 
 	// vAlphaX versions are an separate series of consensus parameters and versions for alphanet
@@ -1496,6 +1506,24 @@ func initConsensusProtocols() {
 	vFnet3.ApprovedUpgrades[protocol.ConsensusVFnet4] = 10000
 
 	vFnet4.ApprovedUpgrades[protocol.ConsensusV40] = 10000
+
+	// vFnet5 was the v42 preview on FNet
+	vFnet5 := v41
+	vFnet5.ApprovedUpgrades = map[protocol.ConsensusVersion]uint64{}
+
+	vFnet5.LogicSigVersion = 13
+	vFnet5.AppSizeUpdates = true
+	vFnet5.AllowZeroLocalAppRef = true
+	vFnet5.EnforceAuthAddrSenderDiff = true
+	vFnet5.EnablePQSchemeFalcon1024 = true
+	vFnet5.LoadTracking = true
+	vFnet5.MaxAbsoluteTxnNoteBytes = 4096   // same as largest AVM value
+	vFnet5.MaxAbsoluteExtraProgramPages = 7 // Allow larger programs with extra fees
+	vFnet5.MaxAbsoluteTotalArgLen = 16384   // We _could_ make this as high as 16*4k
+	vFnet5.PerByteTxnSurcharge = 100        // Each charged byte adds 0.000100 of min fee
+	vFnet5.EnableSelectF128 = true
+
+	Consensus[protocol.ConsensusVFnet5] = vFnet5
 }
 
 // Global defines global Algorand protocol parameters which should not be overridden.
