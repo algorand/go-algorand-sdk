@@ -1,3 +1,16 @@
+# v2.13.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.13.0 -->
+
+## What's Changed
+### New Features
+* feat: Support for PQ accounts by @iglosiggio in https://github.com/algorand/go-algorand-sdk/pull/825
+### Enhancements
+* feat: latest consensus params by @joe-p in https://github.com/algorand/go-algorand-sdk/pull/846
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.12.0...v2.13.0
+
 # v2.12.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.12.0 -->
