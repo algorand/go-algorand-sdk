@@ -560,16 +560,14 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 			continue
 		}
 
-		var indexesToSign []int
-		for j, other := range txsWithSigners {
+		indexesToSign := []int{i}
+		visited[i] = true
+		for j, other := range txsWithSigners[i+1:] {
+			j += i + 1
 			if !visited[j] && txWithSigner.Signer.Equals(other.Signer) {
 				indexesToSign = append(indexesToSign, j)
 				visited[j] = true
 			}
-		}
-
-		if len(indexesToSign) == 0 {
-			return nil, fmt.Errorf("invalid tx signer provided, isn't equal to self")
 		}
 
 		sigStxs, err := txWithSigner.Signer.SignTransactions(txs, indexesToSign)

@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Construct a TransactionWithSigner and pass it to the atc
-	signer := transaction.BasicAccountTransactionSigner{Account: acct1}
+	signer := transaction.Ed25519AccountTransactionSigner{Signer: acct1.AsSigner()}
 	atc.AddTransaction(transaction.TransactionWithSigner{Txn: txn, Signer: signer})
 	// example: ATC_ADD_TRANSACTION
 

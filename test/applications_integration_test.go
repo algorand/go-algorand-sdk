@@ -73,7 +73,11 @@ func iCreateANewTransientAccountAndFundItWithMicroalgos(microalgos int) error {
 	if err != nil {
 		return err
 	}
-	ltxid, lstx, err := crypto.SignTransaction(lsk.PrivateKey, ltxn)
+	sgnr, err := crypto.SKToInMemorySigner(lsk.PrivateKey)
+	if err != nil {
+		return err
+	}
+	ltxid, lstx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: sgnr}, ltxn)
 	if err != nil {
 		return err
 	}
@@ -234,7 +238,7 @@ func iSignAndSubmitTheTransactionSavingTheTxidIfThereIsAnErrorItIs(expectedErr s
 	var err error
 	var lstx []byte
 
-	txid, lstx, err = crypto.SignTransaction(transientAccount.PrivateKey, tx)
+	txid, lstx, err = transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: transientAccount.AsSigner()}, tx)
 	if err != nil {
 		return err
 	}
@@ -896,7 +900,7 @@ func advanceChainAndWaitForBoxesToBeAvailable(expectedBoxLength int) (*models.Bo
 			return nil, err
 		}
 
-		_, lstx, err := crypto.SignTransaction(transientAccount.PrivateKey, txn)
+		_, lstx, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: transientAccount.AsSigner()}, txn)
 		if err != nil {
 			return nil, err
 		}

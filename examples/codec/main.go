@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/algorand/go-algorand-sdk/v2/abi"
-	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/examples"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
@@ -46,7 +45,7 @@ func main() {
 	// Assuming we already have a pay transaction `ptxn`
 
 	// Sign the transaction
-	_, signedTxn, err := crypto.SignTransaction(acct1.PrivateKey, ptxn)
+	_, signedTxn, err := transaction.SignTransaction(transaction.Ed25519AccountTransactionSigner{Signer: acct1.AsSigner()}, ptxn)
 	if err != nil {
 		log.Fatalf("failed to sign transaction: %s", err)
 	}

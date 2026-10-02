@@ -5,7 +5,9 @@ go 1.25.0
 toolchain go1.25.3
 
 require (
+	filippo.io/edwards25519 v1.2.0
 	github.com/algorand/avm-abi v0.2.0
+	github.com/algorand/falcon v0.1.0
 	github.com/algorand/go-codec/codec v1.1.10
 	github.com/cucumber/godog v0.14.1
 	github.com/google/go-querystring v1.1.0
