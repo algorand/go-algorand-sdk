@@ -177,8 +177,12 @@ func (client *Client) submitFormRaw(ctx context.Context, path string, params int
 		return nil, err
 	}
 
-	// Supply the client token.
-	req.Header.Set(client.apiHeader, client.apiToken)
+	// Supply the client token only when one is configured. Public algod/indexer
+	// endpoints may disable API auth; sending an empty token header makes those
+	// nodes reject otherwise valid requests (see #653).
+	if client.apiHeader != "" && client.apiToken != "" {
+		req.Header.Set(client.apiHeader, client.apiToken)
+	}
 	// Add the client headers.
 	for _, header := range client.headers {
 		req.Header.Add(header.Key, header.Value)
