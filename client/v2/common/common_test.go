@@ -103,6 +103,44 @@ func TestClient_Verbs(t *testing.T) {
 	}
 }
 
+func TestClient_OmitsEmptyAPIToken(t *testing.T) {
+	const headerKey = "X-Algo-API-Token"
+	path := "/v2/status"
+
+	t.Run("sets token when provided", func(t *testing.T) {
+		var got string
+		var present bool
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, present = r.Header[http.CanonicalHeaderKey(headerKey)]
+			got = r.Header.Get(headerKey)
+			w.WriteHeader(http.StatusOK)
+		}))
+		t.Cleanup(srv.Close)
+
+		c, err := MakeClient(srv.URL, headerKey, "secret")
+		require.NoError(t, err)
+		_, err = c.GetRaw(context.Background(), path, nil, nil)
+		require.NoError(t, err)
+		assert.True(t, present)
+		assert.Equal(t, "secret", got)
+	})
+
+	t.Run("omits header when token is empty", func(t *testing.T) {
+		var present bool
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, present = r.Header[http.CanonicalHeaderKey(headerKey)]
+			w.WriteHeader(http.StatusOK)
+		}))
+		t.Cleanup(srv.Close)
+
+		c, err := MakeClient(srv.URL, headerKey, "")
+		require.NoError(t, err)
+		_, err = c.GetRaw(context.Background(), path, nil, nil)
+		require.NoError(t, err)
+		assert.False(t, present)
+	})
+}
+
 func TestClientWithTransport(t *testing.T) {
 	var receivedMethod string
 	var receivedPath string
