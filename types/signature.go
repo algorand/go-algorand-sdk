@@ -141,11 +141,11 @@ type HeartbeatProof struct {
 	PK2Sig ed25519Signature `codec:"p2s"`
 }
 
-// PQSig is a post-quantum transaction authorization proof. Its public key and
-// signature are wire/decode-bounded by crypto.MaxPQPublicKeySize and
-// crypto.MaxPQSignatureSize (the largest sizes over all supported PQ schemes),
-// which feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize,
-// and the SignedTxn wire bound.
+// PQSig is a scheme-tagged transaction authorization proof. Its public key and
+// signature are wire/decode-bounded by maxPQPublicKeySize and
+// maxPQSignatureSize (the largest sizes over all schemes in pqSchemes), which
+// feed msgp allocation bounds and therefore PQSigMaxSize, SignedTxnMaxSize, and
+// the SignedTxn wire bound.
 type PQSig struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`
 
