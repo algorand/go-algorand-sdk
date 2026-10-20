@@ -1,3 +1,14 @@
+# v2.14.0
+
+<!-- Release notes generated using configuration in .github/release.yml at release/v2.14.0 -->
+
+## What's Changed
+### Enhancements
+* feat: v43 types by @joe-p in https://github.com/algorand/go-algorand-sdk/pull/848
+
+
+**Full Changelog**: https://github.com/algorand/go-algorand-sdk/compare/v2.13.0...v2.14.0
+
 # v2.13.0
 
 <!-- Release notes generated using configuration in .github/release.yml at release/v2.13.0 -->
