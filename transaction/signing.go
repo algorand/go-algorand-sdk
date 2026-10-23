@@ -3,6 +3,7 @@ package transaction
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -13,6 +14,10 @@ import (
 
 // SignTransaction signs one transaction with the provided TransactionSigner.
 func SignTransaction(signer TransactionSigner, tx types.Transaction) (txid string, stxBytes []byte, err error) {
+	if signer == nil {
+		return "", nil, errors.New("nil signer")
+	}
+
 	stxs, err := signer.SignTransactions([]types.Transaction{tx}, []int{0})
 	if err != nil {
 		return "", nil, err

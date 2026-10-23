@@ -548,6 +548,12 @@ func (atc *AtomicTransactionComposer) GatherSignatures() ([][]byte, error) {
 		return nil, err
 	}
 
+	for i, txWithSigner := range txsWithSigners {
+		if txWithSigner.Signer == nil {
+			return nil, fmt.Errorf("nil signer for transaction at index %d", i)
+		}
+	}
+
 	var txs []types.Transaction
 	for _, txWithSigner := range txsWithSigners {
 		txs = append(txs, txWithSigner.Txn)
