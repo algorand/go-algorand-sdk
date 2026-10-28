@@ -253,6 +253,35 @@ func TestAddMethodCallWithAccess(t *testing.T) {
 	require.Equal(t, types.AppIndex(1), txns[0].Txn.Access[2].App)
 }
 
+func TestAddMethodCallWithAccessZeroAsset(t *testing.T) {
+	var atc AtomicTransactionComposer
+	account := crypto.GenerateAccount()
+	txSigner := BasicAccountTransactionSigner{Account: account}
+	methodSig := "add()uint32"
+
+	method, err := abi.MethodFromSignature(methodSig)
+	require.NoError(t, err)
+
+	addr, err := types.DecodeAddress("DN7MBMCL5JQ3PFUQS7TMX5AH4EEKOBJVDUF4TCV6WERATKFLQF4MQUPZTA")
+	require.NoError(t, err)
+
+	// Issue #764: a ForeignAssets entry of 0 under UseAccess must be rejected.
+	// Otherwise the access-list composition appends an empty (degenerate)
+	// ResourceRef for asset id 0, which the AVM treats as an empty box reference.
+	params := AddMethodCallParams{
+		AppID:         4,
+		Method:        method,
+		Sender:        addr,
+		Signer:        txSigner,
+		ForeignAssets: []uint64{0},
+		UseAccess:     true,
+	}
+	err = atc.AddMethodCall(params)
+	require.Error(t, err)
+	// Nothing should have been added to the group on failure.
+	require.Equal(t, 0, atc.Count())
+}
+
 func TestGatherSignatures(t *testing.T) {
 	var atc AtomicTransactionComposer
 	account := crypto.GenerateAccount()
