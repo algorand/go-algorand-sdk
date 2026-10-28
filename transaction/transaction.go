@@ -1356,6 +1356,13 @@ func MakeApplicationCallTxWithAccess(
 		ensure(types.ResourceRef{Address: addr})
 	}
 	for _, asset := range parsedForeignAssets {
+		// A zero asset id would produce an empty, degenerate ResourceRef that
+		// the AVM treats as an empty box reference rather than an asset
+		// reference. Reject it so callers must pass an explicit box reference
+		// for that behavior. See issue #764.
+		if asset == 0 {
+			return tx, fmt.Errorf("asset id 0 is not a valid access list resource reference")
+		}
 		ensure(types.ResourceRef{Asset: asset})
 	}
 	for _, app := range parsedForeignApps {
