@@ -11,10 +11,10 @@ import (
 // SendRawTransactionParams contains all of the query parameters for url serialization.
 type SendRawTransactionParams struct {
 
-	// SkipPqAddressCheck skip post-quantum address checks, including the check that
-	// rejects PQ authorizer and LogicSig escrow (TEAL v13 or later) whose address is
-	// an Edwards25519 curve point. This should only be used if you understand the
-	// risks and know what you are doing.
+	// SkipPqAddressCheck skip off-curve address checks, including the check that
+	// rejects salted-key signature authorizer and LogicSig escrow (TEAL v13 or later)
+	// whose address is an Edwards25519 curve point. This should only be used if you
+	// understand the risks and know what you are doing.
 	SkipPqAddressCheck bool `url:"skip-pq-address-check,omitempty"`
 }
 
@@ -28,10 +28,10 @@ type SendRawTransaction struct {
 	p SendRawTransactionParams
 }
 
-// SkipPqAddressCheck skip post-quantum address checks, including the check that
-// rejects PQ authorizer and LogicSig escrow (TEAL v13 or later) whose address is
-// an Edwards25519 curve point. This should only be used if you understand the
-// risks and know what you are doing.
+// SkipPqAddressCheck skip off-curve address checks, including the check that
+// rejects salted-key signature authorizer and LogicSig escrow (TEAL v13 or later)
+// whose address is an Edwards25519 curve point. This should only be used if you
+// understand the risks and know what you are doing.
 func (s *SendRawTransaction) SkipPqAddressCheck(SkipPqAddressCheck bool) *SendRawTransaction {
 	s.p.SkipPqAddressCheck = SkipPqAddressCheck
 
